@@ -1,0 +1,196 @@
+Group Paineis TOII
+   Version=7.0
+   VSSDB=
+   HasProperties=1
+   Properties
+      BeforeApply=
+      AfterApply=
+      Icon=
+      ID=
+      Version=
+      PalmName=
+      OutPut=
+   End
+   ProjectsCount=1
+   Project Paineis TOII
+      FoldersCount=10
+      Folder Controladoria
+         VSSPath=Fontes
+         FilesCount=6
+         File \VER912\Paineis TOII\Controladoria\pmst002.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Controladoria\fint001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Controladoria\fint002.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Controladoria\fint003.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Controladoria\fint004.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Controladoria\pmst001.ngco
+             Type=O
+         End
+      End
+      Folder Gestao da Qualidade
+         VSSPath=Nova Pasta2
+         FilesCount=8
+         File \VER912\Paineis TOII\Gestao da Qualidade\qnct001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Gestao da Qualidade\icet001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Gestao da Qualidade\ppapt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Gestao da Qualidade\qadt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Gestao da Qualidade\qdot001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Gestao da Qualidade\qiet001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Gestao da Qualidade\qipt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Gestao da Qualidade\qmtt001.ngco
+             Type=O
+         End
+      End
+      Folder Gestao Educacional
+         VSSPath=Nova Pasta3
+         FilesCount=0
+      End
+      Folder Inteligencia Parceiros
+         VSSPath=Nova Pasta4
+         FilesCount=0
+      End
+      Folder Low-End e Ecossistema
+         VSSPath=Nova Pasta5
+         FilesCount=0
+      End
+      Folder Materiais
+         VSSPath=Nova Pasta6
+         FilesCount=6
+         File \VER912\Paineis TOII\Materiais\gctt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Materiais\comt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Materiais\estt001.ngco
+             Type=O
+         End
+         File \ver912\Paineis TOII\Materiais\wmst001.ngco
+             Type=O
+         End
+         File \ver912\Paineis TOII\Materiais\comt002.ngco
+             Type=O
+         End
+         File \ver912\Paineis TOII\Materiais\pcpt001.ngco
+             Type=O
+         End
+      End
+      Folder Plano de Saude
+         VSSPath=Nova Pasta7
+         FilesCount=6
+         File \VER912\Paineis TOII\Plano de Saude\plst006.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Plano de Saude\plst001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Plano de Saude\plst002.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Plano de Saude\plst003.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Plano de Saude\plst004.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Plano de Saude\plst005.ngco
+             Type=O
+         End
+      End
+      Folder Recursos Humanos
+         VSSPath=Nova Pasta8
+         FilesCount=8
+         File \VER912\Paineis TOII\Recursos Humanos\trmt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Recursos Humanos\apdt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Recursos Humanos\csat001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Recursos Humanos\gpet001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Recursos Humanos\gpet002.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Recursos Humanos\pont001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Recursos Humanos\pont002.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Recursos Humanos\rspt001.ngco
+             Type=O
+         End
+      End
+      Folder Vendas Clientes
+         VSSPath=Nova Pasta9
+         FilesCount=6
+         File \VER912\Paineis TOII\Vendas Clientes\tmkt002.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas Clientes\crdt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas Clientes\lojt001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas Clientes\lojt002.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas Clientes\tect001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas Clientes\tmkt001.ngco
+             Type=O
+         End
+      End
+      Folder Vendas e Fiscal
+         VSSPath=Nova Pasta10
+         FilesCount=6
+         File \VER912\Paineis TOII\Vendas e Fiscal\fat006.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas e Fiscal\fat001.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas e Fiscal\fat002.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas e Fiscal\fat003.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas e Fiscal\fat004.ngco
+             Type=O
+         End
+         File \VER912\Paineis TOII\Vendas e Fiscal\fat005.ngco
+             Type=O
+         End
+      End
+   End
+End

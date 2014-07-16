@@ -1,0 +1,708 @@
+
+/**********************************************************************************************************************************/
+/** Planejamento e controle de produção                                                                                          **/
+/** Rotinas auxiliares de WMS WHB                                                                                                **/
+/** RSAC Soluções Ltda.                                                                                                          **/
+/** WHB Usinagem                                                                                                                 **/
+/**********************************************************************************************************************************/
+/** Data       | Responsável                    | Descrição                                                                      **/
+/**********************************************************************************************************************************/
+/** 23/05/2011 | Rogério Souza Pereira          | Criação da rotina/procedimento.                                                **/
+/**********************************************************************************************************************************/
+#include "rwmake.ch"
+#include "tbiconn.ch"
+#include "topconn.ch"
+#include "protheus.ch"
+#include "fileio.ch"      
+
+
+/**********************************************************************************************************************************/
+/** user function WsEndProd( cNumOp, cEnder, cQtde, cCodEmp, cCodFil )                                                           **/
+/** executa o endereçamento dos movimentos de produção                                                                           **/
+/**********************************************************************************************************************************/
+user function WsEndProd( cNumOp, cEnder, cQtde, cCodEmp, cCodFil,cRecno)
+
+  // variaveis auxiliares
+  local cRet := ""
+  local cQr := ""
+  local aArea := GetArea()
+  local aSdaRecno := {}
+  local nSaldoSda := 0
+  local nQtdeEnd := Val(cQtde)
+  local nResta := 0
+  local nI := 0
+  local cItemEnd := ""
+  local cItemAnt := ""  
+  local cEmail := ""
+  local aCab := {}
+  local aItens := {}
+  local lErro := .F.
+  local nTotAEnd := 0
+	private lMSHelpAuto := .T.
+	private lMSErroAuto := .F.
+
+  // prepara o ambiente
+  //prepare environment empresa cCodEmp filial cCodFil modulo "PCP"   
+  
+  
+    If	Select('SX2') == 0
+		RPCSetType( 3 )					
+		conout(dtoc(date())+'|'+time()+'|'+"Preparando ambiente utilizando empresa " + cCodEmp + " filial " + cCodFil)
+		RpcSetEnv(cCodEmp,cCodFil,,,,GetEnvServer(),{ "SM2" })
+		lAuto := .T.
+  EndIf 
+  
+  cEmail = AllTrim(GetNewPar("MV_W_WMSE", "douglassd@whbbrasil.com.br;haroldbarros@rsacsolucoes.com.br"))  
+  
+  //ajusta o parametro cRecno
+  if (cRecno = nil)
+  	cRecno = '0'
+  endif
+
+
+   
+  // tenta localizar o endereço
+  SBE->(DbSetOrder(1))
+  if SBE->(DbSeek(XFilial("SBE") + cEnder))
+    cEnder := Substr(cEnder, 3, Len(cEnder) - 2)
+  endIf
+  
+
+  // recupera os itens a endereçar pendentes da OP
+  cQr := " select SDA.R_E_C_N_O_ DA_RECNO,
+  cQr += "        SDA.DA_SALDO
+  cQr += "   from " + RetSqlName("SD3") + " SD3,
+  cQr += "        " + RetSqlName("SDA") + " SDA 
+  cQr += "  where SD3.D_E_L_E_T_ = ' '
+  cQr += "    and SDA.D_E_L_E_T_ = ' '
+  cQr += "    and SD3.D3_FILIAL = '" + XFilial("SD3") + "'
+  cQr += "    and SDA.DA_FILIAL = '" + XFilial("SDA") + "'
+  cQr += "    and SDA.DA_PRODUTO = SD3.D3_COD
+  cQr += "    and SDA.DA_QTDORI = SD3.D3_QUANT
+  cQr += "    and SDA.DA_LOTECTL = SD3.D3_LOTECTL
+  cQr += "    and SDA.DA_NUMLOTE = SD3.D3_NUMLOTE
+  cQr += "    and SDA.DA_LOCAL = SD3.D3_LOCAL
+  cQr += "    and SDA.DA_DOC = SD3.D3_DOC
+  cQr += "    and SDA.DA_ORIGEM = 'SD3'
+  cQr += "    and SDA.DA_NUMSEQ = SD3.D3_NUMSEQ
+  cQr += "    and SD3.D3_OP = '" + cNumOp + "'
+  cQr += "    and SD3.D3_TM = '" + GetNewPar("MV_TMPAD", "") + "'
+  cQr += "    and SDA.DA_SALDO > 0
+
+  TcQuery cQr new alias "QSDA"
+  RestArea(aArea)
+        
+  nSaldoSda := 0
+  while !QSDA->(Eof())
+    
+    // adiciona o recno ao array
+    AAdd(aSdaRecno, QSDA->DA_RECNO)
+    nSaldoSda += QSDA->DA_SALDO
+  
+    // proximo registro
+    QSDA->(DbSkip())
+    
+  endDo
+  
+  // fecha a query
+  QSDA->(DbCloseArea())
+
+  /*          
+  // valida se a quantidade informada é superior ao saldo a endereçar
+  if nQtdeEnd > nSaldoSda
+ 	  cRet := "<ParamOk>NO</ParamOk>
+ 	  cRet += "<MsgRet>Quantidade informada superior ao saldo a enderecar!</MsgRet>
+ 	  cRet += "<DadosRet></DadosRet>  
+ 	  
+ 	  
+ 	  
+		  //se foi passado o recno entao o sistema devera buscar na tabela de apontamentos para preencher os dados, 
+		  //mantendo assim a compatibilidade com a versao antiga do procedimento
+		  if (cRecno <> '0' )     
+			    cUpdCmd := " update " + RetSqlName("ZSD")
+			    cUpdCmd += "    SET ZSD_STATUS = 'E', 
+			    cUpdCmd += "    	ZSD_ERROR  = 'Quantidade informada superior ao saldo a enderecar!'
+			    cUpdCmd += "  where D_E_L_E_T_ = ''
+			    cUpdCmd += "    and R_E_C_N_O_ = "+cRecno
+			    TcSqlExec(cUpdCmd)    
+			    
+			    U_WMSEMAIL(cEmail,'WMS - Erro no enderecamento ','Quantidade informada superior ao saldo a enderecar!',cCodEmp,cCodFil)
+		  endif 
+ 	  
+		return cRet
+  endIf
+  */
+  // executa o endereçamento dos registros
+  begin transaction
+
+  nResta := nQtdeEnd
+  for nI := 1 to Len(aSdaRecno)  
+  
+  	if(nResta==0)
+  	
+		  	// Estava tentando enderecar com saldo zero, por isso feito essa validação
+			  cRet := "<ParamOk>OK</ParamOk>
+ 	  		cRet += "<MsgRet>Enderecamento executado com sucesso!</MsgRet>
+ 			  cRet += "<DadosRet></DadosRet>	    		    		    
+	    	return cRet
+	    	
+  	endif	
+  
+    // posiciona o SDA
+    SDA->(DbGoTo(aSdaRecno[nI]))
+
+    // recupera o item de endereçamento
+	  cItemEnd := GetItemEnd( SDA->DA_PRODUTO, SDA->DA_LOCAL, SDA->DA_DOC, SDA->DA_ORIGEM, SDA->DA_LOTECTL, SDA->DA_NUMSEQ )
+	  cItemAnt := StrZero( Val(cItemEnd) - 1, TamSx3("DB_ITEM")[01] )
+    
+    // atualiza o total a endereçar      
+    
+    if nResta > SDA->DA_SALDO
+      nTotAEnd := SDA->DA_SALDO
+    else
+      nTotAEnd := nResta
+    endIf   
+    
+	  // monta o array de cabeçalho
+	  aCab := {}
+	  AAdd( aCab, {"DA_PRODUTO", SDA->DA_PRODUTO, nil} )
+	  AAdd( aCab, {"DA_QTDORI", SDA->DA_QTDORI, nil} )
+	  AAdd( aCab, {"DA_SALDO", SDA->DA_SALDO, nil} )
+	  AAdd( aCab, {"DA_DATA", SDA->DA_DATA, nil} )
+	  AAdd( aCab, {"DA_LOTECTL", SDA->DA_LOTECTL, nil} )
+  	  AAdd( aCab, {"DA_NUMLOTE", SDA->DA_NUMLOTE, nil} )
+      AAdd( aCab, {"DA_LOCAL", SDA->DA_LOCAL, nil} )
+      AAdd( aCab, {"DA_DOC", SDA->DA_DOC, nil} )
+      AAdd( aCab, {"DA_SERIE", SDA->DA_SERIE, nil} )
+      AAdd( aCab, {"DA_CLIFOR", SDA->DA_CLIFOR, nil} )
+      AAdd( aCab, {"DA_LOJA", SDA->DA_LOJA, nil} )
+      AAdd( aCab, {"DA_TIPONF", SDA->DA_TIPONF, nil} )
+      AAdd( aCab, {"DA_ORIGEM", SDA->DA_ORIGEM, nil} )
+      AAdd( aCab, {"DA_NUMSEQ", SDA->DA_NUMSEQ, nil} )
+      AAdd( aCab, {"DA_QTSEGUM", SDA->DA_QTSEGUM, nil} )
+      AAdd( aCab, {"DA_QTDORI2", SDA->DA_QTDORI2, nil} )
+      AAdd( aCab, {"DA_LIBOK", SDA->DA_LIBOK, nil} )
+					  
+	  // monta o array de itens
+	  /* SDB RSAC NORMAL
+      aItens := {}
+      AAdd( aItens, {"DB_ITEM", cItemEnd, nil} )
+      AAdd( aItens, {"DB_LOCALIZ", Padr(cEnder, 15), nil} )
+      AAdd( aItens, {"DB_NUMSERI", Space(TamSx3("DB_NUMSERI")[01]), nil} )
+      AAdd( aItens, {"DB_QUANT", nTotAEnd, nil} )
+      AAdd( aItens, {"DB_HRINI", Time(), nil} )
+      AAdd( aItens, {"DB_DATA", Date(), nil} )
+      AAdd( aItens, {"DB_ESTORNO", " ", nil} )
+      AAdd( aItens, {"DB_QTSEGUM", ConvUm(SDA->DA_PRODUTO, nTotAEnd, 0, 2), nil} )        
+      */
+
+      // monta o array de itens
+	  // SDB RSAC MODIFICADO POR DOUGLAS
+      aItens := {}
+	  AAdd( aItens, {"DB_ITEM", cItemEnd, nil} )
+      AAdd( aItens, {"DB_LOCALIZ", Padr(cEnder, 15), nil} )
+      AAdd( aItens, {"DB_DATA", Date(), nil} )
+      AAdd( aItens, {"DB_QUANT", nTotAEnd, nil} )
+      
+      /* EXEMPLO ROTINA AUTOMATICA WHB
+      			Aadd(_aCabec, {"DA_PRODUTO"	, aDB[i,1]  	   , nil})
+	  			Aadd(_aCabec, {"DA_QTDORI"	, aDB[i,3]		   , nil})
+				Aadd(_aCabec, {"DA_SALDO"	, aDB[i,3]		   , nil})
+				Aadd(_aCabec, {"DA_DATA"	, SDA->DA_DATA     , nil})
+				Aadd(_aCabec, {"DA_LOTECTL"	, aDB[i,5]	       , nil})
+				Aadd(_aCabec, {"DA_NUMLOTE"	, aDB[i,6]	       , nil})
+				Aadd(_aCabec, {"DA_LOCAL"	, aDB[i,7]		   , nil})
+				Aadd(_aCabec, {"DA_DOC"		, aDB[i,8]		   , nil})
+				Aadd(_aCabec, {"DA_SERIE"	, aDB[i,9]		   , nil})
+				Aadd(_aCabec, {"DA_CLIFOR"	, aDB[i,10]	       , nil})
+				Aadd(_aCabec, {"DA_LOJA"    , aDB[i,11]		   , nil})
+				Aadd(_aCabec, {"DA_TIPONF"	, aDB[i,12]	       , nil})
+				Aadd(_aCabec, {"DA_ORIGEM"	, aDB[i,13]	       , nil})
+				Aadd(_aCabec, {"DA_NUMSEQ"	, SDA->DA_NUMSEQ   , nil})
+				Aadd(_aCabec, {"DA_QTSEGUM"	, aDB[i,15]	       , nil})
+				Aadd(_aCabec, {"DA_QTDORI2"	, aDB[i,3]	       , nil})
+
+				Aadd(_aItem, {"DB_ITEM"		, strZero(i)        , nil})
+				Aadd(_aItem, {"DB_LOCALIZ"	, aDB[i,2]      	, nil}) //Localizacao fixa
+				Aadd(_aItem, {"DB_DATA"		, SDA->DA_DATA     	, nil})
+				Aadd(_aItem, {"DB_QUANT"	, aDB[i,3]			, nil})
+      */
+				
+     // executa o endereçamento               
+     MsgRetWMS := ""
+		lMsErroAuto := .F.
+		MsExecAuto( {|x, y, z| mata265(x, y, z)}, aCab, {aItens}, 3 )
+			
+		// verifica se o movimento foi endereçado
+		if ( lMsErroAuto )			 
+		
+			MsgRetWMS += mostraerro()                                			  
+		  // erro no procedimento
+	 	  cRet := "<ParamOk>NO</ParamOk>
+	 	  cRet += "<MsgRet>'Erro na execucao da rotina automatica: +"+MsgRetWMS+"'</MsgRet>
+	 	  cRet += "<DadosRet></DadosRet>
+			lErro := .T.
+			Exit
+		else
+		  // atualiza o saldo pendente de endereçamento
+		  nResta -= nTotAEnd
+		endIf  
+  
+  next nI
+                                     
+
+  if lErro              
+    // faz o rollback do procedimento
+    DisarmTransactions()  
+    
+     //se foi passado o recno entao o sistema devera buscar na tabela de apontamentos para preencher os dados, 
+		  //mantendo assim a compatibilidade com a versao antiga do procedimento
+		  if (cRecno <> '0' )     
+			    cUpdCmd := " update " + RetSqlName("ZSD")
+			    cUpdCmd += "    SET ZSD_STATUS = 'E', 
+			    cUpdCmd += "    	ZSD_ERROR  = 'Erro na execucao da rotina automatica: Produto: "+SDA->DA_PRODUTO+" "+substr(MsgRetWMS,1,32)+"'
+			    cUpdCmd += "  where D_E_L_E_T_ = ''
+			    cUpdCmd += "    and R_E_C_N_O_ = "+cRecno
+			    TcSqlExec(cUpdCmd)
+  			    U_WMSEMAIL(cEmail,'WMS - Erro no enderecamento',"Erro na execucao da rotina automatica: "+MsgRetWMS,cCodEmp,cCodFil)
+			    
+		  endif 
+  else
+    // procedimento concluido
+ 	  cRet := "<ParamOk>OK</ParamOk>
+ 	  cRet += "<MsgRet>Enderecamento executado com sucesso!</MsgRet>
+ 	  cRet += "<DadosRet></DadosRet>    
+ 	  
+ 	  
+ 	   //se foi passado o recno entao o sistema devera buscar na tabela de apontamentos para preencher os dados, 
+		  //mantendo assim a compatibilidade com a versao antiga do procedimento
+		  if (cRecno <> '0' )     
+			    cUpdCmd := " update " + RetSqlName("ZSD")
+			    cUpdCmd += "    SET ZSD_STATUS = 'S', 
+			    cUpdCmd += "    	ZSD_ERROR  = ''
+			    cUpdCmd += "  where D_E_L_E_T_ = ''
+			    cUpdCmd += "    and R_E_C_N_O_ = "+cRecno
+			    TcSqlExec(cUpdCmd)
+		  endif 
+ 	  
+  endIf
+
+  
+  end transaction
+
+
+return cRet
+
+
+/**********************************************************************************************************************************/
+/** static function GetItemEnd( cCodProd, cLocal, cDoc, cOrigem, cContain, cNumSeq )                                             **/
+/** Recupera o proximo item a endereçar                                                                                          **/
+/**********************************************************************************************************************************/
+static function GetItemEnd( cCodProd, cLocal, cDoc, cOrigem, cContain, cNumSeq )
+
+  // retorno da função
+  local cRet := ""
+
+  // query
+  local cQr := ""
+  
+  // area
+  local aArea := GetArea()
+
+
+  // monta a query para recuperar o proximo item
+  cQr := " select max(SDB.DB_ITEM) DB_ITEM
+  cQr += "   from " + RetSqlName("SDB") + " SDB
+  cQr += "  where SDB.D_E_L_E_T_ = ' '
+  cQr += "    and SDB.DB_FILIAL = '" + XFilial("SDB") + "'
+  cQr += "    and SDB.DB_PRODUTO = '" + cCodProd + "'
+  cQr += "    and SDB.DB_LOCAL = '" + cLocal + "'
+  cQr += "    and SDB.DB_DOC = '" + cDoc + "'
+  cQr += "    and SDB.DB_ORIGEM = '" + cOrigem + "'
+  cQr += "    and SDB.DB_LOTECTL = '" + cContain + "'
+  cQr += "    and SDB.DB_NUMSEQ = '" + cNumSeq + "'
+
+  TcQuery cQr new alias "QITE"
+  RestArea(aArea)
+  
+  // busca o proximo item
+  if ( Empty(QITE->DB_ITEM) )
+    cRet := StrZero( 1, TamSx3("DB_ITEM")[01] )
+  else
+    cRet := StrZero( Val(QITE->DB_ITEM) + 1, TamSx3("DB_ITEM")[01] ) 
+  endIf
+
+  // fecha a query
+  QITE->(dbCloseArea())
+
+return cRet
+
+
+
+/**********************************************************************************************************************************/
+/** WsApoProd                                                                                 								     **/
+/** rotina de apontamento de producao                                                                                      		 **/
+/**********************************************************************************************************************************/
+user function WsApoProd( cNumOp, cQtde, cDtEmis, cCodEmp, cCodFil,cRecno )
+
+  // variáveis auxiliares
+  local cRet := ""
+  local cUpdCmd  := ""
+  local nQtde := Val(cQtde)
+  local cD3Parc := ""
+  local dDtEmis := Stod(cDtEmis)
+  local cLoteCtl := ""  
+  local cEmail := ""
+  local cQr2 := ""
+  local cUserN := ""
+	private lMSHelpAuto := .T.
+	private lMSErroAuto := .F.  
+	private MsgRetWMS := ""
+
+
+  // prepara o ambiente
+  //prepare environment empresa cCodEmp filial cCodFil modulo "PCP"   
+    If	Select('SX2') == 0
+		RPCSetType( 3 )					
+		conout(dtoc(date())+'|'+time()+'|'+"Preparando ambiente utilizando empresa " + cCodEmp + " filial " + cCodFil)
+		RpcSetEnv(cCodEmp,cCodFil,,,,GetEnvServer(),{ "SM2" })
+		lAuto := .T.
+  EndIf 
+          
+  cEmail = AllTrim(GetNewPar("MV_W_WMSE", "douglassd@whbbrasil.com.br;haroldbarros@rsacsolucoes.com.br"))            
+
+  //ajusta o parametro cRecno
+  if (cRecno = nil)
+  	cRecno = '0'
+  endif
+
+	// posiciona a OP
+	SC2->(DbSetOrder(1))
+	if ( !SC2->(DbSeek(XFilial("SC2") + cNumOp)) )
+				// OP nao encontrada
+		 	  cRet := "<ParamOk>NO</ParamOk>
+		 	  cRet += "<MsgRet>OP nao localizada!</MsgRet>
+		 	  cRet += "<DadosRet></DadosRet> 
+		 	  
+   	      //se foi passado o recno entao o sistema devera buscar na tabela de apontamentos para preencher os dados, 
+		  //mantendo assim a compatibilidade com a versao antiga do procedimento
+		  if (cRecno <> '0' )     
+			    cUpdCmd := " update " + RetSqlName("ZSC")
+			    cUpdCmd += "    SET ZSC_STATUS = 'E', 
+			    cUpdCmd += "    	ZSC_ERROR  = 'OP nao localizada!'
+			    cUpdCmd += "  where D_E_L_E_T_ = ''
+			    cUpdCmd += "    and R_E_C_N_O_ = "+cRecno
+			    TcSqlExec(cUpdCmd)
+  			    U_WMSEMAIL(cEmail,'WMS - Erro no apontamento','OP nao localizada!',cCodEmp,cCodFil)
+		  endif 
+ 	  
+		return cRet
+	endIf
+		  
+	  
+	// verifica se a quantidade a apontar é maior que o saldo da OP
+	if ( nQtde > (SC2->C2_QUANT - SC2->C2_QUJE) )
+			// quantidade superior
+		 	  cRet := "<ParamOk>NO</ParamOk>
+		 	  cRet += "<MsgRet>Apontamentos a efetivar superior ao saldo da OP (Saldo: " + AllTrim(Transform(SC2->C2_QUANT - SC2->C2_QUJE, PesqPict("SC2", "C2_QUANT"))) + ")</MsgRet>
+		 	  cRet += "<DadosRet></DadosRet>
+		 	  
+   	      //se foi passado o recno entao o sistema devera buscar na tabela de apontamentos para preencher os dados, 
+		  //mantendo assim a compatibilidade com a versao antiga do procedimento
+		  if (cRecno <> '0' )     
+			    cUpdCmd := " update " + RetSqlName("ZSC")
+			    cUpdCmd += "    SET ZSC_STATUS = 'E', 
+			    cUpdCmd += "    	ZSC_ERROR  = 'Apontamentos a efetivar superior ao saldo da OP (Saldo: " + AllTrim(Transform(SC2->C2_QUANT - SC2->C2_QUJE, PesqPict("SC2", "C2_QUANT"))) + ")'
+			    cUpdCmd += "  where D_E_L_E_T_ = ''
+			    cUpdCmd += "    and R_E_C_N_O_ = "+cRecno
+			    TcSqlExec(cUpdCmd)   
+			    U_WMSEMAIL(cEmail,'WMS - Erro no apontamento',"Apontamentos a efetivar superior ao saldo da OP (Saldo: " + AllTrim(Transform(SC2->C2_QUANT - SC2->C2_QUJE, PesqPict("SC2", "C2_QUANT"))),cCodEmp,cCodFil)
+		  endif 
+		  
+		  		 	  
+		return cRet
+	endIf
+		  
+	// posiciona o produto
+	SB1->(DbSetOrder(1))
+	if !SB1->(DbSeek(XFilial("SB1") + SC2->C2_PRODUTO))
+			// produto nao localizado
+	 	  cRet := "<ParamOk>NO</ParamOk>
+	 	  cRet += "<MsgRet>Produto nao localizado!</MsgRet>
+	 	  cRet += "<DadosRet></DadosRet>  
+	 	  
+   	      //se foi passado o recno entao o sistema devera buscar na tabela de apontamentos para preencher os dados, 
+		  //mantendo assim a compatibilidade com a versao antiga do procedimento
+		  if (cRecno <> '0' )     
+			    cUpdCmd := " update " + RetSqlName("ZSC")
+			    cUpdCmd += "    SET ZSC_STATUS = 'E', 
+			    cUpdCmd += "    	ZSC_ERROR  = 'Produto nao localizado!'
+			    cUpdCmd += "  where D_E_L_E_T_ = ''
+			    cUpdCmd += "    and R_E_C_N_O_ = "+cRecno
+			    TcSqlExec(cUpdCmd) 
+			    U_WMSEMAIL(cEmail,'WMS - Erro no apontamento','Produto nao localizado!',cCodEmp,cCodFil)
+		  endif 
+	 	  
+	 	  
+		return cRet
+	endIf
+	      
+	// define o lote
+	if Empty(SB1->B1_FORMLOT)
+		cLoteCtl := CriaVar("D3_LOTECTL")
+	else
+		cLoteCtl := Formula(SB1->B1_FORMLOT)
+	endIf
+	ConOut("Lote: " + cLoteCtl)
+	
+	// tipo do apontamento
+	cD3Parc := Iif( nQtde < (SC2->C2_QUANT - SC2->C2_QUJE) , "P", "T" )   
+	
+	// Busca o Login do usuario -- adicionado por Douglas em 27/02/2014
+    cQr2 := " SELECT ZSC_USER  
+    cQr2 += " FROM " + RetSqlName("ZSC") + " ZSC "
+    cQr2 += " WHERE R_E_C_N_O_ = "+cRecno+" "
+	
+    TcQuery cQr2 new alias "NAME_U"
+    NAME_U->(dbGoTop())
+	  	  
+  If !NAME_U->(Eof())
+        cUserN := NAME_U->ZSC_USER
+	else
+	    cUserN := 'EXP. WHB I'
+	endIf 
+	  
+	NAME_U->(dbCloseArea())
+		    
+	// ok, monta a execucao da rotina automatica
+	// oBS. Adicionado o campo D3_USUARIO - Douglas Dourado
+	aSd3 := { {"D3_FILIAL", XFilial("SD3"), nil} ,;
+						{"D3_COD", SC2->C2_PRODUTO, nil} ,;
+						{"D3_UM", SC2->C2_UM, nil} ,;
+						{"D3_QUANT", nQtde, nil} ,;
+						{"D3_OP", cNumOp, nil} ,;
+						{"D3_EMISSAO", dDtEmis, nil} ,;
+						{"D3_LOCAL", SC2->C2_LOCAL, nil} ,;
+						{"D3_TM", GetNewPar("MV_TMPAD", ""), nil} ,;
+						{"D3_LOTECTL", cLoteCtl, Nil} ,;
+						{"D3_USUARIO", cUserN, Nil} ,;
+						{"D3_PARCTOT", cD3Parc, nil} }
+								   
+	lMSHelpAuto := .T.
+	lMSErroAuto := .F.  
+	
+	MsgRetWMS := ""
+		         
+  // verifica o flag para gerar o SD3
+  MSExecAuto( { |x,y| mata250(x,y) }, aSd3, 3)  
+		
+	if ( lMSErroAuto ) 
+	  
+	  MsgRetWMS += mostraerro()                                
+    
+		// erro no procedimento automatico
+ 	  cRet := "<ParamOk>NO</ParamOk>
+ 	  cRet += "<MsgRet>'Erro na execucao da rotina automatica: "+substr(MsgRetWMS,1,100)+"</MsgRet>
+ 	  cRet += "<DadosRet></DadosRet>  
+ 	  
+ 	  	  //se foi passado o recno entao o sistema devera buscar na tabela de apontamentos para preencher os dados, 
+		  //mantendo assim a compatibilidade com a versao antiga do procedimento
+		  if (cRecno <> '0' )     
+			    cUpdCmd := " update " + RetSqlName("ZSC")
+			    cUpdCmd += "    SET ZSC_STATUS = 'E', " 
+			    cUpdCmd += "    	ZSC_ERROR  = 'Erro na execucao da rotina automatica: Produto: "+SC2->C2_PRODUTO+"  "+substr(MsgRetWMS,1,20)+"'
+			    cUpdCmd += "  where D_E_L_E_T_ = ''
+			    cUpdCmd += "    and R_E_C_N_O_ = "+cRecno
+			    TcSqlExec(cUpdCmd)  
+ 			    U_WMSEMAIL(cEmail,'WMS - Erro no apontamento',"Erro na execucao da rotina automatica: Produto: "+SC2->C2_PRODUTO+"  "+MsgRetWMS,cCodEmp,cCodFil)
+		  endif 
+ 	  
+ 	else
+		// apontamento ok
+ 	  cRet := "<ParamOk>OK</ParamOk>
+ 	  cRet += "<MsgRet>Apontamento concluido com sucesso!</MsgRet>
+ 	  cRet += "<DadosRet></DadosRet> 
+ 	  
+ 	   	  	  //se foi passado o recno entao o sistema devera buscar na tabela de apontamentos para preencher os dados, 
+		  //mantendo assim a compatibilidade com a versao antiga do procedimento
+		  if (cRecno <> '0' )     
+			    cUpdCmd := " update " + RetSqlName("ZSC")
+			    cUpdCmd += "    SET ZSC_STATUS = 'S', " 
+			    cUpdCmd += "    	ZSC_ERROR  = '' "
+			    cUpdCmd += "  where D_E_L_E_T_ = '' "
+			    cUpdCmd += "    and R_E_C_N_O_ = "+cRecno
+			    TcSqlExec(cUpdCmd)
+		  endif 
+ 	  
+ 	  
+	endIf    
+
+
+return cRet
+
+
+/**********************************************************************************************************************************/
+/** static function WsLogin( cUsrName, cPasswd )                                                                                 **/
+/** executa o login no ambiente do protheus                                                                                      **/
+/**********************************************************************************************************************************/
+user function WsLogin( cUsrName, cPasswd, cCodEmp, cCodFil )
+  
+  // flag de password ok
+  local lPasswdOk := .F.
+  
+  // retorno da função
+  local cRet := ""   
+     
+  // array de senha
+  local aPswReg := {}
+  
+  // empresas autorizadas
+  local cEmpAut := ""
+       
+  // código do usuário
+  local cCodUsr := ""
+  
+  // array de empresas liberadas
+  local aEmp := {}
+  local aEmprx := {}
+
+  // contador de loop
+  local nI := 0
+  local nA := 0
+  
+  // variaveis utilizadas no login do protheus
+  private cEmpAnt := cCodEmp
+  private cFilAnt := cCodFil
+  private dDatabase := MsDate()
+  private __cInternet := nil
+  
+  // prepara o ambiente
+  //prepare environment empresa cCodEmp filial cCodFil modulo "PCP"  
+  
+  //Conecta ambiente
+  If	Select('SX2') == 0
+		RPCSetType( 3 )					
+		conout(dtoc(date())+'|'+time()+'|'+"Preparando ambiente utilizando empresa " + cCodEmp + " filial " + cCodFil)
+		RpcSetEnv(cCodEmp,cCodFil,,,,GetEnvServer(),{ "SM2" })
+		lAuto := .T.
+  EndIf
+    
+
+  
+  // abre a tabela de empresas e parametros                                  
+  OpenSm0( cCodEmp )
+  //	OpenSxs( nil, nil, .F., .F., cCodEmp, "SX6", "SX6" )
+           
+  // faz o login do usuário no protheus                                 
+  PswOrder(2)
+  if ( PswSeek(cUsrName, .T.) )
+
+    // verifica se a senha é valida
+    if ( PswName(cPasswd) )
+      // senha ok, carrega o perfil do usuário no array
+      aPswReg := PswRet()
+      lPasswdOk := .T.
+    endIf
+
+  endIf  
+
+
+  // verifica o flag para montar o retorno para o mobile
+  if ( lPasswdOk )
+    
+    // recupera o código do usuário
+    cCodUsr := PswId()
+
+    // monta a lista de empresas autorizadas
+    aEmp := AClone( aPswReg[02][06] )
+    
+		if ( Empty(aEmp) )
+    	cRet := "ParamOk=NO|MsgRet=Usuario nao autorizado|DadosRet=|CodigoUsr="
+		Else
+			  
+			// varre as permissões do usuário
+			SM0->(dbGoTop()) 
+			if ( aEmp[01] == [@@@@] )
+				aEmprx := {}
+				SM0->( DbEval({|| Aadd(aEmprx, SM0->M0_CODIGO + SM0->M0_CODFIL)}) )
+			else
+			  
+			  // adiciona as empresas no array
+			  for nI := 1 to len(aEmp)
+			    AAdd( aEmprx, aEmp[nI] )
+			  next nI
+			  
+			endIf
+			
+	    // retorna os dados na função
+	    if ( Empty(aEmprx) )
+    	  cRet := "<ParamOk>NO</ParamOk>
+    	  cRet += "<MsgRet>Arquivo de empresas corrompido</MsgRet>
+    	  cRet += "<DadosRet></DadosRet>
+    	  cRet += "<CodigoUsr></CodigoUsr>
+    	  cRet += "<NomeCompleto></NomeCompleto>
+    	  cRet += "<Ambiente></Ambiente>
+    	  cRet += "<SqlServidor></SqlServidor>
+    	  cRet += "<SqlPorta></SqlPorta>
+    	  cRet += "<SqlDatabase></SqlDatabase>
+    	  cRet += "<SqlUsername></SqlUsername>
+    	  cRet += "<SqlPassword></SqlPassword>
+    	  cRet += "<TmPad></TmPad>
+	    else
+                       
+	      // faz o loop sobre as empresas liberadas
+				SM0->(dbGoTop()) 
+    		cEmpAut := "<Dataset>"
+	      for nI := 1 to len(aEmprx)
+           
+	        // posiciona a empresa
+	        SM0->(dbSetOrder(1))
+	        if ( SM0->(dbSeek(aEmprx[nI])) )
+	          // adiciona a empresa na string de retorno
+      			cEmpAut += "<Datarow>"
+      			cEmpAut += "<EmpCod>" + AllTrim(SM0->M0_CODIGO) + "</EmpCod>
+      			cEmpAut += "<FilCod>" + AllTrim(SM0->M0_CODFIL) + "</FilCod>
+      			cEmpAut += "<EmpNome>" + AllTrim(SM0->M0_NOME) + "/" + AllTrim(SM0->M0_FILIAL) /*+ " " + AllTrim(Str(nA))*/ + "</EmpNome>" 
+      			cEmpAut += "</Datarow>"
+      		endIf
+	          
+
+	      next nI
+        
+        // finaliza o dataset
+    		cEmpAut += "</Dataset>"
+	      
+	      // retorna os dados
+    	  cRet := "<ParamOk>OK</ParamOk>
+    	  cRet += "<MsgRet>Acesso permitido</MsgRet>
+    	  cRet += "<DadosRet>" + cEmpAut + "</DadosRet>
+    	  cRet += "<CodigoUsr>" + cCodUsr + "</CodigoUsr>
+    	  cRet += "<NomeCompleto>" + AllTrim(aPswReg[1][4]) + "</NomeCompleto>
+    	  cRet += "<Ambiente>" + AllTrim(GetEnvServer()) + "</Ambiente>
+    	  cRet += "<SqlServidor>" + AllTrim(GetNewPar("MV_SQLSERV", "")) + "</SqlServidor>
+    	  cRet += "<SqlPorta>" + AllTrim(GetNewPar("MV_SQLPORT", "")) + "</SqlPorta>
+    	  cRet += "<SqlDatabase>" + AllTrim(GetNewPar("MV_SQLDATA", "")) + "</SqlDatabase>
+    	  cRet += "<SqlUsername>" + AllTrim(GetNewPar("MV_SQLUSER", "")) + "</SqlUsername>
+    	  cRet += "<SqlPassword>" + AllTrim(GetNewPar("MV_SQLPASS", "")) + "</SqlPassword>
+    	  cRet += "<TmPad>" + AllTrim(GetNewPar("MV_TMPAD", "")) + "</TmPad>
+	      
+	    endIf
+	    
+		endIf
+		    
+  else
+ 	  cRet := "<ParamOk>NO</ParamOk>
+ 	  cRet += "<MsgRet>Usuario ou senha invalidos</MsgRet>
+ 	  cRet += "<DadosRet></DadosRet>
+ 	  cRet += "<CodigoUsr></CodigoUsr>
+    cRet += "<NomeCompleto></NomeCompleto>
+    cRet += "<Ambiente></Ambiente>
+ 	  cRet += "<SqlServidor></SqlServidor>
+ 	  cRet += "<SqlPorta></SqlPorta>
+ 	  cRet += "<SqlDatabase></SqlDatabase>
+ 	  cRet += "<SqlUsername></SqlUsername>
+ 	  cRet += "<SqlPassword></SqlPassword>
+ 	  cRet += "<TmPad></TmPad>
+  endIf
+
+return cRet

@@ -1,0 +1,290 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³NHEST171  ºAutor  ³João Felipe da Rosa º Data ³  16/08/2010 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ CADASTRO EMBALAGENS X PEÇAS                                º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ ESTOQUE / CUSTOS                                           º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#INCLUDE 'colors.ch'
+
+User Function NHEST171()
+
+Private aRotina, cCadastro
+
+cCadastro := "Embalagens x Cliente / Fornecedor"
+aRotina   := {}
+aAdd(aRotina,{ "Pesquisa"       ,"AxPesqui"         , 0 , 1})
+aAdd(aRotina,{ "Visualizar"	    ,"U_EST171(2)"      , 0 , 2})
+aAdd(aRotina,{ "Incluir"		,"U_EST171(3)"      , 0 , 3})
+aAdd(aRotina,{ "Alterar"        ,"U_EST171(4)"      , 0 , 4})
+aAdd(aRotina,{ "Excluir"        ,"U_EST171(5)"      , 0 , 5})
+
+mBrowse(6,1,22,75,"ZDY",,,,,,)
+
+Return           
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Função Principal ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function EST171(nParam)
+Local bOk       := {||}
+Local bCanc     := {||oDlg:End()}
+Local bEnchoice := {||}
+Local aTipo     := {"C=Cliente","F=Fornecedor"}
+Private aSize   := MsAdvSize()
+Private nPar    := nParam
+Private cEmbal  := space(15)
+Private cDEmbal := ""
+Private cTipo   
+Private cCliFor := Space(6)
+Private cLoja   := Space(2)
+Private cNome   := ""
+
+	If nPar==2     //visualizar
+		fCarrega()
+	    bOk := {|| oDlg:End()}
+	ElseIf nPar==3 //incluir 
+		bOk := {|| fInclui()}
+	ElseIf nPar==4 //alterar 
+		fCarrega()
+		bOk := {|| fAltera()}
+	ElseIf nPar==5 //excluir
+		fCarrega()
+		bOk := {|| fExclui()}
+	Else
+		MsgBox("Usuário sem permissão para executar esta operação!","Par "+ALLTRIM(STR(nPar)),"INFO")
+		Return
+	EndIf    
+	
+	bEnchoice := {||EnchoiceBar(oDlg,bOk,bCanc)}
+			
+	oDlg := MsDialog():New(aSize[7],0,aSize[6],aSize[5]	,cCadastro,,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+	
+	TSay():New(18,10,{||"Embalagem"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	TGet():New(16,50,{|u| if(Pcount() > 0, cEmbal := u,cEmbal)},oDlg,70,8,"@!",{||fValPrd()},,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,"SB1")
+
+	TSay():New(29,10,{||"Desc. Emb."},oDlg,,,,,,.T.,,)
+	oGet1 := TGet():New(27,50,{|u| if(Pcount() > 0, cDEmbal := u,cDEmbal)},oDlg,200,8,"@!",{||},,,,,,.T.,,,{||.f.},,,,,,)
+
+	TSay():New(40,10,{||"Tipo"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	TComboBox():New(38,50,{|u| if(Pcount() > 0,cTipo := u,cTipo)},aTipo,50,20,oDlg,,{||fAltF3()},,,,.T.,,,,{|| nPar==3 .Or. nPar==4},,,,,)
+
+	TSay():New(51,10,{||"Clie/Forn"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet2 := TGet():New(49,50,{|u| if(Pcount() > 0, cCliFor := u,cCliFor)},oDlg,50,8,"@!",{||fValCF(.f.)},,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,"SA1")
+
+	TSay():New(51,160,{||"Loja"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet3 := TGet():New(49,200,{|u| if(Pcount() > 0, cLoja := u,cLoja)},oDlg,15,8,"@!",{||fValCF(.t.)},,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,)
+
+	TSay():New(62,10,{||"Nome"},oDlg,,,,,,.T.,,)
+	oGet4 := TGet():New(60,50,{|u| if(Pcount() > 0, cNome := u,cNome)},oDlg,200,8,"@!",{||.t.},,,,,,.T.,,,{||.f.},,,,,,)
+
+	oDlg:Activate(,,,.F.,{||.T.},,bEnchoice)
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Validação do produto ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValPrd()
+
+	If !Empty(cEmbal)
+	
+		SB1->(dbSetOrder(1))
+		If SB1->(dbSeek(xFilial("SB1")+cEmbal))
+			cDEmbal := SB1->B1_DESC
+			oGet1:Refresh()
+		Else
+			Alert("Produto não encontrado!")
+			Return .F.
+		EndIf
+	EndIf
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Validacao do código do cliente / fornecedor e loja ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValCF(lLoja)
+Local cAlias
+
+	If !Empty(cCliFor)
+	
+		If Substr(cTipo,1,1)$"C/F"
+			cAlias := Iif(Substr(cTipo,1,1)$"C","SA1","SA2")
+			dbSelectArea(cAlias)
+			
+			dbSetOrder(1)
+			If !dbSeek(xFilial()+cCliFor+Iif(lLoja,cLoja,""))
+				Alert("Cliente / Fornecedor não encontrado!")
+				Return .F.
+			Else
+				cNome := Iif(lLoja , &( (cAlias) + '->' + Substr(cAlias,2,2) + '_NOME' ) , "")
+			EndIf
+		Else 
+			Alert("Informe o tipo!")
+			Return .F.
+		EndIF
+	
+		oGet4:Refresh()
+	EndIf
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Altera a consulta do campo cli/for deacordo com o tipo ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fAltF3()
+	cCliFor := space(6)
+	cLoja   := space(2)
+	cNome   := ""
+	
+	oGet2:cF3 := Iif(Substr(cTipo,1,1)=="C","SA1","SA2")
+	oGet2:Refresh()
+	oGet3:Refresh()
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Validação da tela ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValida()
+	If Empty(cEmbal)
+		Alert("Informe a embalagem!")
+		REturn .F.
+	EndIf 
+	
+	If Empty(cTipo)
+		Alert("Informe o tipo!")
+		REturn .F.
+	EndIf 
+          
+	If Empty(cCliFor)
+		Alert("Informe o Cliente/Fornecedor!")
+		REturn .F.
+	EndIf 
+
+	If Empty(cLoja)
+		Alert("Informe a Loja!")
+		REturn .F.
+	EndIf 
+	
+	If nPar==3 .and. fJaExiste() //nao deixa incluir um que já exista
+		Alert("Já existe Embalagem cadastrada para este Clie/Forn")
+		Return .F.
+	EndIf
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se já não existe cadastro com estas informações ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fJaExiste()
+Local cAl  := 'JAEXISTE'
+Local lRet := .F.
+
+	beginSql Alias cAl
+		select
+			ZDY_PROD prod
+		from
+			%Table:ZDY% ZDY
+		where 
+			ZDY_PROD       = %Exp:cEmbal%
+			and ZDY_TIPO   = %Exp:cTipo%
+			and ZDY_CLIFOR = %Exp:cCliFor%
+			and ZDY_LOJA   = %Exp:cLoja%
+			and ZDY_FILIAL = %xFilial:ZDY%
+			and ZDY.%notDel%
+	endSql
+	
+	If (cAl)->(!Eof())
+		lRet := .T. //.t. pois já existe
+	EndIf
+	
+	(cAl)->(dbCloseArea())
+	
+Return lRet
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Faz a gravação dos dados ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fInclui()
+	If !fValida()
+		Return
+	EndIf
+
+	RecLock("ZDY",.T.)
+		ZDY->ZDY_FILIAL := xFilial("ZDY")
+		ZDY->ZDY_PROD   := cEmbal
+		ZDY->ZDY_TIPO   := cTipo
+		ZDY->ZDY_CLIFOR := cCliFor
+		ZDY->ZDY_LOJA   := cLoja
+	MsUnlock("ZDY")
+
+	oDlg:End()
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Faz a alteração dos dados ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fAltera()
+	If !fValida()
+		Return
+	EndIf
+
+	RecLock("ZDY",.F.)
+		ZDY->ZDY_PROD   := cEmbal
+		ZDY->ZDY_TIPO   := cTipo
+		ZDY->ZDY_CLIFOR := cCliFor
+		ZDY->ZDY_LOJA   := cLoja
+	MsUnlock("ZDY")
+
+	oDlg:End()
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Faz a exclusão dos dados ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fExclui()
+	If MsgYesNo("Tem certeza de que deseja excluir?")
+		
+		RecLock("ZDY",.F.)
+			ZDY->(dbDelete())
+		MsUnlock("ZDY")
+		
+		oDlg:End()
+
+    EndIf
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ0¿
+//³ Carrega os dados para visualização ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ0Ù
+Static Function fCarrega()
+	
+	cEmbal  := ZDY->ZDY_PROD
+	cTipo   := ZDY->ZDY_TIPO
+	cCliFor := ZDY->ZDY_CLIFOR
+	cLoja   := ZDY->ZDY_LOJA
+	cDEmbal := Posicione("SB1",1,xFilial("SB1")+cEmbal,"B1_DESC")
+	cNome   := U_E171DESCF()
+	
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Traz a descricao do cliente ou fornecedor no browse ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function E171DESCF()
+	If ZDY->ZDY_TIPO=="C"
+		Return Posicione("SA1",1,xFilial("SA1")+ZDY->ZDY_CLIFOR+ZDY->ZDY_LOJA,"A1_NOME")
+	ElseIf ZDY->ZDY_TIPO=="F"
+		Return Posicione("SA2",1,xFilial("SA2")+ZDY->ZDY_CLIFOR+ZDY->ZDY_LOJA,"A2_NOME")
+	EndIf
+Return 

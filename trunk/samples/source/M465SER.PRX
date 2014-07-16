@@ -1,0 +1,61 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+User Function M465ser()        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_XCSERIE,")
+
+/*
+_______________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-------------------------------------------------------------------------+¦¦
+¦¦¦Funçào    ¦ M465Ser  ¦ Autor ¦ Octavio Moreira         ¦ Data ¦ 03/05/99 ¦¦¦
+¦¦+----------+--------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Obter a Serie da Nota Credito baseando-se no Tipo do Cliente ¦¦¦
+¦¦+-------------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+*/
+If cPaisLoc=="MEX"
+   if mv_par01==1 //credito 
+      _xcSerie:="NCR"
+   Else
+       _xcSerie:="NDB"
+   Endif   
+elseIf cPaisLoc=="ARG"
+    _xcSerie := Space(3)
+    //+--------------------------------------------------------------------+
+    //¦ Serie "E" qdo Cliente Tipo == "E" - Exportación.                   ¦
+    //+--------------------------------------------------------------------+
+    If 	 SC5->C5_TIPOCLI == "E"
+    	_xcSerie := "E. "
+    //+--------------------------------------------------------------------+
+    //¦ Serie "B" qdo Cliente Tipo == "F" - Consumidor Final.              ¦
+    //¦                               "M" - Monotributista.                ¦
+    //¦                               "O" - Exento Objetivo.               ¦
+    //¦                               "S" - No Sujeto.                     ¦
+    //¦                               "X" - Exento                         ¦
+    //¦                               "Z" - Sujeto No Categorizado.        ¦
+    //+--------------------------------------------------------------------+
+    ElseIf SC5->C5_TIPOCLI $ "F¦M¦O¦S¦Z¦X" 
+    	_xcSerie := "B. "
+    //+--------------------------------------------------------------------+
+    //¦ Serie "A" qdo Cliente Tipo == "I" - Responsavel Inscripto.         ¦
+    //¦                               "N" - Responsavel No Inscripto.      ¦
+    //¦                               "P" - Servicos Publicos.             ¦
+    //¦                               "X" - Exento Subjetivo.              ¦
+    //+--------------------------------------------------------------------+
+    Else
+    	_xcSerie := "A. "
+    EndIf
+Else
+    _xcSerie := Space(3)
+EndIf	
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> __Return( _xcSerie )
+Return( _xcSerie )        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99

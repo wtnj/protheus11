@@ -1,0 +1,189 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ NHEST146 º Autor ³ João Felipe da Rosaº Data ³  19/05/09   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ CADASTRO DE APROVADORES DOS DÉBITOS NO SISTEMA             º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP10 - ESTOQUE/CUSTOS                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#include "colors.ch"
+#include "protheus.ch"
+
+User Function NHEST146()
+Private aRotina := {}
+Private aHeader := {}
+Private aCols   := {}
+Private aPCP    := {}
+Private aQua    := {}
+Private aFis    := {}
+Private aCom    := {}
+Private nArray  := 0
+
+	fCarrega()
+	
+	//ÚÄÄÄÄÄÄÄÄÄ¿
+	//³ AHEADER ³                         
+	//ÀÄÄÄÄÄÄÄÄÄÙ
+	aAdd(aHeader,{"Usuário"  , "ZAY_LOGIN" , PesqPict('ZAY', 'ZAY_LOGIN') , 25, 00,'.T.','','C','ZAY'})
+    aAdd(aHeader,{"Nivel"    , "ZAY_NIVEL" , PesqPict('ZAY', 'ZAY_NIVEL') , 01, 00,'.T.','','C','ZAY'})
+
+	//ÚÄÄÄÄÄÄ¿
+	//³ TELA ³
+	//ÀÄÄÄÄÄÄÙ
+	oDlg  := MSDialog():New(0,0,300,400,"Responsáveis pelos Débitos",,,,,CLR_BLACK,CLR_WHITE,,oMainWnd,.T.)
+	
+	oBtn1 := tButton():New( 5,05,"PCP"      ,oDlg,{||fRecarg(aPCP,1)},40,10,,,,.T.)
+	oBtn2 := tButton():New(17,05,"Qualidade",oDlg,{||fRecarg(aQua,2)},40,10,,,,.T.)
+	oBtn3 := tButton():New(29,05,"Fiscal"   ,oDlg,{||fRecarg(aFis,3)},40,10,,,,.T.)
+	oBtn4 := tButton():New(41,05,"Comercial",oDlg,{||fRecarg(aCom,4)},40,10,,,,.T.)
+	
+	oGetD := MsGetDados():New(5,50,123,195,;
+	                          4,"AllwaysTrue",;
+	                          "AllwaysTrue","",;
+	                          .T.,nil,nil,.F.,;
+	                          200,nil,"AllwaysTrue",;
+	                          nil,"AllwaysTrue",;
+	                          oDlg)
+	/*
+	oGetD := MsGetDados():New(5,50,123,195,;
+	                          4,"U_E146LOK()",;
+	                          "AllwaysTrue","",;
+	                          .T.,nil,nil,.F.,;
+	                          200,nil,"AllwaysTrue",;
+	                          nil,"AllwaysTrue",;
+	                          oDlg)
+	*/                          
+   /*
+	oGetD := MsGetDados():New(133,5,205,297,;
+	                          4,"AllwaysTrue",;
+	                          "AllwaysTrue","",;
+	                          .T.,nil,nil,.F.,;
+	                          200,nil,"AllwaysTrue",;
+	                          nil,"AllwaysTrue",;
+	                          oDlg) 
+	*/                          
+
+	oGroup := tGroup():New(128,5,130,195,,oDlg,,,.T.)
+
+	oBtn5 := tButton():New(135,110,"Gravar",oDlg,{||fGrv()},40,10,,,,.T.)
+	oBtn6 := tButton():New(135,155,"Fechar",oDlg,{||oDlg:End()},40,10,,,,.T.)
+	
+	oDlg:Activate(,,,.T.,{||.T.},,)
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ4¿
+//³ CARREGA OS ARRAYS DOS GRUPOS DE DEBITO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ4Ù
+Static Function fCarrega()
+	
+	ZAY->(DbGoTop())
+	
+	While ZAY->(!EOF())
+		
+		Do Case 
+			Case ZAY->ZAY_GRUPO=="1"
+				aAdd(aPCP,{ZAY->ZAY_LOGIN,ZAY->ZAY_NIVEL,ZAY->(RECNO()),.F.})
+			Case ZAY->ZAY_GRUPO=="2"
+				aAdd(aQua,{ZAY->ZAY_LOGIN,ZAY->ZAY_NIVEL,ZAY->(RECNO()),.F.})
+			Case ZAY->ZAY_GRUPO=="3"
+				aAdd(aFis,{ZAY->ZAY_LOGIN,ZAY->ZAY_NIVEL,ZAY->(RECNO()),.F.})
+			Case ZAY->ZAY_GRUPO=="4"
+				aAdd(aCom,{ZAY->ZAY_LOGIN,ZAY->ZAY_NIVEL,ZAY->(RECNO()),.F.})
+		EndCase	
+		
+	    ZAY->(DbSkip())
+	EndDo
+	
+Return 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ OS DADOS DO GRUPO DE DEBITOS ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fRecarg(aMat,nMat)
+    
+	//copia do acols para o array com as alterações
+	If nArray!=0
+		Do Case
+			Case nArray==1 //pcp
+				aPCP := aCols
+			Case nArray==2 //qua
+				aQua := aCols
+			Case nArray==3 //fis
+				aFis := aCols
+			Case nArray==4 //com
+				aCom := aCols
+		EndCase	
+	EndIf
+	
+	aCols  := Iif(Empty(aMat),{{space(25),"",.f.}},aMat)
+	nArray := nMat
+	
+	oGetD:Refresh()
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A LINHA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function E146LOK()
+	If Empty(aCols[n][1])
+		Alert("Login não informado!")
+		Return .F.
+	EndIf
+	
+	If Empty(aCols[n][2])
+		Alert("Nível não informado!")
+		Return .F.
+	EndIf
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ GRAVA OS APROVADORES DOS DÉBITOS ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fGrv()
+Local aMat := {aPCP,aQua,aFis,aCom}
+
+	For j:=1 to Len(aMat)//PERCORRE OS 4 ARRAYS
+	
+		For x:=1 to Len(aMat[j])//PERCORRE CADA ARRAY
+			
+			If Len(aMat[j][x])==4
+				ZAY->(dBGoTo(aMat[j][x][3]))
+				If(!aMat[j][x][4]) //não deletado
+					If !Empty(aMat[j][x][1]) .and. !Empty(aMat[j][x][1])
+						RecLock("ZAY",.F.)
+							ZAY->ZAY_LOGIN := aMat[j][x][1]
+							ZAY->ZAY_NIVEL := aMat[j][x][2]
+						MsUnLock("ZAY")
+					EndIf
+				Else
+					RecLock("ZAY",.F.)
+						ZAY->(DbDelete())
+					MsUnLock("ZAY")
+				EndIf
+			Else
+				If(!aMat[j][x][3]) //não deletado
+					If !Empty(aMat[j][x][1]) .and. !Empty(aMat[j][x][1])
+						RecLock("ZAY",.T.)
+							ZAY->ZAY_FILIAL := xFilial("ZAY")
+							ZAY->ZAY_LOGIN  := aMat[j][x][1]
+							ZAY->ZAY_NIVEL  := aMat[j][x][2]
+							ZAY->ZAY_GRUPO  := ALLTRIM(Str(j))
+						MsUnLock("ZAY")
+					EndIf
+				EndIf
+			EndIf
+		Next
+		
+	Next
+	
+	oDlg:End()
+Return

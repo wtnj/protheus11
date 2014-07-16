@@ -1,0 +1,168 @@
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "colors.ch"
+#INCLUDE "font.ch"
+#INCLUDE "protheus.ch"
+#include "rwmake.ch"
+#include "ap5mail.ch"
+#include "tbiconn.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ 
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ NHEST215 บAutor ณDouglas de S. Douradoบ Data ณ 06/11/2012บ  ฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ                            
+ฑฑบDesc.     ณ Envia E-Mails p/ grupos (Schedule)                         บฑฑ                                     
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP11 - ESTOQUE E CUSTOS                                    บฑฑ
+ฑฑบ	         ณ TABELAS: ZG1, ZG2 E ZG3						   			  บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/                   
+
+User Function NHEST215()
+Local cQuery
+Local cCodEmp := 'FN'
+Local cCodFil := '01'
+Local cModulo := 'EST'
+Private oMail , _cCusto, nDiasAb 
+
+	/***************************************************************/
+	/******************* Preparando o Ambiente *********************/
+	/***************************************************************/
+	
+	PREPARE ENVIRONMENT EMPRESA "FN" FILIAL "01" MODULO "EST" TABLES "ZF4","SB1","ZG1","ZG2"
+	
+	// prepare environment empresa cCodEmp filial cCodFil modulo cModulo
+	
+	/***************************************************************/
+	
+	oMail := Email():New() 
+	
+	// Pega todas as rnc's em aberto e com no mํnimo 3 dias jแ em aberto
+	cQuery := " SELECT * " 
+	cQuery += " FROM ZF4FN0 ZF4 "
+	cQuery += " WHERE ZF4_SALDO <> 0 "
+	cQuery += " AND ZF4_EXT = 'N' "
+	cQuery += " AND " + DtoS(dDataBase) + " - ZF4_DATA >= 3 " 
+	cQuery += " AND ZF4.D_E_L_E_T_ = '' "
+	cQuery += " AND ZF4_FILIAL = '" + xFilial("ZF4") + "' "
+	
+	TcQuery cQuery NEW ALIAS "TEMP" 
+	
+	TCSETFIELD("TEMP","ZF4_DATA","D")	
+			
+	TEMP->(dbGoTop()) 
+	
+	ZG1->(DBSETORDER(3)) 
+
+		// Percorre cada Rnc em aberto que esteja atrasada (TEMP)
+		While !TEMP->(Eof()) 
+	          
+			  // Busca o CC da pe็a da RNC que estแ selecionada	
+		      _cCusto := Posicione("SB1",1,xFilial("SB1") + TEMP->ZF4_PROD,"B1_CC")
+	          
+			  // Verifica hแ quantos dias a rnc estแ em aberto
+		   	  //nDiasAb := dDataBase - Stod(TEMP->ZF4_DATA) 
+		   	  nDiasAb := dDataBase - TEMP->ZF4_DATA 
+	   	     
+	   	  	  fEnviaMail(_cCusto,nDiasAb,TEMP->ZF4_COD,TEMP->ZF4_DATA,AllTrim(TEMP->ZF4_LOGIN),TEMP->ZF4_SALDO,TEMP->ZF4_PROD,TEMP->ZF4_ARMORT,TEMP->ZF4_ARMDRT)
+		   	  
+		   	  TEMP->(DbSkip())    	 
+		   	  
+		EndDo 
+		
+	TEMP->(DbCloseArea())
+	
+	RESET ENVIRONMENT
+
+Return () 
+
+Static Function fEnviaMail(__cCusto,_Dias,_cRNC,_dData,_cLogin,_cSaldo,_cProd,_cAlmOrg,_cAlmDes)  
+Local _aGrupos := {}, aMail := {}, aMailAdd := {}
+
+	ZG1->(DbSetOrder(3))  // Filial + Centro de Custo
+
+	ZG1->(DbGoTop())  
+	
+	// Se encontrar algum grupo de email com o CC da RNC em aberto, prepara para mandar email
+    IF ZG1->(DbSeek(xFilial("ZG1") + __cCusto )) 
+	    
+			// Percorre os grupos de e-mail
+			While !ZG1->(Eof())
+		   	      
+		   	    If AllTrim(ZG1->ZG1_CC) == AllTrim(__cCusto) .AND. AllTrim(ZG1->ZG1_STAT) == 'A'  // Verifica o Centro de Custo
+			      
+				      // Verifica se o grupo encontrado se encaixa no perํodo de dias em aberto da RNC
+				      If Val(ZG1->ZG1_DIAS) <= _Dias 
+				      	 
+				      	 Aadd(_aGrupos,{ZG1->ZG1_COD}) // Alimenta o Array com o codigo do grupo de Email    	     
+				      	 
+				      EndIf
+			   
+		     	EndIf 
+		     	
+		        ZG1->(DbSkip())
+			      
+		    EndDo
+		    
+		    // Caso nใo ache nenhum grupo que se encaixe nesse periodo com este CC, nao manda email
+		    If len(_aGrupos) == 0
+		       Return	
+		    EndIf
+		    
+		    // Com base no array de grupos (_aGrupos) pega os emails e verificada, para nใo ocorrer duplica็ใo.
+		    For x:=1 to Len(_aGrupos)
+		    
+				aMail := oMail:BuscaEmail(_aGrupos[x][1],.T.)
+				
+				For y:=1 to len(aMail)
+				    
+					// Verifica se e-mail ja foi adicionado
+ 				    If aScan(aMailAdd,{|z| z == aMail[y] }) == 0
+ 				    
+	 				   aAdd(aMailAdd,aMail[y])
+ 				    
+ 				    EndIf					
+				
+				Next
+				
+		    Next 
+		    
+		    oMail:cTo := ""
+		    
+		    // Adiciona no cTo, com emails unicos do aMailAdd		    		    
+		    For x:=1 to len(aMailAdd)
+		    
+		        oMail:cTo += aMailAdd[x]+";"
+		       
+		    Next
+		    
+		    // Preenche o assunto do e-mail
+		    oMail:cAssunto := '*** RNC '+_cRNC+' EM ABERTO ***'        
+            
+            // Preenche a mensagem do e-mail            
+		    oMail:cMsg := '<table align="center" border="2" bgcolor="0066FF" cellspacing="0" cellpadding="20">'  
+			oMail:cMsg += '<tr>'
+			oMail:cMsg += '<td align="center" style="color:#FFFFFF;font-size:20px; font-family:arial">'
+			oMail:cMsg += 'A RNC '+_cRNC+' estแ em aberto hแ '+STR(_Dias)+' dias, favor verificar. <br/>'
+			oMail:cMsg += '<br/>'
+			oMail:cMsg += '<span style="text-decoration:underline">INFORMAวีES:<br/></span>'
+			oMail:cMsg += '<br/>'
+			oMail:cMsg += 'RNC aberta em '+DtoC(_dData)+' por '+_cLogin+' referente เ<br/>'
+			oMail:cMsg += ''+STR(_cSaldo)+' pe็as suspeitas pendentes para destina็ใo do produto '+_cProd+' que foram do armazem '+_cAlmOrg+' para o armazem '+_cAlmDes+'.<br/>'
+			oMail:cMsg += '</td>'
+			oMail:cMsg += '</tr>'
+			oMail:cMsg += '<tr>'			
+			oMail:cMsg += '<td align="center" style="color:#FFFFFF;font-size:20px; font-family:arial">'
+			oMail:cMsg += '<table><tr><td>'
+			
+			oMail:cMsgFim += '</td></tr></table>'			
+			oMail:cMsgFim += '</td></tr></table>'		
+		
+			oMail:Envia()
+			
+	ENDIF
+ 
+Return 

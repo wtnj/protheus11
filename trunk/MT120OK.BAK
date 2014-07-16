@@ -1,0 +1,90 @@
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³  MT120OK ³ Autor ³ João Felipe da Rosa ³ Data ³ 15/10/2013 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Na inclusão do pedido de compras                           ³±±
+±±³          ³ Validade inclusao do pedido                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Compras                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+#INCLUDE "rwmake.ch"
+
+User Function MT120OK()
+
+Local _cParam   := paramixb //recebe um array na posicao 1= num pedido 2=inclui(.T.) 3=Altera(.T.) 4=Exclui(.T.)
+
+Local _nVlr    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_PRECO"})  
+Local _nQtd    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_QUANT"})
+Local _nOS     := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_NUMOS"})     
+Local _nC7SC   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_NUMSC"})
+Local _nC7ItSC := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_ITEMSC"})
+
+Local aOSAtiv  := {}
+
+	//-- VALIDA SALDO DA OS DO ATIVO
+
+	//-- 11/10/2013 JOAOFR
+	//-- para inclusao de PC, soma tudo que já está no acols da mesma OS do ativo, 
+	//-- e não pega o valor das SCs que estão vinculadas aos itens deste pedido
+	For ni:=1 to Len(aCols)
+	
+		//-- nao pega os deletados 
+		If !acols[ni][len(aHeader)+1] .and. !empty(Acols[ni][_nOs])
+			_n:=aScan(aOSAtiv,{|x| x[1]==Acols[ni][_nOs]})
+
+			If _n==0
+				//-- guarda a filial+sc+item na posicao 3 da matriz 
+				//-- para nao considerar o valor destes itens de SC (aSCNotIn), 
+				//-- e sim o valor do pedido que os estão baixando
+				aAdd(aOSAtiv,{Acols[ni][_nOs],; //numero da os
+							  Acols[ni][_nVlr] * Acols[ni][_nQtd],; //valor total do item
+							  {xFilial('SC7')+Acols[ni][_nC7SC]+Acols[ni][_nC7ItSC]}})  //array com as Filial+SC+Item "not in"
+			Else
+				aOSAtiv[_n][2] += Acols[ni][_nVlr] * Acols[ni][_nQtd]   
+				aAdd(aOSAtiv[_n][3],xFilial('SC7')+Acols[ni][_nC7SC]+Acols[ni][_nC7ItSC]) 
+			Endif
+
+	    Endif
+	    
+	Next
+	
+	//-- valida as diferentes OS do ativo que podem ter no PC
+	For xOS := 1 to len(aOSAtiv)
+       	//-- TRAZ O VALOR GASTO DO ITEM DA CONTA
+    	   	aXXX := U_GastoDif(aOSAtiv[xOS][1],"DC",nil,aOSAtiv[xOS][3])
+       	_aOSGer := aXXX[2]
+
+		//Traz o valor GASTO e APROVADO da OS
+		_nVlrGst  := 0
+		_nTotAprv := 0
+		For xG:=1 to len(_aOSGer)
+			If _aOSGer[xG][1]==aOSAtiv[xOS][1]
+				_nVlrGst  += _aOSGer[xG][7]
+				_nTotAprv += _aOSGer[xG][6]
+			Endif
+		Next		       	
+
+   		If (aOSAtiv[xOS][2]+_nVlrGst) > _nTotAprv
+		
+			Msgbox(OemToAnsi("Saldo da Conta "+ALLTRIM(aOSAtiv[xOS][1])+" Insuficiente!"+CHR(10)+CHR(13)+;
+		                 	 "Total Aprovado: R$ "+alltrim(str(_nTotAprv))+chr(10)+chr(13)+;
+    		             	 "Total Gasto: R$ "+alltrim(str(_nVlrGst))+chr(10)+chr(13)+;
+        		         	 "Total Saldo: R$ "+alltrim(str(_nTotAprv-_nVlrGst))+chr(10)+chr(13)+;
+        		         	 "Valor deste PC: R$ "+alltrim(str((aOSAtiv[xOS][2]))))+chr(10)+chr(13)+;
+        		         	 "Falta: R$ "+ alltrim(str(_nTotAprv- (aOSAtiv[xOS][2]+_nVlrGst)  ))  ,"Pedido de Compra - MT120OK","ALERT" )
+			return .f.
+ 		EndIf
+	NEXT  
+	
+	ALERT('OK')
+
+    //------- FIM VALIDACAO OS ATIVO
+	
+Return .t.

@@ -1,0 +1,288 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 17/04/00
+
+User Function M468sqnf()        // incluido pelo assistente de conversao do AP5 IDE em 17/04/00
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("LRET,C461MARCA,L461INVERTE,_CALIASOLD,_NNROITENS,_NTOTALITENS")
+SetPrvt("_CCTRLCLI,_AARRAYSX5,_ATIPO,_ACAMPOS,_CARQSEQ,_NORDERTRB")
+SetPrvt("_NRECNOTRB,_CSERIEANT,_CSERIE,_CNUMNF,_NNUMNF,_XCCLIENTE")
+SetPrvt("_XCLOJA,_NNROITEM,_XCPEDIDO,_XCREMITO,_CCLIEANT,_CLOJAANT")
+SetPrvt("_CDESCRTIPO,_NPOSTIPO,_ACAB,_CCADASTRO,NOPCA,OLBX")
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o	  ³ M461SQNF ³ Autor ³ Jose Lucas				  ³ Data ³ 04.02.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Dialogo para Mostrar a Sequencia da n£mera‡„o de Facturas  ³±±
+±±³          ³ a serem geradas. ( Dados informativos...)                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso		 ³ MATA461																	  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+lRet := .T.
+c461Marca   := ParamIxb[1]
+l461Inverte := ParamIxb[2]
+
+_cAliasOld := Alias()
+
+_nNroItens  := 0
+_nTotalItens:= GETMV("MV_NUMITEN")
+
+_cCtrlCli  := Space(06)
+_aArraySX5 := {}
+
+_aTipo := {{ "D=Exportaci¢n           "},;
+{ "I=Resp. Inscripto       "},;
+{ "N=Resp. No Inscripto    "},;
+{ "P=Servicos Publicos     "},;
+{ "X=Exento                "},;
+{ "E=Deudores del Exterior "},;
+{ "F=Consumidor Final      "},;
+{ "M=Monotributista        "},;
+{ "O=Exento Objetivo       "},;
+{ "S=No Sujeito            "},;
+{ "Z=Sujeto No Categorizado"}}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Criacao de arquivo temporario receber dados.                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+_aCampos := {{"SERIE"   ,"C",03,0},;
+{"NUMERO"  ,"C",12,0},;
+{"CLIENTE" ,"C",06,0},;
+{"LOJA"    ,"C",02,0},;
+{"NOME"    ,"C",30,2},;
+{"TIPO"    ,"C",01,0}}
+
+_cArqSeq := CriaTrab(_aCampos)
+
+dbUseArea(.T.,,_cArqSeq,"TRC",.F.,.F.)
+IndRegua("TRC",_cArqSeq,"CLIENTE+LOJA+NUMERO",,,"Selecionando Registros...")
+#IFNDEF TOP
+	dbSetIndex(_cArqSeq+OrdBagExt())
+#ENDIF
+dbGoTop()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Correr todos os pedidos marcados para prepara‡„o...           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("TRC")
+_nOrderTRB := IndexOrd()
+_nRecnoTRB := Recno()
+_cSerieAnt := Space(3)
+
+dbSelectArea("SCZ")
+If lPedidos
+	dbSetOrder(1)
+Else
+	dbSetOrder(2)
+EndIf
+
+dbSeek(xFilial("SCZ")+mv_par03+mv_par05+mv_par01,.T.)
+
+While !Eof() .and.;
+	CZ_FILIAL == xFilial("SCZ") .and.;
+	CZ_CLIENTE <= mv_par04 .and. CZ_LOJA <= mv_par06
+	
+	If ! IsMark("CZ_OK", c461Marca, l461Inverte)
+		dbSkip()
+		Loop
+	EndIf
+	If ! Empty(CZ_NFISCAL)
+		dbSkip()
+		Loop
+	EndIf
+
+	Sa1->(dbSetOrder(1))
+	Sa1->(dbSeek(xFilial("SA1")+SCZ->CZ_CLIENTE+SCZ->CZ_LOJA))
+	
+	_cSerie := ExecBlock("M468SER",.F.,.F.)
+	If _cSerie != _cSerieAnt
+		dbSelectArea("SX5")
+		If	dbSeek(xFilial("SX5")+"01"+_cSerie)
+			_cNumNF := Alltrim(X5_DESCRI)
+			_nNumNF := Val(_cNumNF)
+         _cNumNF := StrZero(_nNumNF,TamSX3("F2_DOC")[1])
+		Else
+			_nNumNF := 000100000001
+         _cNumNF := StrZero(_nNumNF,TamSX3("F2_DOC")[1])
+		EndIf
+		_cSerieAnt := _cSerie
+	Else
+		_cSerieAnt := _cSerie
+	EndIf
+	dbSelectArea("SCZ")
+	
+	_xcCliente := CZ_CLIENTE
+	_xcLoja := CZ_LOJA
+	
+	While !Eof() .and.;
+		CZ_FILIAL == xFilial("SCZ") .and.;
+		CZ_CLIENTE == _xcCliente .and. CZ_LOJA == _xcLoja
+		
+		If ! IsMark("CZ_OK", c461Marca, l461Inverte)
+			dbSkip()
+			Loop
+		EndIf
+		If ! Empty(CZ_NFISCAL)
+			dbSkip()
+			Loop
+		EndIf
+		
+		If ! lJunta
+			If lPedidos
+				_nNroItem := 0
+				_xcPedido := CZ_PEDIDO
+				While !Eof() .and.;
+					CZ_FILIAL == xFilial("SCZ") .and.;
+					CZ_CLIENTE == _xcCliente .and. CZ_LOJA == _xcLoja .and.;
+					CZ_PEDIDO == _xcPedido
+					If _nNroItem > _nTotalItens
+						Exit
+					EndIf
+					_nNroItem := _nNroItem + 1
+					dbSkip()
+				End
+			Else
+				_nNroItem := 0
+				_xcRemito := CZ_REMITO
+				While !Eof() .and.;
+					CZ_FILIAL == xFilial("SCZ") .and.;
+					CZ_CLIENTE == _xcCliente .and. CZ_LOJA == _xcLoja .and.;
+					CZ_REMITO == _xcRemito
+					If _nNroItem > _nTotalItens
+						Exit
+					EndIf
+					_nNroItem := _nNroItem + 1
+					dbSkip()
+				End
+			EndIf
+			
+			dbSelectArea("SA1")
+			dbSetOrder(1)
+			If dbSeek(xFilial("SA1")+_xcCliente+_xcLoja)
+				dbSelectArea("TRC")
+				RecLock("TRC",.T.)
+				Replace SERIE		With _cSerie
+				Replace NUMERO		With _cNumNF
+				Replace CLIENTE	With SA1->A1_COD
+				Replace LOJA		With SA1->A1_LOJA
+				Replace NOME		With SA1->A1_NOME
+				Replace TIPO		With SA1->A1_TIPO
+				MsUnLock()
+				_nNumNF := _nNumNF + 1
+				_cNumNF := StrZero(_nNumNF,12)
+			EndIf
+		EndIf
+		dbSelectArea("SCZ")
+		If lJunta
+			dbSkip()
+		EndIf
+	End
+	
+	If lJunta
+		dbSelectArea("SA1")
+		dbSetOrder(1)
+		If dbSeek(xFilial("SA1")+_xcCliente+_xcLoja)
+			dbSelectArea("TRC")
+			RecLock("TRC",.T.)
+			Replace SERIE		With _cSerie
+			Replace NUMERO		With _cNumNF
+			Replace CLIENTE	With SA1->A1_COD
+			Replace LOJA		With SA1->A1_LOJA
+			Replace NOME		With SA1->A1_NOME
+			Replace TIPO		With SA1->A1_TIPO
+			MsUnLock()
+			_nNumNF := _nNumNF + 1
+			_cNumNF := StrZero(_nNumNF,12)
+		EndIf
+	EndIf
+	
+	dbSelectArea("SCZ")
+End
+
+_cSerieAnt := " "
+_cClieAnt  := " "
+_cLojaAnt  := " "
+_aArraySX5 := {}
+
+dbSelectArea("TRC")
+dbGotop()
+While !Eof()
+	_cDescrTipo := " "
+	_nPosTipo := Ascan(_aTipo,{|x| Subs(x[1],1,1) == Subs(TRC->TIPO,1,1)})
+	If _nPosTipo > 0
+		_cDescrTipo := _aTipo[_nPosTipo][1]
+	EndIf
+	AADD(_aArraySX5,{SERIE,Trans(NUMERO,"@R 9999-99999999"),NOME,LOJA, _cDescrTipo})
+	dbSelectArea("TRC")
+	dbSkip()
+End
+
+If lRet
+	
+	If Len( _aArraySX5 ) > 0
+		
+		_aCab := { OemToAnsi("Serie"),;
+		OemToAnsi("N£mero"),;
+		OemToAnsi("Cliente"),;
+		OemToAnsi("Sucursal"),;
+		OemToAnsi("Tipo") }
+		
+		_cCadastro := "Secuencia de Numeraci¢n de las Facturas"
+		
+		nOpca := 0
+		
+		@ 0,0 TO 160,400 DIALOG oDlg TITLE _cCadastro
+		
+		oLbx := RDListBox(0.3, .4, 157, 52, _aArraySX5, _aCab)
+		
+		@ 03  ,168 BMPBUTTON TYPE 1 ACTION oOk()// Substituido pelo assistente de conversao do AP5 IDE em 17/04/00 ==> 				@ 03  ,168 BMPBUTTON TYPE 1 ACTION Execute(oOk)
+		@ 17.5,168 BMPBUTTON TYPE 2 ACTION oCancel()// Substituido pelo assistente de conversao do AP5 IDE em 17/04/00 ==> 				@ 17.5,168 BMPBUTTON TYPE 2 ACTION Execute(oCancel)
+		
+		ACTIVATE DIALOG oDlg CENTERED
+		
+	Else
+		lRet := .F.
+	EndIf
+EndIf
+
+dbSelectArea("TRC")
+dbCloseArea()
+_cArqSeq := _cArqSeq + GetDBExtension()
+_cArqSeq := _cArqSeq + OrdBagExt()
+FErase(_cArqSeq)
+
+dbSelectArea("SC9")
+dbSetOrder( _nOrderTRB )
+dbGotop()
+
+dbSelectArea( _cAliasOld )
+
+If nOpcA == 2
+	lRet := .F.
+EndIf
+
+// Substituido pelo assistente de conversao do AP5 IDE em 17/04/00 ==> __Return( lRet )
+Return( lRet )        // incluido pelo assistente de conversao do AP5 IDE em 17/04/00
+
+// Substituido pelo assistente de conversao do AP5 IDE em 17/04/00 ==> Function oOk
+Static Function oOk()
+nOpcA := 1
+Close(oDlg)
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 17/04/00 ==> Function oCANCEL
+Static Function oCANCEL()
+nOpcA := 2
+Close(oDlg)
+Return

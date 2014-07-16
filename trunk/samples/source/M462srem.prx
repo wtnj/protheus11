@@ -1,0 +1,93 @@
+#include "SIGAWIN.CH"  
+#include "RWMAKE.CH"   
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ M462SREM ³ Autor ³ Lucas                  ³ Data ³ 12.05.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Exibir tela para sugerir e solicitar a Serie e Numera‡ao do ³±±
+±±³			 ³ Remito de Vendas...														³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ FATURAMENTO                                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Lucas        ³12/05/01³		³ Inicio...											³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function M462SREM()
+
+Local _aArraySX5	:={}
+Local _cSerie		:= Criavar("CN_SERIE")
+Local _cRemito		:= Criavar("CN_REMITO")
+Local nOpcao 		:= 2
+
+//Uso da FindFunction devido ao SigaPyme que nao reconhece ExistBlock
+_cSerie := Iif(FindFunction("U_M462SER"),ExecBlock("M462SER",.F.,.F.),"R  ")
+
+If Empty(_cSerie)
+	_cSerie := "R  "
+EndIf
+
+_lRet := .T.
+
+dbSelectArea("SX5")
+dbSetOrder(1)
+DbGoTop()
+If !dbSeek(xFilial("SX5")+"SR"+_cSerie)
+	Help("",1,"NOSERIE")
+	_lRet := .F.
+EndIf
+
+If _lRet
+	
+	aAdd(_aArraySX5, { _cSerie, Trans(Alltrim(X5_DESCRI),PesqPict("SCN","CN_REMITO")), SA1->A1_NOME })
+	_cRemito := Alltrim(X5_DESCRI)
+	
+	If Len( _aArraySX5 ) > 0
+		_aCabec := {	OemToansi("Serie"),;
+						OemToansi("N§Remito"),;
+						OemToansi("Cliente")	}
+		_cCadastro	:= OemToAnsi("Secuencia del Numeracion de los Remitos")
+		
+		nOpca := 0
+		
+		@ 0,0 TO 160,400 DIALOG oDlgWnd TITLE _cCadastro
+		
+		oLbx := RDListBox(0.3, .4, 157, 52, _aArraySX5, _aCabec)
+		
+		@  3  ,168 BMPBUTTON TYPE 1 ACTION oOk()
+		@ 17.5,168 BMPBUTTON TYPE 2 ACTION oCancel()
+		
+	    ACTIVATE DIALOG oDlgWnd CENTERED
+	Else 
+		_lRet := .F.
+	EndIf
+EndIf  
+
+If nOpcA != 1
+	_cRemito := ""
+	_cSerie := "   "
+	_lRet := .F.
+EndIf
+
+Return ( {_cRemito, _cSerie, _lRet} )
+
+
+Static Function oOk()
+	nOpcA := 1
+	Close(oDlgWnd)
+Return
+
+
+Static Function oCANCEL()
+	nOpcA := 2
+	Close(oDlgWnd)
+Return

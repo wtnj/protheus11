@@ -1,0 +1,242 @@
+/*---------------------------------------------------------------------------+
+!                             FICHA TÉCNICA DO PROGRAMA                      !
++----------------------------------------------------------------------------+
+!   DADOS DO PROGRAMA                                                        !
++------------------+---------------------------------------------------------+
+!Tipo              ! Relatório                                               !
++------------------+---------------------------------------------------------+
+!Módulo            ! SIGAPCP                                                 !
++------------------+---------------------------------------------------------+
+!Nome              ! WHB_PCPR002                                             !
++------------------+---------------------------------------------------------+
+!Descrição         ! Controle de estoque diario                              !
++------------------+---------------------------------------------------------+
+!Autor             ! Rafael Ricardo Vieceli                                  !
++------------------+---------------------------------------------------------+
+!Data de Criação   ! 26/08/2010                                              !
++------------------+---------------------------------------------------------+
+!   ATUALIZACÕES                                                             !
++-------------------------------------------+-----------+-----------+--------+
+!   Descrição detalhada da atualização      !Nome do    ! Analista  !Data da !
+!                                           !Solicitante! Respons.  !Atualiz.!
++-------------------------------------------+-----------+-----------+--------+
+!                                           !           !           !        !
+!                                           !           !           !        !
++-------------------------------------------+-----------+-----------+--------+
+!                                           !           !           !        !
+!                                           !           !           !        !
++-------------------------------------------+-----------+-----------+-------*/
+#Include "Protheus.ch"
+#Include "rwmake.ch"
+
+user Function pWhbr002()
+
+Local cTitle    := OemToAnsi("Controle de Estoque Diário.")
+Local cHelp     := OemToAnsi("Relatório Controle de Estoque Diário.")
+Local oRel
+Local oGrupo
+Local oProduto
+Local cAl     := getNextAlias()
+Private cPerg := padr("PWHBR002",10)
+
+//Cria as perguntas se não existerem
+criaSx1()
+Pergunte(cPerg, .F.)
+
+//Criacao do componente de impressao
+oRel := tReport():New("PWHBR002",cTitle,cPerg,{|oRel| ReportPrint(oRel,cAl)},cHelp)
+
+oRel:SetPortrait()
+//oReport:SetLandScape()
+
+//Desabilita botão dos parametros
+oRel:HideParamPage(.F.)
+
+//Grupo de Produtos
+oGrupo := trSection():New(oRel,cTitle,{"SBM"},)
+	trCell():New(oGrupo,"BM_GRUPO","SBM","Grupo"    ,pesqPict("SBM","BM_GRUPO"),10)
+	trCell():New(oGrupo,"BM_DESC" ,"SBM","Descrição",pesqPict("SBM","BM_DESC") ,tamSx3("BM_DESC")[1])
+
+	//Oculta o cabeçalho
+	oGrupo:Cell("BM_DESC" ):HideHeader()
+	oGrupo:Cell("BM_GRUPO"):HideHeader()
+
+//Lista produtos
+oProduto := trSection():New(oGrupo,"Ordens de Producao",{"SC2","SB1","SA1"},,,,,,.t.)
+	trCell():New(oProduto,"B1_COD"    ,"SB1","Código"     ,pesqPict("SB1","B1_COD")    ,tamSx3("B1_COD")[1]+1    )
+	trCell():New(oProduto,"B1_DESC"   ,"SB1","Part Number",pesqPict("SB1","B1_DESC")   ,tamSx3("B1_DESC")[1]+1   )
+	trCell():New(oProduto,"B1_UM"     ,"SB1","Un"         ,pesqPict("SB1","B1_UM")     ,tamSx3("B1_UM")[1]+1     )
+	trCell():New(oProduto,"CONSUMO1"  ,""   ,"Consumo"    ,pesqPict("SB2","B2_SALPEDI") ,15,,,"RIGHT",,"RIGHT")
+	trCell():New(oProduto,"B1_EMAX"   ,"SB1","Est.Maximo" ,pesqPict("SB1","B1_EMAX")    ,15,,,"RIGHT",,"RIGHT")
+	trCell():New(oProduto,"B1_ESTSEG" ,"SB1","Est.Minimo" ,pesqPict("SB1","B1_ESTSEG")  ,15,,,"RIGHT",,"RIGHT")
+	trCell():New(oProduto,"B2_QATU"   ,"SB2","Sld.Fisico" ,pesqPict("SB2","B2_QATU")    ,15,,,"RIGHT",,"RIGHT")
+	trCell():New(oProduto,"COBERTA"   ,""   ,"Cobertura"  ,pesqPict("SB2","B2_SALPEDI") ,15,,,"RIGHT",,"RIGHT")
+
+	//TAB na Sessao
+	oProduto:SetLeftMargin(3)
+
+//Executa o relatório
+oRel:PrintDialog() 
+
+Return()
+
+
+/*-----------------+---------------------------------------------------------+
+!Nome              ! reportPrint                                             !
++------------------+---------------------------------------------------------+
+!Descrição         ! Funcao para processamento do dados                      !
++------------------+---------------------------------------------------------+
+!Autor             ! Rafael Ricardo Vieceli                                  !
++------------------+--------------------------------------------------------*/
+static Function reportPrint(oRel,cAl)
+
+Local oGrupo   := oRel:Section(1)
+Local oProduto := oRel:Section(1):Section(1)
+Local cGrupo   := ""
+
+//Muda Titulo
+oRel:SetTitle("Controle de Estoque Diário ("+dtoc(mv_par01)+")")
+
+oGrupo:BeginQuery()
+oProduto:BeginQuery()
+beginSql Alias cAl
+	select
+		BM.BM_GRUPO
+	,   BM.BM_DESC
+	,   B1.B1_DESC
+	,   B1.B1_COD
+	,   B1.B1_UM
+	,   B1.B1_EMAX
+	,   B1.B1_ESTSEG
+	,   coalesce(B2.B2_QATU,null,0) as B2_QATU
+	,   coalesce(B2.B2_SALPEDI,null,0) as B2_SALPEDI
+	,   coalesce(B2.B2_QATU+B2.B2_SALPEDI,null,0) as SALDO
+	,   TMP.CONSUMO
+	,	(TMP.CONSUMO/2 ) as CONSUMO1
+	,	(B2.B2_QATU+B2.B2_SALPEDI)/(TMP.CONSUMO/2 ) as COBERTA
+	from
+		%table:SB1% B1
+	inner join %table:SBM% BM
+		on	BM.BM_FILIAL  = %xFilial:SBM%
+		and BM.BM_GRUPO   = B1.B1_GRUPO
+		and BM.D_E_L_E_T_ = ' '
+	left join %table:SB2% B2
+		on  B2.B2_FILIAL  = %xFilial:SB2%
+		and B2.B2_COD     = B1.B1_COD
+		and B2.B2_LOCAL   = B1.B1_LOCPAD
+		and B2.D_E_L_E_T_ = ' '
+	inner join (
+			select
+				B1.B1_COD
+			,   sum(D3_QUANT) as CONSUMO
+			from
+				%table:SB1% B1
+			left join %table:SD3% D3
+				on  D3.D3_FILIAL  = %xFilial:SD3%
+				and D3.D3_COD     = B1.B1_COD
+				and substring(D3.D3_EMISSAO,1,6) = %Exp:AnoMes(MonthSub(mv_par01,1))%
+				and D3.D3_CF     in ('RE0')
+  				and D3.D3_TM     in ('501','502')
+				and D3.D3_ESTORNO = ' '
+				and D3.D_E_L_E_T_ = ' '
+			where
+				B1.B1_FILIAL  = %xFilial:SB1%
+			and B1.B1_GRUPO  >= %Exp:mv_par02%
+			and B1.B1_GRUPO  <= %Exp:mv_par03%
+			and B1.B1_LOCPAD >= %Exp:mv_par05%
+			and B1.B1_LOCPAD <= %Exp:mv_par06%
+			and B1.B1_COD    >= %Exp:mv_par07%
+			and B1.B1_COD    <= %Exp:mv_par08%
+			and B1.B1_MSBLQL <> 'S'
+			and B1.D_E_L_E_T_ = ' '
+			group by B1.B1_COD
+		) TMP
+		on TMP.B1_COD = B1.B1_COD 
+	where
+		B1.B1_FILIAL  = %xFilial:SB1%
+	and B1.B1_GRUPO  >= %Exp:mv_par02%
+	and B1.B1_GRUPO  <= %Exp:mv_par03%
+	and B1.B1_LOCPAD >= %Exp:mv_par05%
+	and B1.B1_LOCPAD <= %Exp:mv_par06%
+	and B1.B1_COD    >= %Exp:mv_par07%
+	and B1.B1_COD    <= %Exp:mv_par08%
+	and B1.B1_MSBLQL <> 'S'
+	and B1.D_E_L_E_T_ = ' '
+	order by COBERTA asc,
+	      BM.BM_GRUPO
+endSql
+oProduto:EndQuery()
+oGrupo:EndQuery()
+
+//Regua
+oRel:SetMeter((cAl)->(recCount()))
+
+//laço Verificicando se é fim de arquivo
+While !(cAl)->(Eof()) .And. !oRel:Cancel()
+
+	If (mv_par09==2 .and. (cAl)->B2_QATU<=0) .OR. ;
+	   (mv_par09==1 .and. (cAl)->B2_QATU<>0)
+		(cAl)->(dbSkip())
+		Loop
+	EndIf
+	
+	//Incia impressao da sessao
+	oGrupo:Init()
+	//imprime linha
+	oGrupo:PrintLine()
+	//Finaliza impresso da sessao
+	oGrupo:Finish()
+
+	//Controle
+	cGrupo := (cAl)->BM_GRUPO
+
+	//Inicia impressao da sessao
+	oProduto:Init()
+
+	//Laço verificando se linha atual é do mesmo grupo
+	While !(cAl)->(Eof()) .And. !oRel:Cancel() .And. cGrupo == (cAl)->BM_GRUPO
+
+		//imprime linha
+		oProduto:PrintLine()
+
+		//Pula linha
+		(cAl)->(dbSkip())
+
+		//Regua
+		oRel:IncMeter()
+
+	Enddo
+
+	//Finaliza
+	oProduto:Finish()
+
+Enddo
+
+Return
+
+
+/*-----------------+---------------------------------------------------------+
+!Nome              ! criaSx1                                                 !
++------------------+---------------------------------------------------------+
+!Descrição         ! Funcao para cricao dos parametros                       !
++------------------+---------------------------------------------------------+
+!Autor             !                                                         !
++------------------+--------------------------------------------------------*/
+static Function CriaSx1()
+
+//Data de referencia
+putSx1(cPerg,"01","Data Referencia?","Data Referencia?","Data Referencia?","mv_ch1","D",8,0,0,"G","","","","","mv_par01","","","","","","","","","","","","","","","","",{"","","",""},{"","","",""},{"","",""},"")
+//Grupo de até
+putSx1(cPerg,"02","Grupo de?" ,"Grupo de?" ,"Grupo de?" ,"mv_ch2","C",04,0,0,"G","","SBM","","","mv_par02","","","","","","","","","","","","","","","","",{"","","",""},{"","","",""},{"","",""},"")
+putSx1(cPerg,"03","Grupo ate?","Grupo ate?","Grupo ate?","mv_ch3","C",04,0,0,"G","","SBM","","","mv_par03","","","","","","","","","","","","","","","","",{"","","",""},{"","","",""},{"","",""},"")
+//Dias
+putSx1(cPerg,"04","Dias úteis produção?","Dias úteis produção?","Dias úteis produção?","mv_ch4","N",2,0,0,"G","","","","","mv_par04","","","","","","","","","","","","","","","","",{"","","",""},{"","","",""},{"","",""},"")
+//Armazem de até
+putSx1(cPerg,"05","Armazem de?" ,"Armazem de?" ,"Armazem de?" ,"mv_ch5","C",02,0,0,"G","","","","","mv_par05","","","","","","","","","","","","","","","","",{"","","",""},{"","","",""},{"","",""},"")
+putSx1(cPerg,"06","Armazem ate?","Armazem ate?","Armazem ate?","mv_ch6","C",02,0,0,"G","","","","","mv_par06","","","","","","","","","","","","","","","","",{"","","",""},{"","","",""},{"","",""},"")
+//Produto de até
+putSx1(cPerg,"07","Produto de?" ,"Produto de?" ,"Produto de?" ,"mv_ch7","C",15,0,0,"G","","SB1","","","mv_par07","","","","","","","","","","","","","","","","",{"","","",""},{"","","",""},{"","",""},"")
+putSx1(cPerg,"08","Produto ate?","Produto ate?","Produto ate?","mv_ch8","C",15,0,0,"G","","SB1","","","mv_par08","","","","","","","","","","","","","","","","",{"","","",""},{"","","",""},{"","",""},"")
+putSx1(cPerg,"09","Saldo Zerado ?"       ,"Saldo Zerado ?"       ,"Saldo Zerado ?"       ,"mv_ch9","N", 1,0,2,"C","","","","","mv_par09","Sim"      ,"Si"       ,"Yes"    ,"","Não"      ,"No"       ,"No"       ,"Ambos","Ambos"  ,"Ambos" ,""          ,""          ,""          ,"","", "", {"Saldo Zerado","","",""},{"Saldo Zerado","","",""},{"Saldo Zerado","",""},"")
+
+Return

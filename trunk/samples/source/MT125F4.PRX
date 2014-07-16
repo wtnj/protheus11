@@ -1,0 +1,212 @@
+#include "SIGAWIN.CH"        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+#INCLUDE "VKEY.CH"
+#include "RWMAKE.CH"        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+User Function Mt125f4()        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("OGET,_CCPOVAR,NI,_CPROD,LRET,LALCADA")
+SetPrvt("LCONSLOJA,AARRAYF4,BKEYF4,CFILENT,ACAB,CCADASTRO")
+SetPrvt("NOPCA,CDESCR,OLBX,NX,NPRECO,ACOLS")
+
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 09/09/99 ==> #INCLUDE "VKEY.CH"
+/*
+_____________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçào    ¦ MT125F4  ¦ Autor ¦ José Lucas            ¦ Data ¦ 02/06/98 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Consulta F4 para disponibilizar os PC's em aberto no prog. ¦¦¦
+¦¦¦          ¦ Contratos de Parcerias.                                    ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+*/
+//+--------------------------------------------------------------+
+//¦ Recebimento dos parametros.                                  ¦
+//+--------------------------------------------------------------+
+//oGet 	 := ParamIxb[1]
+_cCpoVar  := ReadVar()
+
+If _cCpoVar != "M->C3_PRODUTO"
+	If _cCpoVar == "M->C3_PEDIDO"
+		For nI := 1 To Len(aHeader)
+			If AllTrim(aHeader[nI][2]) == "C3_PRODUTO"
+				_cProd := aCols[n][nI]
+			EndIf
+		Next
+	Else			
+		Return
+	EndIf
+Else
+	_cProd := M->C3_PRODUTO		
+EndIf
+
+//+--------------------------------------------------------------+
+//¦ Definicao das variaveis.                                     ¦
+//+--------------------------------------------------------------+
+Pergunte("MTA100",.F.)
+
+lRet     := .T.
+lAlcada  := .F.
+lConsLoja:= (mv_par08==1)
+aArrayF4 := {}
+bKeyF4  	:= SetKey( VK_F4 )
+
+If GetMV("MV_ALCADA") == "S"
+	If File(cArqAlca)
+		lAlcada := .T.
+	EndIf
+EndIf
+
+//+--------------------------------------------------------------+
+//¦ Verificar o arquivo de Pedidos.                              ¦
+//+--------------------------------------------------------------+
+cFilEnt := xFilial("SC7")
+dbSelectArea("SC7")
+dbSetOrder(6) 
+If lConsLoja
+	dbSeek(xFilEnt(cFilEnt)+_cProd+cA125Forn+cA125Loj)
+Else
+	dbSeek(xFilEnt(cFilEnt)+_cProd+cA125Forn)
+EndIf
+
+If !Found()
+	Help(" ",1,"A100F4")
+	dbSetOrder(1)
+	SetKey( VK_F4,bKeyF4 )
+	lRet := .F.
+EndIf
+
+If lRet
+
+	If lConsLoja
+		While !Eof() .And. C7_FILIAL==xFilEnt(cFilEnt); 
+			.And. C7_PRODUTO+C7_FORNECE+C7_LOJA == _cProd+cA125Forn+cA125Loj
+			If Empty(C7_RESIDUO) 
+				If Empty(C7_PRECO) .and. (C7_QUANT-C7_QUJE) > 0
+					AAdd( aArrayF4,{C7_LOJA,C7_NUM,C7_ITEM,PADR(C7_QUANT-C7_QUJE,11),Dtoc(C7_DATPRF),Substr(C7_DESCRI,1,20),IIF(C7_TIPO==2,"AE","PC")})
+				EndIf	
+			EndIf
+			dbSkip()
+		End
+	Else
+		While !Eof() .And. C7_FILIAL==xFilEnt(cFilEnt); 
+			.And. C7_PRODUTO+C7_FORNECE == _cProd+cA125Forn
+			If Empty(C7_RESIDUO)
+				If Empty(C7_PRECO) .and. (C7_QUANT-C7_QUJE) > 0
+					AAdd( aArrayF4,{C7_LOJA,C7_NUM,C7_ITEM,PADR(C7_QUANT-C7_QUJE,11),Dtoc(C7_DATPRF),Substr(C7_DESCRI,1,20),IIF(C7_TIPO==2,"AE","PC")})
+				EndIf		
+			EndIf
+			dbSkip()
+		End
+	EndIf	
+
+	If !Empty(aArrayF4)
+
+		aCab := { OemToAnsi("Sucursal"),;
+				 	 OemToAnsi("Pedido"),;
+					 OemToAnsi("Item"),;
+					 OemToAnsi("Saldo"),;
+					 OemToAnsi("Entrega"),;
+					 OemToAnsi("Descripción"),;
+					 OemToAnsi("Tipo") }
+					 
+		cCadastro := OemToAnsi("Pedidos de Compras")
+	
+		#IFDEF WINDOWS
+			nOpca:=0
+			SB1->( dbSetOrder(1) )
+			SB1->( dbSeek(xFilial("SB1")+_cProd))
+			cDescr := Substr(SB1->B1_DESC,1,20)
+			
+			@ 0,0 TO 160,400 DIALOG oDlg TITLE cCadastro
+
+	   	@ 0,3 TO 18, 159 
+
+			@ 5  , 6 SAY OemToAnsi("Producto: ")
+			@ 6.3,40 GET cDescr When .F.
+		
+			oLbx := RDListBox(1.6, .4, 157, 52, aArrayF4, aCab)
+			 
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> 			@ 03  ,168 BMPBUTTON TYPE 1 ACTION Execute(oOk)
+			@ 03  ,168 BMPBUTTON TYPE 1 ACTION oOk()
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> 			@ 17.5,168 BMPBUTTON TYPE 2 ACTION Execute(oCancel)
+			@ 17.5,168 BMPBUTTON TYPE 2 ACTION oCancel()
+			ACTIVATE DIALOG oDlg CENTERED
+		#ENDIF
+
+		If nOpca == 1
+			dbSelectArea("SC7")
+			dbSetOrder(1)
+			dbSeek(xFilial("SC7")+aArrayF4[oQual:nAT][2]+aArrayF4[oQual:nAT][3])
+
+			If !Found()
+				dbSetOrder(6)
+				dbSeek(xFilEnt(cFilEnt)+_cProd+Substr(cA125Forn,1,6)+cA125Loj+aArrayF4[oQual:nAT][2])
+				While !Eof() .And. xFilEnt(cFilEnt)+cVar+Substr(cA125Forn,1,6)+cA125Loj+aArrayF4[oQual:nAT][2] == ;
+					C7_FILENT+C7_PRODUTO+C7_FORNECE+C7_LOJA+C7_NUM
+					
+					If C7_ITEM #aArrayF4[oQual:nAT][3]
+						dbSkip()
+						Loop
+					EndIf
+					Exit
+				End
+			EndIf
+				
+			//+----------------------------------------------------------+
+			//¦ Verifica se Pedido ja esta Liberado.                     ¦
+			//+----------------------------------------------------------+
+			If lAlcada
+				If Empty(C7_CODLIB)
+						Help(" ",1,"A205NOLIB")
+					SetKey( VK_F4,bKeyF4 )
+					Return
+				EndIf
+			EndIf
+
+			//+----------------------------------------------------------+
+			//¦ Valorizar Pedidos de Vendas.                             ¦
+			//+----------------------------------------------------------+
+			For nX := 1 To Len(aHeader)
+				Do Case
+					Case Trim(aHeader[nX][2]) == "C3_PRECO"
+						nPreco := aCols[n][nX]
+					Case Trim(aHeader[nX][2]) == "C3_PEDIDO"
+						aCols[n][nX] := SC7->C7_NUM
+				EndCase		
+			Next nX
+			If nPreco != 0		
+				dbSelectArea("SC7")
+				RecLock("SC7",.F.)
+				Replace C7_PRECO	With nPreco
+				Replace C7_TOTAL  With (nPreco*SC7->C7_QUANT)
+				dbUnLock()
+			EndIf	
+		Endif
+	EndIf	
+Else
+	Help(" ",1,"A100F4")
+Endif
+SetKey( VK_F4,bKeyF4 )
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> __Return( lRet )
+Return( lRet )        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function oOk
+Static Function oOk()
+	nOpcA := 1
+	Close(oDlg)
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function oCANCEL
+Static Function oCANCEL()
+	nOpcA := 2
+	Close(oDlg)
+Return

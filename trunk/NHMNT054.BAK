@@ -1,0 +1,151 @@
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³NHMNT051 Autor ³José Henrique M Felipetto  Data  08/22/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³  Relatório de O.S                                          º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Manutenção de Ativos                                       º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "PROTHEUS.CH"
+User Function NHMNT054()
+
+Private 	cStatus := "" 
+Private 	cTipo 	:= ""
+cString		:= "ZDN"
+cDesc1		:= "Este relatório tem omo objetivo"
+cDesc2      := "Listar as ordens de serviços e suas características"
+cDesc3      := ""      
+tamanho		:= "M"
+limite		:= 132
+aReturn		:= { "Zebrado", 1,"Administracao", 1, 2, 1, "", 1 }
+nomeprog	:= "NHMNT054"
+nLastKey	:= 0
+titulo		:= OemToAnsi("Relatório de O.S")
+cabec1    	:= ""
+cabec2		:= ""
+cCancel		:= "***** CANCELADO PELO OPERADOR *****"
+_nPag		:= 1 //Variavel da pagina
+M_PAG		:= 1
+wnrel		:= "MNT054"
+_cPerg		:= "MNT054"
+
+
+SetPrint(cString,wnrel,_cPerg,titulo,cDesc1,cDesc2,cDesc3,.F.,,,tamanho)
+
+if nlastKey ==27
+    Set Filter to
+    Return
+Endif          
+
+SetDefault(aReturn,cString)
+
+nTipo	:= IIF(aReturn[4]==1,GetMV("MV_COMP"), GetMV("MV_NORM"))
+
+aDriver	:= ReadDriver()
+cCompac	:= aDriver[1]
+
+If Pergunte(_cPerg,.T.)
+	Processa( {|| Gerando()  },"Gerando Dados para a Impressao")
+	Processa( {|| RptDetail()  },"Imprimindo...")
+Else
+	Return .F.
+EndIf
+WOR1->(DbCloseArea() )
+
+set filter to 
+//set device to screen
+If aReturn[5] == 1
+	Set Printer To
+	Commit
+    ourspool(wnrel) //Chamada do Spool de Impressao
+Endif                                          
+MS_FLUSH() //Libera fila de relatorios em spool
+Return
+
+Static Function Gerando()
+
+cQuery := "Select CONVERT(Varchar(8000),CONVERT(VARBINARY(8000),ZDN_DESC)) ,* " 
+cQuery += " From " + RetSqlName('ZDN') + " ZDN " + "(NoLock) " 
+cQuery += " Where ZDN_ORDEM BETWEEN '" + mv_par01 + "' AND '" + mv_par02 + "'"
+cQuery += " AND  ZDN_DATA BETWEEN '" + DTOS(mv_par03) + "' AND '" + DTOS(mv_par04) + "'" 
+
+if mv_par05 == 1
+	cQuery += " AND ZDN_STATUS = 'A' "
+ElseIf mv_par05 == 2
+	cQuery += " AND ZDN_STATUS = 'E' "
+elseif mv_par05 == 3
+	cQuery += " AND ZDN_STATUS = 'P' "
+EndIf
+cQuery += " AND ZDN.D_E_L_E_T_ = '' "
+
+MemoWrit("D:\Temp\NHMNT054.SQL",cQuery)
+TCQUERY cQuery NEW ALIAS "WOR1"
+//TcSetField("WOR1","ZDN_DATA","D")
+DbSelectArea("WOR1") 
+WOR1 -> (DbGoTop())
+
+Return 
+
+Static Function RptDetail()
+
+Titulo := OemToAnsi("Relatório de O.S Ferramental -  Data : de " + DTOC(mv_par03) + " até " + DTOC(mv_par04))
+Cabec(Titulo, Cabec1, Cabec2, NomeProg, Tamanho, nTipo) 
+
+
+While WOR1->(!Eof()) 
+if @Prow() > 55
+	Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+EndIf
+
+	@Prow()+1,000 psay __PrtThinLine()
+	@Prow()+1 ,001   psay "Número da O.S: " + WOR1->ZDN_ORDEM // Código
+	@Prow()   ,060 	 psay "Data de Abertura: " + DTOC(STOD(WOR1->ZDN_DATA))   // Data de Abertura
+	
+	@Prow()+1 ,001   psay "Data de Finalização: " + DTOC(STOD(WOR1->ZDN_DATFIM)) //  Data de Finalização
+	If ZDN->ZDN_STATUS == "P"
+		cStatus := "Pendente"
+	ElseIf ZDN->ZDN_STATUS == "A"
+		cStatus := "Aberta"
+	ElseIf ZDN->ZDN_STATUS == "E"
+		cSatus := "Encerrada"
+	EndIf
+	@Prow()   ,060   psay "Status O.S: " + cStatus // Status da O.S
+	
+ 	@Prow()+1 ,001   psay "Código: " + ZDN->ZDN_COD + " - " + ZDN->ZDN_LETRA
+ 	
+ 	
+ 	If ALLTRIM(ZDN->ZDN_TIPO) == "1"
+ 		cTipo := "Modelo"
+ 	ElseIf ALLTRIM(ZDN->ZDN_TIPO) == "2"
+ 		cTipo := "Caixa de Macho"
+ 	ElseIf ALLTRIM(ZDN->ZDN_TIPO) == "3"
+ 		cTipo := "Máscara"
+ 	ElseIf ALLTRIM(ZDN->ZDN_TIPO) == "4"
+ 		cTipo := "Dispositivo"
+ 	EndIf
+ 	@Prow()+1 ,001	 psay "Tipo: " + cTipo
+ 	@Prow()   ,060   psay "Usuário: " + WOR1->ZDN_LOGIN   // Login do Usuário   
+ 	
+ 	ZDN->(DbGoto(WOR1->R_E_C_N_O_))
+ 	@Prow() +1,001 psay "Descrição: "
+	For x:=1 To MlCount(ALLTRIM(ZDN->ZDN_DESC),100)
+		@Prow() + Iif(x==1,0,1) , 12 Psay MemoLine(ZDN->ZDN_DESC,100,x)
+	Next
+	WOR1->(DbSkip())
+EndDo
+
+Return
+
+
+
+
+

@@ -1,0 +1,35 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 05/01/00
+
+User Function Delvetor()        // incluido pelo assistente de conversao do AP5 IDE em 05/01/00
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_AMATA010,_CVETOR,A,_aMata020,_aMATA030,_aMata120Cab,_aMata120Itens")
+
+_aMATA010 := {}
+aadd(_aMATA010,{"B1_COD"                ,"C",15,0})
+
+_aMata020   := {{"A2_COD"    ,"C" ,06,0},;
+					{"A2_LOJA"   ,"C" ,02,0}}
+
+_aMATA030 := {}
+aadd(_aMATA030,{"A1_COD"                ,"C",06,0}) // Codigo
+aadd(_aMATA030,{"A1_LOJA"               ,"C",02,0}) // Loja
+
+_aMata120Cab   :={{"C7_NUM"    ,"C",  6,0}}
+					                                             
+_aMata120Itens :={{"C7_NUM"    ,"C",  6,0},;
+					  {"C7_ITEM"   ,"C",  2,0}}
+					
+_aMata410Cab   :={{"C5_NUM"    ,"C",  6,0}}					  
+_aMata410Itens :={{"C5_NUM"    ,"C",  6,0}}
+					
+_cVetor  := ParamIxb
+A := &_CVETOR
+// Substituido pelo assistente de conversao do AP5 IDE em 05/01/00 ==> __Return(A)
+Return(A)        // incluido pelo assistente de conversao do AP5 IDE em 05/01/00

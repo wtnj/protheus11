@@ -1,0 +1,624 @@
+#INCLUDE "Protheus.CH"
+#INCLUDE "IMPRESG.CH"
+#INCLUDE "MSOLE.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³IMPRESG   ºAutor  ³Microsiga           º Data ³  11/04/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Impressao da Rescisao em modo Grafico.                      º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP6                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±           ³23/12/02³------³ Alt. para 4 digitos no ano do campo data.   ±±
+±±³          ³17/01/03³------³ Ajuste no Campo 09 tomador de servico.     ³±±
+±±³          ³30/01/03³------³ Alt. nos campos 25 e 26, inclusao do Codigo³±±
+±±³          ³30/01/03³------³ de Saque do FGTS.                          ³±±
+±±³          ³03/06/03³------³ Acerto na Impressao das Verbas             ³±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function IMPRESG()
+
+Local Imprime	:= 0
+
+aDriver   		:= LeDriver()
+cCompac 		:= aDriver[1]
+cNormal			:= aDriver[2]
+lNull   		:= .F.
+nContar 		:= 0
+lPrimeira		:= .T.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Define Variaveis PRIVATE utilizadas para Impressao Grafica³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private nPos		:= 0					   				 		   					//LINHA DE IMPRESSAO DO RELATORIO GRAFICO
+	 		   					//LINHA DE IMPRESSAO DO RELATORIO GRAFICO
+Private cFont		:= ""					 				 							//FONTES UTILIZADAS NO RELATORIO
+Private cFontm		:= ""					 				 							//FONTES UTILIZADAS NO RELATORIO
+Private cFontp		:= ""					 				 							//FONTES UTILIZADAS NO RELATORIO
+Private CONTFL		:= 1									  							//CONTA PAGINA
+Private nPosCab 	:= 0
+Private cCodSaqIOB 	:= ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Objetos para Impressao Grafica - Declaracao das Fontes Utilizadas.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private oFont07,oFont08,oFont09, oFont09n,oFont06
+Private nTot	:= Max(Len(aPdv),Len(aPdd))
+Private nNumMax	:= 18						//-- Numero maximo de verbas impressas no Detalhe da rescisao 
+
+oFont06	:= TFont():New("Arial",07,07,,.F.,,,,.T.,.F.)
+oFont07	:= TFont():New("Tahoma",06,06,,.F.,,,,.T.,.F.)
+oFont08	:= TFont():New("Tahoma",08,08,,.F.,,,,.T.,.F.)
+oFont09	:= TFont():New("Tahoma",09,09,,.F.,,,,.T.,.F.)
+oFont09n:= TFont():New("Tahoma",09,09,,.T.,,,,.T.,.F.)     //Negrito//
+
+nEpoca:= SET(5,1910)
+//--MUDAR ANO PARA 4 DIGITOS
+SET CENTURY ON
+fCabecalho()
+
+For Imprime := 1 to nTot
+
+	If !lPrimeira .and. Imprime <= nNumMax
+		nPos += 40
+	EndIf
+	
+	If Max(Len(aPdv)/2,Len(aPdd)) <= nNumMax
+		//-- Primeira coluna Provento
+		If Imprime <= nNumMax .And. Imprime <= Len(aPdv)
+			oPrint:say (nPos,200 ,Space(1) + Subs(aPdv[Imprime],1,21),oFont06)
+			oPrint:say (nPos,550 ,Space(1) + Subs(aPdv[Imprime],22,6), oFont06)			
+			oPrint:say (nPos,650 ,Space(1) + Subs(aPdv[Imprime],29,13), oFont06)
+			lPrimeira:= .F.
+		Else
+			oPrint:say (nPos,220 ,Space(50), oFont06)
+		Endif
+		//--Segunda Coluna Provento
+		If Imprime + nNumMax <= Len(aPdv)
+			oPrint:say (nPos,900 ,Space(1) + Subs(aPdv[Imprime+nNumMax],1,21), oFont06)
+			oPrint:say (nPos,1250 ,Space(1)+ Right(Subs(aPdv[Imprime+nNumMax],22,6),6), oFont06)
+			oPrint:say (nPos,1380 ,Space(1)+ Right(Subs(aPdv[Imprime+nNumMax],29,13),13),oFont06)
+			lPrimeira:= .F.                     
+		Else
+			oPrint:say (nPos,900 ,Space(50), oFont06)
+		Endif
+
+		//--Coluna Desconto		
+		If Imprime <= Len(aPdd)
+			oPrint:say (nPos,1620,Space(1) + Subs(aPdd[Imprime],1,21), oFont06)
+			oPrint:say (nPos,1970,Space(1) + Right(Subs(aPdd[Imprime],22,6),6), oFont06)
+			oPrint:say (nPos,2100,Space(1) + Right(Subs(aPdd[Imprime],29,13),13), oFont06)
+			lPrimeira:= .F.
+		Else
+			oPrint:say (nPos,1620,Space(50), oFont06)
+		Endif
+		nContar ++
+	Else
+		//--1o. coluna Provento
+		If Imprime <= Len(aPdv)/2 .And. Imprime <= Len(aPdv)
+		   	oPrint:say (nPos,200 ,Space(1) + Subs(aPdv[Imprime],1,21), oFont06)
+			oPrint:say (nPos,550 ,Space(1) + Right(Subs(aPdv[Imprime],22,6),6), oFont06)			
+			oPrint:say (nPos,650 ,Space(1) + Right(Subs(aPdv[Imprime],29,13),13), oFont06)
+			lPrimeira:= .F.
+		Else
+			oPrint:say (nPos,200 ,Space(50), oFont06)
+		Endif
+
+		//--2o. coluna Provento 
+		If Imprime + If( Len(aPdv)/2 > 0,Len(aPdv)/2-1,Len(aPdv)/2 ) <= Len(aPdv)
+   			oPrint:say (nPos,900 ,Space(1) + Subs(aPdv[Imprime+Len(aPdv)/2],1,21), oFont06)
+			oPrint:say (nPos,1250 ,Space(1)+ Right(Subs(aPdv[Imprime+Len(aPdv)/2],22,6),6), oFont06)
+			oPrint:say (nPos,1380 ,Space(1)+ Right(Subs(aPdv[Imprime+Len(aPdv)/2],29,13),13),oFont06)
+			lPrimeira:= .F.
+		Else
+			oPrint:say (nPos,900,Space(50), oFont06)
+		Endif
+
+		//--Coluna Desconto 
+		If Imprime <= Len(aPdd)
+			oPrint:say (nPos,1620,Space(1) + Subs(aPdd[Imprime],1,21), oFont06)
+			oPrint:say (nPos,1970,Space(1) + Right(Subs(aPdd[Imprime],22,6),6), oFont06)
+			oPrint:say (nPos,2100,Space(1) + Right(Subs(aPdd[Imprime],29,13),13), oFont06)
+			lPrimeira:= .F.
+		Else
+			oPrint:say (nPos,1620,Space(50), oFont06)
+		Endif
+		nContar ++
+		
+		//-- Impressao do rodape e quebra de pagina.
+		If nContar > nNumMax
+			fRodape()
+			oPrint:EndPage()
+			oPrint:StartPage() 	//Inicia uma nova pagina
+			ContFl++
+			fCabecalho()
+		EndIf
+	EndIf
+Next
+
+nPos += 40
+fRodape()
+
+Set(5,nEpoca)
+If nTdata > 8
+	SET CENTURY ON
+Else
+	SET CENTURY OFF
+Endif
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fCabecalho³ Autor ³ Recursos Humanos      ³ Data ³ 04.11.02 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao do CABECALHO Modo Grafico                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ RdMake                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fCabecalho()
+
+Local nPos1 	:= 0
+Local nPosM 	:= 0
+Local cCateg	:= fCateg(0)
+oPrint:StartPage() 			//Inicia uma nova pagina  
+
+cFont	:=oFont09
+cFontn	:=oFont09n
+cFontm	:=oFont08
+cFontp	:=oFont07
+
+
+nPos   	:= 20
+nPos1	:=nPos
+
+oPrint:line(nPos ,035 ,nPos ,2350) 					 	  							 //Linha Horizontal
+nPos	+=20
+
+If Mv_par08 == 1
+oPrint:say (nPos,760 ,STR0002,cFontn)				 								 //"TERMO DE RESCISAO DO CONTRATO DE TRABALHO"
+Else  																				 // Complementar
+oPrint:say (nPos,760 ,STR0003,cFontn)                 	   							 //"TERMO DE RESCISAO DO CONTRATO DE TRABALHO ( COMPLEMENTAR )"
+Endif
+nPos	+= 40         
+oPrint:line(nPos1 ,035 ,nPos ,035) 					 	  							 //Linha Horizontal
+oPrint:line(nPos1 ,2350,nPos ,2350) 					 	  						 //Linha Horizontal
+nPos1 := nPos
+nPosM :=nPos
+//IDENTIFICACAO DO EMPREGADOR//
+oPrint:line(080 ,035 ,080 ,2350) 					 	  							 //Linha Horizontal
+nPos	+= 30
+oPrint:say (0090,050 ,"I",cFontp)
+oPrint:say (nPos,220 ,STR0056, cFont) 		 										//"|01- CNPJ: 	
+oPrint:say (nPos,920  ,STR0001, cFont)								   				//"##|02- Razao Social / Nome:"
+oPrint:say (nPos,1820,STR0055, cFont) 						  	  					//"##" Filial: "	
+nPos	+= 60
+oPrint:say (0120,050 ,"D",cFontp)
+oPrint:say (nPos,235 ,SUBSTR(aInfo[8]+Space(20),1,20), cFont) 				  		//"|01- CNPJ: 	
+oPrint:say (nPos,935 ,aInfo[3], cFont)						   				  		//"##|02- Razao Social / Nome:"
+oPrint:say (nPos,1835,SRA->RA_Filial, cFont) 								   		//"##" Filial: "	
+nPos	+= 40
+oPrint:line(nPos,170 ,nPos,2350) 					 	  							 //Linha Horizontal
+oPrint:line(nPosM,900 ,nPos,900 )													//Linha Vertical Meio	
+oPrint:line(nPosM,1805,nPos,1805)													//Linha Vertical Meio	
+nPosM	:= nPos
+nPos	+= 30
+oPrint:say (0150,050 ,"E",cFontp)
+oPrint:say (0150,130 ,"E",cFontp)
+oPrint:say (nPos,220 ,"03 "+STR0011, cFont)  										//"|03 Endereco   : "
+oPrint:say (nPos,1820,"04 "+STR0014, cFont)	  						 				//"|04 Bairro : "
+nPos	+= 60
+oPrint:say (0180,050 ,"N",cFontp)
+oPrint:say (0180,130 ,"M",cFontp)
+oPrint:say (nPos,235 ,aInfo[4], cFont)				 	  							//"|03 Endereco   : "
+oPrint:say (nPos,920 ,aInfo[14], cFont)				   	   						//"|03 Complemento
+oPrint:say (nPos,1835,aInfo[13], cFont)	   								   		//"|04 Bairro : "
+nPos	+= 40
+oPrint:line(nPos,170 ,nPos,2350) 					 	  			 				//Linha Horizontal
+oPrint:line(nPosM,1805,nPos,1805)									                //Linha Vertical Meio	
+nPosM	:= nPos
+nPos	+= 30
+oPrint:say (0210,050 ,"T",cFontp)
+oPrint:say (0210,130 ,"P",cFontp)
+oPrint:say (nPos,220 ,"05 "+STR0015, cFont)										 	//"|05 Munic.: "
+oPrint:say (nPos,870 ,"06 "+STR0016, cFont)											//"|06 UF : "
+oPrint:say (nPos,1170,"07 "+STR0013, cFont)								   		   	//"|07 Cep: "
+oPrint:say (nPos,1520,"08 "+STR0017, cFont)										  	//"|08 CNAE"
+oPrint:say (nPos,1770,"09 "+STR0004, cFont)										   	//"|09 CNPJ/CEI Tomador/Obra: "
+nPos	+= 60
+oPrint:say (0240,050 ,"I",cFontp)
+oPrint:say (0240,130 ,"R",cFontp)
+oPrint:say (nPos,230 ,aInfo[5] , cFont)									   		//"|05 Munic.: "
+oPrint:say (nPos,885 ,aInfo[6] , cFont)									   		//"|06 UF : "
+oPrint:say (nPos,1185,aInfo[7] , cFont)									  		//"|07 Cep: "
+oPrint:say (nPos,1535,aInfo[16], cFont)									  		//"|08 CNAE"
+oPrint:say (nPos,1785,Substr(fDesc("SI3",SRA->RA_CC,"I3_CEI")+Space(5),1,15), cFont)//"|09 CNPJ/CEI Tomador/Obra: "
+nPos	+= 40
+oPrint:line(nPosM,850 ,nPos,850 )													//Linha Vertical Meio	
+oPrint:line(nPosM,1150,nPos,1150)													//Linha Vertical Meio	
+oPrint:line(nPosM,1500,nPos,1500)													//Linha Vertical Meio	
+oPrint:line(nPosM,1750,nPos,1750)													//Linha Vertical Meio	
+
+oPrint:say (0270,050 ,"F",cFontp)
+oPrint:say (0270,090 ,"D",cFontp)
+oPrint:say (0270,130 ,"E",cFontp)
+oPrint:say (0300,050 ,"I",cFontp)
+oPrint:say (0300,090 ,"O",cFontp)
+oPrint:say (0300,130 ,"G",cFontp)
+oPrint:say (0330,050 ,"C",cFontp)
+oPrint:say (0330,130 ,"A",cFontp)
+oPrint:say (0360,050 ,"A",cFontp)
+oPrint:say (0360,130 ,"D",cFontp)
+oPrint:say (0390,050 ,"C",cFontp)
+oPrint:say (0390,130 ,"O",cFontp)
+oPrint:say (0420,050 ,"A",cFontp)
+oPrint:say (0420,130 ,"R",cFontp)
+oPrint:say (0445,050 ,"O",cFontp)
+
+oPrint:line(080  ,170 ,nPos ,170 )			   										//Linha Vertical Meio	
+oPrint:line(nPos1,035 ,nPos ,035 )											 		//Linha Vertical Lateral
+oPrint:line(nPos1,2350,nPos ,2350)													//Linha Vertical Lateral
+oPrint:line(nPos ,035 ,nPos ,2350) 													//Linha Horizontal
+nPos+= 20												
+
+//IDENTIFICACAO DO TRABALHADOR//
+nPosM	:= nPos
+nPos1	:= nPos
+
+oPrint:line(nPos,035 ,nPos,2350) 													//Linha Horizontal
+
+oPrint:say (0495,050 ,"I",cFontp)
+oPrint:say (nPos,220 ,STR0025, cFont) 		 										//"10 PIS/PASEP:" 
+oPrint:say (nPos,900 ,STR0023, cFont)								   				//"11 NOME:"
+oPrint:say (nPos,1820,"Matricula", cFont)								   				//"11 NOME:"
+nPos	+= 60
+oPrint:say (0525,050 ,"D",cFontp)
+oPrint:say (0525,130 ,"T",cFontp)
+oPrint:say (nPos,235 ,SRA->RA_PIS,cFont) 											//PIS
+oPrint:say (nPos,935 ,SRA->RA_NOME,cFont)											//NOME
+oPrint:say (nPos,1835,SRA->RA_MAT,cFont)											//MATRICULA
+nPos	+= 40
+oPrint:line(nPos ,170 ,nPos,2350) 					 	  						    //Linha Horizontal
+oPrint:line(nPosM,885 ,nPos,885 )													//Linha Vertical Meio	
+oPrint:line(nPosM,1805,nPos,1805)													//Linha Vertical Meio	
+nPosM	:= nPos
+nPos	+= 20
+oPrint:say (0555,050 ,"E",cFontp)
+oPrint:say (0555,130 ,"R",cFontp)
+oPrint:say (nPos,220 ,"12 "+STR0011, cFont)  										//"|03 Endereco   : "
+oPrint:say (nPos,1820,"13 "+STR0014, cFont)	  						 				//"|04 Bairro : "
+nPos	+= 40
+oPrint:say (0585,050 ,"N",cFontp)
+oPrint:say (0585,130 ,"A",cFontp)
+oPrint:say (nPos,235 ,SRA->RA_ENDEREC, cFont)				 	  					//"|03 Endereco   : "
+oPrint:say (nPos,920 ,SRA->RA_COMPLEM, cFont)				   	   					//"|03 Complemento
+oPrint:say (nPos,1835,SRA->RA_BAIRRO, cFont)	   									//"|04 Bairro : "
+nPos	+= 40
+oPrint:line(nPos ,170 ,nPos,2350) 					 	  							 //Linha Horizontal
+oPrint:line(nPosM,1805,nPos,1805)													 //Linha Vertical Meio	
+nPosM	:= nPos
+nPos	+= 20
+oPrint:say (0615,050 ,"T",cFontp)
+oPrint:say (0615,130 ,"B",cFontp)
+oPrint:say (nPos,220 ,"14 "+STR0015, cFont)										 	//"|05 Munic.: "
+oPrint:say (nPos,870 ,"15 "+STR0016, cFont)											//"|06 UF : "
+oPrint:say (nPos,1170,"16 "+STR0013, cFont)								   		   	//"|07 Cep: "
+oPrint:say (nPos,1520,"17 "+STR0024, cFont)										  	//"|08 CNAE"
+nPos	+= 60
+oPrint:say (0645,050 ,"I",cFontp)
+oPrint:say (0645,130 ,"A",cFontp)
+oPrint:say (nPos,230 ,SRA->RA_MUNICIP, cFont)									   	//"|05 Munic.: "
+oPrint:say (nPos,885 ,SRA->RA_ESTADO , cFont)									   	//"|06 UF : "
+oPrint:say (nPos,1185,SRA->RA_CEP , cFont)									  		//"|07 Cep: "
+oPrint:say (nPos,1535,SRA->RA_NUMCP+"- "+SRA->RA_SERCP+"/"+SRA->RA_UFCP, cFont)									  		//"|08 CNAE"
+nPos	+= 40
+oPrint:line(nPos ,170 ,nPos,2350) 					 	  							 //Linha Horizontal 
+oPrint:line(nPosM,850 ,nPos,850 )													//Linha Vertical Meio	
+oPrint:line(nPosM,1150,nPos,1150)													//Linha Vertical Meio	
+oPrint:line(nPosM,1500,nPos,1500)													//Linha Vertical Meio	
+nPosM	:= nPos                                                                                               
+nPos	+= 20
+oPrint:say (0675,050 ,"F",cFontp)
+oPrint:say (0675,090 ,"D",cFontp)
+oPrint:say (0675,130 ,"L",cFontp)
+
+oPrint:say (nPos,230 , STR0012, cFont)	   						 			   		//18 CPF:"
+oPrint:say (nPos,780 , STR0027, cFont)	   	   					  			   		//19 Nasc.:"
+oPrint:say (nPos,1400, STR0007, cFont)							  			  		//20 Nome da Mae"
+nPos	+= 40
+oPrint:say (0705,050 ,"I",cFontp)
+oPrint:say (0705,090 ,"O",cFontp)
+oPrint:say (0705,130 ,"H",cFontp)
+
+oPrint:say (nPos,250 , SRA->RA_CIC, cFont)		 				  			  		//18 CPF:"
+oPrint:say (nPos,880 , DtoC(SRA->RA_NASC), cFont)				   			  		//19 Nasc.:"
+oPrint:say (nPos,1420, SUBSTR(SRA->RA_MAE+Space(30),1,40), cFont)			 		//20 Nome da Mae"  
+
+oPrint:say (0735,050 ,"C",cFontp)
+oPrint:say (0735,130 ,"A",cFontp)
+oPrint:say (0765,050 ,"A",cFontp)
+oPrint:say (0765,130 ,"D",cFontp)
+oPrint:say (0795,050 ,"C",cFontp)
+oPrint:say (0795,130 ,"O",cFontp)
+oPrint:say (0825,050 ,"A",cFontp)
+oPrint:say (0825,130 ,"R",cFontp)
+oPrint:say (0855,050 ,"O",cFontp)
+nPos	+= 40
+
+oPrint:line(nPosM,770 ,nPos,770 )													//Linha Vertical Meio	
+oPrint:line(nPosM,1390,nPos,1390)													//Linha Vertical Meio	
+oPrint:line(490,170,nPos,170)				   										//Linha Vertical Meio	
+oPrint:line(nPos1,035 ,nPos ,035)											 		//Linha Vertical Lateral
+oPrint:line(nPos1,2350,nPos ,2350)													//Linha Vertical Lateral
+oPrint:line(nPos,035,nPos,2350) 					 						  		//Linha Horizontal
+nPos	+= 20
+
+//DADOS DO CONTRATO//
+
+oPrint:line(nPos,035,nPos,2350) 					 						  		//Linha Horizontal
+
+nPosM	:= nPos
+nPos1	:= nPos
+nPos	+= 20
+
+oPrint:say (nPos,220 , STR0009, cFont)										   		//21 Remuneracao p/ fins rescisorios
+oPrint:say (nPos,800 , STR0010, cFont)		  								  		//22 Admis:"
+oPrint:say (nPos,1330, STR0018, cFont)		   								   		//23 Data do Aviso Previo"
+oPrint:say (nPos,1730, STR0030, cFont)		 								   		//24 Data do afastamento: 
+nPos	+= 60
+oPrint:say (0935,130 ,"C",cFontp)
+oPrint:say (nPos,230 , Transform(SRG->RG_SALMES, "@E 999,999,999.99"), cFont) 		//21 Remuneracao p/ fins rescisorios
+oPrint:say (nPos,900 , DtoC(SRA->RA_ADMISSA), cFont)			   			   		//22 Admis:"
+oPrint:say (nPos,1450, DtoC(SRG->RG_DTAVISO), cFont)			   			   		//23 Data do Aviso Previo"
+oPrint:say (nPos,1800, DtoC(SRG->RG_DATADEM), cFont)			   			   		//24 Data do afastamento: 
+nPos	+= 40
+oPrint:line(nPos,170 ,nPos,2350) 													//Linha Horizontal
+oPrint:line(nPosM,790 ,nPos,790 )													//Linha Vertical Meio	
+oPrint:line(nPosM,1315,nPos,1315)													//Linha Vertical Meio	
+oPrint:line(nPosM,1715,nPos,1715)													//Linha Vertical Meio	
+nPosM	:= nPos
+nPos	+= 20
+
+oPrint:say (0965,050 ,"D",cFontp)
+oPrint:say (nPos,220 , STR0034, cFont)	  				   		 			   		//25 Causa do Afastamento :"           
+oPrint:say (nPos,900 , STR0035, cFont)							 			   		//26 Cod. afastamento:"		
+oPrint:say (nPos,1250, STR0033, cFont)			   		   		 			   		//27 Pens.Alim.:"
+oPrint:say (nPos,1550, STR0036, cFont)				 			   					//28 Categoria do trabalhador"
+nPos	+= 60
+oPrint:say (0965,130 ,"O",cFontp)
+oPrint:say (nPos,250 , cCodR+" - "+ SubStr(cCausa+Space(30),1,30), cFont)	  		//25 Causa do Afastamento :"           
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Codigos de Saque Validos Segundo o Calendario de    Obrigacoes³
+//³e Tabelas Praticas do IOB de Out/99 Paginas 62 a 68.          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCodSaqIOB := "01_02_03_04_05_06_07_10_23_26_27_50_70_80_81_82_86_87_88_91_92_93_94_95" 
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Se o Codigo nao For Valido nao Imprime a Guia de Rescisao.    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF !(StrZero(Val(cCodSaq),2) $ cCodSaqIOB)  //Imprime NAO se Codigo nao for de Saque.
+	cCodSaq := "NAO"
+EndIF
+
+oPrint:say (nPos,1000, cCodSaq, cFont)							  			  		//26 Cod. afastamento:"		
+oPrint:say (nPos,1300, Transform(nPerPensa,"999.99"), cFont) 		  		  		//27 Pens.Alim.:"
+oPrint:say (nPos,1640, cCateg , cFont)					   			   				//28 Categoria do trabalhador"
+nPos	+= 40
+
+oPrint:say (0995,050 ,"A",cFontp)
+oPrint:say (0995,130 ,"N",cFontp)
+oPrint:say (1025,050 ,"D",cFontp)
+oPrint:say (1055,050 ,"O",cFontp)
+oPrint:say (1025,130 ,"T",cFontp)
+oPrint:say (1025,090 ,"D",cFontp)
+oPrint:say (1055,090 ,"O",cFontp)
+oPrint:say (1055,130 ,"R",cFontp)
+oPrint:say (1085,130 ,"A",cFontp)
+oPrint:say (1085,050 ,"S",cFontp)
+oPrint:say (1115,130 ,"T",cFontp)
+oPrint:say (1145,130 ,"O",cFontp)
+
+oPrint:line(nPos1,035 ,nPos ,035)											 		//Linha Vertical Lateral
+oPrint:line(nPos1,2350,nPos ,2350)													//Linha Vertical Lateral
+oPrint:line(nPosM,885 ,nPos,885 )													//Linha Vertical Meio	
+oPrint:line(nPosM,1235,nPos,1235)													//Linha Vertical Meio	
+oPrint:line(nPosM,1535,nPos,1535)													//Linha Vertical Meio	
+oPrint:line(0935,170 ,nPos,170)														//Linha Vertical Meio	
+oPrint:line(nPos,035 ,nPos,2350) 													//Linha Horizontal
+nPos	+= 30
+nPos1	:= nPos
+
+//DISCRIMINACAO DAS VERBAS RESCISORIAS//
+oPrint:say (nPos,200,"Proventos", cFont)					   					
+oPrint:say (nPos,1620,"Descontos", cFont)					   					
+nPos	+= 5
+
+oPrint:line(nPos,035,nPos,2350) 					 						  		//Linha Horizontal
+
+oPrint:say (1280,050,"D", cFontp)					   						  		//Discriminacao das Verbas Rescisorias
+oPrint:say (1280,130,"V", cFontp)	
+oPrint:say (1310,050,"I", cFontp)	
+oPrint:say (1310,130,"E", cFontp)	
+oPrint:say (1340,050,"S", cFontp)	
+oPrint:say (1340,130,"R", cFontp)	
+oPrint:say (1370,050,"C", cFontp)	
+oPrint:say (1370,130,"B", cFontp)	
+oPrint:say (1400,050,"R", cFontp)	
+oPrint:say (1400,130,"A", cFontp)	
+oPrint:say (1430,050,"I", cFontp)	
+oPrint:say (1430,130,"S", cFontp)	
+oPrint:say (1460,050,"M", cFontp)	
+oPrint:say (1510,130,"R", cFontp)	
+oPrint:say (1490,050,"I", cFontp)	
+oPrint:say (1540,130,"E", cFontp)	
+oPrint:say (1520,050,"N", cFontp)	
+oPrint:say (1570,130,"S", cFontp)	
+oPrint:say (1550,050,"A", cFontp)	
+oPrint:say (1600,130,"C", cFontp)	
+oPrint:say (1580,050,"C", cFontp)	
+oPrint:say (1630,130,"I", cFontp)	
+oPrint:say (1610,050,"A", cFontp)	
+oPrint:say (1660,130,"S", cFontp)	
+oPrint:say (1640,050,"O", cFontp)
+oPrint:say (1690,130,"O", cFontp)	
+oPrint:say (1720,130,"R", cFontp)	
+oPrint:say (1730,050,"D", cFontp)	
+oPrint:say (1750,130,"I", cFontp)	
+oPrint:say (1760,050,"A", cFontp)	
+oPrint:say (1780,130,"A", cFontp)	
+oPrint:say (1790,050,"S", cFontp)	
+oPrint:say (1810,130,"S", cFontp)	
+nPos	+= 40
+
+oPrint:line(nPos ,170 ,nPos ,2350) 													//Linha Horizontal apos lancamento das verbas
+oPrint:line(nPos1,035 ,nPos ,035 )											 		//Linha Vertical Lateral
+oPrint:line(nPos1,2350,nPos ,2350)													//Linha Vertical Lateral
+nPos	+= 20
+nPosCab :=  nPos
+nContar := 1
+  
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±º Funcao   ³fRodape   ºAutor  ³Microsiga           º Data ³  04/11/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³fRodape - Impressao do Rodape da Rescisao (Grafico).        º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function fRodape()
+
+Local nPos1		:= nPosCab
+Local x 		:= 0 
+
+If nTot < nNumMax
+	For X := 1 to nNumMax - nTot
+	oPrint:line (nPos1,035 ,nPos, 035)
+	oPrint:line (nPos1,880 ,nPos, 880)
+	oPrint:line (nPos1,1600,nPos,1600)
+	oPrint:line (nPos1,2350,nPos,2350)
+		If X <= nNumMax
+			nPos += 40
+		EndIf	
+	Next
+EndIf
+nPos1	:= 0
+nPosM	:= nPos
+oPrint	:line(nPos,170 , nPos,2350)													//Linha Horizontal
+nPos	+= 20            
+                                                                  
+oPrint:say (nPos,220 , STR0038+If(lNull,Space(20),Space(09)+Transform(nProv,"@E 999,999,999.99")), cFont)			//"|30-TOTAL BRUTO              "
+oPrint:say (nPos,900 , STR0039+If(lNull,Space(14),Space(06)+Transform(nDesc,"@E 999,999,999.99")), cFont)			//"|TOTAL DESCONTOS             "
+oPrint:say (nPos,1620, STR0040+If(lNull,Space(20),Space(09)+Transform(nProv - nDesc,"@E 999,999,999.99")), cFont)	//"|LIQUIDO A RECEBER           "
+nPos	+= 40   
+oPrint:line(1245,035 ,nPos,035 ) 	  												//Linha Vertical Lateral
+oPrint:line(1205,170 ,nPos,170)														//Linha Vertical Meio	
+oPrint:line(1245,880 ,nPos,880 )													//Linha Vertical Meio	
+oPrint:line(1205,1600,nPos,1600)													//Linha Vertical Meio
+oPrint:line(1245,2350,nPos,2350)    												//Linha Vertical Lateral
+
+oPrint:line(nPos,035 ,nPos,2350)		 								   			//Linha Horizontal
+
+
+//FORMALIZACAO DA RESCISAO//
+
+nPos	+= 30
+oPrint:line(nPos,035 ,nPos,2350)		 								   			//Linha Horizontal
+
+nLinha	:= nPos
+nPosM	:= nPos
+nPos	+= 10           
+
+oPrint:say (2160,050,"F", cFontp)	
+oPrint:say (2190,050,"O", cFontp)	
+oPrint:say (2220,050,"R", cFontp)	
+oPrint:say (2250,050,"M", cFontp)	
+oPrint:say (2280,050,"A", cFontp)	
+oPrint:say (2310,050,"L", cFontp)	
+oPrint:say (2310,130,"R", cFontp)	
+oPrint:say (2340,050,"I", cFontp)	
+oPrint:say (2340,130,"E", cFontp)	
+oPrint:say (2370,050,"Z", cFontp)	
+oPrint:say (2370,130,"S", cFontp)	
+oPrint:say (2400,050,"A", cFontp)	
+oPrint:say (2400,130,"C", cFontp)	
+oPrint:say (2430,050,"C", cFontp)	
+oPrint:say (2430,130,"I", cFontp)	
+oPrint:say (2460,050,"A", cFontp)	
+oPrint:say (2460,130,"S", cFontp)	
+oPrint:say (2490,050,"O", cFontp)	
+oPrint:say (2490,130,"A", cFontp)	
+oPrint:say (2520,130,"O", cFontp)	
+oPrint:say (2550,050,"D", cFontp)	
+oPrint:say (2580,050,"A", cFontp)	
+
+oPrint:say (nPos,190 , STR0042, cFontm)	  											//"56 Local e data do Recebimento"
+oPrint:say (nPos,1405, STR0044, cFontm)												//"57 Carimbo e assinatura do empregador ou preposto"     
+nPos  += 100
+oPrint:line(nPos,170 ,nPos,2350) 													//Linha Horizontal
+nPos  += 10
+
+oPrint:say (nPos,190 , STR0043, cFontm)	  											//"58 Assinatura do trabalhador"
+oPrint:say (nPos,1405, STR0045, cFontm) 											//"59 Assinatura Responsavel legal"
+nPos  += 100
+oPrint:line(nPos,170 ,nPos,2350) 													//Linha Horizontal
+nPosM1:= nPos
+nPos  += 10
+
+oPrint:say (nPos,190 , STR0046, cFontm)	   											//"60 HOMOLOGACAO"                 
+oPrint:say (nPos,1405, STR0047, cFontm)	 											//"61 Digital do trabalhador  
+oPrint:say (nPos,1905, STR0048, cFontm)	   											//"62 Digital do responsavel legal"	
+nPos	+= 30    
+oPrint:say (nPos,190 , STR0050, cFontm)	  											//"Foi prestada, gratuitamente, assistencia ao trabalhador, nos   "
+nPos	+= 30
+oPrint:say (nPos,190 , STR0051, cFontm)	   											//"termos do art. 477,Inc.1. da CLT, sendo comprovado, neste ato  "
+nPos	+= 30
+oPrint:say (nPos,190 , STR0052, cFontm)	   											//"o efetivo pagamento das verbas rescisorias acima especificadas."
+nPos	+= 100
+oPrint:say (nPos,190 , STR0031, cFont)	   											//__________________________________
+nPos	+= 30
+oPrint:say (nPos,190 , STR0029, cFontm)	   											//Local e Data
+nPos	+= 100
+oPrint:say (nPos,190 , STR0031, cFont)	   											//__________________________________
+nPos	+= 30
+oPrint:say (nPos,190 , STR0028, cFontm)	   											//Carimbo e assinatura do assistente
+oPrint:say (nPos,1405, STR0053, cFontm)	   											//64 Recepcao pelo Banco( data e carimbo)
+
+oPrint:line(nPosM1,1895,nPos,1895)													//Linha Vertical Meio	
+oPrint:line(nPos,1390,nPos,2350) 													//Meia Linha Horizontal
+nPos	+= 040
+oPrint:line(nPos,170 ,nPos,1390) 													//Meia Linha Horizontal
+nPos	+= 010
+
+oPrint:say (nPos,190 , STR0054, cFontm)	   											//63 Identificacao do orgao homologador"
+nPos	+= 140
+
+oPrint:line(nLinha,035 ,nPos,035 )													//Linha Vertical Lateral
+oPrint:line(nLinha,2350,nPos,2350)													//Linha Vertical Lateral
+oPrint:line(nPos,035 ,nPos,2350) 													//Linha Horizontal
+oPrint:line(nPosM,1390,nPos,1390)													//Linha Vertical Meio	
+oPrint:line(nLinha,170 ,nPos,170)
+
+nPos	+= 20
+oPrint:say (nPos,760 ,STR0019, cFont)												//" A ASSISTENCIA NO ATO DE RESCISAO CONTRATUAL E GRATUITA" #  (LINHA 63)//
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³FIM DO RELATORIO                                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oPrint:EndPage()
+CONTFL:=1
+
+Return 

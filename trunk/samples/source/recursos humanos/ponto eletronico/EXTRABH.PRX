@@ -1,0 +1,681 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "EXTRABH.CH"
+
+#IFNDEF CRLF
+	#DEFINE CRLF ( chr(13)+chr(10) )
+#ENDIF	
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ EXTRABH  ³ Autor ³ Equipe Advanced RH    ³ Data ³ 11.12.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Extrato de Banco de Horas                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ EXTRATBH                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±± 
+±±³Mauricio MR ³05/09/01³      ³ Correcao impressao de saldo anterior     ³±±
+±±³Marinaldo   ³27/09/01³Melhor³Tratamento para o Terminal de Consulta    ³±±
+±±³Marinaldo   ³12/11/01³Melhor³Redefinicao do Codigo HTML para o Terminal³±±
+±±³            ³--------³------³de Consultar (RH OnLine)                  ³±±
+±±³Mauricio MR ³20/09/02³059512³Renomeacao da variavel cFilAnt p/ cFilTmp ³±±
+±±³            ³--------³------³para preservar o conteudo da variavel pri-³±±
+±±³            ³--------³------³vate cFilAnt reservada ao Sistema.        ³±±
+±±³Mauricio MR ³08/09/03³066270³Correcao da Impressao do Saldo Anterior p/³±±
+±±³            ³--------³------³varias quantidades de copias.			  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function Extrabh( lTerminal , cFilTerminal , cMatTerminal  )
+
+Local aOrd		:= { STR0006 , STR0007 , STR0008 , STR0009 , STR0010 } //'Matricula'###'Centro de Custo'###'Nome'###'Turno'###'C.Custo + Nome'
+Local cHtml		:= "" 
+Local cAviso		
+Local cDesc1    := STR0003	//'Extrato de Banco de Horas'
+Local cDesc2    := STR0004	//'Ser  impresso de acordo com os parametros solicitados pelo'
+Local cDesc3    := STR0005	//'usuario.'
+Local cString	:= 'SRA' 	//-- Alias do arquivo principal (Base)
+Local lEnd		:= .F.  
+//-- Tratamento dos arquivos envolvidos no Fechamento Mensal (Para evitar que o processo nao seja finalizado)
+Local aFilesOpen :={"SP5", "SPN", "SP8", "SPG","SPB","SPL","SPC", "SPH", "SPF"}
+Local bCloseFiles:= {|cFiles| If( Select(cFiles) > 0, (cFiles)->( DbCloseArea() ), NIL) }
+
+Private aReturn  := { STR0001 , 1, STR0002 , 2, 2, 1, '',1 } //'Zebrado'###'Administra‡„o'
+Private nomeprog := 'EXTRBH'
+Private aLinha   := {}
+Private nLastKey := 0
+Private cPerg    := 'EXTRBH'
+Private Titulo   := OemToAnsi( STR0011 ) //'Extrato de Banco de Horas'
+Private cCabec   := ''
+Private AT_PRG   := 'EXTRBH'
+Private wCabec0  := 1
+Private wCabec1  := ''
+Private CONTFL   := 1
+Private LI       := 1 //Inicializa Li com 1 para Nao Imprimir Cabecalho Padrao.
+Private nTamanho := 'M'
+Private aInfo    := {}
+Private wnrel
+Private nOrdem
+
+lTerminal := IF( lTerminal == NIL , .F. , lTerminal )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte( cPerg , .F. )
+
+IF !lTerminal
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Envia controle para a funcao SETPRINT                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	wnrel := 'EXTRBH' //-- Nome Default do relatorio em Disco
+	wnrel := SetPrint(cString,wnrel,cPerg,@Titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,.T.,nTamanho)
+
+EndIF	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Retorna a Ordem do Relatorio.                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nOrdem    := IF( !lTerminal , aReturn[8] , 1 )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carregando variaveis mv_par?? para Variaveis do Sistema.     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private FilialDe  := IF( !lTerminal , mv_par01 , cFilTerminal	)	//Filial  De
+Private FilialAte := IF( !lTerminal , mv_par02 , cFilTerminal	)	//Filial  Ate
+Private CcDe      := IF( !lTerminal , mv_par03 , SRA->RA_CC		)	//Centro de Custo De
+Private CcAte     := IF( !lTerminal , mv_par04 , SRA->RA_CC		)	//Centro de Custo Ate
+Private TurDe     := IF( !lTerminal , mv_par05 , SRA->RA_TNOTRAB)	//Turno De
+Private TurAte    := IF( !lTerminal , mv_par06 , SRA->RA_TNOTRAB)	//Turno Ate
+Private MatDe     := IF( !lTerminal , mv_par07 , cMatTerminal	)	//Matricula De
+Private MatAte    := IF( !lTerminal , mv_par08 , cMatTerminal	)	//Matricula Ate
+Private NomDe     := IF( !lTerminal , mv_par09 , SRA->RA_NOME	)	//Nome De
+Private NomAte    := IF( !lTerminal , mv_par10 , SRA->RA_NOME	)	//Nome Ate
+Private RegDe     := IF( !lTerminal , mv_par11 , SRA->RA_REGRA	)	//Regra De
+Private RegAte    := IF( !lTerminal , mv_par12 , SRA->RA_REGRA	)	//Regra Ate
+Private dDtIni    := IF( !lTerminal , mv_par13 , SRA->RA_ADMISSA)	//Data Inicial
+Private dDtFim    := IF( !lTerminal , mv_par14 , dDataBase		)	//Data Final
+Private cSit      := IF( !lTerminal , mv_par15 , fSituacao(,.F.))	//Situacao
+Private cCat      := IF( !lTerminal , mv_par16 , fCategoria(,.F.))	//Categoria
+Private nHoras    := IF( !lTerminal , mv_par17 , 1				)	//Horas Normais/Valorizadas
+Private nCopias   := IF( !lTerminal , mv_par18 , 1				)	//Numero de Copias
+Private nSalBH	  := IF( !lTerminal , mv_par19 , 1				)	//Imprimir com Saldo(Result/Credor/Devedor)
+Private nTpEvento := IF( !lTerminal , mv_par20 , 1				)	//Imprimir Eventos(Autoriz/N.Autoriz/Ambos)
+
+IF lTerminal
+
+	//-- Verifica se foi possivel abrir os arquivos sem exclusividade
+	If Pn090Open(@cHtml, @cAviso)
+		cHtml := ""	
+		cHtml := ImpExtraBh( @lEnd , wNRel , cString , lTerminal  ) 
+	    /*
+		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		³ Apos a obtencao da consulta solicitada fecha os arquivos     ³
+		³ utilizados no fechamento mensal para abertura exclusiva      ³
+		ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+	    Aeval(aFilesOpen, bCloseFiles)
+	Else
+	   cHtml := HtmlDefault( cAviso , cHtml )   
+	Endif
+	
+ElseIF !( nLastKey == 27 )
+
+	SetDefault( aReturn , cString )
+
+	IF !( nLastKey == 27 )
+
+	    RptStatus( { |lEnd| ImpExtraBh( @lEnd , wNRel , cString ) } , Titulo )
+
+	EndIF
+
+EndIF
+
+Return( cHtml )
+
+Static Function ImpExtraBh( lEnd, wNRel, cString , lTerminal )
+
+Local cAcessaSRA	:= &("{ || " + ChkRH("EXTRABH","SRA","2") + "}")
+Local cHtml			:= ""
+Local cFil       	:= ''
+Local cMat       	:= ''
+Local cTno       	:= ''
+Local cFilTmp    	:= 'úú'
+Local cTnoAnt    	:= 'úúú'
+Local lLoop      	:= .F.
+Local nX         	:= 0
+Local nY         	:= 0
+Local nCount		:= 0
+
+lTerminal := IF( lTerminal == NIL , .F. , lTerminal )
+
+lEnd:=.F.
+
+dbSelectArea('SRA')
+dbSetOrder(nOrdem)
+If nOrdem == 1 .or. lTerminal
+	cInicio  := 'RA_FILIAL + RA_MAT'
+	IF !lTerminal
+		dbSeek(FilialDe + MatDe,.T.)
+		cFim     := FilialAte + MatAte
+	Else
+		cFim     := &( cInicio )
+	EndIF		
+ElseIf nOrdem == 2
+   dbSeek(FilialDe + CcDe + MatDe,.T.)
+   cInicio  := 'RA_FILIAL + RA_CC + RA_MAT'
+   cFim     := FilialAte + CcAte + MatAte
+ElseIf nOrdem == 3
+   dbSeek(FilialDe + NomDe + MatDe,.T.)
+   cInicio  := 'RA_FILIAL + RA_NOME + RA_MAT'
+   cFim     := FilialAte + NomAte + MatAte
+ElseIf nOrdem == 4
+   dbSeek(FilialDe + TurDe + MatDe,.T.)
+   cInicio  := 'RA_FILIAL + RA_TNOTRAB + RA_MAT'
+   cFim     := FilialAte + TurAte + MatAte
+ElseIf nOrdem == 5
+   dbSetOrder(8)
+   dbSeek(FilialDe + CcDe + NomDe,.T.)
+   cInicio  := 'RA_FILIAL + RA_CC + RA_NOME'
+   cFim     := FilialAte + CcAte + NomAte
+Endif
+
+//-- Inicializa R‚gua de Impress„o
+IF !lTerminal
+	SetRegua(RecCount())
+EndIF	
+
+dbSelectArea("SRA")
+While SRA->( !Eof() .and. &(cInicio) <= cFim )
+
+   IF !lTerminal
+   
+	   //-- Incrementa a R‚gua de Impress„o
+	   IncRegua()
+	
+	   //-- Cancela a Impress„o case se pressione Ctrl + A
+	   If lEnd
+	      IMPR(cCancela,'C')
+	      Exit
+	   EndIF
+	
+	   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	   //³ Consiste Parametrizacao do Intervalo de Impressao            ³
+	   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	   If (SRA->RA_TNOTRAB < Turde) .Or. (SRA->RA_TNOTRAB > TurAte) .Or. ;
+	      (SRA->Ra_NOME < NomDe) .Or. (SRA->RA_NOME > NomAte) .Or. ;
+	      (SRA->Ra_MAT < MatDe) .Or. (SRA->RA_MAT > MatAte)  .Or. ;
+	      (SRA->Ra_CC < CCDe) .Or. (SRA->RA_CC > CCAte) .Or. ;
+	      (SRA->Ra_REGRA < RegDe) .Or. (SRA->RA_REGRA > RegAte)
+	      dbSkip()
+	      Loop
+	   Endif
+	
+	   //-- Consiste Preenchimento de Cracha e data de Demiss„o
+	   If !Empty(SRA->RA_DEMISSA) .And. SRA->RA_DEMISSA < dDtIni
+	      DbSkip()
+	      Loop
+	   Endif
+	
+	   //-- Consiste Situacao e Categoria
+	   If !(Sra->Ra_SitFolh $ cSit) .Or. ;
+	      !(Sra->Ra_CatFunc $ cCat)
+	      DbSkip()
+	      Loop
+	   Endif
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Consiste controle de acessos e filiais validas               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !(SRA->RA_FILIAL $ fValidFil()) .Or. !Eval(cAcessaSRA)
+			SRA->(dbSkip())
+			Loop
+		EndIf
+	
+	EndIF
+	
+	If SRA->RA_FILIAL #cFilTmp
+		cFilTmp    := SRA->RA_Filial
+		cTnoAnt    := 'úúú'
+		//-- Atualiza o Array de Informa‡”es sobre a Empresa.
+		aInfo := {}
+		fInfo(@aInfo, SRA->RA_Filial)
+	Endif
+
+	IF !lTerminal
+		Set Device to Printer
+	EndIF	
+
+	//-- Carrega os Totais de Horas e Abonos.
+	nSaldo   :=0
+	nSaldoAnt:=0
+	aDet     :={}
+
+   // 1 - Data
+   // 2 - Codigo do Evento
+   // 3 - Descricao do Evento
+   // 4 - Quantidade de Horas Debito
+   // 5 - Quantidade de Horas Credito
+   // 6 - Saldo
+   // 7 - Status
+
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³ Verifica lancamentos no Banco de Horas                       ³
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   dbSelectArea( "SPI" )
+   dbSetOrder(2)
+   dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+   While !Eof() .And. SPI->PI_FILIAL+SPI->PI_MAT == SRA->RA_FILIAL+SRA->RA_MAT
+      // Totaliza Saldo Anterior
+      If SPI->PI_STATUS == " " .And. SPI->PI_DATA < dDtIni
+         If PosSP9( SPI->PI_PD , SRA->RA_FILIAL, "P9_TIPOCOD") $ "1*3" 
+				If nHoras==1	// Horas Normais
+	            nSaldoAnt:=SomaHoras(nSaldoAnt,SPI->PI_QUANT)
+				Else
+					nSaldoAnt:=SomaHoras(nSaldoAnt,SPI->PI_QUANTV)
+				Endif
+	      Else
+				If nHoras==1
+		         nSaldoAnt:=SubHoras(nSaldoAnt,SPI->PI_QUANT)
+				Else
+		         nSaldoAnt:=SubHoras(nSaldoAnt,SPI->PI_QUANTV)
+				Endif
+	      Endif
+			nSaldo := nSaldoAnt
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica os Lancamentos a imprimir                           ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If	SPI->PI_DATA < dDtIni .Or. SPI->PI_DATA > dDtFim
+			dbSkip()
+			Loop
+		Endif
+
+		//-- Verifica tipo de Evento quando for diferente de Ambos
+		If nTpEvento <> 3
+			If !fBscEven(SPI->PI_PD,2,nTpEvento)
+				SPI->(dbSkip())
+				Loop
+			EndIf
+		Else
+			PosSP9( SPI->PI_PD ,SRA->RA_FILIAL )
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Acumula os lancamentos de Proventos/Desconto em Array        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+		If SP9->P9_TIPOCOD $ "1*3"
+			nSaldo:=SomaHoras(nSaldo,If(SPI->PI_STATUS=="B",0,If(nHoras==1,SPI->PI_QUANT,SPI->PI_QUANTV)))
+		Else
+			nSaldo:=SubHoras (nSaldo,If(SPI->PI_STATUS=="B",0,If(nHoras==1,SPI->PI_QUANT,SPI->PI_QUANTV)))
+		Endif
+
+		aAdd(aDet,{padr(DTOC(SPI->PI_DATA),10),SPI->PI_PD,;
+					  Left(DescPdPon(SPI->PI_PD,SPI->PI_FILIAL),20),;
+					  Transform(If(SP9->P9_TIPOCOD $ "1*3",0,If(nHoras==1,SPI->PI_QUANT,SPI->PI_QUANTV)),"9999999.99"),;
+					  Transform(If(SP9->P9_TIPOCOD $ "1*3",If(nHoras==1,SPI->PI_QUANT,SPI->PI_QUANTV),0),"9999999.99"),;
+					  Transform(nSaldo,"99999999.99"),IF(SPI->PI_STATUS=="B","Baixado","Pendente") })
+
+		dbSelectArea( "SPI" )
+		SPI->( dbSkip() )
+
+	Enddo
+
+   If Len(aDet) > 0 .OR. !EMPTY(nSaldo)
+		If nSalBH == 1	.Or. (nSalBH == 2 .And. nSaldo >= 0) .Or.;
+								  (nSalBH == 3 .And. nSaldo < 0)
+      	//-- Imprime o Espelho para um Funcionario.
+	      For nCount := 1 To nCopias
+	          cHtml := fImpFun( lTerminal  )
+	      Next
+		Endif
+	Endif
+
+   dbSelectArea("SRA")
+   dbSkip()
+
+Enddo
+
+IF !lTerminal
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Termino do relatorio                                         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea('SPI')
+	dbSetOrder(1)
+	
+	dbSelectArea('SRA')
+	dbSetOrder(1)
+	Set Filter To
+	Set Device To Screen
+	If aReturn[5] == 1
+	   Set Printer To
+	   dbCommit()
+	   OurSpool(wnrel)
+	Endif
+	MS_FLUSH()
+
+EndIF
+
+Return( cHtml )
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³FImpFun   ³ Autor ³ Equipe Advanced RH    ³ Data ³ 11.12.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Imprime o Extrato de Banco de Horas                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ POR010IMP                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fImpFun( lTerminal  )
+
+Local cHtml		:= ""
+Local cDet      := ""
+Local nX        := 0
+Local nDet	  	:= 0	
+Local lZebrado	:= .F.
+
+//-- O valor inicial do Saldo passa a ser do Saldo Anterior ao Periodo Solicitado
+nSaldo := nSaldoAnt
+lTerminal := IF( lTerminal == NIL , .F. , lTerminal )
+
+/*
+-------------------------------------------------------------------------------
+  Data     Evento                       Debito    Credito       Saldo  Status
+-------------------------------------------------------------------------------
+                      Saldo Anterior 999999.99       0,00        0,00
+99/99/99   999-XXXXXXXXXXXXXXXXXXXX 9999999,99 9999999,99 99999999,99  Baixado
+*/
+
+//-- Inicializa Li com 1 para n„o imprimir cabecalho padrao
+Li := 01
+
+IF lTerminal
+	cHtml += HtmlProcId() + CRLF
+	cHtml += '<html>'  + CRLF
+	cHtml += 	'<head>'  + CRLF
+	cHtml += 		'<title>RH Online</title>'  + CRLF
+	cHtml +=		'<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">'  + CRLF
+	cHtml +=		'<link rel="stylesheet" href="css/rhonline.css" type="text/css">'  + CRLF
+	cHtml +=	'</head>'  + CRLF
+	cHtml +=	'<body bgcolor="#FFFFFF" text="#000000">'  + CRLF
+	cHtml +=		'<table width="515" border="0" cellspacing="0" cellpadding="0">'  + CRLF
+  	cHtml +=			'<tr>'  + CRLF
+    cHtml +=				'<td class="titulo">'  + CRLF
+    cHtml +=					'<p>'  + CRLF
+    cHtml +=						'<img src="'+TcfRetDirImg()+'/icone_titulo.gif" width="7" height="9">'  + CRLF
+    cHtml +=							'<span class="titulo_opcao">'  + CRLF
+    cHtml +=								STR0003 + CRLF	//'Extrato de Banco de Horas'
+    cHtml +=							'</span>' + CRLF
+    cHtml +=							'<br><br>' + CRLF
+	cHtml +=					'</p>' + CRLF
+	cHtml +=				'</td>' + CRLF
+  	cHtml +=			'</tr>' + CRLF
+  	cHtml +=			'<tr>' + CRLF
+    cHtml +=				'<td>' + CRLF
+    cHtml +=					'<p><img src="'+TcfRetDirImg()+'/tabela_conteudo.gif" width="515" height="12" align="center"></p>' + CRLF
+    cHtml +=				'</td>' + CRLF
+  	cHtml +=			'</tr>' + CRLF
+  	cHtml +=			'<tr>' + CRLF
+    cHtml +=				'<td>' + CRLF
+    cHtml +=					'<table width="515" border="0" cellspacing="0" cellpadding="1">' + CRLF
+    cHtml +=						'<tr>' + CRLF
+    cHtml +=							'<td background="'+TcfRetDirImg()+'/tabela_conteudo_1.gif" width="10">&nbsp;</td>' + CRLF
+    cHtml +=							'<td class="titulo" width="498">' + CRLF
+    cHtml +=								'<table width="498" border="0" cellspacing="0" cellpadding="0">' + CRLF
+	cHtml +=									'<tr>' + CRLF
+	cHtml +=										'<td class="etiquetas" bgcolor="#FAFBFC" nowrap>' + CRLF
+    cHtml +=											'<div align="left">' + CRLF
+    cHtml +=												STR0025 + CRLF	//"Data"
+    cHtml +=											'</div>' + CRLF
+    cHtml +=										'</td>' + CRLF
+    cHtml +=										'<td class="etiquetas" bgcolor="#FAFBFC" nowrap>' + CRLF
+    cHtml +=											'<div align="left">' + CRLF
+    cHtml +=												STR0026 + CRLF	//"Evento"
+    cHtml +=											'</div>' + CRLF
+    cHtml +=										'</td>' + CRLF
+    cHtml +=										'<td class="etiquetas" bgcolor="#FAFBFC" nowrap>' + CRLF
+    cHtml +=											'<div align="right">' + CRLF
+    cHtml +=												STR0027 + CRLF	//'D&eacute;bito'
+    cHtml +=											'</div>' + CRLF
+    cHtml +=										'</td>' + CRLF
+    cHtml +=										'<td class="etiquetas" bgcolor="#FAFBFC" nowrap>' + CRLF
+    cHtml +=											'<div align="right">' + CRLF
+    cHtml +=												STR0028 + CRLF	//'Cr&eacute;dito'
+    cHtml +=											'</div>' + CRLF
+    cHtml +=										'</td>' + CRLF
+    cHtml +=										'<td class="etiquetas" bgcolor="#FAFBFC" nowrap>' + CRLF
+    cHtml +=											'<div align="right">' + CRLF
+    cHtml +=												STR0029 + CRLF	//'Saldo'
+    cHtml +=											'</div>' + CRLF
+    cHtml +=										'</td>' + CRLF
+    cHtml +=										'<td class="etiquetas" bgcolor="#FAFBFC" nowrap>' + CRLF
+    cHtml +=											'<div align="center">' + CRLF
+    cHtml +=												STR0030 + CRLF	//'Status'
+    cHtml +=											'</div>' + CRLF
+    cHtml +=										'</td>' + CRLF
+    cHtml +=									'</tr>' + CRLF
+    cHtml +=									'<tr>' + CRLF
+    cHtml +=										'<td colspan="06" class="etiquetas" bgcolor="#FAFBFC"><hr size="1"></td>' + CRLF
+    cHtml +=									'</tr>' + CRLF
+EndIF
+
+//-- Imprime Cabecalho Especifico.
+IF !lTerminal
+	Imp_Cabec() //aqui
+EndIF	
+
+//-- Imprime Marca‡”es
+nDet := Len(aDet)
+For nX := 1 To nDet
+	lZebrado := ( nX%2 == 0.00 )
+	IF nX > 1
+		nSaldo := Val(aDet[nX-1,6])
+	EndIF
+	IF !lTerminal
+		IF Li >57
+			Li := 01
+			Imp_Cabec()
+		EndIF
+		cDet :=	aDet[nX,1] + " "
+		cDet +=	aDet[nX,2] + "-"
+		cDet += aDet[nX,3] + " "
+		cDet += aDet[nX,4] + " "
+		cDet += aDet[nX,5] + " "
+		cDet += aDet[nX,6] + "  "
+		cDet += aDet[nX,7]
+		Impr(cDet, 'C')
+	Else
+		IF lZebrado
+			cHtml += '<tr bgcolor="#FAFBFC">' + CRLF
+			cHtml += 	'<td class="dados_2" bgcolor="#FAFBFC" nowrap><div align="center">' + CRLF
+			cHtml +=	aDet[nX,1] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += 	'<td class="dados_2" bgcolor="#FAFBFC" nowrap><div align="left">' + CRLF
+			cHtml += 		aDet[nX,2] + " - " + Capital( AllTrim( aDet[nX,3] ) ) + CRLF
+			cHtml += 	'<td class="dados_2" bgcolor="#FAFBFC" nowrap><div align="right">' + CRLF
+			cHtml += 		aDet[nX,4] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += 	'<td class="dados_2" bgcolor="#FAFBFC" nowrap><div align="right">' + CRLF
+			cHtml += 		aDet[nX,5] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml +=	 '<td class="dados_2" bgcolor="#FAFBFC" nowrap><div align="right">' + CRLF
+			cHtml +=		aDet[nX,6] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += 	'<td class="dados_2" bgcolor="#FAFBFC" nowrap><div align="center">' + CRLF
+			cHtml += 		aDet[nX,7] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += '<tr>' + CRLF
+		Else
+			cHtml += '<tr>' + CRLF
+			cHtml += 	'<td class="dados_2" nowrap><div align="center">' + CRLF
+			cHtml +=	aDet[nX,1] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += 	'<td class="dados_2" nowrap><div align="left">' + CRLF
+			cHtml += 		aDet[nX,2] + " - " + Capital( AllTrim( aDet[nX,3] ) ) + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += 	'<td class="dados_2" nowrap><div align="right">' + CRLF
+			cHtml += 		aDet[nX,4] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += 	'<td class="dados_2" nowrap><div align="right">' + CRLF
+			cHtml += 		aDet[nX,5] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml +=	 '<td class="dados_2" nowrap><div align="right">' + CRLF
+			cHtml +=		aDet[nX,6] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += 	'<td class="dados_2" nowrap><div align="center">' + CRLF
+			cHtml += 		aDet[nX,7] + CRLF
+			cHtml += 	'</td>' + CRLF
+			cHtml += '<tr>' + CRLF
+		EndIF	
+	EndIF
+Next nx
+
+IF !lTerminal
+
+	//-- Atualiza saldo anterior para o ultimo registro lido
+	//-- Senao, ao findar a pagina na ultima linha detalhe, o saldo anterior a se impresso
+	//-- ira exibir o saldo anterior como o penultimo calculado. 
+	nSaldo := iif(Empty(Len(aDet)),nSaldo,Val(aDet[Len(aDet),6]))
+	If (Li+4) >57
+		Li := 01
+		Imp_Cabec()
+	Endif
+	Impr(__PrtThinLine(),'C') 
+	Impr(' ','C')
+	Impr(Space(55) +  Repl('_',31), 'C')
+	Impr(Space(58) + STR0012 , 'C') //"Assinatura do Funcionario "
+Else
+	cHtml +=								'</table>'
+	cHtml +=								'<br>'
+	cHtml +=							'</td>'
+    cHtml +=							'<td background="'+TcfRetDirImg()+'/tabela_conteudo_2.gif" width="7">&nbsp;</td>'
+    cHtml +=						'</tr>'
+    cHtml +=					'</table>'
+    cHtml +=				'</td>'
+  	cHtml +=			'</tr>'
+  	cHtml +=			'<tr>' 
+    cHtml +=				'<td><img src="'+TcfRetDirImg()+'/tabela_conteudo_3.gif" "515" height="14" align="center"></td>'
+  	cHtml +=			'</tr>'
+	cHtml +=		'</table>'
+	cHtml +=		'<p align="right"><a href="javascript:self.print()"><img src="'+TcfRetDirImg()+'/imprimir.gif" width="90" height="28" hspace="20" border="0"></a></p>'
+	cHtml +=	'</body>'
+	cHtml += '</html>'
+EndIF
+	
+Return( cHtml )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Imp_Cabec ³ Autor ³ Equipe Advanced RH    ³ Data ³ 11.12.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Imprime o cabecalho do Extrato do Banco de horas           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ POR010IMP                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Imp_Cabec()
+
+cDet      := ''
+cDescCc   := ''
+
+
+@ 0,0 PSAY AvalImp(132)
+  
+
+
+//-- Linha 01
+//-- Emp...: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Matr..: 99-999999  Chapa : 9999999999
+cDet := STR0013 + Left( If(Len(aInfo)>0,aInfo[03],SM0->M0_NomeCom) + Space(44), 51) //'Emp...: '
+cDet := cDet + STR0014 + SRA->RA_Filial + '-' + SRA->RA_Mat	//' Matr..: '
+cDet := cDet + STR0015  + SRA->RA_ChapA //'  Chapa : '
+Impr(cDet,'C')
+
+//-- Linha 02
+//-- End...: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Nome..: XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+cDet := STR0016 + Left( If(Len(aInfo)>0,aInfo[04],SM0->M0_EndCob) + Space(43), 50) //'End...: '
+cDet := cDet + STR0017 + Left(SRA->RA_Nome + Space(30), 30) //' Nome..: '
+Impr(cDet,'C')
+
+//-- Linha 03
+//-- CGC...: 99.999.999/9999-99                Funcao: 9999-XXXXXXXXXXXXXXXXXXXX
+cDet := STR0018 + Transform( If(Len(aInfo)>0,aInfo[08],SM0->M0_CGC),'@R 99.999.999/9999-99') + Space(33) //'CGC...: '
+cDet := cDet + STR0019 + SRA->RA_CodFunc + '-' + Left(DescFun(SRA->RA_CodFunc , SRA->RA_Filial) + Space(20), 20) //'Funcao: '
+Impr(cDet,'C')
+
+//-- Linha 04
+//-- C.C...: 99999999-XXXXXXXXXXXXXXXXXXXXXXX  Categ.: XXXXXXXXXXXXXXX
+cDet := STR0020 + Left(SUBS(SRA->RA_CC,1,20) + '-' + Left(DescCc(SRA->RA_CC, SRA->RA_FILIAL,30) + Space(33), 33) + Space(50), 50) //'C.C...: '
+cDet := cDet + STR0021 + DescCateg(SRA->RA_CatFunc,15) //' Categ.: '
+Impr(cDet,'C')
+
+//-- Linha 05
+//-- Turno.: 999-XXXXXXXXXXXXXXXXXXXXX
+cDescTno := Space(50)
+cFil := If(Empty(xFilial('SR6')), xFilial('SR6'), SRA->RA_FILIAL)
+
+dbSelectArea("SR6")
+If dbSeek(cFil+SRA->RA_TNOTRAB,.F.)
+   cDescTno := Left(AllTrim(SR6->R6_Desc),50)
+EndIf
+cDet := STR0022 + AllTrim(SRA->RA_TnoTrab) + '-' + cDescTno //'Turno.: '
+
+Impr(cDet,'C')
+
+//-- Monta e Imprime Cabecalho das Marcacoes
+cDet := STR0023 //'  Data     Evento                       Debito    Credito       Saldo  Status'
+
+Impr(__PrtThinLine(),'C') 
+Impr(cDet, 'C')
+Impr(__PrtThinLine(),'C') 
+
+cDet := Space(43) + STR0024 + Transform(nSaldo,"99999999.99") //"Saldo Anterior "
+Impr( cDet ,"C")
+
+Return( NIL )
+
+/*
+*******************************************************************************
+
+Data               Saldo Anterior     Debito    Credito       Saldo  Status
+  Data   Evento                       Debito    Credito       Saldo  Status
+*******************************************************************************
+                                         Saldo Anterior 99999999,99
+99/99/99 999-XXXXXXXXXXXXXXXXXXXX 9999999,99 9999999,99 99999999,99  Pendente
+99/99/99 999-XXXXXXXXXXXXXXXXXXXX 9999999,99 9999999,99 99999999,99  Baixado
+99/99/99                999999.99 9999999,99 9999999,99 99999999,99  Baixado
+
+*******************************************************************************
+
+Data                 Saldo Anterior     Debito    Credito       Saldo  Status
+  Data     Evento                       Debito    Credito       Saldo  Status
+*******************************************************************************
+                                           Saldo Anterior 99999999,99
+99/99/9999 999-XXXXXXXXXXXXXXXXXXXX 9999999,99 9999999,99 99999999,99  Pendente
+99/99/9999 999-XXXXXXXXXXXXXXXXXXXX 9999999,99 9999999,99 99999999,99  Baixado
+99/99/9999                999999.99 9999999,99 9999999,99 99999999,99  Baixado
+
+*/
+

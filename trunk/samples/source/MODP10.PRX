@@ -1,0 +1,373 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³  MODP10     ³Autor³    Marcos Simidu     ³ Data ³ 28.10.97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Imprime listagem de Cod. de Emitentes P10                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function Modp10()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnRel		:= "MODP10"
+Titulo	:= "Listagem de Codigos de Emitentes (Mod. P10)"
+cDesc1	:= "Emiss„o do Registro modelo P10 conforme parametros"
+cDesc2	:= "informados pelo usuario."
+cDesc3	:= ""
+aReturn	:= { "Zebrado", 1,"Administra‡„o", 2, 2, 1, "",1 }
+nomeprog	:= "MODP10"
+cPerg		:= "MODP10"
+cString	:= "SF3"
+nPagina	:= 0
+nLin		:= 80
+Tamanho	:= "M"
+lEnd		:= .F.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ AJUSTE NO SX1                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aSvAlias:={Alias(),IndexOrd(),Recno()}
+i:=0
+j:=0
+
+aRegistros:={}
+
+AADD(aRegistros,{"MODP10","01","Emitente De        ?","mv_ch1","C",6,0,0,"G","","mv_par01","","","","","","","","","","","","","","",""})
+AADD(aRegistros,{"MODP10","02","Emitente Ate       ?","mv_ch2","C",6,0,0,"G","","mv_par02","","ZZZZZZ","","","","","","","","","","","","",""})
+AADD(aRegistros,{"MODP10","03","Data De            ?","mv_ch3","D",8,0,0,"G","","mv_par03","","","","","","","","","","","","","","",""})
+AADD(aRegistros,{"MODP10","04","Data Ate           ?","mv_ch4","D",8,0,0,"G","","mv_par04","","","","","","","","","","","","","","",""})
+
+dbSelectArea("SX1")
+If !dbSeek("MODP1004")
+	dbSeek("MODP10")
+	While !Eof() .And. SX1->X1_GRUPO=="MODP10"
+		Reclock("SX1")
+		dbDelete()
+		MsUnlock()
+		dbSkip()
+	EndDo
+	For i:=1 to Len(aRegistros)
+		RecLock("SX1",.T.)
+		For j:=1 to FCount()
+			FieldPut(j,aRegistros[i,j])	
+		Next
+		MsUnlock()
+	Next	
+Endif
+
+dbSelectArea(aSvAlias[1])
+dbSetOrder(aSvAlias[2])
+dbGoto(aSvAlias[3])
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FIM DO AJUSTE                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ mv_par01 - Emitente De                ³
+//³ mv_par02 - Emitente Ate               ³
+//³ mv_par03 - Data de                    ³
+//³ mv_par04 - Data Ate                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte(cPerg,.F.)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nLastKey:=0
+wnrel:=SetPrint(cString,wnrel,cPerg,Titulo,cDesc1,cDesc2,cDesc3,.F.,"",.F.,Tamanho,,.T.)
+If nLastKey==27
+  	dbClearFilter()
+  	Return
+Endif
+SetDefault(aReturn,cString)
+If nLastKey==27
+  	dbClearFilter()
+  	Return
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Executa relatorio                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RptStatus( { || RptDetail() } )
+Return
+
+Static Function RptDetail()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa Variaveis            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aMeses	:= {"JANEIRO","FEVEREIRO","MARCO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"}
+cNomEmp	:= SM0->M0_NOMECOM
+cInscr	:= InscrEst()
+cCGC		:= TRANSFORM(SM0->M0_CGC,"@R 99.999.999/9999-99")
+cData  	:= dToC(ddatabase)
+cFilterUser:= aReturn[07]
+lAbortPrint:= .F.
+nLargMax	:= 132
+nLimPag	:= 55
+m_pag		:= 1
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Recebe parametros                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cEmitDe	:= mv_par01
+cEmitAte	:= mv_par02
+dDataIni := mv_par03
+dDataFim := mv_par04
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Recebe layout do modelo escolhido ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aL:=NIL
+R910LayOut()
+
+If !lAbortPrint
+	R910Listagem()
+Endif
+
+
+dbSelectArea("SF3")
+
+cArq:=cArq+OrdBagExt()
+RetIndex("SF3")
+Ferase(cArq)
+
+Set Filter To
+dbSetOrder(1)
+If aReturn[5]==1
+	Set Printer To 	
+	ourspool(wnrel)
+Endif
+
+MS_FLUSH()
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ R910Listagem  ³Autor³   Marcos Simidu    ³ Data ³ 18.10.97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Imprime Listagem de Cod. Materiais                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function R910Listagem()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posicina areas            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SA1")
+dbSetOrder(1)
+
+dbSelectArea("SA2")
+dbSetOrder(1)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis para Filtro             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SF3")
+
+cArq	:= CriaTrab(NIL,.F.)
+cKey	:= "F3_CLIEFOR+F3_LOJA"
+cFiltro := 'F3_FILIAL=="'+xFilial()+'".And.dTos(F3_ENTRADA)>="'+dTos(dDataIni)+'".And.'
+cFiltro := cFiltro + 'dTos(F3_ENTRADA)<="'+dTos(dDataFim)+'".And.F3_CLIEFOR>="'+cEmitDe+'".And.'
+cFiltro := cFiltro +	'F3_CLIEFOR<="'+cEmitAte+'"'
+
+IndRegua("SF3",cArq,cKey,,cFiltro,"Selecionando registros .. ")
+nIndex:=RetIndex("SF3")
+#IFNDEF TOP
+	dbSetIndex(cArq+OrdBagExt())
+#ENDIF
+dbSetOrder(nIndex+1)
+dbGotop()
+
+SetRegua(Reccount())
+
+cClieFor:=""
+
+While !Eof()
+
+	IncRegua()
+	If Interrupcao(@lAbortPrint)
+		Exit
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se ja imprimiu                         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (cClieFor==F3_CLIEFOR+F3_LOJA)
+		dbSkip()
+		Loop
+	Else
+		cClieFor:=F3_CLIEFOR+F3_LOJA
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Avalia filtro do usuario                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !Empty(cFilterUser).and.!(&cFilterUser)
+		dbSkip()
+		Loop
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Avalia se Cliente X Fornecedor                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cNome	:=""
+	cInscr:=""
+	cCgc	:=""
+
+    If Val(SUBSTR(F3_CFO,1,1))> 5
+		If F3_TIPO$"BD"
+			dbSelectArea("SA2")
+			If dbSeek(xFilial()+SF3->F3_CLIEFOR+SF3->F3_LOJA,.F.)
+				cNome	:=A2_NOME
+				cInscr:=A2_INSCR
+				cCgc	:=A2_CGC
+			Endif
+		Else
+			dbSelectArea("SA1")		
+			If dbSeek(xFilial()+SF3->F3_CLIEFOR+SF3->F3_LOJA,.F.)
+				cNome	:=A1_NOME
+				cInscr:=A1_INSCR
+				cCgc	:=A1_CGC
+			Endif
+		Endif
+	Else
+		If F3_TIPO$"BD"
+			dbSelectArea("SA1")
+			If dbSeek(xFilial()+SF3->F3_CLIEFOR+SF3->F3_LOJA,.F.)
+				cNome	:=A1_NOME
+				cInscr:=A1_INSCR
+				cCgc	:=A1_CGC
+			Endif
+		Else
+			dbSelectArea("SA2")
+			If dbSeek(xFilial()+SF3->F3_CLIEFOR+SF3->F3_LOJA,.F.)
+				cNome	:=A2_NOME
+				cInscr:=A2_INSCR
+				cCgc	:=A2_CGC
+			Endif
+		Endif
+	Endif
+
+	dbSelectArea("SF3")
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Cabecalho ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nLin>nLimPag
+		R910Cabec()
+	Endif
+	
+	aDados:=Array(05)
+	
+	aDados[1]:=SF3->F3_CLIEFOR
+	aDados[2]:=cNome
+	aDados[3]:=SF3->F3_ESTADO
+	aDados[4]:=cCgc
+	aDados[5]:=cInscr
+
+	FmtLin(@aDados,aL[13],,,@nLin)
+
+	dbSelectArea("SF3")
+	dbSkip()
+
+EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Preenche a pagina         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+R910Branco()
+
+Return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ R910Cabec ³Autor ³    Marcos Simidu      ³ Data ³ 18.10.97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao de Cabecalho                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function R910Cabec()
+nPagina := nPagina+1
+cPagina := StrZero(nPagina,6)
+cPagina := Right(cPagina,4)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Imprime Cabecalho  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nPagina>1
+	FmtLin(,aL[01],,,@nLin)
+Endif
+nLin:=0
+FmtLin(,AvalImp(nLargMax),,,@nLin)
+FmtLin(,{aL[01],aL[02],aL[03]},,,@nLin)
+FmtLin({cNomEmp},aL[04],,,@nLin)
+FmtLin(,aL[05],,,@nLin)
+FmtLin({cInscr,cCGC},aL[06],,,@nLin)
+FmtLin(,aL[07],,,@nLin)
+FmtLin({cPagina,cData},aL[08],,,@nLin)
+FmtLin(,{aL[09],aL[10],aL[11],aL[12]},,,@nLin)
+
+Return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ R910LayOut³Autor ³    Marcos Simidu      ³ Data ³ 18.10.97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Layout da Listagem                                         ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function R910LayOut()
+
+aL:=Array(13)
+
+aL[01]:="+----------------------------------------------------------------------------------------------------------------------------------+"
+aL[02]:="|                                                    TABELA DE CODIGOS DE EMITENTES                                                |"
+aL[03]:="|                                                                                                                                  |"
+aL[04]:="| FIRMA: #############################                                                                                             |"
+aL[05]:="|                                                                                                                                  |"
+aL[06]:="| INSC.EST: ###########            CGC(MF): ##############                                                                         |"
+aL[07]:="|                                                                                                                                  |"
+aL[08]:="| FOLHA: #######                   DATA: ########                                                                                  |"
+aL[09]:="|                                                                                                                                  |"
+aL[10]:="|----------+--------------------------------------------------------+------+----------------------+--------------------------------+"
+aL[11]:="|  CODIGO  | EMITENTE                                               |  UF  |         CGC          |  INSCRICAO ESTADUAL            |"
+aL[12]:="|----------+--------------------------------------------------------+------+----------------------+--------------------------------+"
+aL[13]:="|  ######  | ###################################################### |  ##  |  ##################  |  ###################           |"
+//       |  <-06->  | <----------------------- 53 -------------------------> |  -2  |  <------ 18 ------>  |  <------ 19 ------->           
+//       x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x1
+//		 0         10        20        30        40        50        60        70        80        90        100       110       120       130 
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ R910Branco³Autor ³    Marcos Simidu      ³ Data ³ 18.10.97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Layout da Listagem                                         ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function R910Branco()
+
+While nLin<nLimPag
+	FmtLin(Array(05),aL[13],,,@nLin)
+EndDo
+FmtLin(,aL[01],,,@nLin)
+
+Return

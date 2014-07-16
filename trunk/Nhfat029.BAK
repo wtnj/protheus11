@@ -1,0 +1,668 @@
+/*
++------------------------------------------------------------------------------+
+!                         FICHA TECNICA DO PROGRAMA                            !
++------------------------------------------------------------------------------+
+!   DADOS DO PROGRAMA                                                          !
++------------------+-----------------------------------------------------------+
+!Modulo            ! FAT - Faturamento                                         !
++------------------+-----------------------------------------------------------+
+!Nome              ! NHFAT029.PRW                                              !
++------------------+-----------------------------------------------------------+
+!Descricao         ! Gerar aviso de embarque para Scania                       +
++------------------+-----------------------------------------------------------+
+!Autor             ! Alexandre Rodizio Bento                                   !
++------------------+-----------------------------------------------------------+
+!Data de Criacao   ! 03/10/2008                                                !
++------------------+-----------------------------------------------------------+
+!   ATUALIZACOES                                                               !
++-------------------------------------------+-----------+-----------+----------+
+!   Descricao detalhada da atualizacao      !Nome do    ! Analista  !Data da   !
+!                                           !Solicitante! Respons.  !Atualiz.  !
++-------------------------------------------+-----------+-----------+----------+
+!Revisão layout                             !Luizwj     ! Edenilson !26/10/2013!
+!                                           !           !           !          !
++-------------------------------------------+-----------+-----------+----------+
+*/
+#include "rwmake.ch"
+#include "topconn.ch"
+#include "ap5mail.CH" 
+
+
+User Function NHFAT029()
+
+//#ifdef UserAsn
+//If !Alltrim(Upper(cusername))$UserAsn .And. !Empty(UserAsn)
+If !Alltrim(Upper(cusername))$'LUIZWJ/EDENILSONAS'
+	Aviso("ASN - Scania","Caro usuário, você não tem permissão para executar esta rotina.", {"OK"},2)
+	Return
+Endif
+//#else
+//	Aviso("ASN - Scania","Caro usuário, regra de bloqueio | UserAsn | indefinida. Favor entrar em contato com TI !", {"OK"},2)
+//	Return
+//#endif
+
+SetPrvt("_cArqDbf, cQuery,_aFields,aCampos,cMarca,cNovaLinha,cARQEXP ,cARQ,nPbruto,x ")
+SetPrvt("_cArqITP,_cArqAE1,_cArqNF2,_cArqAE2,_cArqAE4,_cArqAE3,_cArqTE1,_cArqFTP,cDtaHor ")
+SetPrvt("_aITP,_aAE1,_aNF2,_caAE2,_aAE4,_aAE3,_aFTP,_aTE1, _aDBF,nAux,cCod,nFTP,cIPI,cICM,cDesc")
+SetPrvt("aRotina,cCadastro,_cCliente,_cLoja,_cNotas,_clEmb,a_email,cPerg")
+SetPrvt("cServer,cAccount,cPassword,lConectou,lEnviado,cMensagem,CRLF,cMSG,_cNome,_aFile,_cEdi,_cCam")
+
+cServer	:= alltrim(getmv("MV_RELSERV")) //"192.168.1.4"
+cAccount := alltrim(getmv("MV_RELACNT"))//'protheus'
+cPassword:= alltrim(getmv("MV_RELPSW"))//'siga'
+lConectou
+lEnviado
+cMensagem:= 'Erro ao se conectar no servidor: '
+CRLF     := chr(13)+chr(10)   // PULA LINHA
+cMSG     := ""
+cPerg    := "FAT029"
+_lEmb    := .F. //verifica se gerou o aviso de embarque
+nPbruto  := 0
+nFTP     := 0
+nNotas   := 0
+_cArqDBF := space(12)
+_cArqFTP := space(12)
+_cArqITP := space(12)
+_cArqAE1 := space(12)
+_cArqNF2 := space(12)
+_cArqAE2 := space(12)
+_cArqAE4 := space(12)
+_cArqAE3 := space(12)
+_cArqTE1 := space(12)
+_cNotas  := space(200)
+_cNome   := UsrFullName(__cUserID)
+_aFile   := {}
+
+if SM0->M0_CODIGO <> "FN"  //empresa Fundicao
+	Aviso("ASN - Scania | Atenção","Esta rotina só pode ser utilizada na fundição.", {"OK"},2)
+	return
+endif
+
+/***************************************
+! Variaveis utilizadas para parametros !
+! mv_par01     // Da Nota ?            !
+! mv_par02     // Ate a Nota ?         !
+***************************************/
+
+cNovaLinha:= chr(13) + chr(10)
+_cEdi     := alltrim(getmv("MV_EDI"))                                           //caminho para envio do EDI   // "V:\mdicom\Parceiro\WHBCOMP\Out\"
+_cCam     := "SCA"+subs(dtos(ddatabase),7,2)+subs(dtos(ddatabase),5,2)+"1.TXT"
+cARQEXP   := _cEDI + _cCam
+
+while file(cARQEXP)
+	_cCam   := subs(_cCam,1,7) +  strzero(val(subs(_cCam,8,1))+1,1)+".TXT"
+	cARQEXP := _cEDI + _cCam
+enddo
+
+if Pergunte(cPerg,.T.)
+	Processa({|| Gerando() }, "Gerando Aviso de Embarque para Scania")
+endif
+
+if file( _cArqDBF )  // Deleta arquivo de dados temporario
+	fErase(_cArqDBF)
+	fErase(_cArqITP)
+	fErase(_cArqAE1)
+	fErase(_cArqAE2)
+	fErase(_cArqAE3)
+	fErase(_cArqAE4)
+	fErase(_cArqTE1)
+	fErase(_cArqNF2)
+	fErase(_cArqFTP)
+endif
+
+//Manda e-mail de confirmação da geração do aviso de embarque da Scania
+if _lEmb 																												//verifica se gerou o aviso de embarque
+	CONNECT SMTP SERVER cServer ACCOUNT cAccount PASSWORD cPassword Result lConectou
+	cMsg += '<html>' + CRLF
+	cMsg += '<head>' + CRLF
+	cMsg += '<title> E X E M P L O </title>' + CRLF
+	cMsg += '</head>' + CRLF
+	cMsg += ' <P><IMG SRC="WHBL.BMP" ALIGN=BOTTOM><b><font size="5" face="Times New Roman">'+CRLF+'          Aviso de Embarque</font></b></P>'+ CRLF
+	cMsg += '<b><font size="3" face="Arial"> Email Enviado Atraves do Sistema Protheus</font></b>' + CRLF+CRLF
+	cMsg += '<font size="2" face="Arial">Aviso de Embarque Enviado para Scania as '+time() +' na data: '+Dtoc(ddatabase)+'</font>' + CRLF
+	cMsg += CRLF
+	cMsg += '<font size="2" face="Arial"> Notas enviadas  '+CRLF
+	cMsg += _cNotas+'</font>' + CRLF
+	cMsg += CRLF
+	cMsg += CRLF
+	cMsg += '<font size="2" face="Arial"> Aviso de Embarque Gerado Por '+_cNome+'</font>' + CRLF
+	cMsg += '</body>' + CRLF
+	cMsg += '</html>' + CRLF
+	
+	if SM0->M0_CODIGO == "FN"  //empresa Fundicao
+		a_email := 'lista-fiscal@whbbrasil.com.br;'
+		a_email += 'edenilsonas@whbbrasil.com.br'
+	endif
+	
+	_aFile := { "\System\WHBL.BMP" }
+	
+	if lConectou
+		Send Mail from 'protheus@whbbrasil.com.br' To a_email;
+		SUBJECT '***** AVISO DE EMBARQUE PARA SCANIA ***** ';
+		BODY cMsg;
+		ATTACHMENT _aFile[1];
+		RESULT lEnviado
+		if !lEnviado
+			get mail error cMensagem
+			Alert(cMensagem)
+		endif
+	else
+		Alert("Erro ao se conectar no servidor: " + cServer)
+	endif
+endif
+
+if file(cARQEXP)
+	fclose(cARQ)
+	if !_lEmb
+		ferase(cArQEXP)  // Deleta arquivo de dados pois não foi selecionado nenhuma nota
+	endif
+endif
+
+return
+
+/*---------------------*/
+Static Function Gerando()
+/*---------------------*/
+_cCliente:= "000005"
+_cLoja   := "01"
+cQuery := "SELECT D2.D2_DOC,D2.D2_COD,D2.D2_EMISSAO,D2.D2_QUANT,D2.D2_CLIENTE,D2.D2_LOJA,B1.B1_PESO,B1.B1_POSIPI,C5.C5_PBRUTO,C5.C5_VOLUME1,C6.C6_DESCRI,"
+cQuery += "D2.D2_SERIE,D2.D2_ITEM,D2.D2_TOTAL,D2.D2_TES,D2.D2_VALICM,D2.D2_VALIPI,D2.D2_UM,D2.D2_IPI,D2.D2_PRCVEN,D2.D2_PICM,D2.D2_BASEICM,D2.D2_DESC,D2.D2_DESCON,"
+cQuery += "A7.A7_CLIENTE,A7.A7_LOJA,A7.A7_PRODUTO,A7.A7_PCCLI,A7.A7_CODCLI"
+cQuery += " FROM " +  RetSqlName( 'SD2' ) +" D2, " +  RetSqlName( 'SC5' ) +" C5, "+ RetSqlName( 'SC6' ) +" C6, "+ RetSqlName( 'SB1' ) +" B1, " + RetSqlName( 'SA7' ) +" A7, " + RetSqlName( 'SF4' ) +" F4 "
+cQuery += " WHERE D2.D2_EMISSAO BETWEEN '" + DTOS(Mv_par01) + "' AND '" + DTOS(Mv_par02) + "' "
+cQuery += " AND D2.D2_CLIENTE = '" + _cCliente + "' AND D2.D2_LOJA = '" + _cLoja + "' "
+cQuery += " AND C5.C5_NOTA = D2.D2_DOC AND C5.C5_SERIE = D2.D2_SERIE "
+cQuery += " AND C6.C6_NOTA = D2.D2_DOC AND C6.C6_SERIE = D2.D2_SERIE"
+cQuery += " AND D2.D2_CLIENTE = A7.A7_CLIENTE AND D2.D2_LOJA = A7.A7_LOJA"
+cQuery += " AND B1.B1_COD = D2.D2_COD AND A7.A7_PRODUTO = D2.D2_COD"
+cQuery += " AND SUBSTRING(B1.B1_COD,1,2) NOT IN ('EC','EB')"
+cQuery += " AND D2.D2_TES = F4.F4_CODIGO "
+cQuery += " AND D2.D2_TIPO = 'N' "
+cQuery += " AND F4.F4_FILIAL = D2.D2_FILIAL "
+cQuery += " AND C5.C5_FILIAL = D2.D2_FILIAL "
+cQuery += " AND C6.C6_FILIAL = D2.D2_FILIAL "
+cQuery += " AND C6.C6_ITEM   = D2.D2_ITEMPV "
+cQuery += " AND A7.A7_FILIAL = D2.D2_FILIAL "
+cQuery += " AND D2.D_E_L_E_T_ = ' ' AND C5.D_E_L_E_T_ = ' ' AND C6.D_E_L_E_T_ = ' ' AND B1.D_E_L_E_T_ = ' ' AND A7.D_E_L_E_T_ = ' ' AND F4.D_E_L_E_T_ = ' '"
+cQuery += " ORDER BY D2.D2_DOC,D2.D2_SERIE ASC"
+//MemoWrit('C:\TEMP\FAT029.SQL',cQuery)
+//TCQuery Abre uma workarea com o resultado da query
+TCQUERY cQuery new alias "TMP"
+dbselectarea("TMP")
+
+cARQ  := fcreate(cARQEXP) // So cria o arquivo se tiver dados para enviar
+
+/*+-----------------------------------+
+  ! Parametros para fCriaAsn(nPadrao) !
+  ! 1: Scania                         ! 
+  ! 2: General Motors                 !
+  +-----------------------------------+
+*/
+U_fCriaAsn(1)             // Cria arquivos temporarios de aviso de embarque para Scania
+
+TMP->(dbgotop())
+if empty(TMP->D2_DOC)
+	Aviso("ASN - Scania | Atenção","Não foi encontrado nenhuma nota fiscal neste periodo.", {"OK"},2)
+	fclose(cARQ)
+	ferase(cArQEXP) 													 // Deleta arquivo de dados pois não foi selecionado nenhuma nota
+	TMP->(dbClosearea())
+	XDBF->(dbClosearea())
+	AE1->(dbClosearea())
+	AE2->(dbClosearea())
+	AE3->(dbClosearea())
+	AE4->(dbClosearea())
+	TE1->(dbClosearea())
+	NF2->(dbClosearea())
+	FTP->(dbClosearea())
+	return
+endif
+
+while !TMP->(eof())
+	reclock("XDBF",.T.)
+	XDBF->Nota   := TMP->D2_DOC
+	XDBF->Serie  := TMP->D2_SERIE
+	XDBF->Dta    := subs(TMP->D2_EMISSAO,7,2)+"/"+subs(TMP->D2_EMISSAO,5,2)+"/"+subs(TMP->D2_EMISSAO,1,4)
+	XDBF->Prodcli:= TMP->A7_CODCLI
+	XDBF->Prodwhb:= TMP->D2_COD
+	XDBF->Total  := TMP->D2_TOTAL
+	MsUnlock("XDBF")
+	TMP->(dbskip())
+enddo
+
+cMarca := GetMark()
+aCampos:= {}
+
+aadd(aCampos,{"OK"        ,"C", "  "             ,"@!"})
+aadd(aCampos,{"NOTA"      ,"C", "Nota"           ,"@!"})
+aadd(aCampos,{"SERIE"     ,"C", "Serie"          ,"@!"})
+aadd(aCampos,{"DTA"       ,"C", "Data"           ,"@!"})
+aadd(aCampos,{"PRODCLI"   ,"C", "Prod. Cliente"  ,"@!"})
+aadd(aCampos,{"PRODWHB"   ,"C", "Prod. WHB"      ,"@!"})
+aadd(aCampos,{"TOTAL"     ,"N", "Total"          ,"@e 999,999,999,999.99"})
+aadd(aCampos,{"ESPACO"    ,"C", "  "             ,"@!"})
+
+XDBF->(dbgotop())
+cCadastro:= OemToAnsi("Selecione o Nota - <ENTER> Marca/Desmarca")
+aRotina  := {{"Marca Tudo"    ,'U_fMarck()' ,00,04 },;
+{"Desmarca Tudo" ,'U_fDesmar()',00,01 },;
+{"Legenda"       ,'U_fLegSca()',00,01 } }
+
+markbrow("XDBF","OK" ,"XDBF->OK",aCampos,,cMarca)
+
+procregua(TMP->(reccount()))
+
+TMP->(dbgotop())
+XDBF->(dbgotop())
+nFTP := 1
+_lEmb:= .F. //verifica se gerou o aviso de embarque
+while !TMP->(eof()) .and. !XDBF->(eof())
+	if !empty(XDBF->OK)
+		incproc("Gerando Aviso de Embarque" )
+		
+		//** Segmento AE1v0 - Complemento dados da NFe **//
+		_lEmb  := .T.                                                                                      // Verifica se gerou o aviso de embarque
+		_cNotas:= alltrim(_cNotas) +" "+ TMP->D2_DOC + CRLF
+		RecLock("AE1",.T.)
+		AE1->IdentSeg   := "AE1"
+		AE1->NumNF      := strzero(val(Alltrim(TMP->D2_DOC)),6)
+		AE1->SerNF      := subs(TMP->D2_SERIE,1,2)
+		AE1->DataNF     := subs(TMP->D2_EMISSAO,3,6)
+		AE1->QItNf      := strzero(val(TMP->D2_ITEM),3)
+		AE1->VlToNF     := strzero(TMP->D2_TOTAL,17,2)
+		AE1->VlToNF     := stuff(AE1->VlToNF,AT(".",AE1->VlToNF),1,"")                                      // elimina o ponto
+		AE1->VlToNF     := stuff(AE1->VlToNF,1,0,"0")                                                       // Insere o primeiro caracter
+		AE1->QCDec      := "0"                                                                              // QTDE de casas decimais
+		AE1->CFO        := TMP->D2_TES                                                                      // Alterado D2_CF
+		AE1->VlToICM    := strzero(TMP->D2_VALICM,17,2)
+		AE1->VlToICM    := stuff(AE1->VlToICM,at(".",AE1->VlToICM),1,"")                                    // elimina o ponto
+		AE1->VlToICM    := stuff(AE1->VlToICM,1,0,"0")                                                      // Insere o primeiro caracter
+		AE1->DataVen    := subs(dtos(dDatabase+7),3,6)
+		AE1->EspNF      := iif(alltrim(TMP->D2_TES) == "613","02","00")
+		AE1->VlIPI      := strzero(TMP->D2_VALIPI,17,2)
+		AE1->VlIPI      := Stuff(AE1->VlIPI,at(".",AE1->VlIPI),1,"")                                        //elimina o ponto
+		AE1->VlIPI      := Stuff(AE1->VlIPI,1,0,"0")                                                        // Insere o primeiro caracter
+		AE1->CodFabEn   := ""
+		AE1->DataPrNF   := iif((val(time())+14) > 24,subs(dtos(ddatabase+1),3,6),subs(dtos(ddatabase),3,6)) // verificar
+		AE1->IdentPer   := "0000"
+		SF4->(dbsetorder(1))
+		SF4->(dbseek(xFilial("SF4")+TMP->D2_TES ))                                                          // F4_FILIAL+F4_CODIGO
+		AE1->DescNat    := Subs(SF4->F4_TEXTO,1,20)
+		AE1->Espaco     := Space(10)
+		msunlock("AE1")
+		fwrite(cArq,(AE1->(IdentSeg+NumNF+SerNF+DataNF+QItNf+VlToNF+QCDec+CFO+VlToICM+DataVen+EspNF+VlIPI+CodFabEn+DataPrNF+IdentPer+DescNat+Espaco)+cNovaLinha))
+		nFTP += 1                                                                                           //Controle de qtde de segmentos
+		
+		//** Segmento AE2v1 - Dados do item **//
+		//cCod := TMP->A7_CODCLI //Codigo da amarracao prod x cliente
+		Reclock("AE2",.T.)
+		AE2->IdentSeg    := "AE2"
+		AE2->NumItNF     := strzero(val(TMP->D2_ITEM),3)
+		AE2->NumPed      := TMP->A7_PCCLI
+		AE2->CodItem     := TMP->A7_CODCLI                                // Codigo da amarracao prod x clientecCod
+		AE2->QINF        := strzero(TMP->D2_QUANT,9,0)
+		AE2->UnMedNF     := TMP->D2_UM
+		AE2->CodClasF    := TMP->B1_POSIPI
+		cIPI             := strzero(TMP->D2_IPI,5,2)
+		AE2->AliIPI      := stuff(cIPI,AT(".",cIPI),1,"")                 // elimina o ponto
+		AE2->VlItem      := strzero(TMP->D2_PRCVEN,12,5)
+		AE2->VlItem      := stuff(AE2->VlItem,at(".",AE2->VlItem),1,"")   // elimina o ponto
+		AE2->VlItem      := stuff(AE2->VlItem,1,0,"0")                    // Insere o primeiro caracter
+		AE2->QItEst      := strzero(TMP->D2_QUANT,9,0)
+		AE2->UnMedEs     := TMP->D2_UM
+		AE2->QtUniCom    := strzero(TMP->D2_QUANT,9,0)
+		AE2->UnMedCo     := TMP->D2_UM
+		AE2->CodTpFo     := "P"                                           // P= Producao
+		cDesc            := strzero(TMP->D2_DESC,4,2)
+		AE2->QtPerDe     := stuff(cDesc,AT(".",cDesc),1,"")               // Elimina o ponto
+		AE2->VlToDes     := strzero(TMP->D2_DESCON,11,2)
+		AE2->VlToDes     := stuff(AE2->VlToDes,AT(".",AE2->VlToDes),1,"") // Elimina o ponto
+		AE2->VlToDes     := stuff(AE2->VlToDes,1,0,"0")                   // Insere o primeiro caracter
+		AE2->Espaco      := space(05)
+		msunlock("AE2")
+		fwrite(cArq,(AE2->(IdentSeg+NumItNF+NumPed+CodItem+QINF+UnMedNF+CodClasF+AliIPI+VlItem+QItEst+UnMedEs+QtUniCom+UnMedCo+CodTpFo+QtPerDe+VlToDes+Espaco)+cNovaLinha))
+		nFTP += 1                                                         //Controle de qtde de segmentos
+		
+		//** Segmento AE4v1 - Dados complementares do item
+		reclock("AE4",.T.)
+		AE4->IdentSeg  := "AE4"
+		AE4->AlICM     := strzero(TMP->D2_PICM,2)+"00"
+		AE4->BasICM    := strzero(TMP->D2_BASEICM,17,2)
+		AE4->BasICM    := stuff(AE4->BasICM,at(".",AE4->BasICM),1,"0")   //troca ponto por zero
+		AE4->VlICMAp   := strzero(TMP->D2_VALICM,17,2)
+		AE4->VlICMAp   := stuff(AE4->VlICMAp,at(".",AE4->VlICMAp),1,"0") //elimina o ponto
+		AE4->VlIPIAp   := strzero(TMP->D2_VALIPI,17,2)
+		AE4->VlIPIAp   := stuff(AE4->VlIPIAp,at(".",AE4->VlIPIAp),1,"0") //elimina o ponto
+		AE4->CodSiTr   := "00"
+		AE4->NumDesIt  := space(30)
+		AE4->DatValDe  := space(06)
+		AE4->PedRev    := space(13)
+		AE4->Espaco    := space(19)
+		msunlock("AE4")
+		fwrite(cArq,(AE4->(IdentSeg+AlICM+BasICM+VlICMAp+VlIPIAp+CodSiTr+NumDesIt+DatValDe+PedRev+Espaco)+cNovaLinha))
+		nFTP += 1  //Controle de qtde de segmentos
+		
+		//** Segmento TE1v0 **//
+		reclock("TE1",.T.)
+		TE1->IdentSeg := "TE1"
+		TE1->Texto1   := space(40)
+		TE1->Texto2   := space(40)
+		TE1->Texto3   := space(40)
+		TE1->Espaco   := space(05)
+		msunlock("TE1")
+		fwrite(cArq,(TE1->(IdentSeg+Texto1+Texto2+Texto3+Espaco)+cNovaLinha))
+		nFTP  += 1  // Controle de qtde de segmentos
+		nNotas+= 1  // Controle de número de notas processadas
+	endif
+	XDBF->(dbskip())
+	TMP->(dbskip())
+enddo
+
+If nFTP > 1
+	//** Segmento FTPv0 - Segmento Final Mensagem **//
+	nFTP += 1  									//Controle de qtde de segmentos
+	reclock("FTP",.T.)
+	FTP->IdentSeg := "FTP"
+	FTP->NumCont  := "00000"
+	FTP->QtdeSeg  :=StrZero(nFTP,9)
+	FTP->NumToVl  :="00000000000000000"
+	FTP->CatOper  := Space(01)
+	FTP->Espaco   := Space(36)
+	msunlock("FTP")
+	fwrite(cArq,(FTP->(IdentSeg+NumCont+QtdeSeg+NumToVl+CatOper+ Espaco)+cNovaLinha))
+	fclose(cARQ)
+	Aviso("ASN - Scania | Atenção","Aviso(s) de embarque(s) gerado(s) com sucesso."+CRLF+CRLF+;
+	"Total de Registros Processados: "+StrZero(nFTP-2,3), {"OK"},2)
+else
+	fclose(cARQ)
+	ferase(cArQEXP)  						// Deleta arquivo de dados pois não foi selecionado nenhuma nota
+endif
+
+TMP->(dbclosearea())
+XDBF->(dbClosearea())
+AE1->(dbclosearea())
+AE2->(dbclosearea())
+AE3->(dbclosearea())
+AE4->(dbclosearea())
+TE1->(dbclosearea())
+NF2->(dbclosearea())
+FTP->(dbclosearea())
+
+return
+
+Static Function AjustaSX1()
+setprvt("_sAlias,cPerg,aRegs,cUltPerg,i,j")
+_sAlias := Alias()
+dbSelectArea("SX1")
+dbSetOrder(1)
+cPerg:= "ETQ"
+aRegs:= {}
+aadd(aRegs,{cPerg,"01","Data Inicial       ?","Data Inicial       ?","Data Inicial       ?","mv_ch1","C",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+aadd(aRegs,{cPerg,"02","Data Final         ?","Data Final         ?","Data Final         ?","mv_ch2","C",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+aadd(aRegs,{cPerg,"03","Cliente            ?","Cliente            ?","Cliente            ?","mv_ch3","C",06,0,0,"G","","mv_par03","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+aadd(aRegs,{cPerg,"04","Loja               ?","Loja               ?","Loja               ?","mv_ch4","C",02,0,0,"G","","mv_par04","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+cUltPerg := aRegs[Len(aRegs)][2]
+if !SX1->(dbseek(cPerg + cUltPerg))
+	SX1->(dbseek(cPerg))
+	while SX1->X1_Grupo == cPerg
+		reclock('SX1')
+		SX1->(dbdelete())
+		SX1->(dbskip())
+		msunLock('SX1')
+	enddo
+	for i := 1 to len(aRegs)
+		reclock("SX1", .T.)
+		for j := 1 to len(aRegs[i])
+			fieldput(j, aRegs[i, j])
+		next
+		msunlock()
+		dbcommit()
+	Next
+endif
+dbselectarea(_sAlias)
+Return
+
+/*
+ +------------------------------+
+ ! Cria tabelas temporarias ASN !
+ +------------------------------+
+*/
+User Function fCriaAsn(nPadrao)
+/*
+ +-----------------------------------+
+ ! Parametros para fCriaAsn(nPadrao) !
+ ! 1: Scania                         ! 
+ ! 2: General Motors                 !
+ +-----------------------------------+
+*/
+if nPadrao == 1 //Scania
+/***************
+! Segmento ITP !
+***************/
+_cArqITP := CriaTrab(NIL,.f.)
+_cArqITP += ".DBF"
+_aITP    := {}
+// Nome                           Uso  Tipo  Tam  Dec   Posicao
+aadd(_aITP,{"IdentSeg"   ,"C", 03,0})         // Identificacao Tipo de Segmento  M    A       3    0    1    3
+aadd(_aITP,{"NumComu"    ,"C", 03,0})         // Numero Mensagem Comunicacao     M    A       3    0    4    6
+aadd(_aITP,{"NumVer"     ,"C", 02,0})         // Numero da Versao da Mensagem    M    N       2    0    7    8
+aadd(_aITP,{"NumCont"    ,"C", 05,0})         // Numero de Controle Movimento    O    N       5    0    9   13
+aadd(_aITP,{"IdentMov"   ,"C", 12,0})         // Ident. Geracao Movimento        M    N      12    0   14   25
+aadd(_aITP,{"IdentTra"   ,"C", 14,0})         // Identificacao do Transmissor    M    N      14    0   26   39
+aadd(_aITP,{"IdentRec"   ,"C", 14,0})         // Identificacao do Receptor       M    N      14    0   40   53
+aadd(_aITP,{"CodIntTr"   ,"C", 08,0})         // Codigo Interno Transmissor      O    A       8    0   54   61
+aadd(_aITP,{"CodIntRe"   ,"C", 08,0})         // Codigo Interno Receptor         O    A       8    0   62   69
+aadd(_aITP,{"NomTrans"   ,"C", 25,0})         // Nome do Transmissor             O    A      25    0   70   94
+aadd(_aITP,{"NomRece"    ,"C", 25,0})         // Nome do Receptor                O    A      25    0   95  119
+aadd(_aITP,{"Espaco"     ,"C", 09,0})         // Espaco                          M    A       9    0  120  128
+dbcreate(_cArqITP,_aITP)
+dbusearea(.T.,,_cArqITP,"ITP",.F.)
+
+reclock("ITP",.T.)
+ITP->IdentSeg  := "ITP"
+ITP->NumComu   := "004"
+ITP->NumVer    := "06"
+ITP->NumCont   := "00001"
+cDtaHor        := subs(dtos(dDatabase),3,6)+stuff(time(),at(":",TIME()),1,"") // DATA+HHMMSS
+ITP->IdentMov  := stuff(cDtaHor,AT(":",cDtaHor),1,"")                         // DATA+HHMMSS tira o segundo :
+ITP->IdentTra  := "01261681000104"                                            // cgc empresa Fundicao
+ITP->IdentRec  := "59104901000176"                                            // cgc scania
+ITP->CodIntTr  := space(08)
+ITP->CodIntRe  := "ALL"
+ITP->NomTrans  := "01261681000104"                                            //empresa Fundicao
+ITP->NomRece   := "AMERICA LATINA LOGISTICA"
+ITP->Espaco    := space(09)
+msunlock("ITP")
+fwrite(cArq,(ITP->(IdentSeg+NumComu+NumVer+NumCont+IdentMov+IdentTra+IdentRec+CodIntTr+CodIntRe+NomTrans+NomRece+Espaco)+cNovaLinha))
+dbselectarea("ITP")
+dbclosearea()
+
+/****************
+! Segmento AE1 !
+****************/
+_cArqAE1 := CriaTrab(NIL,.f.)
+_cArqAE1 += ".DBF"
+_aAE1    := {}
+// Nome                           Uso  Tipo  Tam  Dec   Posicao
+aadd(_aAE1,{"IdentSeg"   ,"C", 03,0})         // Identificacao Tipo de Segmento  M    A       3    0    1    3
+aadd(_aAE1,{"NumNF"      ,"C", 06,0})         //  NUMERO DA NF ORIGEM            M    N       6    0    4    9
+aadd(_aAE1,{"SerNF"      ,"C", 04,0})         // SERIE DA NOTA FISCAL ORIGEM     M    A       4    0   10   13
+aadd(_aAE1,{"DataNF"     ,"C", 06,0})         // DATA DA NOTA FISCAL             M    D       6    0   14   19
+aadd(_aAE1,{"QItNf"      ,"C", 03,0})         // QTDE ITENS POR NOTA FISCAL      M    N       3    0   20   22
+aadd(_aAE1,{"VlToNF"     ,"C", 17,2})         // VALOR TOTAL DA NOTA FISCAL      M    N      17    2   23   39
+aadd(_aAE1,{"QCDec"      ,"C", 01,0})         // QUANTIDADE DE CASAS DECIMAIS    M    N       1    0   40   40
+aadd(_aAE1,{"CFO"        ,"C", 03,0})         // CODIGO FISCAL DE OPERACAO       M    N       3    0   41   43
+aadd(_aAE1,{"VlToICM"    ,"C", 17,2})         // VALOR TOTAL DO ICMS APLICADO    M    N      17    2   44   60
+aadd(_aAE1,{"DataVen"    ,"C", 06,0})         // DATA VENCIMENTO DO DOCUMENTO    M    D       6    0   61   66
+aadd(_aAE1,{"EspNF"      ,"C", 02,0})         // ESPECIE DA NOTA FISCAL          M    N       2    0   67   68
+aadd(_aAE1,{"VlIPI"      ,"C", 17,2})         // VALOR IPI APLICADO              M    N      17    2   69   85
+aadd(_aAE1,{"CodFabEn"   ,"C", 03,0})         // CODIGO DA FABRICA ENTREGA       O    A       3    0   86   88
+aadd(_aAE1,{"DataPrNF"   ,"C", 06,0})         // DATA PREVISAO ENTREGA DA NF     O    D       6    0   89   94
+aadd(_aAE1,{"IdentPer"   ,"C", 04,0})         // IDENT. DO PERIODO DE ENTREGA    O    N       4    0   95   98
+aadd(_aAE1,{"DescNat"    ,"C", 20,0})         // DESCRICAO DA NATUREZA OPERACAO  O    A      20    0   99  118
+aadd(_aAE1,{"Espaco"     ,"C", 10,0})         // Espaco                          M    A      19    0  119  128
+dbcreate(_cArqAE1,_aAE1)
+dbusearea(.T.,,_cArqAE1,"AE1",.F.)
+
+/****************
+! Segmento NF2 !
+****************/
+_cArqNF2 := CriaTrab(NIL,.f.)
+_cArqNF2 += ".DBF"
+_aNF2    := {}
+// Nome                           Uso  Tipo  Tam  Dec   Posicao
+aadd(_aNF2,{"IdentSeg"   ,"C", 03,0})         // Identificacao Tipo de Segmento  M    A       3    0    1    3
+aadd(_aNF2,{"VlDesAc"    ,"C", 17,2})         // VALOR DESPESAS ACESSORIAS       O    N      17    2    4   20
+aadd(_aNF2,{"VlFrete"    ,"C", 17,2})         // VALOR DO FRETE                  O    N      17    2   21   37
+aadd(_aNF2,{"VlSegu"     ,"C", 17,2})         // VALOR DO SEGURO                 O    N      17    2   38   54
+aadd(_aNF2,{"VlDesc"     ,"C", 17,2})         // VALOR DO DESCONTO DA NF         O    N      17    2   55   71
+aadd(_aNF2,{"Espaco"     ,"C", 57,0})         // Espaco                          M    A      57    0   72  128
+dbcreate(_cArqNF2,_aNF2)
+dbusearea(.T.,,_cArqNF2,"NF2",.F.)
+
+/****************
+! Segmento AE2 !
+****************/
+
+_cArqAE2 := CriaTrab(NIL,.f.)
+_cArqAE2 += ".DBF"
+_aAE2    := {}
+// Nome                           Uso  Tipo  Tam  Dec   Posicao
+aadd(_aAE2,{"IdentSeg"   ,"C", 03,0})         // Identificacao Tipo de Segmento  M    A       3    0    1    3
+aadd(_aAE2,{"NumItNF"    ,"C", 03,0})         // NUMERO DO ITEM NA NOTA FISCAL   M    N       3    0    4    6
+aadd(_aAE2,{"NumPed"     ,"C", 12,0})         // NUMERO DO PEDIDO DE COMPRA      M    A      12    0    7   18
+aadd(_aAE2,{"CodItem"    ,"C", 30,0})         // CODIGO DO ITEM                  M    A      30    0   19   48
+aadd(_aAE2,{"QINF"       ,"C", 09,0})         // QTDE ITEM UNIDADE NOTA FISCAL   M    N       9    0   49   57
+aadd(_aAE2,{"UnMedNF"    ,"C", 02,0})         // UNIDADE MEDIDA NOTA FISCAL      M    A       2    0   58   59
+aadd(_aAE2,{"CodClasF"   ,"C", 10,0})         // CODIGO DE CLASSIFICACAO FISCAL  M    N      10    0   60   69
+aadd(_aAE2,{"AliIPI"     ,"C", 04,2})         // ALIQUOTA IPI                    M    N       4    2   70   73
+aadd(_aAE2,{"VlItem"     ,"C", 12,5})         // VALOR DO ITEM                   M    N      12    5   74   85
+aadd(_aAE2,{"QItEst"     ,"C", 09,0})         // QTDE ITEM UNIDADE ESTOQUE       O    N       9    0   86   94
+aadd(_aAE2,{"UnMedEs"    ,"C", 02,0})         // UNIDADE MEDIDA ESTOQUE          O    A       2    0  095  096
+aadd(_aAE2,{"QtUniCom"   ,"C", 09,0})         // QTDE UNIDADE DE COMPRA          O    N       9    0  097  105
+aadd(_aAE2,{"UnMedCo"    ,"C", 02,0})         // UNIDADE MEDIDA COMPRA           O    A       2    0  105  107
+aadd(_aAE2,{"CodTpFo"    ,"C", 01,0})         // CODIGO DO TIPO DE FORNECIMENTO  O    A       1    0  108  108
+aadd(_aAE2,{"QtPerDe"    ,"C", 04,2})         // QUANTIDADE PERCENTUAL DESCONTO  O    N       4    2  109  112
+aadd(_aAE2,{"VlToDes"    ,"C", 11,2})         // VALOR TOTAL DESCONTO ITEM       O    N      11    2  113  123
+aadd(_aAE2,{"Espaco"     ,"C", 05,0})         // Espaco                          M    A      05    0  124  128
+dbcreate(_cArqAE2,_aAE2)
+dbusearea(.T.,,_cArqAE2,"AE2",.F.)
+
+/****************
+! Segmento AE4 !
+****************/
+_cArqAE4 := CriaTrab(NIL,.f.)
+_cArqAE4 += ".DBF"
+_aAE4    := {}
+// Nome                           Uso  Tipo  Tam  Dec   Posicao
+aadd(_aAE4,{"IdentSeg"   ,"C", 03,0})         // Identificacao Tipo de Segmento  M    A       3    0    1    3
+aadd(_aAE4,{"AlICM"      ,"C", 04,2})         // ALIQUOTA ICMS                   M    N       4    2    4    7
+aadd(_aAE4,{"BasICM"     ,"C", 17,2})         // BASE DE CALCULO DO ICMS         M    N      17    2    8   24
+aadd(_aAE4,{"VlICMAp"    ,"C", 17,2})         // VALOR DO ICMS APLICADO          M    N      17    2   25   41
+aadd(_aAE4,{"VlIPIAp"    ,"C", 17,2})         // VALOR DO IPI APLICADO           M    N      17    2   42   58
+aadd(_aAE4,{"CodSiTr"    ,"C", 02,0})         // CODIGO DE SITUACAO TRIBUTARIA   M    A       2    0   59   60
+aadd(_aAE4,{"NumDesIt"   ,"C", 30,0})         // NUMERO DESENHO DO ITEM          O    A      30    0   61   90
+aadd(_aAE4,{"DatValDe"   ,"C", 06,0})         // DATA DE VALIDADE DESENHO        O    D       6    0   91   96
+aadd(_aAE4,{"PedRev"     ,"C", 13,0})         // PEDIDO DA REVENDA               O    A      13    0   97  109
+aadd(_aAE4,{"Espaco"     ,"C", 19,0})         // Espaco                          M    A      19    0  110  128
+dbcreate(_cArqAE4,_aAE4)
+dbusearea(.T.,,_cArqAE4,"AE4",.F.)
+
+/****************
+! Segmento AE3 !
+****************/
+_cArqAE3 := CriaTrab(NIL,.f.)
+_cArqAE3 += ".DBF"
+_aAE3    := {}
+// Nome                           Uso  Tipo  Tam  Dec   Posicao
+AADD(_aAE3,{"IdentSeg"   ,"C", 03,0})         // Identificacao Tipo de Segmento  M    A       3    0    1    3
+AADD(_aAE3,{"IdentFat"   ,"C", 14,0})         // IDENT. LOCAL FATURAMENTO        M    N      14    0    4   17
+AADD(_aAE3,{"IdentCob"   ,"C", 14,0})         // IDENT. DO LOCAL DE COBRANCA     M    N      14    0   18   31
+AADD(_aAE3,{"IdentEnt"   ,"C", 14,0})         // IDENT. LOCAL DE ENTREGA         M    A      14    0   32   45
+AADD(_aAE3,{"Espaco"     ,"C", 83,0})         // Espaco                          M    A      83    0   46  128
+dbcreate(_cArqAE3,_aAE3)
+dbusearea(.T.,,_cArqAE3,"AE3",.F.)
+
+/****************
+! Segmento TE1 !
+****************/
+_cArqTE1 := CriaTrab(NIL,.f.)
+_cArqTE1 += ".DBF"
+_aTE1    := {}
+// Nome                           Uso  Tipo  Tam  Dec   Posicao
+aadd(_aTE1,{"IdentSeg"   ,"C", 03,0})         // Identificacao Tipo de Segmento  M    A       3    0    1    3
+aadd(_aTE1,{"Texto1"     ,"C", 40,0})         // TEXTO LIVRE INFORMATIVO         M    A      40    0    4   43
+aadd(_aTE1,{"Texto2"     ,"C", 40,0})         // TEXTO LIVRE INFORMATIVO         M    A      40    0   44   83
+aadd(_aTE1,{"Texto3"     ,"C", 40,0})         // TEXTO LIVRE INFORMATIVO         M    A      40    0   84  123
+aadd(_aTE1,{"Espaco"     ,"C", 05,0})         // Espaco                          M    A       5    0  124  128
+dbcreate(_cArqTE1,_aTE1)
+dbusearea(.T.,,_cArqTE1,"TE1",.F.)
+
+/****************
+! Segmento FTP !
+****************/
+_cArqFTP := CriaTrab(NIL,.f.)
+_cArqFTP += ".DBF"
+_aFTP    := {}
+// Nome                           Uso  Tipo  Tam  Dec   Posicao
+aadd(_aFTP,{"IdentSeg"   ,"C", 03,0})         // Identificacao Tipo de Segmento  M    A       3    0    1    3
+aadd(_aFTP,{"NumCont"    ,"C", 05,0})         // Numero de Controle Movimento    O    N       5    0    4    8
+aadd(_aFTP,{"QtdeSeg"    ,"C", 09,0})         // Quantidade de Segmentos         M    N       9    0    9   17
+aadd(_aFTP,{"NumToVl"    ,"C", 17,0})         // Numero Total de Valores         O    N      17    2   18   34
+aadd(_aFTP,{"CatOper"    ,"C", 01,0})         // Categoria da Operacao           O    A       1    0   35   35
+aadd(_aFTP,{"Espaco"     ,"C", 93,0})         // Espaco                          M    A      93    0   36  128
+dbcreate(_cArqFTP,_aFTP)
+dbusearea(.T.,,_cArqFTP,"FTP",.F.)
+
+/***************
+! Tabela XDBF !
+***************/
+_cArqDBF  := CriaTrab(NIL,.f.)
+_aDBF := {}
+															 // Nome
+aadd(_aDBF,{"OK"         ,"C", 02,0})         // Identificacao Marca
+aadd(_aDBF,{"Nota"       ,"C", 09,0})         //  NUMERO DA NF
+aadd(_aDBF,{"Serie"      ,"C", 03,0})         // SERIE DA NOTA FISCAL
+aadd(_aDBF,{"Dta"        ,"C", 10,0})         // DATA DA NOTA FISCAL
+aadd(_aDBF,{"Prodcli"    ,"C", 15,2})         // Codigo do produto cliente
+aadd(_aDBF,{"Prodwhb"    ,"C", 15,2})         // Codigo do produto new hubner
+aadd(_aDBF,{"Total"      ,"N", 17,2})         // VALOR TOTAL DA NOTA FISCAL
+aadd(_aDBF,{"Espaco"     ,"C", 63,0})         // ESPACO
+dbcreate(_cArqDBF,_aDBF)
+dbusearea(.T.,,_cArqDBF,"XDBF",.F.)
+index on XDBF->NOTA to (_cArqDBF)
+elseif nPadrao == 2
+endif
+return
+
+User Function fLegSca()
+
+private aCores := {{ "ENABLE"  , "Nota nao Selecionada" },;
+{ "DISABLE" , "Nota Selecionada" }}
+
+brwlegenda(cCadastro,"Legenda",aCores)
+
+return
+
+/* Marcar todas as notas */
+User Function fMarck()
+XDBF->(dbgotop())
+while !XDBF->(eof())
+	RecLock("XDBF")
+	XDBF->OK := cMarca
+	msunlock("XDBF")
+	XDBF->(dbskip())
+enddo
+markbrefresh()
+return
+
+/* Desmarcar todas as notas */
+User Function fDesMar()
+XDBF->(dbgotop())
+while !XDBF->(eof())
+	reclock("XDBF")
+	XDBF->OK := "  "
+	msunlock("XDBF")
+	XDBF->(dbskip())
+enddo
+markbrefresh()
+return

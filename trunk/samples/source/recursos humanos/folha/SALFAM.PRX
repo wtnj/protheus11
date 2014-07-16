@@ -1,0 +1,417 @@
+#Include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 17/04/00
+#INCLUDE "SALFAM.CH"
+
+User Function SALFAM()        // incluido pelo assistente de conversao do AP5 IDE em 17/04/00
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CDESC1,CDESC2,CDESC3,CSTRING,AORD,ARETURN")
+SetPrvt("NOMEPROG,ALINHA,NLASTKEY,CPERG,NTAMANHO,LI")
+SetPrvt("NVEZES,AINFO,ADEPEND,LEND,CFILANTE,CTIT")
+SetPrvt("WNREL,NORDEM,CFILDE,CFILATE,CMATDE,CMATATE")
+SetPrvt("CCCDE,CCCATE,NVIAS,TITULO,CINICIO,CFIM")
+SetPrvt("CHAVE,CLCNASC,CCARTO,CNREGCAR,CNUMLIV")
+SetPrvt("CNUMFOL,CDTENT,CDTBAIXA,CLNOME,DNASC,CF_DEMISSA")
+SetPrvt("CE_EMPRESA,CE_ENDERECO,CE_CIDADE,CE_UF,CE_CEP,CE_CGC")
+SetPrvt("CE_IE,CE_BAIRRO,CF_NOME,CF_ENDERECO,CF_BAIRRO,CF_CIDADE")
+SetPrvt("CF_UF,CF_CEP,CF_CTPS,CF_UFCTPS,CF_SERIE,CF_CIC")
+SetPrvt("CF_RG,CF_MAT,CF_FIL,CF_CC,CF_ADMISSA")
+
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 17/04/00 ==> 	#DEFINE PSAY SAY
+
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 17/04/00 ==> #INCLUDE "SALFAM.CH"
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ SALFAM   ³ Autor ³ R.H. - Aldo Marini    ³ Data ³ 07.02.97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Ficha de Salario-Familia                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ SALFAM                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ RdMake                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Cristina    ³02/06/98³XXXXXX³ Conversao para outros idiomas            ³±±
+±±³Kleber      ³03/02/99³XXXXXX³ Acerto Bug do Milˆnio.                   ³±±
+±±³Marinaldo   ³14/04/00³XXXXXX³ Posicionar no Primeiro Registro Seleciona³±±
+±±³            ³        ³XXXXXX³ do nos De? Ate?                          ³±±
+±±³Marina      ³30/08/00³------³Validacao Filial/Acesso.Retirada parte DOS³±±  
+±±³Natie       ³13/08/02³------³ Retirada do comando Eject                ³±±
+±±³Priscila    ³13/09/02³------³Inclusao das variaveis mv_par08 e mv_par09³±±
+±±³            ³        ³------³para que o sistema passe a tratar as Situa³±±
+±±³            ³        ³------³coes e Categorias dos Funcionariosa que se³±±
+±±³            ³        ³------³rao impressos.                            ³±±
+±±³Silvia      ³18/09/03³066339³Acerto na Impres.para Tipo de Depend.s/lim|±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+cDesc1  := STR0001				//'Ficha de Salario-Famila.'
+cDesc2  := STR0002				//'Ser  impresso de acordo com os parametros solicitados pelo'
+cDesc3  := STR0003				//'usuario.'
+cString := 'SX3' 					//-- alias do arquivo principal (Base)
+aOrd    := {STR0004,STR0005} 	//'Matricula'###'Centro de Custo'
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Private(Basicas)                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aReturn  := { STR0006,1,STR0007,2,2,1,'',1 }	//'Zebrado'###'Administra‡„o'
+NomeProg := 'GPER440'
+aLinha   := {}
+nLastKey := 0
+cPerg    := 'GPR440'
+nTamanho := "M"
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis Utilizadas na funcao Principal do Programa         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Li       := 0
+nVezes   := 0   
+aInfo    := {}
+aDepend  := {}
+lEnd     := .F.
+cFilAnte := 'úú'
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Variaveis de Acesso do Usuario                               ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+cAcessaSRA	:= &( " { || " + ChkRH( "SALFAM" , "SRA" , "2" ) + " } " )
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+pergunte('GPR440',.F.)
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis Utilizadas para parametros                         ³
+//³ mv_par01        //  FiLial De                                ³
+//³ mv_par02        //  FiLial Ate                               ³
+//³ mv_par03        //  Matricula De                             ³
+//³ mv_par04        //  Matricula Ate                            ³
+//³ mv_par05        //  Centro De Custo De                       ³
+//³ mv_par06        //  Centro De Custo Ate                      ³
+//³ mv_par07        //  N§ de Vias                               ³
+//³ mv_par08        //  Situacoes                                ³
+//³ mv_par09        //  Categorias                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+cTit := STR0008		//' FICHA DE SALARIO-FAMILIA '
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WnRel :='GPER440' 	//-- Nome Default do relatorio em Disco.
+WnRel :=SetPrint(cString,WnRel,cPerg,cTit,cDesc1,cDesc2,cDesc3,.F.,aOrd,,nTamanho)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carregando variaveis mv_par?? para Variaveis do Sistema.     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nOrdem  := aReturn[8]
+
+If(!Empty(mv_par01),cFilDe :=mv_par01,cFilDe :='00')
+If(!Empty(mv_par02),cFilAte:=mv_par02,cFilAte:='99')
+If(!Empty(mv_par03),cMatDe := mv_par03,cMatDe :='00000')
+If(!Empty(mv_par04),cMatAte:= mv_par04,cMatAte:='99999')
+If(!Empty(mv_par05),cCCDe := mv_par05,cCCDe :='0        ')
+If(!Empty(mv_par06),cCCAte:= mv_par06,cCCAte:='999999999')
+If(!Empty(mv_par07),nVias:= If(mv_par07<=0,1,mv_par07),nVias:= 1)
+cSituacao  := mv_par08	 	//Situacoes a Imprimir
+cCategoria := mv_par09 		//Categorias a Imprimi 
+
+Titulo  := STR0009	//'FICHA DE SALARIO - FAMILIA'
+   
+If nLastKey == 27
+	Return Nil
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Return Nil
+Endif
+
+lEND := .F.
+WnRel := "GPER440"
+cSTRING := "SX3"
+
+RptStatus({|lEnd| fSalFam() })// Substituido pelo assistente de conversao do AP5 IDE em 17/04/00 ==>         RptStatus({|lEnd| Execute(fSalFam)},"Ficha de Salario Familia",lEnd)
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 17/04/00 ==> 	Function fSalFam
+Static Function fSalFam()
+
+Local nX
+Local nY
+Local nZ
+
+dbSelectArea('SRA')
+dbSetOrder(nOrdem)
+SetRegua(RecCount())
+dbGotop()
+
+If nOrdem == 1
+   dbSetOrder( 1 )
+   dbSeek(cFilDe + cMatDe,.T.)
+   cInicio  := "SRA->RA_FILIAL + SRA->RA_MAT"
+   cFim     := cFilAte + cMatAte
+ElseIf nOrdem == 2
+   dbSetOrder( 2 )
+   dbSeek(cFilDe + cCcDe + cMatDe,.T.)
+   cInicio  := "SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT"
+   cFim     := cFilAte + cCcAte + cMatAte
+Endif
+
+//--Setar impressora
+@ 0,0 PSAY AvalImp(132)
+
+While !Eof()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Incrementa Regua de Processamento.                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IncRegua()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Cancela ImpresÆo ao se pressionar <ALT> + <A>.               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	
+	If lEnd
+		@ Prow()+1, 0 PSAY STR0035		//"Cancelado pelo Operador"
+		Chave := 1
+		Exit
+	EndIF
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Processa Quebra de Filial.                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SRA->RA_FILIAL #cFilAnte
+		If	!fInfo(@aInfo,SRA->RA_FILIAL)
+			dbSelectArea('SRA')
+			dbSkip()
+			Loop
+		Endif		
+		cFilAnte := SRA->RA_FILIAL		
+	Endif	
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste Parametriza‡Æo do Intervalo de ImpressÆo.           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If  (SRA->RA_Filial < cFilDe) .Or. (SRA->RA_FILIAL > cFilAte) .Or. ;
+		(SRA->RA_MAT < cMatDe)    .Or. (SRA->RA_MAT > cMatAte) .Or. ;
+		(SRA->RA_CC < cCcDe)      .Or. (SRA->RA_CC > cCCAte) .Or.;
+		!( SRA->RA_SITFOLH $ cSituacao ) .OR.  ! ( SRA->RA_CATFUNC $ cCategoria ).Or. ;
+		 SRA->RA_SITFOLH $ "D" .And.  Mesano(SRA->RA_DEMISSA) # Mesano(dDataBase) //Imprime somente os Demitidos do mes Atual.//
+		
+		dbSelectArea('SRA')
+		dbSkip()
+		Loop
+	EndIf
+	
+   	/*
+	ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	³Consiste Filiais e Acessos                                             ³
+	ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+	IF !( SRA->RA_FILIAL $ fValidFil() .and. Eval( cAcessaSRA ) )
+		dbSelectArea("SRA")
+   		dbSkip()
+   		Loop
+	EndIF
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Pesquisa no arquivo de Dependentes.                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+        cLcnasc  := space(12)
+        cCarto   := space(12)
+        cNregcar := space(8)
+        cNumliv  := space(7)
+        cNumfol  := space(7)
+        cDtent   := ctod("  /  /    ")
+        cDtbaixa := ctod("  /  /    ")
+
+	dbSelectArea('SRB')
+	If dbSeek(SRA->RA_Filial+SRA->RA_Mat,.F.)		
+		While SRB->RB_FILIAL+SRB->RB_MAT == SRA->RA_FILIAL+SRA->RA_MAT
+         If (SRB->RB_TipSf $ "1|2") .And. (SRB->RB_GrauPar=='F')
+                                cLnome   := subs(srb->rb_nome,1,30)
+                                dNasc    := srb->rb_dtnasc
+                                cLcnasc  := srb->rb_locnasc
+                                cCarto   := srb->rb_cartori
+                                cNregcar := srb->rb_nregcar
+                                cNumliv  := srb->rb_numlivr
+                                cNumfol  := srb->rb_numfolh
+                                cDtent   := srb->rb_dtentra
+                                cDtbaixa := srb->rb_dtbaixa
+				aAdd(aDepend,{Left(SRB->RB_Nome,30),SRB->RB_DtNasc,clcnasc,ccarto,cnregcar,cnumliv,cnumfol,cdtent,cdtbaixa})
+			EndIf
+			dbSkip()
+		EndDo
+	Else
+		dbSelectArea('SRA')
+		dbSkip()
+		Loop
+	Endif	
+   aSort(aDepend,,, {|X,Y| DtoS(X[2]) < DtoS(Y[2]) })
+	If Len(aDepend) <= 0
+		dbSelectArea('SRA')
+		dbSkip()
+		Loop
+   ElseIf Len(aDepend) < 13
+      nVezes := (13 - Len(aDepend))
+		For Nx := 1 to nVezes
+			 aAdd(aDepend,{Space(30),CtoD("  /  /    "),SPACE(12),SPACE(12),SPACE(8),SPACE(7),SPACE(7),CTOD("  /  /    "),CTOD("  /  /    ")})
+		Next Nx
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Variaveis utilizadas na impressao.                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cE_Empresa  := Left(aInfo[3],40)
+    cE_Endereco := Left(aInfo[4],30)
+    cE_Cidade   := Left(aInfo[5],20)
+	cE_Uf       := Left(aInfo[6],2)
+	cE_Cep      := Transform(Left(aInfo[7],8),'@R #####-###')
+    cE_Cgc      := Transform(Left(aInfo[8],14),'@R ##.###.###/####-##')
+	cE_IE       := Left(Transform(Val(aInfo[9]),'@E 99,999,999,999,999'),14)
+    cE_Bairro   := Left(aInfo[13],20)
+
+    cF_Nome     := Left(SRA->RA_Nome,30)
+	cF_Endereco := Left(SRA->RA_Endereco,30) + ' ' + Left(SRA->RA_Complem,3)
+    cF_Bairro   := Left(SRA->RA_Bairro,15)
+    cF_Cidade   := Left(SRA->RA_Municipio,16)
+	cF_Uf       := Left(SRA->RA_Estado,2)
+	cF_Cep      := Transform(Left(SRA->RA_Cep,8),'@R #####-###')
+
+    cF_CTPS     := Left(SRA->RA_NumCp,7)
+	cF_UFCTPS   := Left(SRA->RA_UFCP,2)
+	cF_Serie    := Left(SRA->RA_SerCp,5)		
+	cF_CIC      := Left(SRA->RA_CIC,11)
+	cF_RG       := Left(SRA->RA_RG,15)
+	cF_Mat      := Left(SRA->RA_Mat,6)
+	cF_Fil      := Left(SRA->RA_Filial,2)
+    cF_CC       := Left(SRA->RA_CC,9)
+    cF_admissa  := DtoC(SRA->RA_Admissa)
+    cF_demissa  := DtoC(SRA->RA_Demissa)
+
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³ Posicionamento das colunas da Ficha de Salario-Famila        ³
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   //           1         2         3         4         5         6         7         8         9         0         1         2         3
+   // 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901
+   //   Empresa: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                        CGC/Matricula No INPS: 99.999.999/9999-99
+   //   Endereco: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      Bairro: xxxxxxxxxxxxxxxxxxxx    CEP: 99999-999  Cidade: xxxxxxxxxxxxxxxxxxxx  UF: xx
+   //   Empregado: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx     CTPS: xxxxxxx Serie: xxxxx      Dt.Admissao: 99/99/99          Dt.Demissao: 99/99/99
+   //   Endereco: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxx  Bairro: xxxxxxxxxxxxxxx         CEP: 99999-999  Cidade: xxxxxxxxxxxxxxxx      UF: xx
+   //      +------------------------------------------------------------------------------------------------------------------------------------+
+   // |No. |         NOME DO FILHO        | DT.NASC. |  LOCAL DO  |  CARTORIO  | N.REG. |  No.  |   No. | DATA     | DATA DA  |   VISTO    |
+   // |Ord.|                              |          | NASCIMENTO |            |        | LIVRO | FOLHA | ENTRADA  | BAIXA    |FISCAL IAPAS|
+   // |----|------------------------------|----------|------------|------------|--------|-------|-------|----------|----------|------------|
+   // | 99 |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|99/99/9999|            |            |        |       |       |99/99/9999|99/99/9999|            |
+   // |----|------------------------------|----------|------------|------------|--------|-------|-------|----------|----------|------------|
+   //                                                                                        ______________________________________________
+   //                                                                                                            ASSINATURA
+
+       //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+       //³ Impressao da Ficha de Salario-Famila                         ³
+       //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+       For Nx := 1 to nVias
+       @ Li, 54 PSAY STR0009		//	'FICHA DE SALARIO - FAMILIA'
+       Li := Li+3
+       @ Li, 02 PSAY STR0011 + cE_Empresa + Space(38) + STR0012 + cE_Cgc	//'Empresa: '###'CGC/Matricula No INPS: '
+       Li := Li+2
+       @ Li, 02 PSAY STR0013 + cE_Endereco + Space(6)+ STR0014+cE_Bairro + STR0015 + cE_Cep + STR0016 + cE_Cidade + STR0017 + cE_UF						//'Endereco: '###'Bairro: '###'  CEP: '###'  Cidade: '###'  UF: '
+       Li := Li+2
+       @ Li, 02 PSAY STR0018 + cF_Nome + Space(5)+ STR0019+ cF_Ctps + STR0020 + cF_Serie + STR0021+ cF_Admissa +Space(6)+ STR0022 +cF_demissa		//'Empregado: '###'CTPS: '###' Serie: '###'    Dt.Admissao: '###'Dt.Demissao: '
+       Li := Li+2
+       @ Li, 02 PSAY STR0013 + cF_Endereco+ STR0023 + cF_Bairro + Space(7) + STR0024 + cF_Cep + STR0025 + cF_Cidade + Space(6) + STR0026 + cF_UF	//'Endereco: '###'  Bairro: '###'CEP: '###'  Cidade: '###'UF: '
+       Li := Li+2
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+		 Li := Li+1
+       @ Li, 00 PSAY '|'
+       @ Li, 38 PSAY STR0027	//'FILHOS MENORES DE 14 ANOS - (Dados extraidos das certidoes)'
+       @ Li,131 PSAY '|'
+       Li := Li+1
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+       Li := Li+1
+       @ Li, 00 PSAY STR0028	//'|No. |          NOME DO FILHO         | DT.NASC. |  LOCAL DO  |  CARTORIO  | N.REG. |  No.  |   No. | DT.      | DT.DA    |  VISTO   |'
+       Li := Li+1
+       @ Li, 00 PSAY STR0029	//'|Ord.|                                |          | NASCIMENTO |            |        | LIVRO | FOLHA | ENTR.    | BAIXA    |FISC.IAPAS|'
+       Li := Li+1
+       @ Li, 00 PSAY '|----|------------------------------|----------|------------|------------|--------|-------|-------|----------|----------|----------|'
+       Li := Li+1
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Impressao da Ficha Salario-Familia (Detalhe).                ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		 For Ny := 1 to Len(aDepend) 			
+           If Ny #1
+			     @ Li, 00 PSAY '|----|------------------------------|----------|------------|------------|--------|-------|-------|----------|----------|----------|'
+				  Li := Li+1
+           Endif
+		     @ Li, 00 PSAY '| ' + If(!Empty(aDepend[Ny,1]),StrZero(Ny,2),space(2)) + ' |' + aDepend[Ny,1] + '|' + PadR(DtoC(aDepend[Ny,2]),10)+ '|'+ aDepend[Ny,3] +'|'+aDepend[Ny,4]+'|'+ aDepend[Ny,5]+'|'+ aDepend[Ny,6]+'|'+ aDepend[Ny,7]+'|'+PadR(Dtoc(aDepend[Ny,8]),10)+'|'+PadR(DtoC(aDepend[Ny,9]),10)+'|'+'          |' 
+			  Li := Li+1
+   	 Next Ny
+
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+       Li := Li+1
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+       Li := Li+1
+       @ Li, 00 PSAY STR0030	//'| VALOR DE UM SALARIO-FAMILIA                                     | VALOR TOTAL DOS SALARIOS-FAMILIA A PAGAR                       |'
+       Li := Li+1
+       @ Li, 00 PSAY '|'
+       @ Li, 66 PSAY '|'
+       @ Li,131 PSAY '|'
+       Li := Li+1
+       @ Li, 00 PSAY STR0031	//'| Em          ___ de __________________ de _____  R$ ____________ | A partir de ___ de _________________ de _____  R$ ____________ |'
+       Li := Li+1
+
+       For Nz:=1 to 5
+           @ Li, 00 PSAY STR0032	//'| Alterado em ___ de __________________ de _____  R$ ____________ | A partir de ___ de _________________ de _____  R$ ____________ |'
+	        li := li+1
+       Next
+       @ Li, 00 PSAY '+' + Replicate('-',130) + '+'
+       Li := Li+1
+       @ Li, 00 PSAY STR0033		//'RECEBI OS DOCUMENTOS ACIMA'
+       Li := Li+3
+       @ Li, 87 PSAY '___________________________________________'
+       Li := Li+1
+       @ Li,103 PSAY STR0034		//'ASSINATURA'
+		 Li := 0		
+
+	Next Nx   
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Reinicializa Variaveis.                                      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Li      := 0
+	aDepend := {}	
+	dbSelectArea( 'SRA' )
+	dbSkip()	
+	
+EndDo	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Termino do Relatorio.                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( 'SRA' )
+RetIndex('SRA')
+dbSetOrder(1)
+   
+Set Device To Screen
+If aReturn[5] == 1
+	Set Printer To
+	dbCommit()
+	OurSpool(WnRel)
+Endif
+MS_Flush()
+
+Return Nil

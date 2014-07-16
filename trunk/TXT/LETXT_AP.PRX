@@ -1,0 +1,79 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 01/08/00
+
+User Function LETXT()        // incluido pelo assistente de conversao do AP5 IDE em 01/08/00
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("NTAMLIN,CARQ,NHDL,CBUFFER,NBYTES,")
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ LETXT    ³ Autor ³ Luiz Carlos Vieira    ³ Data ³ 24/07/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ PROGRAMA DE EXEMPLO DE IMPORTACAO DE TXT                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+Obs.: Este programa assume que todas as linhas do arquivo texto sao do mesmo
+      tamanho, ou seja, padronizadas. Se o arquivo nao conter todos as linhas
+      do mesmo tamanho, o arquivo pode estar danificado.
+/*/
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declara variaveis                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nTamLin := 100              // Tamanho da linha no arquivo texto
+cArq    := "C:\SIGA\AP5\SIGAADV\ORIGEM.TXT"     // Arquivo texto a importar
+nHdl    := NIL              // Handle para abertura do arquivo
+cBuffer := Space(nTamLin+2) // Variavel para leitura
+nBytes  := 0                // Variavel para verificacao do fim de arquivo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Processos iniciais...                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nHdl := fOpen(cArq,2) // Abre o arquivo
+If nHdl == -1
+    Alert("ERRO!!!")
+    Return
+Endif
+
+nBytes := fRead(nHdl,@cBuffer,nTamLin+2) // Le uma linha
+
+// O seguinte loop permanecera executando ate que nao consigamos ler mais
+// uma linha inteira. Por isso a necessidade de que o arquivo contenha linhas
+// do mesmo tamanho.
+
+// Mais dois por causa das marcas de final de linha (CHR(13)+CHR(10))
+While nBytes == nTamLin+2
+    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+    //³ Neste momento, ja temos uma linha lida. Gravamos os valores ³
+    //³ obtidos retirando-os da linha lida.                         ³
+    //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+    dbSelectArea("SA1") // Arquivo de clientes
+    RecLock("SA1",.T.) // Inclui um registro novo e trava
+
+    // As primeiras posicoes contem o codigo
+    // As cinquenta seguintes o endereco... E assim segue o programa que
+    // deve ser mudado de acordo com o lay-out de seu arquivo texto
+    SA1->A1_COD := Substr(cBuffer,1,6)
+    SA1->A1_END := Substr(cBuffer,7,50)
+
+    //...
+    MsUnLock() // Destrava o registro
+    nBytes := fRead(nHdl,@cBuffer,nTamLin+2) // Le mais uma linha
+
+EndDo
+
+fClose(nHdl) // Fecha o arquivo
+
+Return

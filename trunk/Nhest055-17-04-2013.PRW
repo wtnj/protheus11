@@ -1,0 +1,525 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ NHEST55  ³ Autor ³ Alexandre R. Bento     Data ³ 28/06/05  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ CADASTRO DE VEICULO                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Rdmake                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Expedição/ PCP / Controladoria / Portaria                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+#include "rwmake.ch"
+#include "colors.ch"
+#include "font.ch"
+//#include "protheus.ch"
+
+User Function nhest055()
+SetPrvt("CCADASTRO,AROTINA,")
+
+If AllTrim(Upper(cUserName))$"CESARSM/PATRICIASB"
+	cFuncao := 'axAltera'
+Else
+	cFuncao := 'U_Est55Alt()'
+EndIf
+
+
+//AXCADASTRO("SZN","SZN")
+cCadastro := OemToAnsi("Cadastramento de Veiculos")
+aRotina := {}
+
+aAdd(aRotina,{ "Pesquisa"       ,"AxPesqui"    ,0, 1})
+aAdd(aRotina,{ "Visualizar"	    ,'U_fVei(1)'   ,0, 2})
+
+If Alltrim(Upper(cusername))$"FPORTARIA/SPORTARIA/CESARSM/PATRICIASB/JOAOFR/ADMINISTRADOR/ALEXANDRERB/MARCOSR/PORTARIA.ITESAPAR"
+	aAdd(aRotina,{ "Incluir"   	     ,'U_fVei(2)'  ,0, 3})
+	aAdd(aRotina,{ "Alterar"         ,cFuncao      ,0, 4})
+	aAdd(aRotina,{ "Excluir"         ,'U_fVei(3)'  ,0, 5}) 
+	aAdd(aRotina,{ "Entrada Veiculo" ,'U_fVei(7)'  ,0, 5})                       
+	aAdd(aRotina,{ "Saida Veiculo"   ,'U_fVei(4)'  ,0, 5})
+	aAdd(aRotina,{ "OBS Veiculo"     ,'U_fVei(5)'  ,0, 6})            
+	aAdd(aRotina,{ "Copia Veiculo"   ,'U_fVei(6)'  ,0, 6})                        
+Endif
+
+aAdd(aRotina,{ "Legenda"         ,"U_FLegVei"  ,0, 3})
+
+DbSelectArea("SO5")
+SO5->(DbSetOrder(1))
+mBrowse( 6, 1,22,75,"SO5",,,,,,fCriaCor())
+
+Return(nil)
+
+User Function EST55alt()
+	Alert("Usuário sem permissão!")
+Return .F.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FUNCAO PRINCIPAL ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function fVei(cpar)
+DEFINE FONT oFont12 NAME "Arial" SIZE 12, -12                                                                  
+DEFINE FONT oFont10 NAME "Arial" SIZE 10, -10                                                                  
+SetPrvt("_cDoc,_dDataE,_dDataCh,_cHoraE,_cMot,_cRG,_cPCam,_cPCar,oDialog,_nPar,cQuery, _aMotiv, _cMotiv,_cEmp,_cObs")  
+SetPrvt("_lGerou,_cHoraCh,_cSetor,_aSetor,_cTipo,_aTipo,_cFone,_cVisit")
+_nPar      := cpar
+_aMotiv    := {"Coleta","Entrega","Funcionario" ,"Servico","Visita","Coleta/Entrega","GLP"}
+_cMotiv    := " "
+_cSetor    := " "
+_aSetor    := {"Almox.Central","Almox.Componente","Almox.Bruto" ,"Expedição","Informatica","Engenharia","Qualidade","RH","Risa","Outros"}
+_cTipo     := " "           
+_aTipo     := {"Carroceria","Container","Furgão/Bau" ,"Passeio","Pick-up","Syder"}
+_cModTrans := ""
+_aModTrans := {"1=Carreta","2=Truck","3=Bug","4=Outro"}
+_lGerou    := .F.
+
+
+If  _nPar == 2 //inclui
+    DbSelectArea("SO5")
+    _cDoc      := GetSXENum("SO5","O5_CODIGO")   // Variaveis do Cabecalho do Cadastro    
+    DbCloseArea()
+
+    _lGerou    := .T.
+   	_dDataE    := Ctod("//") //Data de entrada na empresa
+   	_cHoraE    := Space(05)  //hora de entrada na empresa   
+   	_dDataCh   := date()     //Data de chegada
+   	_cHoraCh   := time()     //hora de chegada
+   	_cMot      := Space(30)
+   	_cRG       := Space(10)
+   	_cPCam     := Space(08)
+   	_cPCar     := Space(08)
+   	_cEmp      := Space(30)
+   	_cObs      := Space(100)   
+   	_cFone     := Space(12)
+   	_cVisit    := Space(20)
+   	_nQtdeNf   := 0 
+	_cModTrans := ""
+Elseif _nPar == 1 .Or. _nPar == 3 .Or. _nPar == 5            
+
+    _cDoc      := Alltrim(SO5->O5_CODIGO) // Variaveis do Cabecalho do Cadastro
+    _dDataE    := SO5->O5_DTENTRA
+    _cHoraE    := SO5->O5_HORAENT
+    _cMot      := SO5->O5_DESCRI
+    _cRG       := SO5->O5_CHASSI
+    _cPCam     := SO5->O5_PLACA
+    _cPCar     := SO5->O5_PLACACA 
+    _cMotiv    := SO5->O5_MOTIVO
+    _cEmp      := SO5->O5_EMPRESA
+    _cObs      := SO5->O5_OBS
+    _cHoraCh   := SO5->O5_HORACHE      
+    _dDataCh   := SO5->O5_EMISSAO      
+    _cFone     := SO5->O5_FONE   
+    _cVisit    := SO5->O5_VISITAD   
+    _cSetor    := SO5->O5_DESTINO           
+    _cTipo     := SO5->O5_TIPO  
+    _nQtdeNf   := SO5->O5_QTDENF   
+	_cModTrans := _aModTrans[Val(SO5->O5_MODTRAN)]
+
+Elseif _nPar == 6
+
+    DbSelectArea("SO5")
+    _cDoc      := GetSXENum("SO5","O5_CODIGO")   // Variaveis do Cabecalho do Cadastro
+    _lGerou    := .T.
+    _dDataE    := Ctod("//")
+    _cHoraE    := Space(05)  //hora de entrada na empresa
+    _cHoraCh   := time()   //hora de chegada
+    _dDataCh   := Date()
+    _cMot      := SO5->O5_DESCRI
+    _cRG       := SO5->O5_CHASSI
+    _cPCam     := SO5->O5_PLACA
+    _cPCar     := SO5->O5_PLACACA 
+    _cMotiv    := SO5->O5_MOTIVO
+    _cEmp      := SO5->O5_EMPRESA
+    _cObs      := SO5->O5_OBS
+    _cFone     := SO5->O5_FONE  
+    _cSetor    := SO5->O5_DESTINO           
+    _cTipo     := SO5->O5_TIPO     
+    _cVisit    := SO5->O5_VISITAD 
+    _nQtdeNf   := SO5->O5_QTDENF
+	_cModTrans := _aModTrans[Val(SO5->O5_MODTRAN)]
+    DbCloseArea()   
+
+Elseif _nPar == 4  //saida de veiculo        
+
+	If Empty(SO5->O5_HORAENT)
+		Alert("Efetue a entrada do veículo!")
+		Return .F.
+	EndIf
+	
+    If Empty(SO5->O5_HORASAI)
+         Reclock("SO5",.F.)
+  	        SO5->O5_DTSAIDA := Date() //Data de saida do veiculo
+    	    SO5->O5_HORASAI := Time() // hora de saida do veiculo         	     
+         MsUnlock("SO5")     
+    Endif 
+  
+    Return
+Elseif _nPar == 7  //entrada de veiculo        
+   
+   If Empty(SO5->O5_HORAENT)
+         Reclock("SO5",.F.)
+  	        SO5->O5_DTENTRA := Date() //Data de entrada de veiculo
+    	    SO5->O5_HORAENT := Time() // hora de entrada de veiculo         	     
+         MsUnlock("SO5")     
+         Alert("Data: " +Dtoc(Date()) + "   Hora: "+ Substr(time(),1,5)+chr(13)+;
+               "Entrada do Veiculo OK ") 
+   Endif   
+   
+   Return                 
+Endif   
+
+Define MsDialog oDialog Title OemToAnsi("Cadastro de Veiculos") From 020,030 To 274,705 Pixel 
+@ 013,007 To 110,333 Title OemToAnsi("  Digite os Dados ") //Color CLR_HBLUE
+@ 027,010 Say "Numero :" Size 030,8            
+@ 027,035 Say _cDoc Size 035,8 Object oDoc            
+ oDoc:Setfont(oFont12)                      
+@ 018,112 Say "Data" Size 30,8            
+@ 027,080 Say "Chegada:" Size 30,8            
+@ 025,105 Get _dDataCh Picture "99/99/9999" When .F. Size 35,8 Object oDataCh            
+@ 018,155 Say "Hora " Size 40,8            
+@ 025,150 Get _cHoraCh Picture "99:99:99" When .F. Size 20,8 Object oHoraCh            
+
+//@ 025,105 Get _dDataE Picture "99/99/9999" When .F. Size 35,8 Object oDataE            
+@ 018,232 Say "Data" Size 30,8            
+@ 027,200 Say "Entrada:" Size 40,8            
+@ 025,225 Get _dDataE Picture "99/99/9999" When .F. Size 35,8 Object oDataE            
+@ 018,270 Say "Hora " Size 40,8            
+@ 025,265 Get _cHoraE Picture "99:99:99" When .F. Size 20,8 Object oHoraE            
+
+@ 042,010 Say "Motorista :" Color CLR_HBLUE  Size 050,8            
+@ 041,050 Get _cMot Picture "@!"  When(_nPar == 2 .or. _nPar == 6 ) Size 120,8 Valid !Empty(_cMot) Object oMot             
+
+@ 042,180 Say "RG :" Color CLR_HBLUE  Size 015,8
+@ 041,195 Get _cRG Picture "@!" When(_nPar == 2 .or. _nPar == 6 ) Size 045,8 Valid !Empty(_cRG) Object oRG             
+
+@ 042,255 Say "Fone :" Size 020,8                    
+@ 041,275 Get _cFone Picture "@!" When(_nPar == 2 .or. _nPar == 6 ) Size 045,8 Object ofone             
+
+@ 057,010 Say OemToAnsi("Placa Caminhão:") Color CLR_HBLUE  Size 050,8
+@ 055,050 Get _cPCam Picture "!!!-!!!!" When(_nPar == 2 .or. _nPar == 6 ) Size 035,8 Valid fPlaca(_cPCam) Object oPCam             
+
+@ 057,090 Say OemToAnsi("Placa Carreta :") Size 050,8
+@ 055,130 Get _cPCar Picture "!!!-!!!!" When(_nPar == 2 .or. _nPar == 6 ) Size 035,8 Object oPCar
+
+@ 057,170 Say "Mod. Transp.:" Color CLR_HBLUE Size 050,8
+If (_nPar == 5) .Or. (_nPar == 1)
+	@ 057,207 Say StrTran(_cModTrans,Left(_cModTrans,2),"") Color CLR_BLUE SIZE 45,10 object oModT
+Else
+	@ 055,207 COMBOBOX _cModTrans ITEMS _aModTrans SIZE 40,10 OBJECT oModTrans
+EndIf
+
+@ 057,255 Say OemToAnsi("Tipo :") Size 020,8
+//@ 053,205 Get _cPCar Picture "!!!-!!!!" When(_nPar == 2 .or. _nPar == 6 ) Size 045,8 Object oPCar                                 
+If (_nPar == 5) .Or. (_nPar == 1)
+   @ 057,275 Say _cTipo Color CLR_BLUE SIZE 45,10 object oTipo //When .F.
+Else   
+   @ 055,275 COMBOBOX _cTipo ITEMS _aTipo SIZE 45,10 object oatipo //When .F.
+Endif   
+
+@ 070,010 Say "Empresa :" Color CLR_HBLUE  Size 050,8            
+@ 068,050 Get _cEmp Picture "@!" When(_nPar == 2 .or. _nPar == 6 ) Size 110,8 Valid !Empty(_cEmp) Object oEmp             
+
+@ 070,175 Say "Motivo :" Size 040,8                    
+If (_nPar == 5) .Or. (_nPar == 1)
+   @ 070,195 Say _cMotiv Color CLR_BLUE SIZE 50,10 object oMotiv //When .F.
+//    oMotiv:Setfont(oFont10)                      
+Else   
+   @ 068,195 COMBOBOX _cMotiv ITEMS _aMotiv SIZE 50,10 object oMotiv //When .F.
+Endif   
+
+@ 070,255 Say "Destino:" Size 040,8                    
+If (_nPar == 5) .Or. (_nPar == 1)
+   @ 070,275 Say _cSetor Color CLR_BLUE SIZE 55,10 object oSetor //When .F.
+Else   
+   @ 068,275 COMBOBOX _cSetor ITEMS _aSetor SIZE 55,10 object oaSetor //When .F.
+Endif   
+
+@ 083,010 Say "Visitado :" Size 40,8         
+@ 081,050 Get _cVisit Picture "@!"  When(_nPar == 2 .Or. _nPar == 5 .or. _nPar == 6 ) size 75,10 object oVisit   
+
+@ 083,165 Say "Quant. NF:" Size 40,8         
+@ 081,195 Get _nQtdeNf Picture "@e 999"  When(_nPar == 2 .Or. _nPar == 5 .or. _nPar == 6 ) size 75,10 object oQtdeNf
+
+@ 096,010 Say "Obs :" Size 20,8         
+@ 094,050 Get _cObs Picture "@!S100"  When(_nPar == 2 .Or. _nPar == 5 .or. _nPar == 6 ) size 190,10 object oOBS   
+
+@ 113,305 BMPBUTTON TYPE 02 ACTION fEnd() //FCancela()
+@ 113,275 BMPBUTTON TYPE 01 ACTION fGrVei()
+Activate MsDialog oDialog Center valid fDialog()
+
+Return           
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ CANCELA O CADASTRO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fEnd() 
+   If _lGerou
+   //   Alert(" Volta o numero ")
+      RollBackSx8() //Volta a numeração da Ordem de Liberação
+   Endif   
+   Close(oDialog) 
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÚ¿
+//³ VALIDA O CADASTRO DE VEICULO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÚÙ
+Static Function fDialog()
+Local _lRet := .T.
+
+	If Empty(_cMot) .Or. Empty(_cPcam) .Or. Empty(_cRG) .Or. Empty(_cEmp) .Or. Empty(_cModTrans)
+	   Alert("Campos obrigatórios em branco!")
+	   _lRet := .F.
+	Endif
+	
+	If _cTipo=="Container" .AND. Empty(_cObs)
+		Alert("Informe o nº do Container na observação!")
+		Return .F.
+	EndIf
+
+	If _nPar ==  3                      
+	   _lRet := .T.
+	Endif
+
+Return(_lRet)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ GRAVA O VEICULO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fGrVei()
+
+If _nPar == 2 .Or. _nPar == 6 
+   SO5->(DbSetOrder(1))
+   If !SO5->(Dbseek(xFilial("SO5")+_cDoc))
+	  // Begin Transaction  
+	      If !fDialog()
+	      		Return
+	      EndIf
+	      
+	      Reclock("SO5",.T.)
+	         SO5->O5_FILIAL  := xFilial("SO5")
+		     SO5->O5_CODIGO  := _cDoc
+		     SO5->O5_DESCRI  := _cMot      // Motorista
+		     SO5->O5_HORAENT := space(05)  //hora de entrada
+		     SO5->O5_DTENTRA := Ctod("//") // data de entrada
+	  	     SO5->O5_PLACACA := _cPCar     //placa da carreta
+		     SO5->O5_PLACA   := _cPCam     //placa do camihao ou carro
+		     SO5->O5_CHASSI  := _cRG       // RG do motorista
+		     SO5->O5_HORACHE := Time()     //hora de chegada             		     
+		     SO5->O5_EMISSAO := Date()     //Data de chegada
+	  	     SO5->O5_EMPRESA := _cEmp      // empresa / transportadora
+		     SO5->O5_MOTIVO  := _cMotiv    // motivo da entrada do veiculo         	     
+		     SO5->O5_OBS     := _cObs      // Observaçao da entrada do veiculo         	     	     
+             SO5->O5_FONE    := _cFone
+		     SO5->O5_VISITAD := _cVisit 
+		     SO5->O5_DESTINO := _cSetor    // destino da entrada do veiculo         	     		     
+		     SO5->O5_TIPO    := _cTipo     // tipo da entrada do veiculo         	     		     
+		     SO5->O5_QTDENF  := _nQtdeNf   // quantidade de notas
+		  	 SO5->O5_MODTRAN := Substr(_cModTrans,1,1) // modalidade do transporte
+	      MsUnlock("SO5")
+	      
+	      If SM0->M0_CODIGO=="NH"
+		      //chamado 004176 - FlaviaK
+		      If AllTrim(SO5->O5_MOTIVO)=="GLP" 
+		      	  fOpenDOC("FM08000035")
+		      	  Alert("Favor imprimir o formulário!")
+		      EndIf
+	
+		      //chamado 004177 - FlaviaK
+		      If Val(_cDoc)%10==0
+		          fOpenDOC("FM08000034")
+		          Alert("Favor imprimir o formulário!")
+		      EndIf
+		  EndIf	      	
+		      
+	   ConfirmSX8()
+	Else
+        Msgbox("Este numero de documento ja existe Cadastrado,"  +chr(13)+;
+             "Favor avisar a Informatica, pois nao sera gravado este documento.","Atencao","STOP" )  
+	Endif
+Elseif _nPar ==  3          
+
+	If Empty(SO5->O5_HORASAI)//permite excluir somente se o veiculo não saiu da empresa.
+       	Reclock("SO5",.F.)
+        	SO5->(DbDelete())
+    	MsUnlock("SO5")     
+	Endif  
+
+Elseif _nPar ==  5      
+
+	Reclock("SO5",.F.)
+		SO5->O5_OBS := _cObs   // Observaçao da entrada do veiculo         	     	     
+	MsUnlock("SO5")     
+
+Endif
+
+Close(oDialog)     
+_lGerou  := .F.
+SO5->(DbgoBottom())
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ ABRE O FORMULARIO FM08.000035 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fOpenDoc(cDoq)
+Local cMvSave   := "CELEWIN400"  
+Local lView     := GetMv( "MV_QDVIEW" ) 
+Local cPView    := Alltrim( GetMv( "MV_QDPVIEW" ) )
+Local lAchou    := .F.
+Local aQPath    := QDOPATH()
+Local cQPath    := aQPath[1]
+Local cQPathTrm := aQPath[3]
+Local cTexto
+
+QDH->(DbSetOrder(1)) // Ultima revisao
+QDH->(DbSeek(xFilial("QDH")+cDoq)) //  + ZA7->ZA7_FERRV))	        
+While AllTrim(QDH->QDH_DOCTO) == cDoq
+	lAchou := .T.
+	QDH->(DbSkip())
+Enddo
+
+If lAchou
+
+	QDH->(DbSkip(-1))	
+	
+    cTexto := Alltrim(QDH->QDH_NOMDOC)
+	
+	If !File(cQPathTrm+cTexto)
+		CpyS2T(cQPath+cTexto,cQPathTrm,.T.)
+	EndIf
+	
+	If UPPER(Right(Alltrim(cTexto),4))$".CEL"
+
+		fRename(cQPathTrm+cTexto,cQPathTrm+StrTran(UPPER(cTexto),".CEL",".DOC"))
+
+		cTexto := StrTran(UPPER(cTexto),".CEL",".DOC")
+		
+		oWordTmp := OLE_CreateLink("TMsOleWord97")
+		OLE_SetProperty( oWordTmp, oleWdVisible,   .T. )
+		OLE_SetProperty( oWordTmp, oleWdPrintBack, .F. )
+		OLE_OpenFile( oWordTmp, ( cQPathTrm + Alltrim(cTexto) ),.F., cMvSave, cMvSave )
+
+		Aviso("", "Alterne para o programa do Ms-Word para visualizar o documento ou clique no botao para fechar.", {"Fechar"})
+
+		OLE_CloseLink( oWordTmp )
+	ELSE			
+		QA_OPENARQ(cQPathTrm+cTexto)
+	ENDIF
+
+Else
+	MsgBox("Documento nao encontrado!","Cadastro de documento","STOP")
+Endif
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A PLACA³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fPlaca(_cPl)
+Local _nNum   := 1
+Local _lFlag  := .T. 
+Local _lRet   := .T. 
+Local _cPlaca := _cPl
+
+If !Empty(_cPCam) .And. Empty(_cPCar) 
+   SO5->(DbSetOrder(4))
+   SO5->(Dbseek(xFilial("SO5")+_cPlaca))
+      While !SO5->(EOF()) .And. _cPlaca == SO5->O5_PLACA
+        
+         If Empty(SO5->O5_HORASAI)
+            _cMot    := SO5->O5_DESCRI
+            _cRG     := SO5->O5_CHASSI
+            _cPCam   := SO5->O5_PLACA
+            _cPCar   := SO5->O5_PLACACA  
+            _cHoraE  := SO5->O5_HORAENT // Hora de Entrada do veiculo na empresa
+            _dDataE  := SO5->O5_DTENTRA // Data de Entrada do veiculo na empresa            
+            _dDataCh := SO5->O5_EMISSAO // Data de chegada do veiculo na empresa            
+            _cHoraCh := SO5->O5_HORACHE // Hora de chegada do veiculo na empresa            
+            ObjectMethod(oHoraE,  "Refresh()")
+            ObjectMethod(oDataE,  "Refresh()")
+            ObjectMethod(oHoraCh, "Refresh()")
+            ObjectMethod(oDataCh, "Refresh()")
+            ObjectMethod(oMot,    "Refresh()")
+            ObjectMethod(oRG,     "Refresh()")         
+            ObjectMethod(oPCam,   "Refresh()")         
+            ObjectMethod(oPCar,   "Refresh()")               
+            oPCam:SetFocus(oPCam)  
+            Msgbox("O Caminhao ja esta no PATIO CONFIRA A PLACA ou verique placa nao BAIXADA !!!","ALERT" )  
+            _lRet  := .F. 
+            exit //se achou força a saida do loop
+         Endif   
+         SO5->(Dbskip())
+      Enddo   
+Endif
+
+If !Empty(_cPlaca)
+   If Len(Alltrim(_cPlaca)) <> 8
+      Msgbox("Placa Digitada Errada, Verifique !!!" +chr(13)+;
+             "A Placa so Pode conter LETRAS E NUMEROS.","Atencao","ALERT" )  
+      _cPcam := Space(08)                
+      _lRet  := .F. 
+     
+   Endif
+
+   For _nNum:= 1 to 3
+      
+      _lFlag := Entre("A","Z",Subs(_cPlaca,_nNum,1))   
+      If !_lFlag
+         Msgbox("Placa Digitada Errada, Verifique !!!" +chr(13)+;
+             "A Placa so Pode conter LETRAS E NUMEROS.","Atencao Letras","ALERT" )  
+         _cPcam := Space(08)   
+         _lRet  := .F.              
+      Endif      
+   Next
+
+   For _nNum:=5 to 8
+      
+      _lFlag := Entre("0","9",Subs(_cPlaca,_nNum,1))   
+      If !_lFlag
+         Msgbox("Placa Digitada Errada, Verifique !!!" +chr(13)+;
+             "A Placa so Pode conter LETRAS E NUMEROS.","Atencao Numeros","ALERT" )  
+         _cPcam := Space(08)                
+         _lRet  := .F.              
+      Endif      
+   Next 
+Endif               
+SO5->(DbSetOrder(1))
+If Empty(_cPlaca)
+   _lRet  := .F.              
+Endif
+
+ObjectMethod(oPCam, "Refresh()")         
+
+Return(_lRet)
+
+//ÚÄÄÄÄÄÄÄÄÄ¿
+//³ LEGENDA ³
+//ÀÄÄÄÄÄÄÄÄÄÙ
+User Function FLegVei()       
+
+Local aLegenda :=	{ {"BR_AMARELO" , "Cadastrado"},;
+					  {"BR_VERMELHO", "Fechado"   },;
+  					  {"BR_VERDE"   , "Aberto"    }}
+
+BrwLegenda("Cadastro de Veiculos", "Legenda", aLegenda)
+
+Return  
+
+
+Static Function fCriaCor()       
+
+Local aLegenda :=	{ {"BR_AMARELO" , "Cadastrado"},;
+					  {"BR_VERMELHO", "Fechado"   },;
+  					  {"BR_VERDE"   , "Aberto"    }}
+
+Local uRetorno := {}
+Aadd(uRetorno, {'O5_HORAENT = " " .AND. O5_HORASAI = " "' , aLegenda[1][1] } )
+Aadd(uRetorno, {'O5_HORAENT <> " " .AND. O5_HORASAI <> " "' , aLegenda[2][1] } )
+Aadd(uRetorno, {'O5_HORAENT <> " " .AND. O5_HORASAI = " "' , aLegenda[3][1] } )
+
+Return(uRetorno)

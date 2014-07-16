@@ -1,0 +1,275 @@
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ NHEST024        ³ Jose Roberto Gorski   ³ Data ³ 24.04.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Relacao das Movimentacoes das EPI's                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+#include "rwmake.ch"       
+#INCLUDE "TOPCONN.CH"
+#IFNDEF WINDOWS
+	#DEFINE PSAY SAY
+#ENDIF
+
+User Function nhest024()   
+
+
+SetPrvt("CSAVCUR1,CSAVROW1,CSAVCOL1,CSAVCOR1,CSAVSCR1,CBTXT")
+SetPrvt("CBCONT,CABEC1,CABEC2,CABEC3,WNREL,NORDEM")
+SetPrvt("TAMANHO,LIMITE,ARETURN,NLASTKEY,CRODATXT,NCNTIMPR")
+SetPrvt("TITULO,CDESC1,CDESC2,CDESC3,CSTRING,NTIPO")
+SetPrvt("NOMEPROG,CPERG,NPAG,NROS,ADRIVER,CCOMPAC")
+SetPrvt("CNORMAL,LPRIMEIRO,CQUERY,_CCCUSTO,_CPRODUTO,_NTOTALPROD")
+
+
+cSavCur1:="";cSavRow1:="";cSavCol1:="";cSavCor1:="";cSavScr1:="";CbTxt:=""
+CbCont:="";cabec1:="";cabec2:="";cabec3:="";wnrel:=""
+nOrdem:=0
+tamanho:="M"
+limite :=132
+aReturn := { "Especial", 1,"Administracao", 1, 2, 1, "",1 }
+nLastKey:= 0
+cRodaTxt := ""
+nCntImpr := 0
+titulo   := "Relacao das Movimentacoes das EPI's"
+cDesc1   := " "
+cDesc2   := " "
+cDesc3   := " "
+cString  := "SZ7"
+nTipo    := 15
+nomeprog := "NHEST024"
+cPerg    := "EST024"
+nPag     := 1
+M_Pag    := 1
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Parametros:                                                  ³
+//³ mv_par01     Do Funcionario                                  ³
+//³ mv_par02     Ate o Funcionario                               ³
+//³ mv_par03     Do Centro de Custo                              ³
+//³ mv_par04     Ate o Centro de Custo                           ³
+//³ mv_par05     Do Produto                                      ³
+//³ mv_par06     Ate o Produto                                   ³
+//³ mv_par07     Da Data                                         ³
+//³ mv_par08     Ate a Data                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+// Abertura dos Arquivos
+SZ7->(DbSetOrder(1)) // Filial + Numero + Item
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel:= "NHEST024"
+Pergunte(cPerg,.f.)
+SetPrint("SZ7",NomeProg,cPerg,titulo,cDesc1,cDesc2,cDesc3,.T.,"")
+
+If LastKey() == 27 .or. nLastKey == 27
+   RestScreen(3,0,24,79,cSavScr1)
+   Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If LastKey() == 27 .or. nLastKey == 27
+   RestScreen(3,0,24,79,cSavScr1)
+   Return
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se deve comprimir ou nao                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ntipo  := IIF(aReturn[4]==1,GetMV("MV_COMP"),GetMV("MV_NORM"))
+
+nRos:=SM0->M0_CGC
+aDriver := ReadDriver()
+cCompac := aDriver[1]
+cNormal := aDriver[2]
+lPrimeiro := .T.
+
+rptStatus({||Gerando()},"Gerando Base para o Relatorio...")
+
+TZ7->(DbCloseArea())
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ Gerando         ³ Jose Roberto Gorski   ³ Data ³ 24.04.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Executa a Query                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+
+Static Function Gerando()
+
+cQuery := "SELECT * "
+cQuery := cQuery + " FROM SZ7NH0"
+cQuery := cQuery + " WHERE Z7_MATR BETWEEN '" + mv_par01 + "' AND '" + mv_par02 + "' AND"
+cQuery := cQuery + " Z7_CC BETWEEN '" + mv_par03 + "' AND '" + mv_par04 + "' AND"
+cQuery := cQuery + " Z7_PRODUTO BETWEEN '" + mv_par05 + "' AND '" + mv_par06 + "' AND"
+cQuery := cQuery + " Z7_DATA BETWEEN '" + DtoS(mv_par07) + "' AND '" + DtoS(mv_par08) + "' AND"
+cQuery := cQuery + " D_E_L_E_T_ <> '*' "
+cQuery := cQuery + " ORDER BY Z7_CC+Z7_PRODUTO+Z7_DATA+Z7_MATR"
+
+//TCQuery Abre uma workarea com o resultado da query
+TCQUERY cQuery NEW ALIAS "TZ7"
+MemoWrit('C:\TEMP\NHEST024.SQL',cQuery)
+DbSelectArea("TZ7")
+
+Processa( {|| Imprime() } )
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ Imprime         ³ Jose Roberto Gorski   ³ Data ³ 24.04.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Impressao dos Dados                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+Static Function Imprime()
+
+// SetRegua(TRB->(RecCount()))
+TZ7->(DbGoTop())
+
+lPrimeiro := .T.
+
+cabec1 := ""
+cabec2 := "NUMERO   ITEM   MATRICULA  NOME                            DATA         QUANTIDADE"    
+cabec3 := "------   ----   ---------  -----------------------------   --------     ----------"
+
+Cabec(Titulo,Cabec1,Cabec2,Nomeprog,Tamanho,nTipo)
+
+While TZ7->(!Eof())
+
+//   If Prow() > 66    // .or. lPrimeiro == .T.
+      //If lPrimeiro == .F.
+      //   Eject
+      //   nPag := nPag + 1
+      //Endif
+      //lPrimeiro := .f.
+      //Cabecalho()
+//   Endif
+     If pRow() > 66 
+        Cabec(Titulo,Cabec1,Cabec2,Nomeprog,Tamanho,nTipo)
+     Endif
+ 
+   @ Prow() + 1, 000 Psay AllTrim(TZ7->Z7_CC) + ": " + TZ7->Z7_DESCRCC
+
+   _cCCusto := TZ7->Z7_CC
+
+   While TZ7->(!Eof()) .And. _cCCusto == TZ7->Z7_CC
+
+         _cProduto   := TZ7->Z7_PRODUTO
+         _nTotalProd := 0.00
+  
+         If pRow() > 66 
+            Cabec(Titulo,Cabec1,Cabec2,Nomeprog,Tamanho,nTipo)
+         Endif
+
+         @ Prow() + 2, 000 Psay Replicate("-",132)
+         @ Prow() + 2, 000 Psay AllTrim(TZ7->Z7_PRODUTO) + ": " + TZ7->Z7_DESC
+
+         While TZ7->(!Eof()) .And. TZ7->Z7_PRODUTO == _cProduto
+
+               If pRow() > 66
+                  Cabec(Titulo,Cabec1,Cabec2,Nomeprog,Tamanho,nTipo)
+               Endif
+
+               // Imprime os dados
+               @ Prow() + 1, 000 Psay TZ7->Z7_NUMERO
+               @ Prow()    , 010 Psay TZ7->Z7_ITEM
+               @ Prow()    , 016 Psay TZ7->Z7_MATR
+               @ Prow()    , 027 Psay TZ7->Z7_NOME
+               @ Prow()    , 059 Psay StoD(TZ7->Z7_DATA)
+               @ Prow()    , 069 Psay TZ7->Z7_QUANT Picture "@E999999"
+
+               _nTotalProd := _nTotalProd + TZ7->Z7_QUANT
+
+               TZ7->(DbSkip())
+         EndDo
+
+
+         @ Prow() + 1, 059 Psay "TOTAL:"
+         @ Prow()    , 069 Psay _nTotalProd Picture "@E999999"
+         @ Prow() + 1, 000 Psay Replicate("*",132)
+
+   EndDo
+EndDo
+
+If aReturn[5] == 1
+   Set Printer To
+   Commit
+   Ourspool(wnrel) //Chamada do Spool de Impressao
+Endif
+
+MS_FLUSH() //Libera fila de relatorios em spool
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ NHFIN021        ³ Jose Roberto Gorski   ³ Data ³ 24.05.00 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Montagem do Cabecalho                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+
+Static Function Cabecalho()
+
+aDriver := ReadDriver()
+
+If ( Tamanho == 'P' )
+    @ 0,0 PSAY &(aDriver[1])
+ElseIf ( Tamanho == 'G' )
+    @ 0,0 PSAY &(aDriver[5])
+ElseIf ( Tamanho == 'M' ) .And. ( aReturn[4] == 1 ) 
+    @ 0,0 PSAY &(aDriver[3])
+ElseIf ( Tamanho == 'M' ) .And. ( aReturn[4] == 2 ) 
+    @ 0,0 PSAY &(aDriver[4])
+EndIf 
+// cabec1 := "" 
+cabec2 := "NUMERO   ITEM   MATRICULA  NOME                            DATA         QUANTIDADE"    
+cabec3 := "------   ----   ---------  -----------------------------   --------     ----------"
+@ prow()+1,00 Psay Repli("*",132)
+@ prow()+1,00 Psay "*"+SM0->M0_NOMECOM
+@ prow(),112 Psay "Folha : "                                                                                                    
+@ prow(),124 Psay StrZero(nPag,5,0)+"  *"
+@ prow()+1,00 Psay "*S.I.G.A. / "+nomeprog
+@ prow(),20 Psay PadC(titulo,82)
+@ prow(),112 Psay "DT.Ref.: "+Dtoc(dDataBase)+"  *"
+@ prow()+1,00 Psay "*Hora...: "+Time()
+@ prow(),112 Psay "Emissao: "+Dtoc(Date())+"  *"
+@ prow()+1,00 Psay Repli("*",132)
+@ prow()+1,00 Psay " "
+// @ prow()+1,00 Psay cabec1
+@ prow()+1,00 Psay cabec2
+@ prow()+1,00 Psay cabec3
+Return
+
+

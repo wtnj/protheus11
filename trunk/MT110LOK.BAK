@@ -1,0 +1,696 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ MT110LOK        ³ Alexandre R. Bento    ³ Data ³ 11/06/06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Ponto de entrada q traz lead time do produto e soma na data³±±
+±±³          ³ Entrega prevista e o usuario não pode alterar p/ baixo    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Ponto de entrada para validação da linha do acols         ³±±
+±±³          ³ na abertura de SC.								         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+#include "topconn.ch"
+#include "rwmake.ch"
+
+User Function MT110LOK()
+
+Local _nItem  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_ITEM"})
+Local _nCod   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_PRODUTO"})
+Local _nData  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_DATPRF"})
+Local _nCC    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_CC"})
+Local _nCCU   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_CCU"})
+Local _nConta := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_CONTA"})
+Local _nOS    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_NUMOS"})
+Local _nVlr   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_VUNIT"})
+Local _nQtd   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_QUANT"})
+Local _nNF    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_NFSAIDA"})
+Local _nSer   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_SERSAI"})
+Local _nLocal := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_LOCAL"})
+Local _nForn  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_FORNECE"})
+Local _nLoja  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_LOJA"})
+
+Local _lOK    := .T.
+Local _dData  := Ddatabase
+
+Local lin 			:= 500
+Local _cDescSe
+Local _nLinha
+Local _nx
+Local _aOSAtiv      := {}
+Local _nVlrCon      := 0
+Local _cOk          := .T.
+Local _lPri         := .F.
+Local _nTotA  := 0
+Local _nTotC  := 0
+Local _nTotG  := 0
+Local _nGTotA := 0
+Local _nGTotC := 0
+Local _nGTotG := 0
+Local _nVlrPed := 0
+Local _nVlrGas := 0
+Local _nVGasIt := 0
+Local _nVlrGTo := 0
+Local _cTipo   := Space(01)
+Local _nTotAprv := 0
+Local cBloqAlm  := ""
+
+//Se for executado a partir da rotina de MRP, não considera esta validação
+If AllTrim(Upper(FunName()))$"MATA710/PWHBM001"
+	Return .T.
+EndIf
+
+If !Acols[n][len(aHeader)+1]  //nao pega quando a linha esta deletada
+	
+	SB1->(dbsetorder(1)) //filial + cod
+	If !SB1->(Dbseek(xFilial("SB1")+Acols[n][_nCod] ))
+		Alert('Produto não encontrado!')
+	Endif
+	
+	IF SM0->M0_CODIGO$"IT"
+		
+		// Pedido por Wagner Ferreira - Almoxarifado - Itesapar
+		If Alltrim(Acols[n][_nCC])$"ALMOXARI" .And. !Upper(AllTrim(cUserName))$"WAGNER.FERREIRA/PAMELA.SILVA/PRISCILA.KRUSTCH/FABRICIO.GURSKI/EMANUELLE.PLODEK/LUIZ.ARAUJO/EMANUELE.RIBAS/ERNANDO.GURSKI/PRISCILA.PRINZ/GIOVAN.BRUSTULIN";
+			.and. !Alltrim(upper(FunName()))$"NHCOM063"
+			MsgBox("O centro de custo ALMOXARI só pode ser utilizado por funcionários do almoxarifado. Favor entrar em contato com os mesmos.","Atencao","ALERT")
+			Return .f.
+		Endif
+		
+		/*
+		If SUBSTR(SB1->B1_COD,1,2)$'FE' .AND. !Upper(AllTrim(cUserName))$"NILSON.RENOSTO/MAXWEL.ROCHA/ADMINISTRADOR"
+		Msgbox("Usuário sem permissão para solicitar produto FE, Somente o depto Central de Ferramentas esta autorizado!",;
+		"Usuário não autorizado, Somente Central de Ferramentas!","ALERT")
+		RETURN .F.
+		Endif
+		*/
+		
+		/*
+		_lOK := .F.
+		
+		If SB1->B1_GRUPO$"MM60/MM61/MM62/MM30/MM31/MM32/SA09/SA36" .AND.  Upper(AllTrim(cUserName))$"LUIZ.SANTOS/ISABELLE.DELIGA/JEFFERSON.CHAFRANSKI"
+		_lOK := .T.
+		ElseIf Substr(SB1->B1_GRUPO,1,2)$"MS" .AND. Upper(AllTrim(cUserName))$"CRISTINA.ROCHINSKI/LUCIANOC"
+		_lOK := .T.
+		ElseIf Substr(SB1->B1_GRUPO,1,2)$"MF" .AND. Upper(AllTrim(cUserName))$"EMANUELE.RIBAS/MURILO.ARAUJO/JOAOFR"
+		_lOK := .T.
+		ElseIf Substr(SB1->B1_GRUPO,1,2)$"FE" .AND. Upper(AllTrim(cUserName))$"NILSON.RENOSTO/EMANUELE.RIBAS"
+		_lOK := .T.
+		ElseIf Substr(SB1->B1_GRUPO,1,2)$"ML/PQ/MS/MG/MM/MX/MK/MF/OL/PQ/EB" .AND. Upper(AllTrim(cUserName))$"CRISTINA.ROCHINSKI/WAGNER.FERREIRA/PRISCILA.PRINZ"
+		_lOK := .T.
+		ElseIf Substr(SB1->B1_GRUPO,1,2)$"EB" .AND. Upper(AllTrim(cUserName))$"WILIAN.BLAGINSKI/LUCIANOC"
+		_lOK := .T.
+		ElseIf Substr(SB1->B1_GRUPO,1,2)$"MK/SA" .AND. Upper(AllTrim(cUserName))$"CLEVERSON.ANTUNES"
+		_lOK := .T.
+		Endif
+		
+		If !_lOK
+		Alert("Usuário sem permissão para solicitar produtos do grupo "+SB1->B1_GRUPO+"!")
+		Return .f.
+		
+		endif
+		*/
+		
+	ENDIF
+	
+	
+	//--OS Nº 047979
+	//-- nao permite realizar SC para produtos que possuem contrato de parceria (pedido em aberto) pendente
+	
+	//-- CHAMADO: 048643
+	//-- exceção para os tipos
+	If !SB1->B1_TIPO$"MP/CP/BN/EB"
+		
+		SC3->(dbsetorder(3))//C3_FILIAL+C3_PRODUTO+C3_NUM+C3_ITEM
+		SY1->(dbSetOrder(3)) // Y1_FILIAL+Y1_USER
+		
+		If SC3->(dbseek(xFilial('SC3')+aCols[n][_nCod]))
+			While SC3->(!EOF()) .AND. Alltrim(SC3->C3_PRODUTO)==Alltrim(aCols[n][_nCod])
+				
+				If Empty(SC3->C3_RESIDUO) .AND. SC3->C3_CONAPRO<>"B" .AND. SC3->C3_QUJE<SC3->C3_QUANT
+					
+					//-- chamado 055791
+					If SC3->C3_CC==Acols[n][_nCC] .and. SC3->C3_LOCAL==Acols[n][_nLocal]
+						If !SY1->(dbSeek(xFilial('SY1')+__cUserID))
+							Alert('Produto não pode ser comprado através de SC neste Armazém e C.Custo, pois é comprado através do Pedido em Aberto (Contrato) Nº: '+SC3->C3_NUM+' Item: '+SC3->C3_ITEM+'!')
+							Return .F.
+						Endif
+					Endif
+					
+				Endif
+				
+				SC3->(dbskip())
+			Enddo
+		Endif
+	Endif
+	//-- FIM OS 048643
+	//-- FIM OS 047979
+	
+	/**
+	* Chamado 007916 do helpdesk
+	*/
+	//-- valida conta contábil
+	If !U_NHEST165(aCols[n][_nCC],aCols[n][_nConta],aCols[n][_nCod])
+		Return .F.
+	EndIf
+	
+	If Subs(Acols[n][_nCod],1,3)$"MOD"
+		Msgbox(" O Produto Selecionado Nao Pode ser Comprado!","Usuário não autorizado","ALERT")
+		_lOk := .F.
+	Endif
+	
+	//-- EMPRESA FUNDIÇÃO
+	
+	If SM0->M0_CODIGO=='FN'
+
+		//-- CHAMADO  PORTAL WHB
+		//-- exceto produto de serviços de informatica - 05/08/2013 - joaofr
+		//-- exceto informatica
+		//If !Alltrim(cUserName)$"VILMARTW/JONATHAGS/IOHANSSONOD/NERBALBJ/ANDERSONRI" .AND. Alltrim(Acols[n][_nCC])$"23005001" .and. !ALLTRIM(SB1->B1_COD)$"SA08.000001/SA16.000001" 
+		//If !Alltrim(cUserName)$"ANDERSONRI/LUIZMB/IOHANSSONOD/JONATHAGS" .AND. Alltrim(Acols[n][_nCC])$"23005001/ALMOXARI" .and. !ALLTRIM(SB1->B1_COD)$"SA08.000001/SA16.000001" .and. !alltrim(SB1->B1_TIPO)='MA'
+		If !Alltrim(cUserName)$"ANDERSONRI/LUIZMB/IOHANSSONOD/JONATHAGS" .AND. Alltrim(Acols[n][_nCC])$"23005001" .and. !ALLTRIM(SB1->B1_COD)$"SA08.000001/SA16.000001" //.and. !alltrim(SB1->B1_TIPO)='MA'		
+			Alert("Para o centro de custo 23005001, somente autorizado para ANDERSONRI / LUIZMB / IOHANSSONOD / JONATHAGS ! - P.E. MT110LOK")
+			Return .F.
+		EndIf
+		
+		//-- CHAMADO do portal
+		//If !Alltrim(cUserName)$"CLEBERT/CRISTOVAOLG/THIAGOL/SILVETEAC/FABIORM/VALERIAHB" .AND. Alltrim(Acols[n][_nCC])$"23005002"
+		If !Alltrim(cUserName)$"THIAGOL/SILVETEAC/CRISTOVAOLG/FABIORM" .And. Alltrim(Acols[n][_nCC])$"23005002"		
+			Alert("Para o centro de custo 23005002, somente autorizado para THIAGOL / SILVETEAC / CRISTOVAOLG / FABIORM ! -  P.E. MT110LOK")
+			Return .F.
+		EndIf
+		//fim os
+		
+		//os: 065162 (josias - 1226)
+		If (SB1->B1_COD$"SA36.000002/SA09.000011" .OR. SB1->B1_GRUPO$"SA58/SA59") .AND. AllTrim(aCols[n][_nLocal])$"41/42/48" .AND. !Upper(AllTrim(cUserName))$"WAGNERSM/CASSIOTK/JOSIASAS"
+			Alert("Usuário sem permissão para solicitar produtos do grupo "+SB1->B1_GRUPO+"!"+chr(13)+chr(10)+"Os: 065162")
+			Return .f.
+		Endif
+		//--fim os 065162
+		
+		
+		If SB1->B1_GRUPO$"CT01/CT02/CT03/CT04/CT05/CT06" .AND. !Upper(AllTrim(cUserName))$"JACQUELINETS/SIMARARO"
+			Alert("Usuário sem permissão para solicitar produtos do grupo "+SB1->B1_GRUPO+" ! ")
+			Return .f.
+		Endif
+		
+		// os :051493
+		If AllTrim(aCols[n][_nLocal])$"21/22/2E" .and. ALLTRIM(SB1->B1_GRUPO)$"MD01" .AND. !Upper(AllTrim(cUserName))$"ADEMARFL/LUCIANODB/REGINALDOAR/ADMIN/JOAOFR/AMADOXONR/ROGERIOP"
+			Alert("Usuário sem permissão para solicitar produtos do grupo "+SB1->B1_GRUPO+"! Somente Modelação!")
+			Return .f.
+		Endif
+		// fim os: 051493
+		
+		// os: 067253 - Claudio Santana de Almeida
+		// alterado pela os: 070071
+		// alterado pela os: 070191
+		If !SB1->B1_GRUPO$'SA51/SA57' .and. Empty(Alltrim(Acols[n][_nOS])) .and. AllTrim(aCols[n][_nLocal])$"31" .And. Alltrim(Acols[n][_nConta])$"401020020003/401030050008/101040030006/304020050008/401020020003/401030010010" .And.;
+			Subs(AllTrim(Acols[n,_nCC]),1,1)$"3" .And. !Upper(AllTrim(cUserName))$"CLAUDIOSA/CRISTIANEM/ROMULODB/MARLONCC/JHONYRC/LEANDROJS"
+			Msgbox("Usuário sem permissão para solicitar produto do almoxarifado 31 Conta "+Alltrim(Acols[n][_nConta])+" e Centro de Custo iniciado com 3. Somente Manutenção!",;
+			"Usuário não autorizado, Somente Manutanção!","ALERT")
+			Return .f.
+		Endif
+		
+		//CHAMADO 016382
+		/* Tirado por Alexandre, pois todas as plantas utilizam estes codigos, assim não é exclusividade tal uso.
+		If AllTrim(SB1->B1_GRUPO)$"MM30/MM31/MM32"
+		If !Upper(AllTrim(cUserName))$"ALINEBM/CLAUDIOSA/DERLIKD/GUILHERMEO/LEONARDOJB/FABRICIOCP/GERALDOF/JOSEFH/ROGERIOJS/LUISC/ANDRELA/FERNANDOP/LEANDROJS"
+		Msgbox(" Usuário sem permissão para solicitar produto desse grupo (MM30,MM31,MM32)! ","Usuário não autorizado","ALERT")
+		_lOk := .F.
+		EndIf
+		EndIf
+		//CHAMADO 016382
+		If AllTrim(Acols[n][_nCod])$"SA09.000011/SA36.000002"
+		If !Upper(AllTrim(cUserName))$"ALINEBM/CLAUDIOSA/DERLIKD/GUILHERMEO/LEONARDOJB/FABRICIOCP/GERALDOF/JOSEFH/ROGERIOJS/LUISC/ANDRELA/FERNANDOP/LEANDROJS/JEFERSONAV"
+		Msgbox(" Usuário sem permissão para solicitar produto desse código! ","Usuário não autorizado","ALERT")
+		_lOk := .F.
+		EndIf
+		EndIf
+		*/
+		
+		//-- CONFORME SOLICITAÇÃO DE VEIGA, BRAGA, FREDERICH E E-MAIL ENVIADO AO MARCOSVS
+		If AllTrim(aCols[n][_nLocal])$"21/22/2E" .and. ;
+			ALLTRIM(SB1->B1_TIPO)$"MA/MP" .AND. !Upper(AllTrim(cUserName))$"LUCIANODB/REGINALDOAR/EVALDOMC/MARLONCM/ADMIN/JOAOFR"
+			
+			Msgbox("Usuário sem permissão para solicitar produto do tipo "+ALLTRIM(SB1->B1_TIPO)+"! Somente Almoxarifado!",;
+			"Usuário não autorizado, Somente Almoxarifado!","ALERT")
+			RETURN .F.
+		EndIf
+		//-- Fim
+		
+		//-- OS Nº: 042863
+		If AllTrim(aCols[n][_nLocal])$"41" .and. ;
+			SUBSTR(SB1->B1_GRUPO,1,2)$'MM' .AND. !ALLTRIM(SB1->B1_GRUPO)$"MM15/MM14/MM50" .AND. !Upper(AllTrim(cUserName))$"JOSIASAS/ADMIN/JOAOFR/CASSIOTK/WAGNERSM/EDERSONSF/DIOGOPO"
+			
+			Msgbox("Usuário sem permissão para solicitar produto do grupo "+ALLTRIM(SB1->B1_GRUPO)+"! Somente Manutenção Forjaria!",;
+			"Usuário não autorizado, Somente Manutenção Forjaria!","ALERT")
+			RETURN .F.
+		EndIf
+		//-- Fim OS Nº: 042863
+		
+		//-- OS Nº: 042863
+		If AllTrim(aCols[n][_nLocal])$"31" .and. SM0->M0_CODFIL=='01' .and. ;
+			ALLTRIM(SB1->B1_GRUPO)$"PQ31/MS32/ML01/MK01/MG01/MX01/MX02" .AND. !Upper(AllTrim(cUserName))$"ADMIN/JOAOFR/JOSEAM/ANTONIORL/LUCASF/ALMIRRR/ANDERSONCC/LEANDROJS"
+			
+			Msgbox("Usuário sem permissão para solicitar produto do grupo "+ALLTRIM(SB1->B1_GRUPO)+" no armazem 31! Somente almoxarifado usinagem!",;
+			"Usuário não autorizado, Somente Almoxarifado da Usinagem !","ALERT")
+			RETURN .F.
+		EndIf
+		//-- Fim OS Nº: 042863
+		
+		//-- OS Nº: 034146
+		If AllTrim(aCols[n][_nLocal])$"21" .and. ;
+			ALLTRIM(SB1->B1_COD)$"SA09.000006/"+;
+			"SA09.000007/"+;
+			"SA09.000008/"+;
+			"SA09.000009/"+;
+			"SA09.000010/"+;
+			"SA09.000011/"+;
+			"SA09.000012/"+;
+			"SA09.000013/"+;
+			"SA09.000014/"+;
+			"SA09.000015/"+;
+			"SA09.000016/"+;
+			"SA09.000017/"+;
+			"SA09.000018/"+;
+			"SA09.000019" .AND. !Upper(AllTrim(cUserName))$"THIAGOL/VILMARTW/LUCIANODB/REGINALDOAR/NERBALBJ/FABIOWC/ALINEBM/DOUGLASG/IOHANSSONOD/CRISTIANOS/RUICR/FRANCISVB/DIOGOAS/IGORJC/RODRIGOBR/ISMAELP/EDINAPN/THIAGOL/CAMILATS/ANDERSONRI/FABIORM/SILVETEAC"
+			
+			Msgbox("Usuário sem permissão para solicitar produto "+ALLTRIM(SB1->B1_COD)+"! Somente Manutenção!",;
+			"Usuário não autorizado, Somente Manutenção!","ALERT")
+			_lOk := .F.
+		EndIf
+		//-- Fim OS Nº: 034146
+		
+		//-- chamado 031001
+		//-- data: 14/05/2012
+		If AllTrim(SB1->B1_GRUPO)$'MM01/MM02/MM03/MM04/MM05/MM06/MM07/MM08/MM09/MM10/MM11/MM12/MM13/MM14/MM15/MM16/MM17/MM18/MM19'.OR. ALLTRIM(SB1->B1_COD)$"SA09.000011"
+			If AllTrim(aCols[n][_nLocal])$"21" .AND. !Upper(AllTrim(cUserName))$"JONATHAGS/VILMARTW/LUCIANODB/REGINALDOAR/ANTONIOFS/NERBALBJ/FABIOWC/ALINEBM/DOUGLASG/IOHANSSONOD/CRISTIANOS/RUICR/FRANCISVB/DIOGOAS/IGORJC/THIAGODS/THIAGOMS/THIAGOL/RODRIGOBR/EDINAPN/ISMAELP/RUICR/ANDERSONRI/FABIORM/SILVETEAC"
+				Msgbox("Usuário sem permissão para solicitar produto "+Iif(ALLTRIM(SB1->B1_COD)$"SA09.000011",ALLTRIM(SB1->B1_COD),"do grupo "+alltrim(SB1->B1_GRUPO))+"!",;
+				"Usuário não autorizado, Somente Manutenção!","ALERT")
+				_lOk := .F.
+			EndIf
+		EndIf
+		//-- fim chamado 031001
+		
+		//-- OS 11092
+		If !ALLTRIM(SB1->B1_GRUPO)$"FE31/FE32/FE33/FE35"
+			If SB1->B1_LT > 0
+				_dData :=  _dData + SB1->B1_LT
+				If Acols[n][_nData] < _dData //Verifica se o usuario alterou a data a baixo do lead time
+					Msgbox("Atencao A Data de Necessidade nao Pode ser Menor que a Data Atual"+CHR(13)+;
+					" mais o Lead Time do Produto ","Solicitação de Compra","ALERT" )
+					//	Acols[n][_nData] := _dData
+				Endif
+			Endif
+		EndIf
+		//-- FIM OS 11092
+		
+		If ALLTRIM(SB1->B1_GRUPO)$"SA98"
+			Msgbox("Produto Destinado a Venda e Nao pode ser Comprado!","Usuário não autorizado","ALERT")
+			_lOk := .F.
+		EndIf
+		
+		If Alltrim(Acols[n][_nCC])$"ALMOXARI" .And. SB1->B1_TIPO$"SA"
+			MsgBox("Informe o Centro de Custo onde Será Efetuado o Servico, pois Servicos não Podem ser Estocados no Almoxarifado","Atencao","ALERT")
+			_lOK := .F.
+		Endif
+		
+		
+		
+		//-- CHAMADO 019853 do portal
+		If !Alltrim(cUserName)$"TIAGOJ/DIOGOBA/GLEBERG/FABIOJF/PETERSONAP" .and. ALLTRIM(SB1->B1_TIPO)$"MM" .AND. Alltrim(Acols[n][_nCC])$"54001001"
+			Alert("Para produtos do tipo MM e C.Custo 54001001, somente autorizado para pessoal da Manutenção!")
+			Return .F.
+		EndIf
+		
+		//-- CHAMADO 030034 PORTAL WHB
+		//-- ALTERADO PELO CHAMADO 036304
+		If !Alltrim(cUserName)$"PATRICIAFF/MARCELOP" .AND. Alltrim(Acols[n][_nCC])$"33005002"
+			Alert("Para C.Custo 33005002, somente autorizado para PATRICIAFF / MARCELOP!")
+			Return .F.
+		EndIf
+		
+		If !Alltrim(cUserName)$"LUCIANODB/REGINALDOAR/PAULORG/BRUNORF/JOAOFS/OSNIRZ/GUILHERMEMB/JOAOFR" .and. AllTrim(aCols[n][_nLocal])$"21" .AND. (ALLTRIM(SUBSTR(SB1->B1_GRUPO,1,2))$"MX" .OR. ALLTRIM(SB1->B1_GRUPO)$"MS01")
+			Alert("Para produtos do tipo MX ou grupo MS01, e armazém 21, somente autorizado para pessoal do Almoxarifado!")
+			Return .F.
+		EndIf
+		
+		If Alltrim(cUserName)$"LUCIANODB/REGINALDOAR/PAULORG/BRUNORF/JOAOFS" .and. !AllTrim(aCols[n][_nLocal])$"21" .AND. (ALLTRIM(SB1->B1_TIPO)$"MX" .or. ALLTRIM(SB1->B1_GRUPO)$"MS01")
+			Alert("Usuário só permitido para requisitar este produto para armazém 21!")
+			Return .F.
+		EndIf
+		
+		IF SM0->M0_CODFIL=='01'
+			If Subs(AllTrim(Acols[n,_nCC]),1,1)$"2" .AND. !Subs(AllTrim(Acols[n,_nLocal]),1,1)$"2"
+				MsgBox("Para Este Centro de Custo, Favor Informar Almoxarifado Começando com 2","Atencao","ALERT")
+				_lOK := .F.
+			ElseIf Subs(AllTrim(Acols[n,_nCC]),1,1)$"3" .AND. !Subs(AllTrim(Acols[n,_nLocal]),1,1)$"3"
+				MsgBox("Para Este Centro de Custo, Favor Informar Almoxarifado Começando com 3","Atencao","ALERT")
+				_lOK := .F.
+			ElseIf Subs(AllTrim(Acols[n,_nCC]),1,1)$"4" .AND. !Subs(AllTrim(Acols[n,_nLocal]),1,1)$"4"
+				MsgBox("Para Este Centro de Custo, Favor Informar Almoxarifado Começando com 4","Atencao","ALERT")
+				_lOK := .F.
+			ElseIf Subs(AllTrim(Acols[n,_nCC]),1,1)$"5" .AND. !Subs(AllTrim(Acols[n,_nLocal]),1,1)$"5"
+				MsgBox("Para Este Centro de Custo, Favor Informar Almoxarifado Começando com 5","Atencao","ALERT")
+				_lOK := .F.
+			Endif
+		Endif
+		
+		//OS: 004204
+		//C.C. IMOBILIZ só deverá estar liberado para produtos IM19
+		If AllTrim(Acols[n,_nCC])$"IMOBILIZ" .AND. !AllTrim(SB1->B1_GRUPO)$"IM19"
+			Alert("Somente produtos do grupo IM19 podem ser solicitados no C.Custo IMOBILIZ!")
+			Return .F.
+		EndIF
+		
+		//OS:003797
+		//Bloqueia os produtos genérico e imobilizado para o C.Custo ALMOXI
+		If Alltrim(Acols[n][_nCC])$"ALMOXARI"
+			If AllTrim(SB1->B1_TIPO)=="IM"
+				Alert("C.Custo não pode ser ALMOXARI para produtos do tipo IMOBILIZADO!")
+				_lOk := .F.
+			EndIf
+			
+			If "GENERICO"$SB1->B1_DESC
+				Alert("C.Custo não pode ser ALMOXARI para produtos GENÉRICOS!")
+				_lOk := .f.
+			EndIf
+		EndIf
+		
+		// -----------------------------------------------------------------------------------------------------------------------------------------------
+		
+		// OS 053354
+		// Bloqueio de CC da qualidade em Pernambuco
+		If SM0->M0_CODFIL=='02' .AND. Alltrim(Acols[n][_nCC])$"53006001" .AND. !Alltrim(UPPER(cusername))$"MARCOMA/JOAOCM/DOUGLASSD/VALMIRP/JOAOFR/ELISANGELAOS/BEATRIZMS"
+			Alert('Este Centro de Custo não Pode ser Utilizado, Favor entrar em Contato com o Depto da Qualidade Pernambuco')
+			_lOK := .F.
+		EndIf
+		
+		If Subs(Acols[n][_nCC],2,1)$"5" .And. !SB1->B1_TIPO$"PA/BN/FR" .And. !Alltrim(Acols[n][_nCod])$"SA10.000005/SA10.000001" //fundicao cc iniciando com 4 ou 5
+			MsgBox("Este Centro de Custo não Pode ser Utilizado, Favor entrar em Contato com o Depto de Custos","Atencao","ALERT")
+			_lOK := .F.
+		Endif
+		
+		If Subs(Alltrim(Acols[n][_nCod]),1,2)$"FE"
+			If Empty(Acols[n][_nCCU]) .and. !Alltrim(upper(FunName()))$"MATA410/MATA460/MATA461/MATA460A/NHCOM063"
+				MsgBox("O Centro de Custo onde é Usada a Ferramenta deve ser Preenchido !!!","Atencao","ALERT")
+				_lOK := .F.
+			Endif
+		Endif
+		
+		//-- solicitado por rogerio contabilidade
+		If (Subs(Alltrim(Acols[n][_nConta]),1,8)$"10302013" .Or. Subs(Alltrim(Acols[n][_nConta]),1,5)$"10402") .And. Empty(Alltrim(Acols[n][_nOS]))
+			Msgbox(OemToAnsi("Para Esta Conta Contabil é Obrigatório o Preenchimento do Campo com o Numero da O.S. do Ativo"),"Solicitação de Compra","ALERT" )
+			_lOK := .F.
+		Endif
+		
+		//-- solicitado por PatriciaFF
+		If (!Empty(Alltrim(Acols[n][_nOS])) .AND. SUBSTR(Alltrim(Acols[n][_nCC]),1,2)$"34/54" .AND. Subs(Alltrim(Acols[n][_nOS]),1,2)$'DF' .AND. !Alltrim(UPPER(cusername))$"PATRICIAFF/JOAOFR")
+			Msgbox(OemToAnsi("Somente o login PATRICIAFF está autorizado a emitir SC de novos projetos (DF) para C.Custo começando com 34/54"),"Solicitação de Compra","ALERT    " )
+			_lOK := .F.
+		Endif
+		
+		If !Subs(Alltrim(Acols[n][_nConta]),1,5)$"10302" .And. Subs(Alltrim(Acols[n][_nCod]),1,2)$"IM" .And. !Alltrim(Acols[n][_nCod])$"IM09.000001/IM99.000001" //software (lei protecao intelectual)
+			Msgbox(OemToAnsi("Para Esta Conta Contabil é Obrigatório Colocar o Produto Iniciando com IM"),"Solicitação de Compra","ALERT" )
+			_lOK := .F.
+		Endif
+		
+		If Subs(Alltrim(Acols[n][_nCod]),1,2)$"IM" .And. Alltrim(Acols[n][_nCC])==Iif(SM0->M0_CODIGO$"FN/IT","DIFERIDO","DIFERI")
+			Msgbox("Para Este Produto nao Pode-se Utilizar Este Centro de Custo ","Solicitação de Compra","ALERT" )
+			_lOK := .F.
+		Endif
+		
+		If  !Alltrim(UPPER(cusername))$"LUISC/ADACIRD/HESSLERH/LUPERCIOC/ADMINISTRADOR/DIOGOBA/ANDERSONSC"  .And. Alltrim(Acols[n][_nCod])$"SA51.000016"
+			Msgbox("Este Produto Só pode ser Utilizado pela Logistica, Favor Verificar!!! ","Solicitação de Compra","ALERT" )
+			_lOK := .F.
+		Endif
+		
+		If  AllTrim(aCols[n][_nLocal])$"31" .And. !Alltrim(UPPER(cusername))$"JOSEAM/ADACIRD/ANTONIORL/LEANDROJS/REJIANEPL/ADMINISTRADOR/DOUGLASSD/ANDERSONSC"  .And. Subs(Alltrim(Acols[n][_nCod]),1,4)$"MX01/MG01"
+			Msgbox("Este Produto Somente Almox. podem Utilizar ","Solicitação de Compra","ALERT" )
+			_lOK := .F.
+		Endif
+		
+		If  AllTrim(aCols[n][_nLocal])$"31" .And. !Alltrim(cusername)$"LEANDROJS/LUISC/BEATRIZMS/ANDERSONSC/ALEXANDRERB/ADMINISTRADOR/JOAOFR/ANTONIORL"  .And. Subs(Alltrim(Acols[n][_nCod]),1,4)$"MX02"
+			Msgbox("Este Produto e Almoxarifado Somente a Informatica podem Utilizar ","Solicitação de Compra","ALERT" )
+			_lOK := .F.
+		Endif
+		
+	Endif
+	
+	//EMPRESA USINAGEM
+	
+	If SM0->M0_CODIGO=="NH"
+		
+		/*
+L		
+		-- COMENTADO POR JOAOFR, POIS NÃO EXISTE ARMAZEM 51 NA USINAGEM OU CCUSTO ALMOXI NA FUNDICAO
+		
+		//SOLICITADO PELO DIOGOBA PARA BLOQUEAR SOLICITAÇÃO DE COMPRA FEITA AO ALMOXARIFADO DO ARMAZEM 51
+		If Alltrim(aCols[n][_nCC])$"ALMOXI" .AND. AllTrim(aCols[n][_nLocal])$"51"
+		If !ALLTRIM(UPPER(cUserName))$"DIOGOBA/ANDERSONSC/DANILOCS/CARLOSPS/CUSTODIOFS"
+		Alert("Usuario nao permitido para fazer solicitação de compra para ALMOXI do Armazem 51!")
+		_lOk := .F.
+		EndIf
+		EndIf
+		
+		*/
+		
+		If ALLTRIM(SB1->B1_GRUPO)$"MA01"
+			If !ALLTRIM(UPPER(cUserName))$"LEANDROJS/LUISC"
+				Msgbox("Produtos MA01 somente permitido para o almoxarifado!","Usuário não autorizado","ALERT")
+				_lOk := .F.
+			EndIf
+		EndIf
+		
+		If Alltrim(Acols[n][_nCC])$"ALMOXI" .And. SB1->B1_TIPO$"SA"
+			MsgBox("Informe o Centro de Custo onde Será Efetuado o Servico, pois Servicos não Podem ser Estocados no Almoxarifado","Atencao","ALERT")
+			_lOK := .F.
+		Endif
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ LIBERA SC PARA DETERMINADOS TIPOS DO PRODUTO OU DETERMINADOS USUARIOS ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		
+		If !Alltrim(cUserName)$"DERLIKD/ANDREAG/BEATRIZMS/DIEGONB/SILMARAMC/ANGELAPS/MARCOSR/ADMINISTRADOR/ROBERTOSE/JUCINEIAT/MARCOSD/ERICALP/ANAPM/ALEXANDRERB/LUPERCIOC/GLEISONJP/LEANDRAAS/TAMYFR" .and. ;
+			!ALLTRIM(SB1->B1_TIPO)$"MS/SA/PQ/MD" .AND. ;
+			!AllTrim(SB1->B1_COD)$"ME01.000004/ME01.000006/ME01.000021/ME01.000008"
+			Alert("Não é permitido fazer S.C. pela Usinagem, exceto exceções definidas pelo setor de Compras!")
+			Return .F.
+		EndIf
+		
+		//OS: 004204
+		//C.C. IMOBIL só deverá estar liberado para produtos IM15
+		If AllTrim(Acols[n,_nCC])$"IMOBIL" .AND. !AllTrim(SB1->B1_GRUPO)$"IM15"
+			Alert("Somente produtos do grupo IM15 podem ser solicitados no C.Custo IMOBIL!")
+			Return .F.
+		EndIF
+		
+		//OS: 002651
+		// BLOQUEIA OS ITENS GENERICOS PARA O C.CUSTO ALMOXI
+		cBloqAlm := "ML01.000013/" //ACUCAR CRISTAL
+		cBloqAlm += "ML01.000012/" //CHA NESTEA
+		cBloqAlm += "MS02.000051/" //PLACAS DE SINALIZAÇÃO
+		cBloqAlm += "MX01.000033/" //cartões de visita
+		cBloqAlm += "FE01.000000/"
+		cBloqAlm += "MX01.000207/" //genérico
+		cBloqAlm += "MA01.000001/"
+		cBloqAlm += "MX01.000087/"
+		cBloqAlm += "MX02.000039/"
+		cBloqAlm += "MM02.003263/"
+		cBloqAlm += "MS02.000001/"
+		cBloqAlm += "MX02.000047/" //memoria
+		cBloqAlm += "MX02.000053/" //materiais aplicados
+		cBloqAlm += "MM02.003263/" //SERVIÇOS
+		cBloqAlm += "FE01.000000"
+		
+		If Alltrim(Acols[n][_nCC])$"ALMOXI" .AND. ALLTRIM(SB1->B1_COD)$cBloqAlm
+			Alert("C.Custo não pode ser ALMOXI para este produto!")
+			_lOk := .F.
+		EndIf
+		
+		If Subs(Acols[n][_nCC],1,1)$"5" .And. !SB1->B1_TIPO$"PA/BN"  //Usinagem cc inicando com 5
+			MsgBox("Este Centro de Custo não Pode ser Utilizado, Favor entrar em Contato com o Depto de Custos","Atencao","ALERT")
+			_lOK := .F.
+		Endif
+		
+		If !Subs(Alltrim(Acols[n][_nConta]),1,5)$"10302" .And. Subs(Alltrim(Acols[n][_nCod]),1,2)$"IM" .And. !Alltrim(Acols[n][_nCod])$"IM10.000001" //software (lei protecao intelectual)
+			Msgbox(OemToAnsi("Para Esta Conta Contabil é Obrigatório Colocar o Produto Iniciando com IM"),"Solicitação de Compra","ALERT" )
+			_lOK := .F.
+		Endif
+		
+		/*----------------------------------*
+		* Incluído por João Felipe da Rosa *
+		* Desc: Valida N.F. e Série        *
+		* Data: 09/07/2008                 *
+		*----------------------------------*/
+		SF2->(DbSetOrder(1)) // filial + doc + serie
+		If !Empty(Acols[n][_nNF])
+			If !SF2->(DbSeek(xFilial("SF2")+Acols[n][_nNF]+Acols[n][_nSer]))
+				MsgBox(OemToAnsi("Nota Fiscal de Saida nao encontrada. Favor Verificar!"),"Nota Fiscal","ALERT")
+				_lOK := .F.
+			EndIf
+		EndIf
+		
+	Endif
+	
+	//-- EMPRESAS USINAGEM E FUNDICAO E ITESAPAR
+	If ALLTRIM(UPPER(SM0->M0_CODIGO))$"FN/NH/IT"
+		
+		If Alltrim(Acols[n][_nCC])==Iif(SM0->M0_CODIGO=="FN/IT","DIFERIDO","DIFERI")
+			
+			If !Alltrim(cusername)$"Administrador/ANDREACP/PATRICIAFFJULIANAGY/GLEISONJP/SAMUELCF/CRISVALDOM/SILMARAM"
+				Msgbox("Para o Centro de Custo DIFERI Somente a PATRICIAFF Pode Incluir Solicitacao ","Solicitação de Compra","ALERT" )
+				_lOK := .F.
+			Endif
+			
+			//foi inserido a pedido do rogerio da contabilidade em 02/08/07
+			If Subs(Alltrim(Acols[n][_nCod]),1,2)$"IM"
+				Msgbox("Para Este Produto nao Pode-se Utilizar Este Centro de Custo ","Solicitação de Compra","ALERT" )
+				_lOK := .F.
+			Endif
+			
+		Endif
+		
+		//foi inserido a pedido do rogerio da contabilidade em 23/11/07
+		If !Subs(Alltrim(Acols[n][_nCod]),1,2)$"IM" .And. Alltrim(Acols[n][_nCC])==Iif(SM0->M0_CODIGO=="FN/IT","IMOBILIZ","IMOBIL") .And. Empty(Alltrim(Acols[n][_nOS]))
+			Msgbox("Para Este Produto nao Pode-se Utilizar Este Centro de Custo ","Solicitação de Compra","ALERT" )
+			_lOK := .F.
+		Endif
+		
+	Endif
+	
+	//-- RETIRADO MOMENTANEAMENTE
+	/*
+	If Acols[n][_nData] < _dData //Verifica se o usuario alterou a data a baixo do lead time
+	Msgbox("Atencao A Data de Necessidade nao Pode ser Menor que a Data Atual ","Solicitação de Compra","ALERT" )
+	Acols[n][_nData] := _dData
+	Endif
+	*/
+	
+	//foi inserido a pedido do rogerio da contabilidade em 31/05/07
+	If Alltrim(Acols[n][_nConta])$"103020050001" .And. Subs(Alltrim(Acols[n][_nCod]),1,2)$"MX"
+		Msgbox("Para Este Produto nao Pode-se Utilizar Esta Conta de IMOBILIZADO ","Solicitação de Compra","ALERT" )
+		_lOK := .F.
+	Endif
+	
+	If (Subs(Alltrim(Acols[n][_nConta]),1,8)$"10302015" .Or. Subs(Alltrim(Acols[n][_nConta]),1,5)$"10402") .And. Empty(Alltrim(Acols[n][_nOS]))
+		Msgbox(OemToAnsi("Para Esta Conta Contabil é Obrigatório o Preenchimento do Campo com o Numero da O.S. do Ativo"),"Solicitação de Compra","ALERT" )
+		_lOK := .F.
+	Endif
+	
+	If Subs(Alltrim(Acols[n][_nConta]),1,5)$"10302" .And. Empty(Alltrim(Acols[n][_nOS])) .And. !Subs(Alltrim(Acols[n][_nCod]),1,2)$"IM/EB"
+		Msgbox(OemToAnsi("Para Esta Conta Contabil é Obrigatório Colocar o Produto Iniciando com IM"),"Solicitação de Compra","ALERT" )
+		_lOK := .F.
+	Endif
+	
+	If Empty(Acols[n][_nVlr]) .AND. !ALLTRIM(UPPER(FUNNAME()))$"MATA410/NHCOM063"
+		Msgbox(OemToAnsi("Favor Digitar o Preço Estimado para o Produto ")+Alltrim(Acols[n][_nCod]) +CHR(13)+;
+		OemToAnsi(" Pois é campo Obrigatório"),"Solicitação de Compra","ALERT" )
+		return .F.
+	Endif
+	
+	If Subs(Alltrim(Acols[n][_nCod]),1,4)$"IM15" .And. !Empty(Alltrim(Acols[n][_nOS])) .And.;
+		Right(Alltrim(Acols[n][_nCod]),4) <>  Right(Alltrim(Acols[n][_nOS]),4)
+		Msgbox("O Produto "+Alltrim(Acols[n][_nCod]) +OemToAnsi(" não é da O.S. do Ativo Numero ")+Alltrim(Acols[n][_nOS]),"Solicitação de Compra","ALERT" )
+		return .F.
+	Endif
+	
+	//-- OS ATIVO
+	
+	// Se foi preenchido o campo OS Ativo pega a conta e CC da O.S.
+	// E não for para fornecedor ZAIRE 006962 LOJA 01
+	If !Empty(Alltrim(Acols[n][_nOS])) .AND. !Alltrim(Acols[n][_nForn])+Alltrim(Acols[n][_nLoja])$"00696201"
+		
+		ZA1->(DbsetOrder(1))
+		If ZA1->(DbSeek(xFilial("ZA1")+Subs(Acols[n][_nOS],1,6)))
+			
+			//-- VERIFICA SE A CONTA ESTÁ ENCERRADA
+			If ZA1->ZA1_ENCERA$"S"
+				Msgbox(OemToAnsi("O.S. Ja esta Encerrada, Nao Pode ser Utilizada "),"MT110LOK - Solicitação de Compra","ALERT" )
+				return .F.
+				
+				//-- SENAO PEGA O CC E A CONTA
+			Else
+				Acols[n][_nCC]    := ZA1->ZA1_CC
+				Acols[n][_nConta] := U_NHCOM059() // ZA1->ZA1_CONTA
+			Endif
+			
+		Else
+			Msgbox(OemToAnsi("Esta O.S. não Existe. Favor Verificar !!! "),"MT110LOK - Solicitação de Compra","ALERT" )
+			return .F.
+			
+		Endif
+		
+		//-- VERIFICA SE A OS POSSUI ITENS
+		ZA2->(DbsetOrder(1))
+		If !ZA2->(DbSeek(xFilial("ZA2")+ALLTRIM(Acols[n][_nOS])))
+			Msgbox(OemToAnsi("Esta O.S. não Existe, a OS Deve Conter Código de Controle, Favor Verificar !!! "),"MT110LOK - Solicitação de Compra","ALERT" )
+			return .F.
+		Endif
+		
+		//-- incluida por joaofr 29/05/2013
+		aSCNotIn := {}
+		if altera
+			//-- retira o valor do item da sc que esta sendo alterado
+			aAdd(aSCNotIn,XFILIAL("SC1")+SC1->C1_NUM+acols[n][_nItem])
+		endif
+		
+		//-- TRAZ O VALOR GASTO DO ITEM DA CONTA
+		aXXX := U_GastoDif(Acols[n][_nOs],"DC",nil,aSCNotIn)
+		_aOSGer := aXXX[2]
+		
+		//Traz o valor GASTO e APROVADO da OS
+		_nVlrGst  := 0
+		_nTotAprv := 0
+		For xG:=1 to len(_aOSGer)
+			If _aOSGer[xG][1]==Acols[n][_nOs]
+				_nVlrGst  += _aOSGer[xG][7]
+				_nTotAprv += _aOSGer[xG][6]
+			Endif
+		Next
+		
+		//-- 02/09/2013 JOAOFR
+		//-- Soma também os itens ainda não incluidos que estão no acols da SC da mesma OS
+		If inclui .and. alltrim(upper(funname()))$"MATA110"
+			For _ni:=1 to Len(aCols)
+				
+				If n<>_ni .and. !acols[_ni][len(aHeader)+1] .and. alltrim(Acols[_ni][_nOs])==alltrim(Acols[n][_nOs])
+					_nVlrGst += Acols[_ni][_nVlr] * Acols[_ni][_nQtd]
+				Endif
+				
+			Next
+		Endif
+		
+		
+		If ((Acols[n][_nVlr] * Acols[n][_nQtd])+_nVlrGst) > _nTotAprv
+			
+			Msgbox(OemToAnsi("Saldo da Conta "+ALLTRIM(Acols[n][_nOS])+" Insuficiente!"+CHR(10)+CHR(13)+;
+			"Total Aprovado: R$ "+alltrim(str(_nTotAprv))+chr(10)+chr(13)+;
+			"Total Gasto: R$ "+alltrim(str(_nVlrGst))+chr(10)+chr(13)+;
+			"Total Saldo: R$ "+alltrim(str(_nTotAprv-_nVlrGst))+chr(10)+chr(13)+;
+			"Valor deste item da SC: R$ "+alltrim(str((Acols[n][_nVlr] * Acols[n][_nQtd]))))+chr(10)+chr(13)+;
+			"Falta: R$ "+ alltrim(str(_nTotAprv- ((Acols[n][_nVlr] * Acols[n][_nQtd])+_nVlrGst)  ))  ,"Solicitação de Compra","ALERT" )
+			return .f.
+		EndIf
+		
+	Endif
+	
+	//-- Validação adicional para verificar se a conta contábil está bloqueada
+	CT1->(dbSetOrder(1)) //-- CT1_FILIAL+CT1_CONTA
+	If CT1->(dbSeek(xFilial("CT1")+aCols[n][_nConta]))
+		If ALLTRIM(CT1->CT1_BLOQ)$"1"
+			Alert('Conta Contábil encontra-se bloqueada para uso. Favor entrar em contato com o setor de Controladoria!')
+			Return .F.
+		Endif
+	Else
+		Alert('Conta Contábil não encontrada!')
+		Return .F.
+	Endif
+	
+	
+Endif
+
+Return(_lOK)

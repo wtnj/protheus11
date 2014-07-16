@@ -1,0 +1,944 @@
+#INCLUDE "Protheus.CH"
+#INCLUDE "GPERPPP.CH"
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ GPERPPP  ³ Autor ³ Desenvolvimento R.H.  ³ Data ³ 09/12/02 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Perfil Profissiografico Previdenciario                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ GPERPPP(void)                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Rdmake                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±       
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±± 
+±±³Emerson     ³06/01/03³------³Buscar o codigo CBO no cadastro de funcoes³±±
+±±³            ³        ³------³de acordo com os novos codigos CBO/2002.  ³±±
+±±³Andreia     ³21/05/03³------³Acerto na impressao do exame audiometrico ³±±
+±±³            ³        ³------³de referencia.                            ³±±
+±±³Andreia     ³05/06/03³------³Acerto na impressao da descricao das ativi³±±
+±±³            ³        ³------³des, porque estava sendo repetida para to-³±±
+±±³            ³        ³------³dos os funcionarios.                      ³±±
+±±³Andreia     ³07/01/04³------³Adaptacao ao novo layot. IN 99/03 INSS/DC.³±±
+±±³Andreia     ³24/03/04³070139³Criacao da pergunta "Observacoes" e impr. ³±±
+±±³Andreia     ³16/04/04³070826³Acerto na impressao do resultado de exames³±±
+±±³            ³        ³069673³porque quando o campo estava em branco es-³±±
+±±³            ³        ³------³tava sendo impresso como "Alterado".      ³±±
+±±³Andreia     ³16/04/04³069964³Acerto na impressao do agente de risco    ³±±
+±±³            ³        ³------³quando o nome for muito extenso e nao ti- ³±±
+±±³            ³        ³------³ver espacos( uma so palavra).             ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function GPERPPP()
+
+/*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+  ³ Define Variaveis Locais (Basicas)                            ³
+  ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+LOCAL cDesc1	:=	OemToAnsi (STR0001)		  		//"Perfil Profissiografico Previdenciario"
+LOCAL cDesc2 	:=	OemToAnsi (STR0002)				//"Ser  impresso de acordo com os parametros solicitados pelo"
+LOCAL cDesc3 	:=	OemToAnsi (STR0003)				//"usuario."
+LOCAL cString	:=	"SRA"							// alias do arquivo principal (Base)
+LOCAL aOrd 		:=	{STR0004,STR0005}				//"Matricula"#"Centro de Custo"
+Local aDriver   := ReadDriver()
+
+/*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+  ³ Define Variaveis PRIVATE(Programa)                           ³
+  ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+SetPrvt("ADRIVER,NCONTAR")
+Private cIndCond	:= ""
+Private cFor		:= ""
+Private nOrdem		:= 0
+Private aInfo 		:= {}
+
+Private aReturn		:= {STR0007, 1,STR0008, 1, 2, 1, "",1 }	//"Zebrado"###"Administra‡„o"
+Private nLi			:= 1
+Private nLi1	 	:= 0
+Private nLiM   		:= 0
+Private nLiM1 		:= 0
+Private lPrimeira	:= .T.        
+Private cUsaCsa		:= getmv("MV_USACSA",,"N")
+
+/*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+  ³ Variaveis UtinLizadas na funcao IMPR                         ³
+  ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+Private Titulo  := OemToAnsi (STR0006)							//"PERFIL PROFISSIOGRAFICO PREVIDENCIARIO"
+Private wCabec0 := 3
+Private wCabec1 := ""
+Private wCabec2 := ""
+Private wCabec3 := ""
+Private Contfl  := 1
+Private nTamanho:= "M"
+Private cPerg   := "GPRPPP"
+PRIVATE	AL			:=	{}
+
+// Grupo/Ordem /Pergunta				/Pergunta Spanhol     /Pergunta Ingles			        /Variavel /Tipo/Tamanho/Decimal/Presel	/GSC	 /Valid		  /Var01		/Def01		/DefSpa01	/DefIng1	/Cnt01					  	    	/Var02		/Def02		/DefSpa2		/DefIng2	/Cnt02	/Var03	/Def03	/DefSpa3	/DefIng3	/Cnt03	/Var04	/Def04	/Cnt04	/Var05	/Def05	/Cnt05	/XF3
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+pergunte(cPerg,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel:="GPERPPP"            //Nome Default do relatorio em Disco
+wnrel:=SetPrint(cString,wnrel,cPerg,@Titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,,nTamanho)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carregando variaveis mv_par?? para Variaveis do Sistema.     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nOrdem  		    := aReturn[8]
+Private FilDe		:=	mv_par01   						//  Filial De
+Private FilAte		:=	mv_par02						//  FiLial Ate
+Private CustoDe		:=	mv_par03						//  Centro de Custo De    
+Private CustoAte	:=	mv_par04						//  Centro de Custo Ate                      
+Private MatDe		:=	mv_par05						//  Matricula De                             
+Private MatAte		:=	mv_par06   						//  Matricula Ate  
+Private NomeDe		:=	mv_par07 						//  Nome De     				
+Private NomeAte		:=	mv_par08						//  Nome Ate  
+Private FuncaoDe	:=	mv_par09						//  Funcao De  
+Private FuncaoAte	:=	mv_par10						//  Funcao Ate  
+Private dDataDe		:= 	mv_par11						//  Data De         
+Private dDataAte	:= 	mv_par12						//  Data Ate        
+Private cRepresentante:=	mv_par13						//  Nome do Representante
+Private cNIT		:=	mv_par14						//  NIT do representante
+Private DtEmissa	:=	mv_par15						//  dATA DE EMISSAO
+Private cObs		:=  mv_par16
+
+cObs += mv_par17
+cObs += mv_par18
+cObs += mv_par19
+cObs += mv_par20
+
+If nLastKey = 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey = 27
+	Return
+Endif
+
+//--Setar impressora
+If aReturn[4] == 1  // Comprimido
+    @ 0,0 PSAY &(if(nTamanho=="P",aDriver[1],if(nTamanho=="G",aDriver[5],aDriver[3])))
+Else                // Normal
+    @ 0,0 PSAY &(if(nTamanho=="P",aDriver[2],if(nTamanho=="G",aDriver[6],aDriver[4])))
+Endif
+RptStatus({|lEnd| fImprime(@lEnd,wnRel,cString)},Titulo)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³fImprime  ºAutor  ³Equipe RH Microsiga º Data ³  09/12/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Impressao do Perfil Profissigrafico Previdencario - PPP    º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP6                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fImprime(lEnd,wnRel,cString)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis de Acesso do Usuario                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cAcessaSRA	:= &( " { || " + ChkRH( "GPERPPP" , "SRA" , "2" ) + " } " )
+
+Private cDescDet := ""
+
+
+//--MUDAR ANO PARA 4 DIGITOS
+SET CENTURY ON
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Ordem Do Relatorio                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nOrdem  := aReturn[8]
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posiciona no Primeiro Registro Selecionado                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SRA")
+nSavRec   := RecNo()
+nSavOrdem := IndexOrd()
+
+If nOrdem == 1
+	dbSetOrder(1)
+ElseIf nOrdem == 2
+	dbSetOrder(2)
+Endif
+If nOrdem == 1
+	dbSeek( FilDe + MatDe, .T. )
+	cInicio  := "SRA->RA_FILIAL + SRA->RA_MAT"
+	cFim     := FilAte + MatAte
+ElseIf nOrdem == 2
+	dbSeek( FilDe  + CustoDe + MatDe, .T. )
+	cInicio  := "SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT"
+	cFim     := FilAte + CustoAte + MatAte
+Endif
+
+fLayout()  
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega Regua de Processamento                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SetRegua(RecCount())
+
+While !Eof() .And. &cInicio <= cFim
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Movimenta Regua de Processamento                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IncRegua()
+
+	If lEnd
+		@Prow()+1,0 PSAY cCancel
+		Exit
+    Endif
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste Parametrizacao do Intervalo de Impressao            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If 	(SRA->RA_MAT < MatDe) .Or. (SRA->RA_MAT > MatAte) .Or. ;
+		(SRA->RA_CC  < CustoDe) .Or. (SRA->RA_CC  > CustoAte)
+		dbSelectArea("SRA")
+		dbSkip()		
+		Loop
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste controle de acessos e filiais validas               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !(SRA->RA_FILIAL $ fValidFil()) .Or. !Eval(cAcessaSRA)
+		dbSelectArea("SRA")
+		dbSkip()
+		Loop
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Carregando array com os dados da empresa                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	fInfo(@aInfo,SRA->RA_FILIAL)	
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Carregando as Funcoes de Impressao                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ 	fPerfil()
+	
+	dbSelectArea("SRA")
+	dbSkip()
+	nLi:=1
+	lPrimeira:= .T.
+Enddo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Termino do relatorio                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Set Device To Screen
+dbSelectArea("SRA")
+dbSetOrder(1)
+dbgotop()
+
+If aReturn[5] == 1
+	Set Printer To
+	dbCommit()
+	OurSpool(WnRel)
+Endif
+MS_FLUSH()
+If nTdata > 8
+	SET CENTURY ON
+Else
+	SET CENTURY OFF
+Endif
+Return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³fLayout   ºAutor  ³Equipe RH Microsiga º Data ³  09/04/03   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Laytout do   Perfil Profissigrafico Previdencario - PPP    º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP6                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Function fLayout()
+
+aL		:=	Array(111)
+aL[001]	:= "                                     PERFIL PROFISSIOGRAFICO PREVIDENCIARIO"         
+aL[002]	:= "|----------------------------------------------------------------------------------------------------------------------------------"
+aL[003]	:= "| I  |  SECAO DE DADOS ADMINISTRATIVOS                                                                                             |"
+aL[004]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[005]	:= "| 1 - CNPJ do Domicilio  | 2 - Nome Empresarial                                                 | 3 - CNAE                         |"
+aL[006]	:= "|     Tributario/CEI     |                                                                      |                                  |"  
+aL[007]	:= "|     ################   |     ########################################                         |     #######                      |"
+aL[008]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[009]	:= "| 4 - Nome do Trabalhador                                              | 5 - BR/PDH             | 6 - NIT                          |"
+aL[010]	:= "|     ########################################                         |      ###               |     ##############               |"      
+aL[011]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[012]	:= "| 7 - Data do Nascimento | 8 - Sexo  | 9 - CTPS(No, Serie e UF )       | 10 - Data de Admissao  |11 - Regime Revezamento           |"
+aL[013]	:= "|     ##########         |     #     |     ################            |      ##########        |     ###############              |"      
+aL[014]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[015]	:= "|12 | CAT REGISTRADA                                                                                                               |"
+aL[016]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[017]	:= "|12.1 - Data do Registro |12.2 - Numero da CAT           | 12.1 - Data do Registro | 12.2 - Numero da CAT                          |"
+aL[018]	:= "|------------------------|-------------------------------|-------------------------|-----------------------------------------------|"
+aL[019]	:= "|     ##########         |       ###############         |        ##########       |        ###############                        |"
+aL[020]	:= "|                        |                               |                         |                                               |"
+aL[021]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[022]	:= "|13 | LOTACAO E ATRIBUICAO                                                                                                         |"
+aL[023]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[024]	:= "|13.1 - Periodo         |13.2-CNPJ/CEI   |13.3-Setor     |13.4-Cargo                    |13.5-Funcao                   |13.6- |13.7|"
+aL[025]	:= "|                       |                |               |                              |                              |CBO   |Cod.|"
+aL[026]	:= "|                       |                |               |                              |                              |      |GFIP|"
+aL[027]	:= "|-----------------------|----------------|---------------|------------------------------|------------------------------|------|----|"
+aL[028]	:= "|########## a ##########|################|###############|##############################|##############################|######|##  |"
+aL[029]	:= "|                       |                |               |                              |                              |      |    |"
+aL[030]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[031]	:= "|14 |PROFISSIOGRAFIA                                                                                                               |"
+aL[032]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[033]	:= "|14.1 - Periodo         | 14.2 - Descricao das Atividades                                                                          |"        
+aL[034]	:= "|-----------------------|----------------------------------------------------------------------------------------------------------|"
+aL[035]	:= "|########## a ##########|##########################################################################################################|"
+aL[036]	:= "|                       |##########################################################################################################|"
+aL[037]	:= "|                       |                                                                                                          |"
+aL[038]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+   
+aL[039]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[040]	:= "| II | SECAO DE REGISTROS AMBIENTAIS                                                                                               |"
+aL[041]	:= "|----|-----------------------------------------------------------------------------------------------------------------------------|"
+aL[042]	:= "| 15 | EXPOSICAO A FATORES DE RISCOS                                                                                               |"
+aL[043]	:= "|----|-----------------------------------------------------------------------------------------------------------------------------|"
+aL[044]	:= "|15.1-Periodo           |15.2|15.3-Fator de Risco |15.4-Intens./  |15.5-Tecnica Utilizada                  |15.6-EPC|15.7-EPI|15.8-|"
+aL[045]	:= "|                       |Tipo|                    |Concentracao   |                                        |Eficaz  |EFicaz  |CA-  |"
+aL[046]	:= "|                       |    |                    |               |                                        |(S/N))  |(S/N)   |EPI  |"
+aL[047]	:= "|-----------------------|----|--------------------|---------------|----------------------------------------|--------|--------|-----|"
+aL[048]	:= "|########## a ##########|  # |####################|###############|########################################|    #   |    #   |#####|"
+aL[049]	:= "|                       |    |####################|               |                                        |        |        |     |"
+aL[050]	:= "|                       |    |                    |               |                                        |        |        |     |"
+aL[051]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[052]	:= "| 16 | RESPONSAVEL PELOS REGISTROS AMBIENTAIS                                                                                      |"
+aL[053]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[054]	:= "|16.1-Periodo           |16.2-NIT      |16.3-Registro Conselho|16.4-Nome do Profissional Legalmente Habilitado                     |"
+aL[055]	:= "|                       |              |de Classe             |                                                                    |"     
+aL[056]	:= "|-----------------------|--------------|----------------------|--------------------------------------------------------------------|"
+aL[057]	:= "|########## a ##########|##############| ###########          | ########################################                           |"
+aL[058]	:= "|                       |              |                      |                                                                    |"
+aL[059]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+
+aL[060]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[061]	:= "|III | SECAO DE RESULTADOS DE MONITORACAO BIOLOGICA                                                                                |"
+aL[062]	:= "|----|-----------------------------------------------------------------------------------------------------------------------------|"
+aL[063]	:= "| 17 | EXAMES MEDICOS CLINICOS E COMPLEMENTARES( Quadro I e II, da NR-07 )                                                         |"
+aL[064]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[065]	:= "|17.1-Data   |17.2- Tipo  |17.3-Natureza                                      |17.4-Exame(R/S)|17.5-Indicacao de Resultados        |"
+aL[066]	:= "|------------|------------|---------------------------------------------------|---------------|------------------------------------|"
+aL[067]	:= "| ########## |     #      |################################################## |     #         | (#)Normal  |(#)Alterado            |"
+aL[068]	:= "|            |            |                                                   |               |            |   (#)Estavel          |"
+aL[069]	:= "|            |            |                                                   |               |            |   (#)Agravamento      |"
+aL[070]	:= "|            |            |                                                   |               |            |     (#)Ocupacional    |"
+aL[071]	:= "|            |            |                                                   |               |            |     (#)Nao Ocupacional|"
+aL[072]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[073]	:= "| 18 | RESPONSAVEL PELA MONITORACAO BIOLOGICA                                                                                      |"
+aL[074]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[075]	:= "| 18.1 - Periodo        | 18.2 - NIT     |18.3 - Registro Conselho de Classe  |18.4- Nome do Profissional Legalmente Habilitado    |"
+aL[076]	:= "|-----------------------|----------------|------------------------------------|----------------------------------------------------|"
+aL[077]	:= "|########## a ##########| ############## |      ###########                   |      ########################################      |"
+aL[078]	:= "|                       |                |                                    |                                                    |"
+aL[079]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+   
+aL[080]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[081]	:= "|IV | RESPONSAVEIS PELAS INFORMACOES                                                                                               |"
+aL[082]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[083]	:= "| Declaramos, para todos os fins de direito, que as informacoes prestadas neste documento sao veridicas e foram transcritas        |"
+aL[084]	:= "|fielmente dos registros administrativos, das demonstracoes ambientais e dos programas medicos de responsabilidade da empresa.     |"
+aL[085]	:= "|E de nosso conhecimento que a prestacao de informacoes falsas neste documento constitui crime de falsificacao de documento        |"
+aL[086]	:= "|publico, nos termos do art. 297 do Codigo Penal, e tambem, que tais informacoes sao de carater privativo do trabalhador,          |"
+aL[087]	:= "|constituindo crime, nos termos da Lei no. 9.029/95, praticas discriminatorias decorrentes de sua exigibilidade por outrem, bem    |"
+aL[088]	:= "|como de sua divulgacao para terceiros, ressalvado quando exigida pelos orgaos publicos competentes.                               |"
+aL[089]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[090]	:= "|19 - Data Emissao PPP | 20- REPRESENTANTE LEGAL DA EMPRESA                                                                        |"
+aL[091]	:= "|----------------------|-----------------------------------------------------------------------------------------------------------|"
+aL[093]	:= "|                      | 20.1 - NIT                                        |20.2 - NOME                                            |"
+aL[094]	:= "|                      |   ##############                                  |     ########################################          |"
+aL[095]	:= "|                      |---------------------------------------------------|-------------------------------------------------------|"
+aL[096]	:= "|                      |                                                   |                                                       |"
+aL[097]	:= "|                      |                                                   |                                                       |"
+aL[098]	:= "|                      |                                                   |                                                       |"
+aL[099]	:= "|     ##########       |                                                   |                                                       |"
+aL[100]	:= "|                      |                                                   |                                                       |"
+aL[101]	:= "|                      |                                                   |                                                       |"
+aL[102]	:= "|                      |                                                   |                                                       |"
+aL[103]	:= "|                      |                                                   |       ______________________________________          |"
+aL[104]	:= "|                      |                   (Carimbo)                       |                    (Assinatura)                       |"
+aL[105]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+	
+aL[106]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[107]	:= "| OBSERVACOES                                                                                                                      |"
+aL[108]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[109]	:= "| #################################################################################################################################|"
+aL[110]	:= "|                                                                                                                                  |"
+aL[111]	:= "|----------------------------------------------------------------------------------------------------------------------------------|"
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºfPerfil   ³GPERPPP   ºAutor  ³Equipe RH Microsiga º Data ³  09/12/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Impressao do Cabecalho - PPP                               º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP6                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fPerfil()
+Local cCTPS 	:= SRA->RA_NUMCP + "-" + SRA->RA_SERCP + "/" + SRA->RA_UFCP
+Local cSexo 	:= SRA->RA_SEXO
+Local cCNPJ		:= ""
+Local aGetArea 	:= GetArea()
+Local nLinha
+Local cLinha
+Local aPeriodo 	:= array(8)
+Local aAgente 	:= array(9)	
+Local aExame	:= array(4)
+Local aCargos	:= {}
+Local nX		:= 0
+Local nI		:= 0
+Local aCat		:= {}
+Local cPIS		:= ""
+
+If aInfo[15] == 1 //CEI                                           
+	cCnpj := Transform(SUBSTR(aInfo[8]+Space(16),1,16),"@R 99.999.99999/99")
+Else
+	cCnpj := Transform(SUBSTR(aInfo[8]+Space(16),1,16),"@R 99999999/9999-99")
+EndIF	
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ I - SECAO DE DADOS ADMINISTRATIVOS     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nLin:= 1
+FmtLin(,{aL[1],aL[2],aL[3],aL[4],aL[5],aL[6]},,,@nLin)
+//1-CNPJ/2-Nome Empresarial/ 3-CNAE
+FmtLin({cCnPj,aInfo[03],Transform(Subs(aInfo[16],1,7),"@R 999999-9")},aL[07],,,@nLin) 
+
+FmtLin(,{aL[8],al[9]},,,@nLin)       
+                                   
+ //4-Nome do Trabalhador/5-BR/PDH/6-NIT
+ //CRIAR CAMPO SRA->RA_BRPDH 
+ If SRA->RA_BRPDH =="1"
+ 	cBRPDH := "BR"
+ ElseIf SRA->RA_BRPDH =="2"
+ 	cBRPDH := "PDH"
+ Else	
+ 	cBRPDH := "NA"
+ EndIf	
+
+cPis := Transform(SRA->RA_PIS,"@R 999.99999.99-9") 	
+FmtLin({Subs(SRA->RA_NOME,1,40),cBRPDH,cPIS},aL[10],,,@nLin)       
+
+FmtLin(,{aL[11],aL[12]},,,@nLin)                              
+
+//7-Data Nascimento/8-Sexo/9-CTPS/10-ADMISSAO/ Regime Revezamento 
+//Criar campo SR6->R6_REVEZAM                                                 
+SR6->( dbSeek( xFilial("SR6")+SRA->RA_TNOTRAB ) )
+FmtLin({DTOC(SRA->RA_NASC),cSexo,cCTPS,DTOC(SRA->RA_ADMISSA),SR6->R6_REVEZAM},aL[13],,,@nLin) 
+FmtLin(,{aL[14],aL[15],aL[16],aL[17],aL[18]},,,@nLin)          
+
+//CAT Emitidas no Periodo
+dbSelectArea("RC9") 					
+If RC9->(dbSeek(SRA->RA_FILIAL+SRA->RA_MAT))
+	While RC9->(!EOF()) .and. (RC9->RC9_FILIAL + RC9->RC9_MAT) == (SRA->RA_FILIAL + SRA->RA_MAT)
+
+		 //Se houver CAT no cadastro imprime data e Numero do Docto 
+		If ! Empty (RC9->RC9_DATA)
+			nX := len(aCat) 
+			If nX == 0 .or. !empty(aCat[nX,3])
+		        AADD(aCat,{DTOC(RC9->RC9_DATA),Transform(RC9->RC9_NUMERO,"@R 9999999999-9/99"),"",""})
+		    Else
+		        aCat[nX,3] 	:= DTOC(RC9->RC9_DATA)
+		        aCat[nX,4]	:= Transform(RC9->RC9_NUMERO,"@R 9999999999-9/99")
+	        EndIf
+		Endif	
+		dbSelectArea("RC9")
+		RC9->(dbSkip())
+	Enddo	
+EndIf
+
+If len(aCat) > 0
+	For nX := 1 to len(aCat)
+		//--Verifica Salto de Pagina
+		fPulaPag()
+		//|12.1-Data Reg./12.2-Numero da CAT/12.1-Data Reg./12.2-Numero da CAT
+		FmtLin({aCat[nX,1],aCat[nX,2],aCat[nX,3],aCat[nX,4]},aL[19],,,@nLin)
+	Next	  
+Else
+	FmtLin(,{aL[20]},,,@nLin) //linha em branco da CAT
+EndIf
+
+fPulaPag()
+FmtLin(,{aL[21],aL[22],aL[23],aL[24],aL[25],aL[26],aL[27]},,,@nLin)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³13- LOTACAO E ATRIBUICAO                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("RC6")	
+dbSetOrder(1)
+If dbSeek(SRA->RA_FILIAL+ SRA->RA_MAT)
+	While RC6->(!EOF()) .and. (RC6->RC6_FILIAL + RC6->RC6_MAT) == (SRA->RA_FILIAL + SRA->RA_MAT)
+
+		//--Verifica Salto de Pagina
+		fPulaPag()
+	
+		aPeriodo[1] := DtoC(RC6->RC6_DATAIN)        
+		aPeriodo[2] := DtoC(RC6->RC6_DATAFI)
+		
+		SI3->( dbSeek(xFilial("SI3")+RC6->RC6_CC))
+		If TYPE("SI3->I3_CEI") # "U" .and. TYPE("SI3->I3_TIPO") # "U"
+			aPeriodo[3] := If(SI3->I3_TIPO=="1",Transform(SI3->I3_CEI,"@R 99999999/9999-99"),Transform(SI3->I3_CEI,"@R 99.999.99999/99")) //CNPJ/CEI
+		Else
+			aPeriodo[3] := ""
+		Endif
+		aPeriodo[3] := If( empty(val(aPeriodo[3])),cCnPj,aPeriodo[3] )			
+		
+		aPeriodo[4] := SUBS(FDESC("SI3",RC6->RC6_CC,"I3_DESC"),1,15)
+		aPeriodo[5] := SUBS(RC6->RC6_DESCCA,1,30)
+		aPeriodo[6] := SUBS(RC6->RC6_DESCFUN,1,30)
+		aPeriodo[7] := fCodCBO(RC6->RC6_FILIAL,RC6->RC6_CODFUN,RC6->RC6_DATAIN)
+		//criar campo RC6->RC6_GFIP
+		aPeriodo[8]	:= RC6->RC6_GFIP //Cod.GFIP
+	        
+		//|13.1-Periodo/13.2-CNPJ/CEI/13.3-Setor/13.4-Cargo/13.5-Funcao/13.6-CBO/13.7-Cod.GFIP
+		FmtLin({aPeriodo[1],aPeriodo[2],aPeriodo[3],aPeriodo[4],aPeriodo[5],aPeriodo[6],aPeriodo[7],aPeriodo[8]},aL[28],,,@nLin) 
+	
+		AADD(aCargos,{RC6->RC6_DATAIN,RC6->RC6_DATAFI,RC6->RC6_CARGO})
+					    
+	   	dbSelectArea("RC6")
+		dbSkip()
+	EndDo  
+Else 
+	FmtLin(,{aL[29]},,,@nLin)
+	FmtLin(,{aL[29]},,,@nLin)
+EndIf
+
+fPulaPag()
+FmtLin(,{aL[30],aL[31],aL[32],aL[33],aL[34]},,,@nLin)          
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³14 -PROFISSIOGRAFIA                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//14.1 - Periodo/ 14.2 - Descricao das Atividades                                                                          |        
+
+cDescDet := ""
+If len(aCargos) >0
+	For nI := 1 to len(aCargos)
+		dbSelectArea("SQ3")
+		dbSetOrder(1)
+		If dbSeek(If (xFilial("SQ3") = "  ",Space(2),SRA->RA_FILIAL) + aCargos[nI,3]) 
+			//Carrega as informacoes do campo Memo - Descricao das Atividades
+			cDescDet  := MSMM(SQ3->Q3_DESCDET,,,,3)
+		EndIf
+		                                    
+		nLinha := MlCount(cDescDet,77)
+		If nLinha > 0
+			For nX := 1 to nLinha
+				//--Verifica Salto de Pagina
+				fPulaPag()
+				cLinha:=  Space(01)+Memoline(cDescDet,77,nX,,.T.)
+				If nx == 1
+					//14.1 -Dt.Inicio - Dt.Final/ 14.2 - Descricao das Atividades                                                                          |        
+					FmtLin({aCargos[nI,1],aCargos[nI,2],cLinha},aL[35],,,@nLin)  
+				Else
+					FmtLin({cLinha},aL[36],,,@nLin)   //Descricao das atividades
+				EndIf	
+			Next i     
+		Else
+			FmtLin({aCargos[nI,1],aCargos[nI,2],Space(40)},aL[35],,,@nLin) 
+		EndIf	
+	Next nI
+Else
+	FmtLin(,{aL[37]},,,@nLin)
+EndIf
+
+fPulaPag()
+FmtLin(,{aL[38]},,,@nLin)
+
+nLin++
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ II | SECAO DE REGISTROS AMBIENTAIS     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| 15 | EXPOSICAO A FATORES DE RISCOS     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+fPulaPag()
+
+FmtLin(,{aL[39],aL[40],aL[41],aL[42],aL[43],aL[44],aL[45],aL[46],aL[47]},,,@nLin)
+
+//15.1-Periodo/15.2-Tipo/15.3-Fator de Risco/15.4-Intens.Conc./15.5-Tecnica Utilizada/15.6-EPC/15.7-EPI/15.8-CA-EPI
+dbSelectArea("RC7")	
+dbSetOrder(1)
+If dbSeek(SRA->RA_FILIAL + SRA->RA_MAT)
+
+	While RC7->(!EOF()) .and. (RC7->RC7_FILIAL + RC7->RC7_MAT) == (SRA->RA_FILIAL +SRA->RA_MAT)
+	
+		//--Verifica Salto de Pagina
+		fPulaPag()
+	            
+       	If ! Empty (RC7->RC7_DATAIN)
+
+			aAgente[1] := DtOC(RC7->RC7_DATAIN)
+			aAgente[2] := Dtoc(RC7->RC7_DATAFI) 	//CRIAR CAMPO  
+			
+			If RC7->RC7_TIPO=="1"		 	//CRIAR CAMPO	
+				aAgente[3] := "F" //Fisico
+			ElseIf RC7->RC7_TIPO=="2"
+				aAgente[3] := "Q" //Quimico
+			ElseIf RC7->RC7_TIPO=="3"
+				aAgente[3] := "B" //Biologico
+			ElseIf RC7->RC7_TIPO=="4"
+				aAgente[3] := "E" //Ergonomico
+			ElseIf RC7->RC7_TIPO=="5"
+				aAgente[3] := "M" //Mecanico
+			EndIf	
+			
+			cAgente1 := Substr(RC7->RC7_NOMEAG,1,20)	 	//Fator de Risco  		
+			nLoop := Len(cAgente1)
+
+			While .T.
+			
+				If Len(RC7->RC7_NOMEAG) == Len(cAgente1) .and. Len(cAgente1)+1 <= 20
+					Exit
+				EndIf
+			
+				If SubStr(RC7->RC7_NOMEAG,Len(cAgente1),1) == " " .and. Len(cAgente1)+1 <= 20
+					Exit
+				EndIf                                                           
+				
+			    If Len(cAgente1)+1 <= 20
+			    	Exit
+			    EndIf	
+				cAgente1 := SubStr(RC7->RC7_NOMEAG,1,nLoop )
+				nLoop --
+			Enddo
+            
+ 			cAgente	 := SubStr(RC7->RC7_NOMEAG,Len(cAgente1)+1,40)
+			
+			cAgente2 := SubStr(cAgente,1,20)
+			nLoop 	 := Len(cAgente2)
+
+			While .T.
+			
+				If Len(cAgente) == Len(cAgente2) .and. Len(cAgente2)+1 <= 20
+					Exit
+				EndIf
+			
+				If SubStr(cAgente,Len(cAgente2),1) == " " .and. Len(cAgente2)+1 <= 20
+					Exit
+				EndIf
+			    If Len(cAgente2)+1 <= 20
+			    	Exit
+			    EndIf	
+				
+				cAgente2 := SubStr(cAgente,1,nLoop )
+				nLoop --
+			Enddo
+			
+			cAgente3 := SubStr(cAgente,Len(cAgente2)+1,20) // 3.a linha do extenso
+			If !empty(cAgente3)
+				cAgente2 := StrTran(cAgente2," ","  ",,20 - Len(cAgente2) - 1 + 1)
+            EndIf                          
+
+			aAgente[4]	:= cAgente1
+			aAgente[5] := RC7->RC7_CONCENTR 				//Intensidade/conc. //Exclui campo e cria novo
+			aAgente[6] := RC7->RC7_TECUTI 					//CRIAR campo e excluir campo RC7_TECNICA
+			aAgente[7] := If(RC7->RC7_EPC=="1","S","N")	//Excluir o campo RC7_EPIEPC e criar RC7_EQPI e RC7_EPC
+			aAgente[8] := If(RC7->RC7_EQPI	=="1","S","N")	//Criar campo
+			aAgente[9] := RC7->RC7_CAEPI					//CRIAR CAMPO 
+									
+			FmtLin({aAgente[1],aAgente[2],aAgente[3] ,aAgente[4],aAgente[5],aAgente[6],aAgente[7],aAgente[8],aAgente[9]},aL[48],,,@nLin) 
+			If !empty(cAgente2)
+				FmtLin({cAgente2},aL[49],,,@nLin) 
+			EndIf	
+			If !empty(cAgente3)
+				FmtLin({cAgente3},aL[49],,,@nLin) 
+			EndIf	
+		Else
+			FmtLin(,{aL[50]},,,@nLin)
+		EndIf	
+		dbSelectArea("RC7")
+		dbSkip()  
+	EndDo
+Else
+	FmtLin(,{aL[50]},,,@nLin)
+Endif    
+
+fPulaPag()
+FmtLin(,{aL[51],aL[52],aL[53],aL[54],aL[55],aL[56]},,,@nLin)
+
+fPulaPag()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³16| RESPONSAVEL PELOS REGISTROS AMBIENTAIS  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//               
+//16.1-Periodo/16.2-NIT/16.3-Registro Conselho/16.4-Nome do Profissional Legalmente Habilitado 
+
+dbSelectArea("TMK")
+dbSetorder(3) // Busca indicador de funcao = engenheiro
+DbGoTop()
+If TMK->( eof() )
+	FmtLin(,{aL[58]},,,@nLin)  //imprime linha em branco
+EndIf                                 
+cPIS := ""
+While TMK->( !eof()) .and. TMK->TMK_FILIAL == xFilial("TMK") 
+
+	If TMK->TMK_INDFUN $"4" //Engenheiro
+		fPulaPag()
+		cPis := Transform(TMK->TMK_NIT,"@R 999.99999.99-9") 			
+		//16.1-Data Inicial  - Data Final /16.2-NIT/16.3-Registro Conselho/16.4-Nome do Profissional Legalmente Habilitado 
+		FmtLin({TMK->TMK_DTINIC,TMK->TMK_DTTERM,cPIS,TMK->TMK_NUMENT,TMK->TMK_NOMUSU },aL[57],,,@nLin) 
+	EndIf
+	TMK->( dbskip())              
+EndDo	
+                              
+fPulaPag()
+FmtLin(,{aL[59]},,,@nLin) 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³III | SECAO DE RESULTADOS DE MONITORACAO BIOLOGICA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| 17 | EXAMES MEDICOS CLINICOS E COMPLEMENTARES( Quadro I e II, da NR-07 )|
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+fPulaPag()
+
+FmtLin(,{aL[60],aL[61],aL[62],aL[63],aL[64],aL[65],aL[66]},,,@nLin) 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³RESULTADO DE EXAMES³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("RC8")	
+dbSetOrder(1)
+If dbSeek(SRA->RA_FILIAL+ SRA->RA_MAT)
+	
+	While ! Eof() .AND. (RC8->RC8_FILIAL + RC8->RC8_MAT) == (SRA->RA_FILIAL + SRA->RA_MAT)
+
+		If ! Empty (RC8->RC8_DATA)         
+        	//--Verifica Salto de Pagina
+			fPulaPag()
+            aFill(aExame,"")
+			aExame[1]	:= 	DTOC(RC8->RC8_DATA)
+			//Criar CAMPO RC8_TIPO para indicar se e admissional,periodico, etc
+			If RC8->RC8_EXTIPO == "1"
+				aExame[2]	:="A" //Admissional
+			ElseIf RC8->RC8_EXTIPO == "2"
+				aExame[2]	:="P" //Periodico
+			ElseIf RC8->RC8_EXTIPO == "3"
+				aExame[2]	:="R" //Retorno
+			ElseIf RC8->RC8_EXTIPO == "4"
+				aExame[2]	:="M" //Mudanca Funcao
+			ElseIf RC8->RC8_EXTIPO == "5"
+				aExame[2]	:="D" //Demissional"
+   	        EndIf
+   	    	aExame[3]   :=	RC8->RC8_NOMEEX //Criar Campo 
+				 
+			If RC8->RC8_EXAME == "1" //CRIAR CAMPO
+				aExame[4]	:= "R" //Referencial
+			ElseIf RC8->RC8_EXAME == "2"
+			 	aExame[4]	:= "S" //Sequencial
+			EndIf	
+            //excluir campos RC8_RESULT, RC8_AUDROD, RC8_AUDROE,RC8_TIPOAU
+            //Criar campo de resultado RC8->RC8_INRES
+    	    
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³NO SX5 falta incluir as opcoes³
+			//³- Anormal Ocupacional         ³
+			//³- Anormal nao Ocupacional     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                    
+			cNormaL  := If( RC8->RC8_INDRES =="1","X","")
+			cAlterado:= If( !empty(RC8->RC8_INDRES) .and. RC8->RC8_INDRES # "1","X","")
+			//17.1-Data /17.2- Tipo  /17.3-Natureza/17.4-Exame(R/S)/17.5-Indicacao de Resultados 
+			FmtLin({aExame[1],aExame[2],aExame[3],aExame[4],cNormal,cAlterado},aL[067],,,@nLin) 
+			
+			
+			If RC8->RC8_INDRES $ "12 " //1- Normal; 2- Alterado 
+				FmtLin({""},aL[68],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[69],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[70],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[71],,,@nLin) 
+			ElseIf RC8->RC8_INDRES == "3" //Alterado Estavel
+				FmtLin({"X"},aL[68],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[69],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[70],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[71],,,@nLin) 
+			ElseIf RC8->RC8_INDRES == "4" //Alterado Agravamento
+				FmtLin({""},aL[68],,,@nLin) 
+				fPulaPag()
+				FmtLin({"X"},aL[69],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[70],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[71],,,@nLin) 
+			ElseIf RC8->RC8_INDRES == "5" //Alterado Agravamento Ocupacional
+				FmtLin({""},aL[68],,,@nLin) 
+				fPulaPag()
+				FmtLin({"X"} ,aL[69],,,@nLin) 
+				fPulaPag()
+				FmtLin({"X"},aL[70],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[71],,,@nLin) 
+			ElseIf RC8->RC8_INDRES == "6" //Alterado Agravamento Nao ocupacional
+				FmtLin({""},aL[68],,,@nLin) 
+				fPulaPag()
+				FmtLin({"X"},aL[69],,,@nLin) 
+				fPulaPag()
+				FmtLin({""},aL[70],,,@nLin) 
+				fPulaPag()
+				FmtLin({"X"},aL[71],,,@nLin) 
+			EndIf                 
+			FmtLin(,aL[72],,,@nLin) 
+		EndIf
+		dbSelectArea("RC8")
+		dbSkip()
+    EndDo
+Else
+	fPulaPag()
+	FmtLin({"","","","","",""},aL[067],,,@nLin) 
+	fPulaPag()
+	FmtLin({""},aL[68],,,@nLin) 
+	fPulaPag()
+	FmtLin({""},aL[69],,,@nLin) 
+	fPulaPag()
+	FmtLin({""},aL[70],,,@nLin) 
+	fPulaPag()
+	FmtLin({""},aL[71],,,@nLin) 
+	fPulaPag()
+	FmtLin(,aL[72],,,@nLin) 
+EndIf 
+                               
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| 18 | RESPONSAVEL PELA MONITORACAO BIOLOGICA |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+fPulaPag()
+FmtLin(,{aL[73],aL[74],aL[75],aL[76]},,,@nLin) 
+dbSelectArea("TMK")
+dbSetorder(3) // Busca indicador de funcao = Medico     
+DbGoTop()
+If TMK->( eof() )
+	FmtLin(,{aL[78]},,,@nLin)  //imprime linha em branco
+EndIf
+cPIS := ""
+While TMK->( !eof()) .and. TMK->TMK_FILIAL == xFilial("TMK") 
+
+	If TMK->TMK_INDFUN $"1#6" //Medico do trabalho e Medico
+
+		cPis := Transform(TMK->TMK_NIT,"@R 999.99999.99-9") 			
+		// 18.1-Periodo/18.2-NIT/18.3-Reg.Conselho de Classe/18.4-Nome do Profissional Legalmente Habilitado
+		fPulaPag()
+		FmtLin({TMK->TMK_DTINIC,TMK->TMK_DTTERM,cPIS,TMK->TMK_NUMENT,TMK->TMK_NOMUSU },aL[77],,,@nLin) 
+    EndIf
+	TMK->( dbskip())              
+EndDo	
+
+fPulaPag()
+FmtLin(,{aL[79]},,,@nLin)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//|IV - RESPONSAVEIS PELAS INFORMACOES          |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+fPulaPag()
+FmtLin(,{aL[80],aL[81],aL[82]},,,@nLin)
+fPulaPag()
+FmtLin(,{aL[83],aL[84],aL[85]},,,@nLin)
+fPulaPag()
+FmtLin(,{aL[86],aL[87],aL[88]},,,@nLin)
+fPulaPag()
+FmtLin(,{aL[89],aL[90],aL[91]},,,@nLin)
+fPulaPag()
+FmtLin(,{aL[93] }      ,,,@nLin)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//|19 - Data Emissao PPP |20- REPRESENTANTE LEGAL DA EMPRESA |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+// 20.1 - NIT /20.2 - NOME
+fPulaPag()
+cNit := Transform(cNIT,"@R 999.99999.99-9") 			
+FmtLin({cNIT,cRepresentante},aL[094],,,@nLin)
+
+fPulaPag()
+FmtLin(,{aL[95],aL[96],aL[97],aL[98]},,,@nLin)
+
+//19 - Data Emissao PPP
+fPulaPag()
+FmtLin({DtEmissa},aL[99],,,@nLin)
+
+fPulaPag()
+FmtLin(,{aL[100],aL[101],aL[102],aL[103],aL[104]},,,@nLin)
+fPulaPag()
+FmtLin(,{aL[105]},,,@nLin)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//|OBSERVACOES               |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+FmtLin(,{aL[106],aL[107],aL[108]},,,@nLin)
+
+nLinha := MlCount(cObs,127)
+If nLinha > 0
+	For nX := 1 to nLinha
+		//--Verifica Salto de Pagina
+		fPulaPag()
+		cLinha:=  Space(01)+Memoline(cObs,127,nX,,.T.)
+		FmtLin({cLinha},aL[109],,,@nLin)
+	Next i     
+Else
+	FmtLin(,{aL[110]},,,@nLin)
+
+EndIf	
+FmtLin(,{aL[111]},,,@nLin)
+
+RestArea(aGetArea)
+RETURN NIL
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³GPERPPP   ºAutor  ³Microsiga           º Data ³  12-18-02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP6                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fPulaPag()
+Local lRet :=.F.      
+
+If  nLin >= 58
+	FmtLin(,{aL[2]},,,@nLin)
+	nLin := 01
+	lRet := .T.
+EndIf						
+If lRet
+	FmtLin(,{aL[1],aL[2]},,,@nLin)
+EndIf
+Return(lRet)

@@ -1,0 +1,691 @@
+#include "rwmake.ch"
+#INCLUDE "TOPCONN.CH"
+#include "colors.ch"
+#include "font.ch"
+#INCLUDE "protheus.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ NHEST205 ºAutor  ³Douglas de S. Douradoº Data ³ 27/08/2012º ±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ CADASTRO DE PRODUTO BLOQUEADO                              º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP11 - ESTOQUE E CUSTOS                                    º±±
+±±º	         ³ TABELA DE CADASTRO:  ZEZFN0		                          º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+/*********BROWSE*********/
+User Function NHEST205
+Private oDlg
+Private aRotina, cCadastro // variaveis do Mbrowse
+
+cCadastro := "Bloqueio de Produto"
+aRotina   := {}
+aAdd(aRotina,{ "Visualizar"	    ,"U_EST205(1)"   , 0 , 2})
+aAdd(aRotina,{ "Incluir"		,"U_EST205(2)" 	 , 0 , 3})
+aAdd(aRotina,{ "Alterar"        ,"U_EST205(3)"   , 0 , 4})
+aAdd(aRotina,{ "Excluir"        ,"U_EST205(4)"   , 0 , 5}) 
+aAdd(aRotina,{ "Legenda"        ,"U_E205Legenda()" , 0 , 1}) 
+  
+mBrowse(6,1,22,75,"ZEZ",,,,,,fCriaCor())                   
+/*************************/         
+Return
+
+// Função Principal
+User Function EST205(nParam)
+Local bOk         := {||}
+Local bCanc       := {||oDlg:End()}
+Local bEnchoice   := {||}
+Private nPar 	  := nParam, cTitle
+Private cNumBloq  := space(06), cMotivo:=space(80), cResp:= space(25), dDtIni := CtoD('  /  /  '), dDtFim := CtoD('  /  /  ')
+Private cHrIni    := space(05), cHrFim := space(05) , nDiasAviso := 0, cHrIni := space(05) , cHrFim := space(05) , cDeProd := space(15)
+Private aSize     := MsAdvSize(), cAtProd := space(15), cDeAlm := space(02), cAtAlm := space(02) , cDesc := space(100), cProd := space(15)
+Private cAlm      := space(02)
+Private aHeader   := {}
+Private aCols     := {}
+Private aSize     := MsAdvSize()
+Private aObjects  := {{ 100, 100, .T., .T. },{ 300, 300, .T., .T. }}
+Private aInfo     := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 5, 5 , 5, 5}
+Private aPosObj   := MsObjSize( aInfo, aObjects, .T.), aCombo := {"1=Não","2=Sim"} , cCombo := " ", lCombo := .F.
+
+
+/****************** Construindo o cabeçalho do ACols ********************/
+
+	aAdd(aHeader,{"Produto"     , "ZEZ_PROD"   , PesqPict("ZEZ","ZEZ_PROD")  , 15,00, "U_E205PRD()","","C","ZEZ"})
+	aAdd(aHeader,{"Descricao"   , "B1_DESC"    , PesqPict("SB1","B1_DESC")   , 50,00, ".F.","","C","SB1"})
+	aAdd(aHeader,{"Armazem"		, "ZEZ_ALM"    , PesqPict("ZEZ","ZEZ_ALM")   , 02,00, ".T.","","C","ZEZ"})	
+
+/************* Identifica a operação que será realizada *****************/
+  
+If nPar==1      //visualizar
+
+    fCarrega()
+    cTitle  := 'Visualizar'  	 
+   
+ElseIf nPar==2  //incluir
+
+  	IF fVerificaMat(2)	
+	     cTitle := 'Inclusão de Bloqueio'
+	     cNumBloq := GetSxeNum("ZEZ","ZEZ_NUM")	     	     
+	ELSE
+	  	 MsgBox("Favor cadastrar o login do usuário "+UPPER(ALLTRIM(cUserName))+" no cadastro de usuários!","Acesso Negado","ALERT")
+  		 Return
+	ENDIF	 	 
+	
+ElseIf nPar==3  //alterar              
+
+	IF fVerificaMat()	
+	     cTitle := 'Alterar'
+	     fCarrega()
+	ELSE
+	  	 MsgBox("Favor cadastrar o login do usuário "+UPPER(ALLTRIM(cUserName))+" no cadastro de usuários!","Acesso Negado","ALERT")
+  		 Return
+	ENDIF
+	
+ElseIf nPar==4  //excluir
+
+	fCarrega()			
+   	cTitle := 'Excluir'
+   	
+EndIf 	
+
+CarregaDesc()
+
+/********************** Inicialização dos Say's e Get's ************************/ 
+
+Define MsDialog oDlg Title (cTitle) From aSize[7],00 To aSize[6],aSize[5] Pixel
+
+	@ 08,10  Say "Código de Bloqueio:" PIXEL OF oDlg    	      
+	@ 18,10  Get cNumBloq SIZE 35,10 WHEN .F. PIXEL OF oDlg
+
+	@ 08,65  Say "Motivo do Bloqueio: " PIXEL OF oDlg    	      
+	@ 18,65  Get cMotivo WHEN (nPar == 2 .or. nPar == 3) SIZE 120,10 PIXEL OF oDlg 
+	
+	@ 08,195 Say "Responsável: " PIXEL OF oDlg    	      
+	@ 18,195 Get cResp WHEN .F. SIZE 046,10 PIXEL OF oDlg
+	@ 18,250 Get cDesc WHEN .F. SIZE 150,10 PIXEL OF oDlg  // Descrição 
+	
+	IF nPar == 1 .OR. nPar == 3 .OR. nPar == 4 			   // Caso Visualização ou Alteração ou Exclusão
+   		@ 095,10  Say "Produto: " PIXEL OF oDlg
+		@ 104,10  Get cPROD WHEN (.F.) F3 "SB1" SIZE 55,10 
+	
+		@ 095,70  Say "Almoxarifado: " PIXEL OF oDlg
+		@ 104,70  Get cAlm WHEN (.F.) F3 "SB1" SIZE 18,10		
+	EndIf	
+			
+	@ 37,10  Say "Data Inicial: " PIXEL OF oDlg
+	@ 46,10  Get dDtIni WHEN (nPar == 2 .or. nPar == 3) SIZE 50,10 PIXEL OF oDlg
+	
+	@ 37,65  Say "Data Final: " PIXEL OF oDlg
+	@ 46,65  Get dDtFim WHEN (nPar == 2 .or. nPar == 3) SIZE 50,10 PIXEL OF oDlg
+		
+	@ 65,10 Say "Horario Inicial: " PIXEL OF oDlg    	      
+	@ 74,10 Get cHrIni SIZE 18,10 WHEN (nPar == 2 .or. nPar == 3)PICTURE "99:99" PIXEL OF oDlg 
+		
+	@ 65,50 Say "Horario Final: " PIXEL OF oDlg    	      
+	@ 74,50 Get cHrFim SIZE 18,10 WHEN (nPar == 2 .or. nPar == 3 )PICTURE "99:99" PIXEL OF oDlg
+		
+	@ 65,90 Say "Quantidade de Dias de aviso: " PIXEL OF oDlg
+	@ 74,90 Get nDiasAviso SIZE 15,10 WHEN (nPar == 2 .or. nPar == 3 ) PICTURE "@E99" PIXEL OF oDlg 
+	
+	IF nPar == 2  // Caso Inclusão
+	
+		@ 37,195 Say "Gerar por Sequencia ? " PIXEL OF oDlg
+		@ 46,195 Combobox cCombo ITEMS aCombo SIZE 30,10 WHEN (nPar == 2) PIXEL OF oDlg ON CHANGE fCombo()
+	
+		@ 37,260 Say "De Produto: " PIXEL OF oDlg
+		@ 46,260 MSGet oDeProd VAR cDePROD SIZE 55,10 WHEN (lCombo) F3 "SB1" PIXEL OF oDlg 	
+
+		@ 37,320 Say "Ate Produto: " PIXEL OF oDlg
+		@ 46,320 MSGet oAtProd VAR cAtProd WHEN (lCombo) F3 "SB1" SIZE 55,10 PIXEL OF oDlg
+	
+		@ 65,260 Say "De Almoxarifado: " PIXEL OF oDlg
+		@ 74,260 MSGet oDeAlm VAR cDeAlm  WHEN (lCombo) F3 "ALM" SIZE 15,10 PIXEL OF oDlg
+	                
+		@ 65,320 Say "Ate Almoxarifado: " PIXEL OF oDlg
+		@ 74,320 MsGet oAtAlm VAR cAtAlm WHEN (lCombo) F3 "ALM" SIZE 15,10  PIXEL OF oDlg
+	
+		@ 73,376 BUTTON "Gerar Produtos" SIZE 40,13 WHEN (lCombo) ACTION fGeraLista() PIXEL OF oDlg 
+	
+	EndIF
+	
+	bEnchoice := {||EnchoiceBar(oDlg,bOk,bCanc)} // Enchoice Bar
+	
+	IF nPar == 2
+		// cria o getDados
+		oGeTD := MsGetDados():New( /*aPosObj[2,1]*/ 104     			,; //superior
+	                           aPosObj[2,2]     						,; //esquerda
+	                           aPosObj[2,3]     						,; //inferior
+	                           aPosObj[2,4]     						,; //direita
+	                           3               					 		,; // nOpc
+	                           "U_E205LOK()" 						 	,; // CLINHAOK
+	                           "AllwaysTrue"    						,; // CTUDOOK
+	                           ""               						,; // CINICPOS
+	                           .T.              						,; // LDELETA
+	                           nil              						,; // aAlter
+	                           nil             	 						,; // uPar1
+	                           .F.              						,; // LEMPTY
+	                           200              						,; // nMax
+	                           nil              						,; // cCampoOk
+	                           "AllwaysTrue()"  						,; // CSUPERDEL
+	                           nil              						,; // uPar2
+	                           "AllwaysTrue()"  						,; // CDELOK
+	                           oDlg              						;  // oWnd
+	                          )
+    	                           
+		If nPar==1 .OR. nPar==3  //visualizar ou alterar
+			oGetD:nMax := Len(aCols)
+		EndIf
+		
+	
+	EndIf		  	
+			
+
+Activate MsDialog oDlg ON INIT EnchoiceBar(oDlg,{||Confirmar(),.T.},{||Cancelar()})      
+
+Return
+
+/**********************************************************************/ 
+
+// Ativa ou Desativa os botões para inclusão em sequencia -------------
+Static Function fCombo()
+
+	IF cCombo = '2' //Sim
+	   lCombo := .T.
+	   oDeProd:Refresh()
+	   oAtProd:Refresh() 
+	   oDeAlm:Refresh()
+	   oAtAlm:Refresh()	  
+	ELSE
+	   lCombo := .F. //Nao
+	   oDeProd:Refresh()
+	   oAtProd:Refresh() 
+	   oDeAlm:Refresh()
+	   oAtAlm:Refresh()	   			
+	ENDIF
+
+Return
+// --------------------------------------------------------------------
+
+Static Function fGeraLista() // Evento do Botão "Gerar Produtos" (Adiciona produtos por sequencia)
+
+Processa( {|| fIncluiLista() },"Adicionando..." )
+                                                       
+Return
+
+//--------------- Traz a descrição do produto no Acols ----------------
+User Function E205PRD()  
+Local _cCod  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZEZ_PROD"})
+Local _cDesc := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "B1_DESC"})
+	
+	DbSelectArea("SB1")
+	DbSetOrder(1)
+	If DbSeek(xFilial("SB1")+M->ZEZ_PROD)
+		Acols[n][_cDesc] := SB1->B1_DESC
+		oGeTD:Refresh()
+	Else
+		Alert("Produto não encontrado!")
+		Return .F.
+	EndIf	
+
+Return .T. 
+//---------------------------------------------------------------------
+
+/************* Verifica se produto existe no armazem ******************/
+
+User Function E205LOK()  
+Local nPosLcz := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZEZ_ALM"})
+Local nPosPrd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZEZ_PROD"}) 
+Local cQuery1
+
+	IF !ValidaData()		 
+		Return
+	ENDIF
+
+//Verifica Armazem -----------------------------------------------------
+SB2->(DbSetOrder(2))
+	
+	If !SB2->(DbSeek(xFilial("SB2")+ aCols[n][nPosLcz] + aCols[n][nPosPrd]))		
+		Alert("Produto não existente neste armazem.")
+		Return .F.
+	EndIf
+//-----------------------------------------------------------------------		
+
+// Verifica produto com armazem ja existente para mesmo periodo de bloqueio 
+ZEZ->(DbSetOrder(2))  
+
+	IF ZEZ->( DbSeek(xFilial("ZEZ") + aCols[n][1] + aCols[n][3] ) ) // Confere se já existe esse produto com cadastro 
+ 	     
+ 	 	 // Se Sim, gera um Alias
+	 	 cQuery1 := " SELECT ZEZ_PROD, ZEZ_ALM  "     
+		 cQuery1 += " FROM " + RetSqlName("ZEZ") + " ZEZ" 
+		 cQuery1 += " WHERE  ZEZ_PROD = '" + aCols[n][1] + "' " 
+		 cQuery1 += " AND ZEZ_ALM = '" + aCols[n][3] + "' "
+		 cQuery1 += " AND ((ZEZ_DTINI BETWEEN '" +DtoS(dDtIni)+"' AND '"+DtoS(dDtFim)+"') "
+		 cQuery1 += " OR (ZEZ_DTFIM BETWEEN '" +DtoS(dDtIni)+"'   AND '" +DtoS(dDtFim)+"') )"		  				
+		 cQuery1 += " AND ZEZ.D_E_L_E_T_ = '' AND ZEZ_FILIAL = '" +xFilial("ZEZ") + "' " 
+				
+		 TCQUERY cQuery1 NEW ALIAS "PROD"  // Criando alias produtos ja existente, para verificar a data	
+		 		 
+		 IF !PROD->(Eof())
+		 	PROD->(DbCloseArea())
+		 	Alert("Já existe um registro com este produto e almoxarifado para bloqueio nessa mesma data")
+		 	Return .F. 
+		 ELSE 
+		 	PROD->(DbCloseArea())
+		 	Return .T.
+		 Endif 
+		 		  	  
+    ENDIF  	
+//---------------------------------------------------------------------------
+
+// Verifica se produto ja foi adicionado ------------------------------------
+
+	For x:=1 to Len(aCols)
+	   	If !aCols[x][len(aHeader)+1] //nao pega quando estiver deletado	   		    
+			If (aCols[n][1] == aCols[x][1]) .AND. (aCols[n][3] == aCols[x][3]) .AND. (n <> x)
+				Alert("Este Produto já foi adicionado")  
+				Return .F.							
+			ENDIF	
+		EndIf
+	Next	
+//---------------------------------------------------------------------------	
+Return .T.      
+
+
+/*************** Carrega os Dados para Visualização *******************/
+Static Function fCarrega()  
+	
+	cNumBloq     := ZEZ->ZEZ_NUM
+	cMotivo      := ZEZ->ZEZ_MOTIV
+	cResp   	 := ZEZ->ZEZ_LOGIN
+	CarregaDesc()
+	dDtIni 		 := ZEZ->ZEZ_DTINI
+	dDtFim 		 := ZEZ->ZEZ_DTFIM
+	cPROD		 := ZEZ->ZEZ_PROD	
+	cAlm		 := ZEZ->ZEZ_ALM	
+	cHrIni		 := ZEZ->ZEZ_HRINI
+	cHrFim		 := ZEZ->ZEZ_HRFIM
+	nDiasAviso	 := ZEZ->ZEZ_DIAS 
+				
+Return	
+/**********************************************************************/
+
+// Grava os produtos do Acols no BD
+Static Function fIncluiProd()
+Local nI := 0			
+							
+		//ITENS DO ACOLS
+   		For x:=1 to Len(aCols)
+	   		If !aCols[x][len(aHeader)+1] //nao pega quando estiver deletado
+	   		    IF fVerificaProd(aCols[x][1],aCols[x][3]) // Verifica se ja existe um produto para o mesmo periodo de bloqueio com mesmo cod.
+	   		    	nI++    		    	
+					RecLock("ZEZ",.T.)
+						ZEZ->ZEZ_FILIAL := xFilial("ZEZ") 
+			       		ZEZ->ZEZ_NUM    := cNumBloq
+						ZEZ->ZEZ_MOTIV  := cMotivo
+						ZEZ->ZEZ_LOGIN  := AllTrim(cUserName)									 
+						ZEZ->ZEZ_HRINI  := cHrIni
+						ZEZ->ZEZ_HRFIM  := cHrFim
+						ZEZ->ZEZ_DTINI  := dDtIni
+						ZEZ->ZEZ_DTFIM  := dDtFim
+						ZEZ->ZEZ_DIAS   := nDiasAviso
+						ZEZ->ZEZ_PROD 	:= aCols[x][1]
+						ZEZ->ZEZ_ALM    := aCols[x][3] 					
+					MsUnlock("ZEZ")			
+				ENDIF	
+		    EndIf
+		Next	
+		
+		IF nI == 0  // Caso nenhum produto seja incluído
+		   Alert("Nenhum produto foi incluído.")
+		   RollBackSX8()	
+		ELSE
+		   ConfirmSX8()		
+		   MsgBox("Foram incluídos " + AllTrim(Str(nI)) + " produtos.","Inclusao realizada com sucesso","INFO") 
+		ENDIF
+		
+		oDlg:end()
+	
+Return
+
+/**********************************************************************/
+
+Static Function fIncluiLista() // Inclui uma lista(grupo) de produtos para bloqueio (botão "Gerar Produtos")
+Local cQuery
+Private nAlert := 0, nAlert2 := 0
+
+	//aCols := {} 
+
+	IF !PreValida()
+		Return 
+	ENDIF	
+
+	// Gera Alias com somente os produtos que se deseja bloquear e os locais aonde ele existe
+	cQuery := " SELECT B1_COD, B1_DESC, B2_LOCAL  "
+	cQuery += " FROM " + RetSqlName("SB1") + " B1, " + RetSqlName("SB2") + " B2 " 
+	cQuery += " WHERE  B1_COD = B2_COD "
+	cQuery += " AND B1_COD BETWEEN '" +cDePROD+ "' AND '" +cAtProd+ "' " 
+	cQuery += " AND B2_LOCAL BETWEEN '" +cDeAlm+ "' AND '" +cAtAlm+ "' "
+	cQuery += " AND B1.D_E_L_E_T_ = '' AND B1_FILIAL = '" +xFilial("SB1") + "' " 
+	cQuery += " AND B2.D_E_L_E_T_ = '' AND B2_FILIAL = '" +xFilial("SB2") + "' " 
+		
+	TCQUERY cQuery NEW ALIAS "TMP"  // Criando alias com dispositivos x preventiva que se encaixam nos parâmetros
+	
+	TMP->(DbGoTop())	 
+	
+	While !TMP->(Eof())   		
+   	
+		IF fVerificaProd(TMP->B1_COD,TMP->B2_LOCAL) .AND. fExiste(TMP->B1_COD,TMP->B2_LOCAL)		
+				   
+			Aadd(aCols,{TMP->B1_COD,TMP->B1_DESC,TMP->B2_LOCAL, .F.})  	  	
+			 
+		ENDIF		
+			 
+		TMP->(DbSkip())  
+			 
+	Enddo
+	
+	TMP->(DbCloseArea()) 
+	
+	IF nAlert <> 0  // Caso bloqueado algum produto
+	   Alert("Cancelado "+AllTrim(Str(nAlert))+" inclusões, produto(s) já foram adicionado(s).")
+    ENDIF
+    
+    IF nAlert2 <> 0 // Caso bloqueado 2
+	   Alert("Cancelado "+AllTrim(Str(nAlert2))+" inclusões, produto(s) já estão cadastrado(s) para bloqueio neste período")
+    ENDIF 
+    
+    ConfirmSX8()			
+
+Return
+
+// Carrega o nome completo do usuario
+Static Function CarregaDesc()  
+
+	QAA->(DBSETORDER(6))
+		IF nPar == 2
+			QAA->( DBSEEK( UPPER(Alltrim(cUserName) ) ) ) 
+		ELSE
+			QAA->( DBSEEK( UPPER(Alltrim(cResp) ) ) ) 
+		ENDIF	
+	cDesc := QAA->QAA_NOME	
+	QAA->(DbCloseArea()) 
+	
+Return 
+
+// Verifica se produto ja foi adicionado no Acols ----------------------
+Static Function fExiste(produto,alm)
+	For x:=1 to Len(aCols)
+	   	If !aCols[x][len(aHeader)+1] //nao pega quando estiver deletado	   		    
+			If (aCols[x][1] == produto) .AND. (aCols[x][3] == alm)
+				nAlert++			 
+				Return .F.							
+			ENDIF	
+		EndIf
+	Next	
+//----------------------------------------------------------------------
+Return .T.
+
+
+/************* Grava, Altera, ou Exclui o Registro no BD **************/
+Static Function Confirmar()
+    
+ DO CASE // Verifica a operação que será feita
+  
+	CASE nPar == 2    // Inclui um novo registro ------
+	    
+		IF !Validar()
+			Return
+   		EndIf 
+		
+		Processa( {|| fIncluiProd() },"Incluindo..."   ) 
+		
+		ConfirmSX8()			 		
+    
+    CASE nPar == 3  // Altera o registro --------------      
+   		IF !Validar()
+			Return
+   		EndIf 		
+	    RecLock("ZEZ",.F.) 	     	    
+			ZEZ->ZEZ_MOTIV  := cMotivo		
+			ZEZ->ZEZ_PROD 	:= cPROD			
+			ZEZ->ZEZ_ALM  	:= cAlm								 
+			ZEZ->ZEZ_HRINI  := cHrIni
+			ZEZ->ZEZ_HRFIM  := cHrFim
+			ZEZ->ZEZ_DTINI  := dDtIni
+			ZEZ->ZEZ_DTFIM  := dDtFim
+			ZEZ->ZEZ_DIAS   := nDiasAviso
+		MsUnlock("ZEZ") 
+    	MsgBox('Dados Alterados com sucesso !', 'Dados Alterados', 'INFO')
+   		oDlg:End()
+    			
+    CASE nPar == 4   // Exclui o Registro ------
+    	If MsgYesNo("Tem certeza de que deseja excluir?")		
+	  		RecLock("ZEZ",.F.)
+	  			ZEZ->(dbDelete())
+	 		MsUnLock("ZEW")
+	 		MsgBox('Dados Excluidos com Sucesso','Registro Excluido') 
+ 			oDlg:End()	 	 		
+	 	ENDIF
+	 	        
+    OTHERWISE  		// No caso de uma operação de "Visualizar"         
+    	oDlg:end()   
+		
+  ENDCASE  		 		
+	
+Return    
+/********************************************************************/ 
+
+// Verifica se existe um produto já cadastrado e que já tenha a data de bloqueio existente
+Static Function fVerificaProd(produto,alm) 
+Local cQuery1
+
+ZEZ->(DbSetOrder(2)) 	 
+
+	IF ZEZ->( DbSeek(xFilial("ZEZ") + produto + alm ) ) // Confere se já existe esse produto com cadastro 
+ 	 
+	 	 // Se Sim, gera um Alias
+	 	 cQuery1 := " SELECT ZEZ_PROD, ZEZ_ALM  "     
+		 cQuery1 += " FROM " + RetSqlName("ZEZ") + " ZEZ" 
+		 cQuery1 += " WHERE  ZEZ_PROD = '" + produto + "' " 
+		 cQuery1 += " AND ZEZ_ALM = '" + alm + "' "
+		 cQuery1 += " AND ((ZEZ_DTINI BETWEEN '" +DtoS(dDtIni)+"' AND '"+DtoS(dDtFim)+"') "
+		 cQuery1 += " OR (ZEZ_DTFIM BETWEEN '" +DtoS(dDtIni)+"'   AND '" +DtoS(dDtFim)+"') )"		  				
+		 cQuery1 += " AND ZEZ.D_E_L_E_T_ = '' AND ZEZ_FILIAL = '" +xFilial("ZEZ") + "' " 
+				
+		 TCQUERY cQuery1 NEW ALIAS "PROD"  // Criando alias produtos ja existente, para verificar a data			
+		 
+		 IF !PROD->(Eof())
+		 	PROD->(DbCloseArea())
+		 	nAlert2++
+		 	Return .F. 
+		 ELSE 
+		 	PROD->(DbCloseArea())
+		 	Return .T.
+		 Endif		  	  
+	 	 
+	ELSE	// Caso não exista nenhum cadastro deste produto, já valida automaticamente.           
+	     
+		 Return .T.
+	 
+	ENDIF 		   	 	
+     	   
+Return 
+       
+
+// Busca a matrícula do responsavel pela inclusão
+Static Function fVerificaMat(cOperacao)	
+  
+ IF cOperacao == 2 //Inclusao
+	
+	QAA->(DBSETORDER(6))
+	IF QAA->( DBSEEK( UPPER(Alltrim(cUserName) ) ) )
+	   cResp := QAA->QAA_LOGIN 
+	   QAA->(DbCloseArea()) 
+	   RETURN .T.
+	ELSE  
+	   QAA->(DbCloseArea()) 	   
+	   RETURN .F.
+	EndIf 
+	
+ ELSE 
+   
+ 	QAA->(DBSETORDER(6))
+	IF QAA->( DBSEEK( UPPER(Alltrim(cUserName) ) ) )
+	   QAA->(DbCloseArea())
+	   RETURN .T.
+	ELSE 	   
+	   QAA->(DbCloseArea())		   
+	   RETURN .F.
+	EndIf 
+
+ ENDIF   
+	
+Return .T.
+
+// Legenda ---------------------------------------------------------
+USER Function E205Legenda()       
+
+Local aLegenda :=	{ {"BR_VERMELHO" , "Está bloqueado"},;
+  				 	  {"BR_VERDE"    , "Foi está bloqueado"},;
+  				 	  {"BR_AMARELO"  , "Irá ser bloqueado"}	}
+
+BrwLegenda(OemToAnsi("Produto para Bloqueio"), "Legenda", aLegenda)
+
+Return  
+          
+// Cria Cor (Legenda) ----------------------------------------------
+Static Function fCriaCor()       
+
+Local aLegenda :=	{ {"BR_VERMELHO" , "Está bloqueado"  },;
+  				      {"BR_VERDE"    , "Foi bloqueado"},;
+					  {"BR_AMARELO"  , "Irá ser bloqueado"}	}
+Local uRetorno := {}
+
+Aadd(uRetorno, { "DtoS(ZEZ_DTINI) <= '"+DtoS(DATE())+"' .AND. DtoS(ZEZ_DTFIM) >= '"+DtoS(DATE())+"' ",aLegenda[1][1] }) // Está Bloqueado
+Aadd(uRetorno, { "DtoS(ZEZ_DTINI) <  '"+DtoS(DATE())+"' .AND. DtoS(ZEZ_DTFIM) <  '"+DtoS(DATE())+"' ",aLegenda[2][1] })// Foi Bloq.
+Aadd(uRetorno, { "DtoS(ZEZ_DTINI) >  '"+DtoS(DATE())+"' .AND. DtoS(ZEZ_DTFIM) >  '"+DtoS(DATE())+"' ",aLegenda[3][1] })// Irá Bloq.
+
+Return(uRetorno)
+
+//Valida os campos "De Data" e "Ate Data"
+Static Function ValidaData()
+
+	If Empty(dDtIni)
+	  Alert('Favor informar a data de inicio do bloqueio')  // Valida o campo "De Data"
+	  Return .F.
+	EndIf
+	
+	If dDtIni < Date()
+	  Alert('A data inicial não pode ser anterior ao dia de hoje')  // Valida o campo "De Data"
+	  Return .F.
+	EndIf
+
+	If Empty(dDtFim)
+	  Alert('Favor informar a data final de bloqueio')      // Valida o campo "Ate Data"
+	  Return .F.
+	EndIf
+	
+	If dDtFim < Date()
+	  Alert('A data final não pode ser anterior ao dia de hoje')      // Valida o campo "Ate Data"
+	  Return .F.
+	EndIf
+	
+Return .T.
+ 
+// Valida os campos da inclusao por sequencia -------------------------------------------
+Static Function PreValida() 
+
+	If Empty(dDtIni)
+	  Alert('Favor informar a data de inicio do bloqueio')  // Valida o campo "De Data"
+	  Return .F.
+	EndIf
+	
+	If dDtIni < Date()
+	  Alert('A data inicial não pode ser anterior ao dia de hoje')  // Valida o campo "De Data"
+	  Return .F.
+	EndIf
+	
+	If Empty(dDtFim)
+	  Alert('Favor informar a data final de bloqueio')      // Valida o campo "Ate Data"
+	  Return .F.
+	EndIf
+	
+	If dDtFim < Date()
+	  Alert('A data final não pode ser anterior ao dia de hoje')      // Valida o campo "Ate Data"
+	  Return .F.
+	EndIf
+
+	If Empty(cAtProd)
+	  Alert('Favor informar o campo "De Produto" ! ')       // Valida o campo "De Produto"
+	  Return .F.
+	EndIf
+
+	If Empty(cAtAlm)
+	  Alert('Favor informar o campo "Ate Almoxarifado" ! ')      // Valida o campo "Ate Produto"
+	  Return .F.
+	EndIf 
+	
+Return .T.
+
+//*** VALIDAÇÃO DOS GETS **************************
+Static Function Validar()
+
+If Empty(cMotivo) 
+  Alert('Favor informar o motivo do bloqueio')          // Valida o campo "Motivo do Bloqueio"
+  Return .F.
+EndIf  
+
+If Empty(dDtIni)
+  Alert('Favor informar a data de inicio do bloqueio')  // Valida o campo "De Data"
+  Return .F.
+EndIf 
+
+If Empty(dDtFim)
+  Alert('Favor informar a data final de bloqueio')      // Valida o campo "Ate Data"
+  Return .F.
+EndIf
+     
+IF nPar == 2
+
+	If dDtIni < Date()
+	  Alert('A data inicial não pode ser anterior ao dia de hoje')  // Valida o campo "De Data"
+	  Return .F.
+	EndIf
+
+	If dDtFim < Date()
+	  Alert('A data final não pode ser anterior ao dia de hoje')      // Valida o campo "Ate Data"
+	  Return .F.
+	EndIf
+
+ENDIF    
+
+If Empty(cHrIni)
+  Alert('Favor informar o horário inicial do bloqueio') // Valida o campo "Hora Inicial"
+  Return .F.
+EndIf   
+
+If Empty(cHrFim)
+  Alert('Favor informar o horário final do bloqueio')   //  Valida o campo "Hora Final"
+  Return .F.
+EndIf   
+
+If Empty(nDiasAviso) .OR. nDiasAviso == 0
+  Alert('Favor informar a quantidade de dias de aviso') // Valida o campo "Dias de Aviso"
+  Return .F.
+EndIf 
+    
+Return .T. 
+
+/** Evento do botão cancelar **/
+Static Function Cancelar() 
+	
+	RollBackSX8()
+	oDlg:end()      
+
+Return

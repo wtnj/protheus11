@@ -1,0 +1,155 @@
+#include "rwmake.ch"       // incluido pelo assistente de conversao do AP5 IDE em 11/01/00
+
+User Function altvetor()    // incluido pelo assistente de conversao do AP5 IDE em 11/01/00
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_AMATA010,_aMata020,_AMATA150,_AMATA030,_AMATA416CAB")
+SetPrvt("_aMATA265CAB,_aMATA265ITENS,_AMATA416ITEM,_CVETOR,A")
+SetPrvt("_aMata040,_aMata120Cab,_aMata120Itens,_aMata410Cab,_aMata410Item")
+SetPrvt("_aFina040,_afina050")
+
+_aMATA010 := {}
+aadd(_aMATA010,{"B1_COD"                ,"C",15,0})
+aadd(_aMATA010,{"B1_DESC"               ,"C",30,0}) 
+
+_aMata020   := {{"A2_COD"    ,"C" ,06,0},;
+					{"A2_LOJA"   ,"C" ,02,0},;
+					{"A2_NOME"   ,"C" ,40,0},;
+					{"A2_NREDUZ" ,"C" ,20,0}}
+
+_aMATA030 := {}
+aadd(_aMATA030,{"A1_COD"                ,"C",06,0}) // Codigo
+aadd(_aMATA030,{"A1_LOJA"               ,"C",02,0}) // Loja
+aadd(_aMATA030,{"A1_NOME"               ,"C",40,0}) // Nome
+aadd(_aMATA030,{"A1_NREDUZ"             ,"C",20,0})
+					
+_aMata040   :={{"A3_COD"    ,"C" , 6,0},;
+					{"A3_NOME"   ,"C" ,40,0}}
+					
+_aMata120Cab   :={{"C7_NUM"    ,"C",  6,0},;
+                 {"C7_COND"   ,"C",  3,0},;
+					  {"C7_FILENT" ,"C",  2,0},;
+					  {"C7_CONTATO","C", 15,0},;
+					  {"C7_TPFRETE","C",  1,0},;
+					  {"C7_DESC1"  ,"N",  5,2},;
+					  {"C7_DESC2"  ,"N",  5,2},;
+					  {"C7_DESC3"  ,"N",  5,2}}
+					                                             
+_aMata120Itens :={{"C7_NUM"    ,"C",  6,0},;
+					  {"C7_ITEM"   ,"C",  2,0},;
+                 {"C7_PRODUTO","C", 15,0},;
+                 {"C7_QUANT"  ,"N", 12,2},;
+		           {"C7_PRECO"  ,"N", 14,2},;
+		           {"C7_TOTAL"  ,"N", 14,2},;
+		           {"C7_DATPRF" ,"D", 08,0},;
+		           {"C7_FLUXO"  ,"C", 01,0}}
+										
+_aMata150   :={{"C8_ITEM"   ,"C" , 2,0},;
+					{"C8_PRECO"  ,"N" ,14,2},;
+					{"C8_TOTAL"  ,"N" ,14,2},;
+					{"C8_COND"   ,"C" , 3,0},;
+					{"C8_FORNECE","C" , 6,0},;
+					{"C8_LOJA"   ,"C" , 2,0},;
+					{"C8_CONTATO","C" ,15,0},;
+					{"C8_PRAZO"  ,"N" , 4,0},;
+					{"C8_NUM"    ,"C" , 6,0}} 
+					
+//Alterado por Fernando Alves Bernardes - 1/20/2000
+_aMata416Cab := {{"CJ_NUM"    ,"C", 6,0},;
+					  {"CJ_CLIENTE","C", 6,0},;
+					  {"CJ_LOJA"   ,"C", 2,0}}
+                 
+_aMata416Itens :={{"CK_PRODUTO","C",15,0},;
+					 	{"CK_NUM"    ,"C", 6,0},;					 	
+					  	{"INDEX"     , 3}}		                 
+
+/*				
+_aMata416Cab := {{"CJ_NUM"    ,"C", 6,0},;
+					  {"CJ_CLIENTE","C", 6,0},;
+					  {"CJ_LOJA"   ,"C", 2,0},;
+                 {"CJ_CONDPAG","C", 3,0}}
+
+_aMata416Item :={{"CK_ITEM"   ,"C", 2,0},;
+                 {"CK_PRODUTO","C",15,0},;
+					  {"CK_UM"     ,"C", 2,0},;
+					  {"CK_QTDVEN" ,"N", 9,2},;
+                 {"CK_PRCVEN" ,"N",11,2},;
+                 {"CK_TES"    ,"C", 3,0},;
+					  {"CK_PEDCLI" ,"C", 9,0},;
+					  {"CK_NUM"    ,"C", 6,0}}
+*/
+_aMATA265CAB  :={{"DA_PRODUTO","C", 15,0},;
+					  {"DA_LOCAL"  ,"C", 02,0},;
+					  {"DA_NUMSEQ" ,"C", 06,0},;
+					  {"DA_DOC"    ,"C", 06,0}}
+					  
+_aMATA265ITENS:={{"DB_ITEM"   ,"C", 03,0},;
+                 {"DB_LOCALIZ","C", 15,0},;
+                 {"DB_QUANT"  ,"N", 12,2},;
+					  {"DB_DATA"   ,"D", 08,0},;
+					  {"DB_ESTORNO","C", 01,0}}
+					  
+_aMata410Cab := {}
+aadd(_aMATA410Cab,{"C5_NUM"                ,"C",06,0}) // Numero do pedido
+aadd(_aMATA410Cab,{"C5_CLIENTE"            ,"C",06,0}) // Codigo do cliente
+aadd(_aMATA410Cab,{"C5_LOJACLI"            ,"C",02,0}) // Loja do cliente
+aadd(_aMATA410Cab,{"C5_CONDPAG"            ,"C",03,0}) // Codigo da condicao de pagamanto
+aadd(_aMATA410Cab,{"C5_TABELA"             ,"C",01,0})
+
+_aMata410Item :={{"C6_NUM"    ,"C",06,0,"#SC5->C5_NUM"},;
+					  {"C6_ITEM"   ,"C",  2,0,"#"},;
+                 {"C6_PRODUTO","C", 15,0},;
+                 {"C6_QTDVEN" ,"N",  9,2},;
+		           {"C6_PRCVEN" ,"N", 11,2},;
+		           {"C6_VALOR"  ,"N", 12,2},;
+					  {"C6_ENTREG" ,"D", 08,0},;
+                 {"C6_UM"     ,"C",  2,0},;
+					  {"C6_TES"    ,"C",  3,0},;
+					  {"C6_LOCAL"  ,"C",  2,0},;
+					  {"AUTDELETA" ,"C", 01,0}}					  
+				  
+_aMata140Cab   :={{"F1_DOC"    ,"C",  6,0},;
+                 {"F1_SERIE"  ,"C",  3,0},;
+                 {"F1_TIPO"   ,"C",  1,0},;
+                 {"F1_FORNECE","C",  6,0},;
+                 {"F1_LOJA"   ,"C",  2,0},;
+                 {"F1_EMISSAO","D",  8,0}}
+
+_aMata140Itens :={{"D1_DOC"    ,"C", 06,0,"#SF1->F1_DOC"},;
+                   {"D1_SERIE"  ,"C", 03,0,"#SF1->F1_SERIE"},;
+                   {"D1_ITEM"   ,"C", 02,0,"#"},;
+                   {"D1_COD"    ,"C", 15,0,"#"},;
+                   {"D1_FORNECE","C", 06,0,"#"},;
+                   {"D1_LOJA"   ,"C", 02,0,"#"},;
+                   {"D1_UM"     ,"C", 02,0},;
+                   {"D1_QUANT"  ,"N", 11,2},;
+						 {"D1_VUNIT"  ,"N", 14,2},;
+                   {"D1_TOTAL"  ,"N", 14,2},;
+					    {"D1_PEDIDO" ,"C",  6,0},;
+					    {"D1_ITEMPC" ,"C",  2,0},;
+						 {"AUTDELETA" ,"C", 01,0},;
+						 {"INDEX"     , 8}}		                 
+
+_aFina040      :={{'E1_PREFIXO',"C", 03,0},;
+						 {'E1_NUM'      ,"C", 06,0},;
+                 	 {'E1_NATUREZ'  ,"C", 10,0},;                 	 
+	              	 {'E1_VENCTO'   ,"D", 08,0},;
+	              	 {'E1_VALOR'    ,"N", 17,2}}
+						 
+_aFina050      :={{'E2_PREFIXO',"C", 03,0},;
+					    {'E2_NUM'    ,"C", 06,0},;
+					    {'E2_TIPO'   ,"C", 03,0},;
+                   {'E2_NATUREZ',"C", 10,0},;
+	                {'E2_VENCTO' ,"D", 08,0},;
+	                {'E2_VALOR'  ,"N", 17,2}}
+	              
+_cVetor  := ParamIxb
+A := &_CVETOR
+// Substituido pelo assistente de conversao do AP5 IDE em 11/01/00 ==> __Return(A)
+Return(A)        // incluido pelo assistente de conversao do AP5 IDE em 11/01/00

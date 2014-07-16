@@ -1,0 +1,224 @@
+#INCLUDE "TOPCONN.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ NHEST140  ºAutor ³João Felipe da Rosa º Data ³  10/02/2009 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ RELATORIO DE TRANSFERENCIA INTERNA                         º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ ESTOQUE E CUSTOS                                           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±º          ³          ³                                                 º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function NHEST140()   
+
+cString   := ""
+cDesc1    := OemToAnsi("Este relatório tem como objetivo apresentar")
+cDesc2    := OemToAnsi("todos os materiais expedidos da WHB Fundição")
+cDesc3    := OemToAnsi("para a WHB Usinagem (Transferência Interna)")
+tamanho   := "G"
+limite    := 220
+aReturn   := { "Zebrado", 1,"Administracao", 1, 2, 1, "",1 }
+nomeprog  := "NHEST140" //nome do arquivo
+aLinha    := { }
+nLastKey  := 0
+titulo    := OemToAnsi(" RELATORIO DE TRANSFERENCIA INTERNA (DIÁRIO)") //título
+//           |01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+Cabec1    := " PECAS/DIAS              1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20    21    22    23    24    25    26    27    28    29    30    31   TOTAL"
+cabec2    := ""
+cCancel   := "***** CANCELADO PELO OPERADOR *****"
+_nPag     := 1 
+M_PAG     := 1 //Variavel que acumula numero da pagina 
+wnrel     := nomeprog //"NH"
+_cPerg    := "EST140" 
+_aMat := {}
+
+If !Pergunte(_cPerg,.T.)
+   Return(nil)
+Endif 
+      
+If mv_par04 == 2 //mensal
+	titulo := " RELATORIO DE TRANSFERENCIA INTERNA (MENSAL)" 
+	Cabec1 := " PECAS/MES                           Jan            Fev            Mar            Abr            Mai            Jun            Jul            Ago            Set            Out            Nov            Dez    TOTAL"
+EndIf
+
+SetPrint(cString,wnrel,_cPerg,titulo,cDesc1,cDesc2,cDesc3,.F.,,,tamanho)
+
+if nlastKey ==27
+    Set Filter to
+    Return
+Endif
+
+SetDefault(aReturn,cString)
+
+nTipo := IIF(aReturn[4]==1,GetMV("MV_COMP"), GetMV("MV_NORM"))
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³CHAMADAS PARA AS FUNÇÕES³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Processa(  {|| Gerando()   },"Gerando Dados para a Impressao") 
+RptStatus( {|| Imprime()   },"Imprimindo...")
+
+set filter to //remove o filtro da tabela
+
+If aReturn[5] == 1
+	Set Printer To
+	Commit
+    ourspool(wnrel) //Chamada do Spool de Impressao
+Endif                                          
+
+MS_FLUSH() //Libera fila de relatorios em spool
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³FUNCAO QUE GERA OS DADOS PARA IMPRESSAO³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function Gerando()
+Local cQuery, nPos, nDia, nMes
+Local cAnoMes := Substr(mv_par01,4,4) + Substr(mv_par01,1,2)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³MONTA A QUERY³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If SELECT('TRA1')>0
+	TRA1->(dbclosearea())
+Endif
+
+cQuery := "SELECT * FROM "+RetSqlName("ZBB")+" ZBB, "+RetSqlName("ZBA")+" ZBA, "+RetSqlName("SB1")+" B1"
+cQuery += " WHERE ZBA.ZBA_NUM = ZBB.ZBB_NUM"
+cQuery += " AND ZBB_COD BETWEEN '"+MV_PAR02+"' AND '"+MV_PAR03+"'"
+cQuery += " AND ZBB_COD = B1.B1_COD "
+cQuery += " AND B1.B1_GRUPO BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"'"
+
+IF mv_par04 == 2//MENSAL
+	cQuery += " AND SUBSTRING(ZBA.ZBA_DATA,1,4) = '" + Substr(cAnoMes,1,4) +"'"
+Else
+	cQuery += " AND SUBSTRING(ZBA.ZBA_DATA,1,6) = '"+cAnoMes+"'"
+EndIf
+
+cQuery += " AND ZBA.D_E_L_E_T_ = '' AND ZBA.ZBA_FILIAL = '"+XFILIAL("ZBA")+"'"
+cQuery += " AND ZBB.D_E_L_E_T_ = '' AND ZBB.ZBB_FILIAL = '"+XFILIAL("ZBB")+"'" 
+cQuery += " AND B1.D_E_L_E_T_  = '' AND B1.B1_FILIAL   = '"+xFilial("SB1")+"'"
+
+//MemoWrit('C:\TEMP\'+nomeprog+'.SQL',cQuery)
+TCQUERY cQuery NEW ALIAS "TRA1" 
+
+TRA1->(DbGotop())
+       
+While TRA1->(!EOF())
+	nPos := Ascan(_aMat, {|x| x[1] == TRA1->ZBB_COD})
+
+    
+
+	If mv_par04 == 2 //mensal
+	    
+	    nMes := Val(Substr(TRA1->ZBA_DATA,5,2)) + 1
+	    
+	    If nPos == 0	    
+	    	aAdd(_aMat,{TRA1->ZBB_COD,0,0,0,0,0,0,0,0,0,0,0,0})
+	    	nPos := Ascan(_aMat, {|x| x[1] == TRA1->ZBB_COD})
+	    	If nPos > 0
+	    		_aMat[nPos,nMes] += TRA1->ZBB_QUANT
+	    	EndIf
+
+	    Else
+	     	_aMat[nPos,nMes] += TRA1->ZBB_QUANT
+	    EndIf
+
+	Else // diario
+	    
+		nDia := Val(Substr(TRA1->ZBA_DATA,7,2))+1
+	    If nPos == 0
+	
+	    	aAdd(_aMat,{TRA1->ZBB_COD,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})
+	    	nPos := Ascan(_aMat, {|x| x[1] == TRA1->ZBB_COD})
+	    	If nPos > 0
+	    		_aMat[nPos,nDia] += TRA1->ZBB_QUANT
+	    	EndIf
+	    Else
+	     	_aMat[nPos,nDia] += TRA1->ZBB_QUANT
+	    EndIf
+
+
+	EndIf
+
+
+    TRA1->(DBSKIP())
+ENDDO
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³FUNCAO PARA IMPRESSAO DO RELATÓRIO³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function Imprime()
+Local _cCod      := ""
+Local _nTotLinha := 0
+    
+If mv_par04 == 2//mensal
+	Titulo += " DO ANO DE "+Substr(mv_par01,4,4)
+Else
+	Titulo += " DO PERÍODO DE "+UPPER(MesExtenso(Val(Substr(mv_par01,1,2)))) + "/" + Substr(mv_par01,4,4)
+EndIf
+
+Cabec(Titulo, Cabec1, Cabec2, NomeProg, Tamanho, nTipo) 
+
+SetRegua(TRA1->(RecCount()))
+ 
+_aMat := aSort(_aMat,,,{ |x,y| x[1] < y[1]})//ordena por codigo do produto
+
+//Percorre os registros
+For _x := 1 to Len(_aMat)
+
+	If Prow() > 65 
+		_nPag  := _nPag + 1   
+		Cabec(Titulo, Cabec1, Cabec2, NomeProg, Tamanho, nTipo) 
+  	Endif
+
+	IncRegua()
+		
+	If _cCod <> Substr(_aMat[_x,1],1,2)
+		_cCod := Substr(_aMat[_x,1],1,2)
+		@ Prow()+1,001 Psay __PrtThinLine()
+	EndIf
+              
+   	@ Prow()+1,001 Psay _aMat[_x,1]
+
+	If mv_par04 == 2 //mensal
+		_nLin  := 31
+	    _nMais := 15   
+	    _cMask := "@E 99999999"
+	else
+	   	_nLin      := 21
+   		_nMais     := 6
+	   	_cMask     := "@E 99999"
+	EndIf
+   	
+   	_nTotLinha := 0
+   	
+   	For _y := 2 to Len(_aMat[_x])
+   		@ Prow()  ,_nLin Psay _aMat[_x,_y] Picture _cMask
+		_nTotLinha += _aMat[_x,_y]
+		_nLin += _nMais
+   	Next
+             
+	@ Prow()  ,208 Psay _nTotLinha Picture "@E 999999"
+	
+	TRA1->(DbSkip())
+
+Next 
+
+@ Prow()+01,001 Psay __PrtThinLine()
+
+TRA1->(DbCloseArea())
+
+Return(nil)

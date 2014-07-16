@@ -1,0 +1,357 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ A010TOK         ³ Alexandre R. Bento    ³ Data ³03.01.2003³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Ponto de Entrada p/validar o codigo do produto            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+#Include "rwmake.ch"    
+#Include "prtopdef.ch"    
+#include "colors.ch"
+#include "font.ch"  
+#include "ap5mail.ch"
+
+
+
+User Function  A010TOK()
+
+   Local cNom    := Alltrim(M->B1_COD)
+   Local X
+   Local lFlag   := .T.
+   Local nRegSB1 := 0
+   Local lOK     := .F. //Flag de Controle se pode alterar ou nao          
+   Local _cChave := 0
+   Local _nRecno := 0
+   Local _cDescp := Space(200)
+   DEFINE FONT oFont NAME "Arial" SIZE 12, -12                                                                  
+   
+   If Inclui
+
+      If ALLTRIM(M->B1_TIPO)$"PA/PI" .And. Empty(M->B1_CC)
+		   MsgBox("O Campo Centro de Custo Deve ser Preenchido Corretamente.","Atencao","STOP")
+		   Return(.F.)  // retorna
+	  Endif
+	   
+	  SX5->(Dbgotop())       
+	  SX5->(DbSetOrder(1)) //filial+cod
+	  SX5->(DbSeek(xFilial("SX5")+"ZA")) //tabelas de almoxarifados
+	  While SX5->(!Eof()) 
+	   	  If SX5->X5_TABELA  == "ZA" //.AND. Val(SX5->X5_CHAVE) > _cChave
+	         If AllTrim(SX5->X5_CHAVE) == M->B1_LOCPAD //Verifica se o almox existe 
+	            lOK := .T.
+	            Exit //
+	         Endif                       
+ 		    // _cChave := Val(SX5->X5_CHAVE)
+		  Endif  
+	      SX5->(Dbskip())
+	  Enddo
+  	  If !lOK
+         Msgbox("Atencao Almoxarifado do Produto NÃO EXISTE Verifique","Atencao","ALERT" )  
+         M->B1_LOCPAD := "  " //Limpa o conteudo do almox
+         Return(.F.)       
+      Endif       
+      
+      _cChave := 0
+	   
+	   
+	   For x:=1 to len(cNom)
+	   
+	      IF Subs(cNom,x,1) <> "." .And. Subs(cNom,x,1) <> "/"
+		      lFlag := Entre("0","Z",Subs(cNom,x,1))
+	    	  If !lflag
+		         Msgbox("Atencao Codigo do Produto Com ERRO de Digitacao" +chr(13)+;
+		                "Codigo so Pode conter LETRAS E NUMEROS.","Atencao","ALERT" )  
+		         Return(.F.)       
+		      Endif
+		  Endif   
+	   Next
+   
+   	   If len(Alltrim(M->B1_COD)) < 9
+          Msgbox("Atencao Codigo do Produto Com ERRO de Digitacao" +chr(13)+;
+          "Codigo nao Pode ter Menos que 9 Digitos.","Atencao","ALERT" )  
+          Return(.F.)       
+	   Endif
+
+	   _cDescp      := M->B1_DESC + Space(170)
+	   
+//	   SB5->(DbSetOrder(1)) //filial+cod
+//	   If !SB5->(DbSeek(xFilial("SB5")+M->B1_COD))
+	   
+//	      RecLock("SB5",.T.)
+//	         SB5->B5_FILIAL   := xFilial("SB5")
+//	         SB5->B5_COD      := M->B1_COD
+	        // M->B5_CEME    := M->B1_DESC
+//	      MsUnLock("SB5")
+//	      ALERT("Produto  "+Alltrim(M->B1_COD)+" "+"Incluido no Cadastro de Complemento de Produto")
+//	   Endif
+       If Subs(SB1->B1_COD,1,2) <> "FE"
+	   	   If len(Alltrim(M->B1_DESC)) >= 29           
+	   	      Define MsDialog oDlgComp Title OemToAnsi("Complemento do Produto") From 100,050 To 245,610 Pixel 
+		      @ 110,055 To 010,245                                     
+		      @ 015,010 Say OemToAnsi("Complete Abaixo a Descrição Complementar do Produto") Color CLR_BLUE Size 450,8 Object oItem                        
+		        oItem:Setfont(oFont)                      
+			  //@ 030,100 Say OemToAnsi("ESCOLHA UMA OPÇÃO")   Size 180,8 Object oDescTit 
+		      @ 030,010 Get _cDescp  Picture "@!" SIZE 250,10 Object oDescp  
+		      //Valid (Empty(_cDescp)) Object oDescp  
+		      @ 050,220 BMPBUTTON TYPE 01 ACTION Close(oDlgComp)
+			  Activate msDialog oDlgComp Centered 
+        	  M->B5_CEME     := _cDescp			  
+   	       Endif	   
+	   Else
+  	       M->B5_CEME  := Iif(Empty(M->B1_FDESC),M->B1_DESC,M->B1_FDESC) //grava a descricao da ferramenta         	       
+	   Endif		  
+
+   	   
+   	   /*
+   	     
+       lOK:= .F.
+       SX5->(Dbgotop())       
+	   SX5->(DbSetOrder(1)) //filial+cod
+	   SX5->(DbSeek(xFilial("SX5")+"ZU"))	//POSICIONA NO PRIMEIRO   
+	   While SX5->(!Eof()) //.And. SX5->X5_TABELA == "ZU"
+	   	  If SX5->X5_TABELA  == "ZU" .AND. Val(SX5->X5_CHAVE) > _cChave
+	         If Alltrim(Substr(SX5->X5_DESCRI,1,15)) == Upper(Alltrim(cUsername)) //Verifica se o Usuario é o mesmo da tabela ZU no SX5
+		        If Upper(AllTrim(Subs(SX5->X5_DESCRI,16,4))) == M->B1_GRUPO //Verifica se o Usuario pode cadastrar este grupo 
+	               lOK := .T.
+	               Exit //
+	            Endif                                                   	
+	         Endif                       
+ 		     _cChave := Val(SX5->X5_CHAVE)
+		  Endif  
+	      SX5->(Dbskip())
+	   Enddo
+
+	   If !lOK //se o usuario inclui um novo produto e nao tem acesso a altera-lo inclui automaticamente o grupo
+	   	  RecLock("SX5",.T.)
+		    SX5->X5_TABELA  := "ZU"
+			SX5->X5_CHAVE   := StrZero(_cChave+1,3) // adiciona um na chave, ou seja a numeração
+			SX5->X5_DESCRI  := Upper(Subs(cUserName,1,15)) + M->B1_GRUPO + M->B1_LOCPAD
+			SX5->X5_DESCSPA := Upper(Subs(cUserName,1,15)) + M->B1_GRUPO + M->B1_LOCPAD
+			SX5->X5_DESCENG := Upper(Subs(cUserName,1,15)) + M->B1_GRUPO + M->B1_LOCPAD
+		  MsUnLock("SX5")
+
+	   Endif
+	   */
+	   
+	   If Mv_par02 == 2 .And. lOK   
+	   
+  	      SB5->(DbSetOrder(1)) //filial+cod
+   	      SX1->(DbSetOrder(1)) //filial+cod
+  	      If !SB5->(DbSeek(xFilial("SB5")+M->B1_COD))
+	   
+  	         RecLock("SB5",.T.)
+  	            SB5->B5_FILIAL  := xFilial("SB5")
+  	            SB5->B5_COD     := M->B1_COD
+	            SB5->B5_CEME    := Iif(Empty(M->B1_FDESC),M->B1_DESC,M->B1_FDESC)
+  	         MsUnLock("SB5")
+
+  	         //Seta para mostrar o complemento do produto sempre que incluir ou alterar
+  	         SX1->(DbSeek("MTA010"))
+             While Alltrim(SX1->X1_GRUPO)$"MTA010"
+                RecLock('SX1')                        		
+                   SX1->X1_CNT01  := '1'
+                   SX1->X1_PRESEL := 1
+	            MsUnLock('SX1')
+  	            SX1->(Dbskip())
+  	         Enddo
+	      Endif
+	   Endif
+	   
+   Endif    
+	
+   If Altera
+	   SX5->(DbSetOrder(1))
+		SX5->(DbSeek(xFilial("SX5")+"ZU")) // Tabela de validação de Usuarios, Grupos e Local Padrão                  
+		While !SX5->(Eof()) .And. SX5->X5_TABELA == "ZU"
+
+		   If Alltrim(Substr(SX5->X5_DESCRI,1,15)) == Upper(Alltrim(cUserName)) //Verifica se o Usuario é o mesmo da tabela ZU no SX5
+		      If Upper(AllTrim(Subs(SX5->X5_DESCRI,16,4))) == SB1->B1_GRUPO //Verifica se o Usuario pode cadastrar este grupo 
+		         lOK := .T. //Flag de Controle          
+		         Exit //achou força a saida
+		      Endif   
+		   Endif
+		   SX5->(DbSkip())
+		Enddo
+
+		/*
+		If !lOK  // Usuario sem permissão para cadastrar o Grupo
+		   MsgBox("Usuario sem Permissão para Alterar Dados deste Grupo","Atencao","STOP")
+		   Return(.F.)  // retorna
+		Endif                        
+        */
+        
+        SA7->(DbSetOrder(2))
+		If SA7->(DbSeek(xFilial("SA7")+SB1->B1_COD)) // Tabela de amarrcao produto x cliente
+		   While !SA7->(Eof()) .And. SA7->A7_PRODUTO == SB1->B1_COD // Verifica se existem mais de um cliente c/mesmo codigo
+		      If M->B1_CODAP5 <> SA7->A7_CODCLI .And. !Empty(M->B1_CODAP5)                                                   
+		      	 RecLock("SA7",.F.)
+			        SA7->A7_CODCLI := M->B1_CODAP5
+			     MsUnLock("SA7")
+			  Endif   
+			  SA7->(Dbskip())
+		   Enddo 
+		Endif
+      /*
+      If Subs(SB1->B1_COD,1,2) = "FE"  
+	      If MsgBox("Deseja Alterar a Descrição Complementar da Ferramenta?"+Chr(13)+;
+	                "Apartir da Descricao da ferramenta","Atencao","YESNO")
+	     		SB5->(DbSetOrder(1)) //filial+cod
+			   If SB5->(DbSeek(xFilial("SB5")+SB1->B1_COD))
+			      RecLock("SB5",.F.)
+			        SB5->B5_CEME     := M->B1_DESC
+			      MsUnLock("SB5")
+		      Endif
+	   	Endif
+      Endif
+      */
+   Endif
+   
+   If Subs(SB1->B1_COD,1,2) = "FE" .Or. Subs(M->B1_COD,1,2) = "FE"          
+	   If !Empty(SB1->B1_CODSUB) .Or. !Empty(M->B1_CODSUB)
+	      _nRecno := SB1->(Recno())           
+	      If SB1->(DbSeek(xFilial("SB1")+M->B1_CODSUB,.T.)) // Codigo do produto substituido  
+		     RecLock("SB1",.F.)
+			    SB1->B1_MSBLQL = "1" //1=SIM bloqueado
+			 MsUnLock("SB1")
+	      Endif            
+	      SB1->(Dbgoto(_nRecno))
+	   Endif
+       M->B5_CEME     := M->B1_FDESC //grava alteracao da descricao da ferramenta no complemento	   
+   Endif
+   
+   If Inclui .AND. ALLTRIM(M->B1_TIPO)$"PQ"
+   		If EMPTY(M->B1_FISPQ)
+		   MsgBox("Campo Ficha de PQ obrigatório para produtos do tipo PQ.","Atencao","ALERT")
+		   Return(.F.)  // retorna
+	  	Else
+	  	   fEmail() 
+	  	EndIf
+   EndIf 
+
+   If Inclui .And. M->B1_GRUPO$"MQ03" //caracteristica do instrumento    
+   
+	   If !Empty(M->B1_CARINST) 
+	
+	      M->B1_COD    := M->B1_CODBAR := M->B1_GRUPO +"."+M->B1_LISTINS+M->B1_CARINST //Forma o codigo do instrumento e grava no qm2   
+	
+	      QM2->(DbSetOrder(1))  //QM2_FILIAL+QM2_INSTR+QM2_REVINV
+	      If !QM2->(DbSeek(xFilial("QM2")+M->B1_COD)) // Tabela de Instrumentos
+	             
+	   		 If EMPTY(M->B1_CC) .Or. Len(Alltrim(M->B1_CC)) < 6
+			    MsgBox("Centro de Custo é o Depto p/ Metrologia, Campo Obrigatório para produtos do tipo MQ.","Atencao","ALERT")
+			    Return(.F.)  // retorna
+		  	 EndIf
+		  	 
+		  	 If M->B1_FREQAF <= 0 //frequencia de calibracao
+			    MsgBox("A Frequencia de Calibracao é Campo Obrigatório para Instrumentos.","Atencao","ALERT")
+			    Return(.F.)  // retorna
+		  	 Endif
+	
+	         M->B1_CODAP5 := M->B1_LISTINS+M->B1_CARINST //Forma o codigo do instrumento e grava no qm2         
+	         
+	         RecLock("QM2",.T.)
+			   QM2->QM2_FILIAL := xFilial("QM2")
+			   QM2->QM2_INSTR  := M->B1_COD   
+			   QM2->QM2_CODINS := M->B1_CODAP5   		   
+			   QM2->QM2_DESC   := M->B5_CEME
+			   QM2->QM2_REVINS := "00" //M->B1_REVDES
+			   QM2->QM2_TIPO   := M->B1_FAMINST
+			   QM2->QM2_RESP   := M->B1_RESP
+			   QM2->QM2_USOINI := dDataBase
+			   QM2->QM2_FREQAF := M->B1_FREQAF
+			   QM2->QM2_LINHA1 := M->B1_LINHA
+			   QM2->QM2_DEPTO  := M->B1_CC
+			   QM2->QM2_STATUS := "C" //Compras    
+			   QM2->QM2_FILRES := "01"
+			   QM2->QM2_DATREV := dDataBase
+			   QM2->QM2_VALDAF := dDataBase + M->B1_FREQAF			   
+			   QM2->QM2_REVINV := "YY"
+			   QM2->QM2_STOPS  := "3"
+			   QM2->QM2_BITDAD := "4"
+			   QM2->QM2_PORTA  := "1"
+			   QM2->QM2_PARITY := "3"   			   			   			   			   
+			   QM2->QM2_BAUDRA := "2"
+			   QM2->QM2_ONLINE := "2"
+			   QM2->QM2_FLAG   := "1"			   			   			   
+				    
+		     MsUnLock("QM2")
+	    
+	      Else
+	         MsgBox("Instrumento Ja esta Cadastrado Com Este Codigo.","Atencao","ALERT")
+	         Return(.F.)  // retorna
+	      
+	      Endif
+	   Else
+	      MsgBox("O Grupo do Instrumento só Pode ser MQ03.","Atencao","ALERT")
+	      Return(.F.)  // retorna
+	   
+	   Endif
+   Endif   
+   
+   //-- OS Nº: 042820
+	If Alltrim(upper(cUsername))$"JOSEAM/SOLIANEFF/REJIANEPL/SABRINARA/ANTONIORL/ROBISONFM/EMERSONAO/DIOGOPO"
+		Alert('Usuário sem permissão!')
+		return .f.
+	Endif
+   //-- FIM OS 842820
+Return(.T.)     
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ ENVIA EMAIL PARA RESPONSAVEL POR ³
+//³ GESTAO AMBIENTAL INFORMANDO NOVO ³
+//³ CADASTRAMENTO DE PRODUTO QUIMICO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Static Function fEmail()
+Local cServer := Alltrim(GETMV("MV_RELSERV")) //"192.168.1.11"
+Local cAccount := Alltrim(GETMV("MV_RELACNT"))//'protheus'
+Local cPassword := Alltrim(GETMV("MV_RELPSW"))//'siga'
+Local lConectou
+Local lEnviado
+Local cMensagem := '' 
+Local CRLF := chr(13)+chr(10)   // PULA LINHA  
+Local cMSG := ""
+
+CONNECT SMTP SERVER cServer ACCOUNT cAccount PASSWORD cPassword Result lConectou
+
+cMsg := 'Produto Cadastrado: '+M->B1_COD+' '+M->B1_DESC+CRLF
+cMsg += 'Responsável: '+UsrFullName(__cUserID)+CRLF
+cMsg += 'Empresa: '
+
+IF SM0->M0_CODIGO == "NH"  //empresa USINAGEM
+	cMsg += 'Usinagem'+CRLF
+ElseIf SM0->M0_CODIGO == "FN"  //empresa FUNDICAO
+	cMsg += 'Fundicao'+CRLF
+EndIf
+
+cMsg += 'FISPQ: '
+
+If M->B1_FISPQ$'S'
+	cMsg += 'Sim'+CRLF
+ElseIf M->B1_FISPQ$'N'
+	cMsg += 'Nao'+CRLF
+EndIf
+
+a_email := 'sga@whbusinagem.com.br'
+cAssunto := '************ NOVO PRODUTO TIPO PQ CADASTRADO **************'
+	
+If lConectou
+	Send Mail from 'protheus@whbbrasil.com.br' To a_email;
+	SUBJECT cAssunto;
+	BODY cMsg;   
+	RESULT lEnviado
+	If !lEnviado
+		Get mail error cMensagem
+    	Alert(cMensagem)
+	EndIf                             
+else
+    Alert("Erro ao se conectar no servidor: " + cServer)		
+Endif
+Return(.T.)
+

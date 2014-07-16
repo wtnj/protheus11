@@ -1,0 +1,392 @@
+#Include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+#INCLUDE "ETIQAS.CH"
+
+User Function Etiqas()        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CBTXT,CSTRING,AORD,CDESC1,CDESC2,CDESC3")
+SetPrvt("LEND,ARETURN,NOMEPROG,AVETOR,NLASTKEY,CPERG")
+SetPrvt("AINFO,AT_PRG,WCABEC0,WCABEC1,WCABEC2,CONTFL")
+SetPrvt("LI,NTAMANHO,TITULO,WNREL,CMOSTRA,CDET")
+SetPrvt("NTOT,CCAB,CNOME,CFIM,NTAM,NLC")
+SetPrvt("NLN,NPULA,NORDEM,CFILDE,CFILATE,CCCDE")
+SetPrvt("CCCATE,CMATDE,CMATATE,CNOMEDE,CNOMEATE,CCATEGORIA")
+SetPrvt("DPERDE,DPERATE,CSINDICATO,NCOLUNAS,CSITUACAO,CINICIO")
+SetPrvt("CHAVE,NCOL,NALIN,CFIL,CTIPPAGTO")
+SetPrvt("CMOTIVO,CFUN,CTIPO")
+
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 19/11/99 ==> 	#DEFINE PSAY SAY
+
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 19/11/99 ==> #INCLUDE "ETIQAS.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ ETIQAS   ³ Autor ³R.H. - Marcos Stiefano ³ Data ³ 04.01.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Emiss„o de Etiqueta de Aumento Salarial					  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ETIQCT                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ RdMake                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Emerson     ³06/01/03³------³Buscar o codigo CBO no cadastro de funcoes³±±
+±±³            ³        ³------³de acordo com os novos codigos CBO/2002.  ³±±
+±±³Pedro Eloy  ³08/04/04³069591³Corrigido no parametro da funcao fCodCBO()³±±
+±±³            ³        ³------³buscar CBO de acordo com o registro solic.³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+//+--------------------------------------------------------------+
+//¦ Define Variaveis Locais (Basicas)                            ¦
+//+--------------------------------------------------------------+
+cbTxt   := ''
+cString := "SRA"  			// alias do arquivo principal (Base)
+aOrd    := {STR0001,STR0002,STR0003} 	//"Matricula"###"Centro de Custo"###"Nome"
+cDesc1  := STR0004			//"Emissäo de Etiqueta de Aumento Salarial."
+cDesc2  := STR0005			//"Será impresso de acordo com os parametros solicitados pelo"
+cDesc3  := STR0006			//"usuario."
+
+//+--------------------------------------------------------------+
+//¦ Define Variaveis Private(Basicas)                            ¦
+//+--------------------------------------------------------------+
+lEnd     := .F.
+aReturn  := {STR0007,1,STR0008,2,2,1,"",1 }		//"Zebrado"###"Administraçäo"
+NomeProg := "GPER320"
+aVetor   := {}
+nLastKey := 0
+cPerg    := "GPR320"
+aInfo    := {}
+//+--------------------------------------------------------------+
+//¦ Variaveis Utilizadas na funcao IMPR                          ¦
+//+--------------------------------------------------------------+
+AT_PRG   := "GPER320"
+wCabec0  := 2
+wCabec1  := ""
+wCabec2  := ""
+Contfl   := 1
+Li       := 0
+nTamanho := "M"
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Variaveis de Acesso do Usuario                               ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+cAcessaSRA	:= &( " { || " + ChkRH( "ETIQAS" , "SRA" , "2" ) + " } " )
+
+
+//+--------------------------------------------------------------+
+//¦ Verifica as perguntas selecionadas                           ¦
+//+--------------------------------------------------------------+
+pergunte("GPR320",.F.)
+
+//+--------------------------------------------------------------+
+//¦ Variaveis utilizadas para parametros                         ¦
+//¦ mv_par01        //  Filial De                                ¦
+//¦ mv_par02        //  Filial Ate                               ¦
+//¦ mv_par03        //  Centro de Custo De                       ¦
+//¦ mv_par04        //  Centro de Custo Ate                      ¦
+//¦ mv_par05        //  Matricula De                             ¦
+//¦ mv_par06        //  Matricula Ate                            ¦
+//¦ mv_par07        //  Nome De                                  ¦
+//¦ mv_par08        //  Nome Ate                                 ¦
+//¦ mv_par09        //  Categorias                               ¦
+//¦ mv_par10        //  Periodo De                               ¦
+//¦ mv_par11        //  Periodo Ate                              ¦
+//¦ mv_par12        //  Sindicato (99 Todos)                     ¦
+//¦ mv_par13        //  Numero de Colunas                        ¦
+//¦ mv_par14        //  Esp.Estabelecimento                      ¦
+//¦ mv_par15        //  Tipo                                     ¦
+//¦ mv_par16        //  SituaçSes                                ¦
+//+--------------------------------------------------------------+
+Titulo := STR0009		//"EMISSÄO ETIQUETA DE AUMENTO SALARIAL"
+
+//+--------------------------------------------------------------+
+//¦ Envia controle para a funcao SETPRINT                        ¦
+//+--------------------------------------------------------------+
+wnrel:="GPER320"            //Nome Default do relatorio em Disco
+wnrel:=SetPrint(cString,wnrel,cPerg,Titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,.F.)
+
+If nLastKey == 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Return
+Endif
+
+RptStatus({||GR320Imp()})// Substituido pelo assistente de conversao do AP5 IDE em 19/11/99 ==> 	RptStatus({||Execute(GR320Imp)})
+Return Nil
+// Substituido pelo assistente de conversao do AP5 IDE em 19/11/99 ==> 	function GR320Imp
+Static function GR320Imp()
+
+Local T
+
+//+--------------------------------------------------------------+
+//¦ Define Variaveis Locais (Programa)                           ¦
+//+--------------------------------------------------------------+
+cMostra := "S"
+cDet    := ""
+nTot    := ""
+cCab    := ""
+cNome   := ""
+cFim    := ""
+nTam    := 0
+nLC     := 189
+nLN     := 105
+nPula   := 1
+
+//+--------------------------------------------------------------+
+//¦ Carregando variaveis mv_par?? para Variaveis do Sistema.     ¦
+//+--------------------------------------------------------------+
+nOrdem     := aReturn[8]
+cFilDe     := mv_par01
+cFilAte    := mv_par02
+cCcDe      := mv_par03
+cCcAte     := mv_par04
+cMatDe     := mv_par05
+cMatAte    := mv_par06
+cNomeDe    := mv_par07
+cNomeAte   := mv_par08
+cCategoria := mv_par09
+dPerDe     := mv_par10
+dPerAte    := mv_par11
+cSindicato := mv_par12
+nColunas   := If( mv_par13 > 4 , 4 , mv_par13 )
+cSituacao  := mv_par16
+
+dbSelectArea( "SRA" )
+If nOrdem == 1
+	dbSetOrder( 1 )
+ElseIf nOrdem == 2
+	dbSetOrder( 2 )
+ElseIf nOrdem == 3
+	dbSetOrder(3)
+Endif
+
+dbGoTop()
+
+If nOrdem == 1
+	dbSeek(cFilDe + cMatDe,.T.)
+	cInicio := "SRA->RA_FILIAL + SRA->RA_MAT"
+	cFim    := cFilAte + cMatAte
+ElseIf nOrdem == 2
+	dbSeek(cFilDe + cCcDe + cMatDe,.T.)
+	cInicio := "SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT"
+	cFim    := cFilAte + cCcAte + cMatAte
+ElseIf nOrdem == 3
+	DbSeek(cFilDe + cNomeDe + cMatDe,.T.)
+	cInicio := "SRA->RA_FILIAL + SRA->RA_NOME + SRA->RA_MAT"
+	cFim    := cFilAte + cNomeAte + cMatAte
+Endif
+
+dbSelectArea( "SRA" )
+SetRegua(SRA->(RecCount()))
+
+Chave := 0
+Li    := PROW()
+nCol  := 1
+nAlin := 0
+For T:=1 TO nColunas
+	aAdd(aVetor,{" "," "," "," "," "," "})
+Next T
+
+cFil  := "  "
+@Li,0 PSAY Chr(15)
+
+dbSelectArea( "SRA" )
+While !Eof() .And. Chave == 0
+
+	//+--------------------------------------------------------------+
+	//¦ Movimenta Regua Processamento                                ¦
+	//+--------------------------------------------------------------+
+
+	IncRegua()
+   //+--------------------------------------------------------------+
+   //¦ Verifica Quebra de Filial                                    ¦
+   //+--------------------------------------------------------------+
+   If SRA->RA_FILIAL #cFil
+      If !fInfo(@aInfo,Sra->ra_Filial)
+         Exit
+      Endif
+		cFil:=SRA->RA_FILIAL
+   Endif
+
+	While !Eof() .And. SRA->RA_FILIAL == cFil 
+
+		//+--------------------------------------------------------------+
+		//¦ Movimenta Regua Processamento                                ¦
+		//+--------------------------------------------------------------+
+		IncRegua()
+
+		//+--------------------------------------------------------------+
+		//¦ Verifica o De / Ate Solicitado                               ¦
+		//+--------------------------------------------------------------+
+		If nOrdem == 1
+			If SRA->RA_FILIAL + SRA->RA_MAT > cFilAte + cMatAte
+				Chave := 1
+				Exit
+			Endif
+		Elseif nOrdem == 2
+			If SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT > cFilAte + cCcAte + cMatAte
+				Chave := 1
+				Exit
+			Endif
+		Elseif nOrdem == 3
+			If SRA->RA_FILIAL + SRA->RA_NOME + SRA->RA_MAT > cFilAte + cNomeAte + cMatAte
+				Chave := 1
+				Exit
+			Endif
+		Endif
+
+		//+--------------------------------------------------------------+
+		//¦ Cancela Impres¦o ao se pressionar <ALT> + <A>                ¦
+		//+--------------------------------------------------------------+
+		If lEnd
+			Chave := 1
+			Exit
+		EndIF
+	
+		//+--------------------------------------------------------------+
+		//¦ Consiste Parametrizaç¦o do Intervalo de Impress¦o            ¦
+		//+--------------------------------------------------------------+
+		If (Sra->Ra_Nome < cNomeDe) .Or. (Sra->Ra_Nome > cNomeAte) .Or. ;
+		   (Sra->Ra_Mat < cMatDe) .Or. (Sra->Ra_Mat > cMatAte) .Or. ;
+			(Sra->Ra_CC < cCcDe) .Or. (Sra->Ra_CC > cCCAte)
+			dbSkip(1)
+			Loop
+		EndIf
+		
+			/*
+		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		³Consiste Filiais e Acessos                                             ³
+		ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+		IF !( SRA->RA_FILIAL $ fValidFil() .and. Eval( cAcessaSRA ) )
+			dbSelectArea("SRA")
+      		dbSkip()
+       		Loop
+		EndIF
+			
+		//+--------------------------------------------------------------+
+		//¦ Verifica Situacao e Categoria do Funcionario                 ¦
+		//+--------------------------------------------------------------+
+		If !( SRA->RA_SITFOLH $ cSituacao ) .OR. !( SRA->RA_CATFUNC $ cCategoria )
+			dbSkip()
+			Loop
+		Endif
+	
+		//+--------------------------------------------------------------+
+		//¦ Verifica Sindicatos - 99 Todos                               ¦
+		//+--------------------------------------------------------------+
+		If cSindicato #"99" .And. SRA->RA_SINDICA # cSindicato
+			dbSkip()
+			Loop
+		EndIf
+      cTipPagto := If(SRA->RA_CATFUNC$"M*C"," POR MES",If(SRA->RA_CATFUNC="H"," POR HRS"," POR DIA"))
+		dbSelectArea( "SR3" )
+		IF dbSeek(SRA->RA_FILIAL+SRA->RA_MAT)
+			While !Eof() .And. SRA->RA_FILIAL + SRA->RA_MAT == SR3->R3_FILIAL + SR3->R3_MAT .And. SR3->R3_PD == "000"
+				If SR3->R3_DATA >= dPerDe .And. SR3->R3_DATA <= dPerAte
+					nAlin:=nAlin+1
+					dbSelectArea( "SX5" )
+					If dbSeek( xFilial( "SX5" ) + "41" + SR3->R3_TIPO )
+						cMotivo := fTAcento( SubStr(SX5->X5_DESCRI,1,15) )
+					Else
+						cMotivo := STR0010			//"Nao Cad.Tab. 41"
+					Endif
+					dbSelectArea( "SR7" )
+					If dbSeek(SR3->R3_FILIAL+SR3->R3_MAT+DTOS(SR3->R3_DATA))
+						cFun:= DescFun(SR7->R7_FUNCAO,SR7->R7_FILIAL)
+					Else
+						cFun:= STR0011					//"*** Nao Cadastrado ***"
+					Endif
+				
+					dbSelectArea( "SR3" )
+					aVetor[nAlin,1]:= STR0012+SRA->RA_FILIAL+"  "+STR0013+SRA->RA_MAT+"  "+ Iif(cPaisLoc == "BRA",STR0014+SRA->RA_NUMCP+"/"+SRA->RA_SERCP,"")			//"FIL.: "###"MATRIC: "###"CART.PROF: "
+					aVetor[nAlin,2]:= STR0015+DtoC(SR3->R3_DATA)+STR0016+ALLTRIM(Transform(SR3->R3_VALOR,"@E 999,999,999.99"))+cTipPagto	//"AUMENTADO EM "###" P/  R$ "
+					aVetor[nAlin,3]:= STR0017+cFun+Iif(cPaisLoc == "BRA",STR0018+fCodCBO(SRA->RA_FILIAL,SR7->R7_FUNCAO,dDataBase),"")				//"NA FUNCAO DE "###" C.B.O. "
+					aVetor[nAlin,4]:= STR0019+ cMotivo									//"POR MOTIVO DE "
+					aVetor[nAlin,5]:= " "
+					aVetor[nAlin,6]:= " "
+					cTipo:="I"
+					FChkET320()
+				Endif
+				dbSkip()	
+			Enddo
+		Endif
+		dbSelectArea( "SRA" )
+		dbSkip()
+	Enddo
+
+	IF Chave == 1
+		Exit
+	Endif
+
+	If Eof()
+		Exit
+	Endif
+Enddo
+cTipo:="F"
+FChkET320()
+//+--------------------------------------------------------------+
+//¦ Termino do Relatorio                                         ¦
+//+--------------------------------------------------------------+
+dbSelectArea( "SRA" )
+Set Filter to
+dbSetOrder(1)
+Set Device To Screen
+
+If aReturn[5] == 1
+	Set Printer To
+	Commit
+	ourspool(wnrel)
+Endif
+
+MS_FLUSH()
+
+*-------------------------------------
+// Substituido pelo assistente de conversao do AP5 IDE em 19/11/99 ==> FuncTion FChkET320
+Static FuncTion FChkET320()
+*-------------------------------------
+
+Local C
+Local I
+
+If (cTipo == "I" .And. nAlin == nColunas) .Or. (cTipo == "F" .And. nAlin > 0)
+	For C:= 1 To 6
+		nCol:=0
+		For I:= 1 To nColunas       
+			 @ Li,nCol PSAY aVetor[I,C]
+			 nCol := nCol + 56
+			 aVetor[I,C]:= " "
+		Next
+		Li := Li + 1
+	Next
+
+	nAlin:=0              
+
+Endif
+
+If cTipo == "F"
+	@ Li, 0 PSAY " "
+Endif	
+
+Return(nil)        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+

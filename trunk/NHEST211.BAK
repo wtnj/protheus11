@@ -1,0 +1,238 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³EST214  ºAutor:José Henrique M Felipetto º Data ³  10/16/12 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Etq. Volks                                       		  º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ EST                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "RWMAKE.CH"
+
+User Function NHEST211()
+Private nAlt,nLar,oPr,oFnt1,oFnt2,oFnt3,oFnt4,oDlgParam,cProd,_nQuant,nAltBar1,nAltBar2,nAltBar3,nAltBar4
+
+oFnt1  := TFont():New("Arial",,11,,.T.,,,,,.F.)
+oFnt2  := TFont():New("Arial",,08,,.F.,,,,,.F.)
+oFnt3  := TFont():New("Arial",,07,,.T.,,,,,.F.)
+oFnt4  := TFont():New("Arial",,14,,.T.,,,,,.F.)
+oFnt5  := TFont():New("Arial",,15,,.T.,,,,,.F.)
+
+cProd := Space(Len(SB1->B1_COD))
+_nQuant := 0
+
+oDlgParam  := MsDialog():New(0,0,120,250,"Assistente de etiqueta.",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+	oSay1 := TSay():New(08,10,{||"Peca:"},oDlgParam,,,,,,.T.,,)
+	oGet1 := tGet():New(06,50,{|u| if(Pcount() > 0, cProd := u,cProd)},oDlgParam,60,8,"@!",{|| fValidaPeca(cProd) },;
+					,,,,,.T.,,,{|| .T. },,,,,,"SB1","cProd")
+
+	oSay2 := TSay():New(28,10,{||"Quantidade:"},oDlgParam,,,,,,.T.,,)
+	oGet2 := tGet():New(26,50,{|u| if(Pcount() > 0, _nQuant := u,_nQuant)},oDlgParam,60,8,"99999",{||fValQtde(_nQuant)},;
+					,,,,,.T.,,,{|| .T. },,,,,,,"_nQuant")
+
+	oBtnParam := tButton():New(48,50,"Avançar",oDlgParam,{|| fImpEtiq(cProd,_nQuant) } ,60,10,,,,.T.)
+oDlgParam:Activate(,,,.t.,{||.T.},,)
+Return
+
+Static Function fImpEtiq(Peca,Quant)
+Local Contador := 1
+
+nAlt 	 := 40
+nLar 	 := 40
+nAltBar1 := 3.5
+nAltBar2 := 6.0
+nAltBar3 := 6.9
+nAltBar4 := 7.6
+
+oPr := tAvPrinter():New("Protheus")
+oPr:StartPage()
+
+For i := 1 to Quant
+	If Contador > 2
+		oPr:EndPage()
+		nLar := 40
+		nAlt := 40
+		nAltBar1 := 3.5
+		nAltBar2 := 6.0
+		nAltBar3 := 6.9
+		nAltBar4 := 7.6
+		Contador := 1
+		oPr:StartPage()
+	EndIf
+	
+	fDesenhaEtiq()
+	
+	nAlt += 1700
+	nAltBar1 += 14.0
+	nAltBar2 += 14.0
+	nAltBar3 += 13.9
+	nAltBar4 += 14.0
+	Contador++
+Next i
+
+oPr:EndPage()
+oPr:End()
+oPr:Preview()
+
+Return
+
+Static Function fValQtde(Quant)
+	If Quant <= 0
+		alert("Quantidade informada deve ser maior que 0! Favor verifique!")
+		Return .F.
+	EndIf
+Return .T.
+
+Static Function fDesenhaEtiq()
+Private _nAuxLar := 1427.6
+
+If cProd == "VWB03.4.0410.00"
+	_nAuxLar := 1627.6
+ElseIf cProd == "VWB03.4.0208.01"
+	_nAuxLar := 1787.6	
+EndIf
+
+/* Box */
+/* ----------------------------------------------- */
+oPr:Line(nAlt,nLar,nAlt,nLar + _nAuxLar) 			    	// 1ª Linha Horizontal
+oPr:Line(nAlt,nLar,nAlt + 1500, nLar) 					// 1ª Linha Vertical
+oPr:Line(nAlt,nLar + _nAuxLar,nAlt + 1500, nLar + _nAuxLar) // 2ª Linha Vertical
+oPr:Line(nAlt + 1500,nLar,nAlt + 1500, nLar + _nAuxLar)   // 2ª Linha Horizontal
+/* Fim Box */
+/* ----------------------------------------------- */
+
+oPr:Line(nAlt + 180,nLar,nAlt + 180,nLar + _nAuxLar)   		// 2ª Linha Horizontal
+oPr:Line(nAlt + 360,nLar + 650,nAlt + 360,nLar + _nAuxLar)  // 3ª Linha Horizontal
+oPr:Line(nAlt + 600,nLar,nAlt + 600,nLar + _nAuxLar)   		// 4ª Linha Horizontal
+
+oPr:Line(nAlt + 270,nLar + 650,nAlt + 270,nLar + _nAuxLar)  // Divisória Endereço / P Liq
+oPr:Line(nAlt,nLar + 650,nAlt + 360, nLar + 650) // Linha Vertical do Meio de Cima
+oPr:Line(nAlt + 600,nLar + 650,nAlt + 1020, nLar + 650) // Linha Vertical do Meio de Baixo
+
+oPr:Line(nAlt + 840,nLar,nAlt + 840,nLar + 650)   	// 5ª Linha Horizontal Esquerda
+oPr:Line(nAlt + 1020,nLar,nAlt + 1020,nLar + 650)   // 6ª Linha Horizontal Esquerda
+
+oPr:Line(nAlt + 720,nLar + 650,nAlt + 720,nLar + _nAuxLar)   	// 7ª Linha Horizontal Direita
+oPr:Line(nAlt + 900,nLar + 650,nAlt + 900,nLar + _nAuxLar)   	// 8ª Linha Horizontal Direita
+oPr:Line(nAlt + 1020,nLar + 650,nAlt + 1020,nLar + _nAuxLar)    // 9ª Linha Horizontal Direita
+oPr:Line(nAlt + 270,nLar + 900,nAlt + 360,nLar + 900)
+oPr:Line(nAlt + 270,nLar + 1200,nAlt + 360,nLar + 1200)
+//oPr:Line(nAlt + 360,nLar + 900,nAlt + 450,nLar + 900)
+//oPr:Line(nAlt + 450,nLar + 900,nAlt + 450,nLar + 1887.6)
+oPr:Line(nAlt + 900,nLar + 960,nAlt + 1020,nLar + 960)
+oPr:Say(nAlt + 1040,nLar + 10,"CLASSE:",oFnt1)
+
+
+/* Says */ 
+oPr:Say(nAlt + 10,nLar + 10,"Destinatário/Receiver",oFnt2)
+oPr:Say(nAlt + 55,nLar + 10,"VOLKSWAGEN DO BRASIL LTDA",oFnt1)
+oPr:Say(nAlt + 115,nLar + 10,"ESTRADA MARGINAL VIA ANCHIETA KM 23,5",oFnt3)
+
+oPr:Say(nAlt + 10,nLar + 660,"Portaria, Porta/Dock Gate (F)",oFnt2)
+
+oPr:Say(nAlt + 180,nLar + 660,"Endereço fornecedor/Supplier/Address",oFnt2)
+oPr:Say(nAlt + 220,nLar + 660,"WHB COMPONENTES AUTOMOTIVOS S/A.",oFnt3)
+
+oPr:Say(nAlt + 270,nLar + 660,"P.Liq/Net WT(Kg)",oFnt2)
+oPr:Say(nAlt + 300,nLar + 660,"13,44",oFnt1)
+
+oPr:Say(nAlt + 270,nLar + 920,"P.Bruto/Gross WT (Kg)",oFnt2)
+oPr:Say(nAlt + 300,nLar + 920,"15,94",oFnt1)
+
+oPr:Say(nAlt + 270,nLar + 1230,"Caixas/Boxes",oFnt2)
+oPr:Say(nAlt + 300,nLar + 1230,"1",oFnt1)
+
+oPr:Say(nAlt + 190,nLar + 10,"Nr. Referencia/Part Nbr. (P)",oFnt2)
+
+oPr:Say(nAlt + 300,nLar + 20,Alltrim(SB1->B1_CODAP5),oFnt4)
+MSBAR("CODE128",nAltBar1,0.5,Alltrim(SB1->B1_CODAP5),oPr,.F., ,.T.  ,0.0324,0.85,NIL,NIL,NIL,.F.,,,.F.)//imprime cod. de barraS correto
+
+oPr:Say(nAlt + 610,nLar + 10,"Quantidade/Quantity (Q)",oFnt2)
+If SB1->B1_COD$"VWB03.4.0410.00/VWB03.4.0404.00"
+	oPr:Say(nAlt + 610,nLar + 350,"24",oFnt1)
+	MSBAR("CODE128",nAltBar2,0.5,"24",oPr,.F., ,.T.  ,0.0324,0.85,NIL,NIL,NIL,.F.,,,.F.)//imprime cod. de barraS correto	
+Else
+	oPr:Say(nAlt + 610,nLar + 350,"32",oFnt1)
+	MSBAR("CODE128",nAltBar2,0.5,"32",oPr,.F., ,.T.  ,0.0324,0.85,NIL,NIL,NIL,.F.,,,.F.)//imprime cod. de barraS correto
+EndIf
+
+oPr:Say(nAlt + 610,nLar + 660,"Descrição/Description",oFnt2)
+oPr:Say(nAlt + 650,nLar + 660,Alltrim(SB1->B1_DESC),oFnt5)
+
+oPr:Say(nAlt + 730,nLar + 660,"Ref. Embalagem/Box",oFnt2)
+oPr:Say(nAlt + 750,nLar + 900,"KLT4314",oFnt4)
+MSBAR("CODE128",nAltBar3,6.3,"KLT4314",oPr,.F., ,.T.  ,0.0324,0.80,NIL,NIL,NIL,.F.,,,.F.)//imprime cod. de barraS correto
+
+oPr:Say(nAlt + 910,nLar + 660,"Data/Date",oFnt2)
+oPr:Say(nAlt + 960,nLar + 660,DTOC( Date() ),oFnt1)
+
+oPr:Say(nAlt + 910,nLar + 970,"Mud.Eng/Eng Change",oFnt2)
+
+oPr:Say(nAlt + 850,nLar + 10,"Fornecedor/Supplier (V)",oFnt2)
+oPr:Say(nAlt + 850,nLar + 350,"P479",oFnt1)
+MSBAR("CODE128",nAltBar4,0.5,"P479",oPr,.F., ,.T.  ,0.0324,0.85,NIL,NIL,NIL,.F.,,,.F.)//imprime cod. de barraS correto
+
+desQuadrados(nAlt,nLar)
+
+oPr:Say(nAlt + 1350,nLar + 20 ,"Turno: 		1º ( )  		2º ( )  		3º ( )",oFnt1)
+oPr:Say(nAlt + 1350,nLar + 550,"Data: __/__/____",oFnt1)
+     	
+oPr:Say(nAlt + 1440,nLar + 20,"Responsável: __________________________________________",oFnt1)
+
+
+
+
+Return
+
+Static Function fValidaPeca(Produto)
+
+SB1->( DbSetOrder(1) )
+If !SB1->( DbSeek(xFilial("SB1") + Produto ))
+	alert("Produto não encontrado! Verifique!")
+	Return .F.
+EndIf
+
+Return .T.
+
+Static Function desQuadrados(Alt,Lar)
+Local nCont := 1
+Local nAux  := 14
+aCombo := {"63","64","65","66","73","74","75","76","84","85","86","","",""}
+
+If SB1->B1_COD == "VWB03.4.0410.00"
+	aCombo := {"","1","2","3","3","13","23","33","2","12","22","32","1","11","21","31"}
+	nAux := 16
+ElseIf SB1->B1_COD == "VWB03.4.0208.01"
+	aCombo := {"11","12","13","14","15","16","20","21","22","23","24","32","33","34","43","44","54"}
+	nAux := 17
+ElseIf SB1->B1_COD == "VWB03.4.0404.00"
+	aCombo := {"11","12","13","21","22","23","31","32","33"}
+EndIf
+
+Lar += 30
+While nCont <= nAux
+	If nCont == 8
+		Alt += 120
+		Lar -= 1260
+	EndIf
+	
+	oPr:Line(Alt + 1100,Lar + 10,Alt + 1100, Lar + 100) // 1ª Linha Horizontal
+	oPr:Line(Alt + 1200,Lar + 10,Alt + 1200, Lar + 100) // 2ª Linha Horizontal
+	oPr:Line(Alt + 1100,Lar + 10,Alt + 1200, Lar + 10) // 1ª Linha Vertical
+	oPr:Line(Alt + 1100,Lar + 100,Alt + 1200, Lar + 100) // 2ª Linha Vertical
+	oPr:Say(Alt + 1120,Lar + 40,aCombo[nCont])
+	
+	Lar += 180
+	nCont++
+EndDo
+Return
+
+//aCombo := {"11","12","13","14","15","16","20","21","22","23","24","32","33","34","43","44","54"}

@@ -1,0 +1,137 @@
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Opcao de acesso para o Modelo 2                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+// 3,4 Permitem alterar getdados e incluir linhas
+// 6 So permite alterar getdados e nao incluir linhas
+// Qualquer outro numero so visualiza
+nOpcx:=3
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montando aHeader                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("Sx3")
+dbSetOrder(1)
+dbSeek("SX5")
+nUsado:=0
+aHeader:={}
+While !Eof() .And. (x3_arquivo == "SX5")
+	IF X3USO(x3_usado) .AND. cNivel >= x3_nivel
+    	nUsado:=nUsado+1
+        AADD(aHeader,{ TRIM(x3_titulo), x3_campo, x3_picture,;
+            	x3_tamanho, x3_decimal,"ExecBlock('Md2valid',.f.,.f.)",;
+        	   	x3_usado, x3_tipo, x3_arquivo, x3_context } )
+    Endif
+    dbSkip()
+End
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montando aCols                                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aCols:=Array(1,nUsado+1)    
+dbSelectArea("Sx3")
+dbSeek("SX5")
+nUsado:=0
+While !Eof() .And. (x3_arquivo == "SX5")
+	IF X3USO(x3_usado) .AND. cNivel >= x3_nivel
+    	nUsado:=nUsado+1
+        IF nOpcx == 3
+           IF x3_tipo == "C"
+             aCOLS[1][nUsado] := SPACE(x3_tamanho)
+                Elseif x3_tipo == "N"
+                    aCOLS[1][nUsado] := 0
+                Elseif x3_tipo == "D"
+                    aCOLS[1][nUsado] := dDataBase
+                Elseif x3_tipo == "M"
+                    aCOLS[1][nUsado] := ""
+                Else
+                    aCOLS[1][nUsado] := .F.
+                Endif
+            Endif
+        Endif
+   dbSkip()
+End
+aCOLS[1][nUsado+1] := .F. 
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis do Cabecalho do Modelo 2                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCliente:=Space(6)
+cLoja	:=Space(2)
+dData	:= MsDate()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis do Rodape do Modelo 2                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nLinGetD:=0
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Titulo da Janela                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cTitulo:="TESTE DE MODELO2"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Array com descricao dos campos do Cabecalho do Modelo 2      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aC:={}
+// aC[n,1] = Nome da Variavel Ex.:"cCliente"
+// aC[n,2] = Array com coordenadas do Get [x,y], em Windows estao em PIXEL
+// aC[n,3] = Titulo do Campo
+// aC[n,4] = Picture
+// aC[n,5] = Validacao
+// aC[n,6] = F3
+// aC[n,7] = Se campo e' editavel .t. se nao .f.
+#IFDEF WINDOWS
+	AADD(aC,{"cCliente"	,{15,10} ,"Cod. do Cliente"	,"@!"			,"ExecBlock('Md2VlCli',.f.,.f.)","SA1",})
+	AADD(aC,{"cLoja"	,{15,200},"Loja"			,"@!"			,,,})
+	AADD(aC,{"dData"	,{27,10} ,"Data de Emissao"	,				,,,})
+#ELSE
+	AADD(aC,{"cCliente"	,{6,5} ,"Cod. do Cliente"	,"@!"			,"ExecBlock('Md2VlCli',.f.,.f.)","SA1",})
+	AADD(aC,{"cLoja"	,{6,40},"Loja"				,"@!"			,,,})
+	AADD(aC,{"dData"	,{7,5} ,"Data de Emissao"	,				,,,})
+#ENDIF
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Array com descricao dos campos do Rodape do Modelo 2         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aR:={}
+// aR[n,1] = Nome da Variavel Ex.:"cCliente"
+// aR[n,2] = Array com coordenadas do Get [x,y], em Windows estao em PIXEL
+// aR[n,3] = Titulo do Campo
+// aR[n,4] = Picture
+// aR[n,5] = Validacao
+// aR[n,6] = F3
+// aR[n,7] = Se campo e' editavel .t. se nao .f.
+#IFDEF WINDOWS
+	AADD(aR,{"nLinGetD"	,{120,10},"Linha na GetDados"	,"@E 999",,,.F.})
+#ELSE
+	AADD(aR,{"nLinGetD"	,{19,05},"Linha na GetDados"	,"@E 999",,,.F.})
+#ENDIF
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Array com coordenadas da GetDados no modelo2                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+#IFDEF WINDOWS
+	aCGD:={44,5,118,315}
+#ELSE
+	aCGD:={10,04,15,73}
+#ENDIF
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Validacoes na GetDados da Modelo 2                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cLinhaOk:="ExecBlock('Md2LinOk',.f.,.f.)"
+cTudoOk:="ExecBlock('Md2TudOk',.f.,.f.)"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Chamada da Modelo2                                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+// lRetMod2 = .t. se confirmou 
+// lRetMod2 = .f. se cancelou
+lRetMod2:=Modelo2(cTitulo,aC,aR,aCGD,nOpcx,cLinhaOk,cTudoOk)
+// No Windows existe a funcao de apoio CallMOd2Obj() que retorna o
+// objeto Getdados Corrente
+If lRetMod2
+	#IFDEF WINDOWS
+		MsgStop("Voce confirmou a operacao!")
+	#ELSE
+		Alert("Voce confirmou a operacao!")
+	#ENDIF
+Else
+	#IFDEF WINDOWS
+		MsgStop("Voce abortou a operacao!")
+	#ELSE
+		Alert("Voce abortou a operacao!")
+	#ENDIF
+Endif
+
+Return

@@ -1,0 +1,7 @@
+nLinGetD:=n
+#IFDEF WINDOWS
+	MsgStop("Estava na Linha "+Alltrim(Str(n))+" da GetDados")
+#ELSE
+	Alert("Estava na Linha "+AllTrim(Str(n))+" da GetDados")
+#ENDIF
+__RETURN(.T.)	

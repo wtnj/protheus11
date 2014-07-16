@@ -1,0 +1,241 @@
+/*
+Padrao Zebra
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³img01     ºAutor  ³Sandro Valex        º Data ³  19/06/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Ponto de entrada referente a imagem de identificacao do     º±±
+±±º          ³produto. Padrao Microsiga                                   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+#include "Topconn.ch"
+User Function Img01 //Identificacao de produto
+
+Local cCodigo,sConteudo,cTipoBar, nX
+Local nqtde    := If(len(paramixb) >= 1,paramixb[ 1],NIL)
+Local cCodSep  := If(len(paramixb) >= 2,paramixb[ 2],NIL)
+Local cCodID   := If(len(paramixb) >= 3,paramixb[ 3],NIL)
+Local nCopias  := If(len(paramixb) >= 4,paramixb[ 4],0)
+Local cNFEnt   := If(len(paramixb) >= 5,paramixb[ 5],NIL)
+Local cSeriee  := If(len(paramixb) >= 6,paramixb[ 6],NIL)
+Local cFornec  := If(len(paramixb) >= 7,paramixb[ 7],NIL)
+Local cLojafo  := If(len(paramixb) >= 8,paramixb[ 8],NIL)
+Local cArmazem := If(len(paramixb) >= 9,paramixb[ 9],NIL)
+Local cOP      := If(len(paramixb) >=10,paramixb[10],NIL)
+Local cNumSeq  := If(len(paramixb) >=11,paramixb[11],NIL)
+Local cLote    := If(len(paramixb) >=12,paramixb[12],NIL)
+Local cSLote   := If(len(paramixb) >=13,paramixb[13],NIL)
+Local dValid   := If(len(paramixb) >=14,paramixb[14],NIL)
+Local cCC  	   := If(len(paramixb) >=15,paramixb[15],NIL)
+Local cLocOri  := If(len(paramixb) >=16,paramixb[16],NIL)
+Local cOPREQ   := If(len(paramixb) >=17,paramixb[17],NIL)
+Local cNumSerie:= If(len(paramixb) >=18,paramixb[18],NIL)
+Local cOrigem  := If(len(paramixb) >=19,paramixb[19],NIL)
+Local cEndereco:= If(len(paramixb) >=20,paramixb[20],NIL)
+Local cPedido  := If(len(paramixb) >=21,paramixb[21],NIL)
+Local nResto   := If(len(paramixb) >=22,paramixb[22],0)
+Local cItNFE   := If(len(paramixb) >=23,paramixb[23],NIL)
+Local cAl := getNextAlias()
+
+cLocOri := If(cLocOri==cArmazem,' ',cLocOri)
+nQtde   := If(nQtde==NIL,SB1->B1_QE,nQtde)
+cCodSep := If(cCodSep==NIL,'',cCodSep)
+
+If nResto > 0
+   nCopias++
+EndIf
+
+For nX := 1 to nCopias
+	If cCodID # NIL
+		CBRetEti(cCodID)
+		nqtde 	:= CB0->CB0_QTDE
+		cCodSep  := CB0->CB0_USUARIO
+		cNFEnt   := CB0->CB0_NFENT
+		cSeriee  := CB0->CB0_SERIEE
+		cFornec  := CB0->CB0_FORNEC
+		cLojafo  := CB0->CB0_LOJAFO
+		cArmazem := CB0->CB0_LOCAL
+		cOP      := CB0->CB0_OP
+		cNumSeq  := CB0->CB0_NUMSEQ
+		cLote    := CB0->CB0_LOTE
+		cSLote   := CB0->CB0_SLOTE
+		cCC      := CB0->CB0_CC
+		cLocOri  := CB0->CB0_LOCORI
+		cOPReq	:= CB0->CB0_OPREQ
+		cNumserie:= CB0->CB0_NUMSER
+		cOrigem  := CB0->CB0_ORIGEM
+		cEndereco:= CB0->CB0_LOCALI
+		cPedido  := CB0->CB0_PEDCOM
+		If CB0->(FieldPos("CB0_ITNFE")) > 0
+			cItNFE 	 := CB0->CB0_ITNFE
+		EndIf
+	EndIf
+   If nResto > 0 .and. nX==nCopias
+      nQtde  := nResto
+   EndIf
+	If Usacb0("01")
+		cCodigo := If(cCodID ==NIL,CBGrvEti('01',{SB1->B1_COD,nQtde,cCodSep,cNFEnt,cSeriee,cFornec,cLojafo,cPedido,cEndereco,cArmazem,cOp,cNumSeq,NIL,NIL,NIL,cLote,cSLote,dValid,cCC,cLocOri,NIL,cOPReq,cNumserie,cOrigem,cItNFE}),cCodID)
+	Else
+		cCodigo := SB1->B1_CODBAR
+	EndIf
+	cCodigo := Alltrim(cCodigo)
+	cTipoBar := 'MB07' //128
+	If ! Usacb0("01")
+		If Len(cCodigo) == 8
+			cTipoBar := 'MB03'
+		ElseIf Len(cCodigo) == 13
+			cTipoBar := 'MB04'
+		EndIf
+	EndIf 
+	
+	nVerif := getSkipLote(mv_par01,mv_par02,mv_par03,mv_par04)
+
+	If nVerif == 1 // Retorna o Campo QEK_VERIFI de acordo com os parâmetros enviados
+		cSLote := OemToAnsi("Inspecionar")
+	ElseIf nVerif == 2
+		cSLote := OemToAnsi("Skip Lote")
+	Else
+		cSLote := OemToAnsi("Amarracao")
+	EndIf
+	
+	MSCBLOADGRF("SIGA.GRF")
+	MSCBBEGIN(1,6)
+	MSCBBOX(30,05,76,05)
+	MSCBBOX(02,12.7,76,12.7)
+	MSCBBOX(02,21,76,21)
+	MSCBBOX(30,01,30,12.7,3)
+	MSCBGRAFIC(2,3,"SIGA")
+	MSCBSAY(33,02,'PRODUTO',"N","0","025,035")
+	MSCBSAY(33,06,"CODIGO","N","A","012,008")
+	MSCBSAY(33,08, AllTrim(SB1->B1_COD), "N", "0", "032,035")
+	MSCBSAY(05,14,"DESCRICAO","N","A","012,008")
+	MSCBSAY(05,16,SB1->B1_DESC,"N", "0", "020,030")
+	MSCBSAY(05,14,"DESCRICAO","N","A","012,008")
+	If ! Empty(cLote)
+		MSCBSAY(05,18,"Lote "+cLote+' - '+cSLote, "N", "0", "020,030")
+	EndIf
+	MSCBSAYBAR(23,22,cCodigo,"N",cTipoBar,8.36,.F.,.T.,.F.,,2,1,.F.,.F.,"1",.T.)
+	MSCBInfoEti("Produto","30X100")
+	sConteudo:=MSCBEND()
+	If Type('cProgImp')== "C" .AND. cProgImp=="ACDV120"
+	    GravaCBE(CB0->CB0_CODETI,SB1->B1_COD,nQtde,cLote,dValid)
+	EndIf
+Next
+Return sConteudo
+
+Static Function getSkipLote(nNF,nSerie,cForn,cLoja)
+Local nVerif := 0
+Local cQuery := ""
+
+cQuery := "SELECT QEK_VERIFI FROM " + RetSqlName("QEK")
+cQuery += " WHERE QEK_NTFISC = '" + nNF + "' "
+cQuery += " AND QEK_SERINF = '" + nSerie + "' "
+cQuery += " AND QEK_FORNEC = '" + cForn + "' "
+cQuery += " AND QEK_LOJFOR = '" + cLoja + "' "
+cQuery += " AND D_E_L_E_T_ = '' "
+cQuery += " AND QEK_FILIAL = '" + xFilial("QEK") + "' "
+TCQUERY cQuery NEW ALIAS "TRA"
+
+nVerif := TRA->QEK_VERIFI
+TRA->(DbCloseArea() )
+
+Return nVerif
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³img01cx   ºAutor  ³Sandro Valex        º Data ³  19/06/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Ponto de entrada referente a imagem de identificacao do     º±±
+±±º          ³produto para caixa a agranel                                º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function Img01CX //dispositivo de identificacao de produto
+Local cCodigo,sConteudo,cTipoBar, nX
+Local nqtde 	:= If(len(paramixb) >= 1,paramixb[ 1],NIL)
+Local cCodSep 	:= If(len(paramixb) >= 2,paramixb[ 2],NIL)
+Local cCodID 	:= If(len(paramixb) >= 3,paramixb[ 3],NIL)
+Local nCopias	:= If(len(paramixb) >= 4,paramixb[ 4],NIL)
+Local cArmazem := If(len(paramixb) >= 5,paramixb[ 5],NIL)
+Local cEndereco:= If(len(paramixb) >= 6,paramixb[ 6],NIL)
+
+nQtde   := If(nQtde==NIL,SB1->B1_QE,nQtde)
+cCodSep := If(cCodSep==NIL,'',cCodSep)
+
+For nX := 1 to nCopias
+	If Usacb0("01")
+		cCodigo := If(cCodID ==NIL,CBGrvEti('01',{SB1->B1_COD,nQtde,cCodSep,NIL,NIL,NIL,NIL,NIL,cEndereco,cArmazem,,,,,,,,}),cCodID)
+	Else
+		cCodigo := SB1->B1_CODBAR
+	EndIf
+	cCodigo := Alltrim(cCodigo)
+	cTipoBar := 'MB07' //128
+	If ! Usacb0("01")
+		If Len(cCodigo) == 8
+			cTipoBar := 'MB03'
+		ElseIf Len(cCodigo) == 13
+			cTipoBar := 'MB04'
+		EndIf
+	EndIf
+	MSCBLOADGRF("SIGA.GRF")
+	MSCBBEGIN(1,6)
+	MSCBBOX(30,05,76,05)
+	MSCBBOX(02,12.7,76,12.7)
+	MSCBBOX(02,21,76,21)
+	MSCBBOX(30,01,30,12.7,3)
+	MSCBGRAFIC(2,3,"SIGA")
+	MSCBSAY(33,02,'CAIXA',"N","0","025,035")
+	MSCBSAY(33,06,"CODIGO","N","A","012,008")
+	MSCBSAY(33,08, AllTrim(SB1->B1_COD), "N", "0", "032,035")
+	MSCBSAY(05,14,"DESCRICAO","N","A","012,008")
+	MSCBSAY(05,17,SB1->B1_DESC,"N", "0", "020,030")
+	MSCBSAYBAR(23,22,cCodigo,"N",cTipoBar,8.36,.F.,.T.,.F.,,2,1,.F.,.F.,"1",.T.)
+	MSCBInfoEti("Produto Granel","30X100")
+	sConteudo:=MSCBEND()
+Next
+Return sConteudo
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³img01De   ºAutor  ³Sandro Valex        º Data ³  19/06/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Ponto de entrada referente a imagem de identificacao da     º±±
+±±º          ³Unidade de despacho                                         º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function Img01DE //dispositivo de identificacao de unidade de despacho produto
+Local nCopias 	:= If(len(paramixb) >= 1,paramixb[ 1],NIL)
+Local cCodigo 	:= If(len(paramixb) >= 2,Alltrim(paramixb[ 2]),NIL)
+
+MSCBLOADGRF("SIGA.GRF")
+MSCBBEGIN(nCopias,6)
+	MSCBBOX(30,05,76,05)
+	MSCBBOX(02,12.7,76,12.7)
+	MSCBBOX(02,21,76,21)
+	MSCBBOX(30,01,30,12.7,3)
+	MSCBGRAFIC(2,3,"SIGA")
+	MSCBSAY(33,02,'UNID. DE DESPACHO',"N","0","025,035")
+	MSCBSAY(33,06,"CODIGO","N","A","012,008")
+	MSCBSAY(33,08, AllTrim(SB1->B1_COD), "N", "0", "032,035")
+	MSCBSAY(05,14,"DESCRICAO","N","A","012,008")
+	MSCBSAY(05,17,SB1->B1_DESC,"N", "0", "020,030")
+	MSCBSAYBAR(23,22,cCodigo,"N","MB01",8.36,.F.,.T.,.F.,,2,1,.F.,.F.,"1",.T.)  // codigo intercaldo 2 e 5 para EAN14
+	MSCBInfoEti("Unid.Despacho","30X100")
+sConteudo:=MSCBEND()
+Return sConteudo

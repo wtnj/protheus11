@@ -1,0 +1,273 @@
+#INCLUDE "rwmake.ch"        
+#INCLUDE "ImpLiFin.CH"
+
+User Function ImpLiFin()     
+//Definicao do array de Titulo aTitulos.
+#Define CGC			1		
+#Define FILIAL 	2
+#Define CC     	3 
+#Define NOME     4
+#Define MAT			5
+#Define 	ENDERE	6
+#Define BAIRRO		7
+#Define MUNICIP	8
+#Define ESTADO		9
+#Define CEP			10
+#Define CIC			11
+#Define NASC    	12
+#Define	MAE		13
+#Define SALMEN		14
+#Define	ADMISSA	15
+#Define 	DTAVISO	16
+#Define DTDEM		17
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("ADRIVER,CCOMPAC,CNORMAL,LNULL,NCONTAR,NLI")
+SetPrvt("IMPRIME,DET,X,cCodSaqIOB")
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³RdMake    ³ ImpLiFin ³ Autor ³ Alexandre Silva       ³ Data ³ 11.03.03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao da Rescisao em Papel Zebrado                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ ImpLiFin                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß/*/
+
+aDriver := LeDriver()
+cCompac := aDriver[1]
+cNormal := aDriver[2]
+lNull   := .F.
+nContar := 0
+nLi     := 0
+
+nEpoca:= Set(5,1910)
+
+fCabecalho()
+   
+For Imprime := 1 to Max(Len(aPdv),Len(aPdd))
+	If Max(Len(aPdv)/2,Len(aPdd)) <= 16
+		If Imprime <= 16 .And. Imprime <= Len(aPdv)
+			Det := Space(1) + aPdv[Imprime]+"|"
+		Else
+			Det := Space(42)+"|"
+		Endif
+		
+		If Imprime + 16 <= Len(aPdv)
+			Det := Det + Space(1) + aPdv[Imprime + 16]+"|"
+		Else
+			Det := Det + Space(42)+"|"
+		Endif
+		
+		If Imprime <= Len(aPdd)
+			Det := Det + Space(1) + aPdd[Imprime]+" |"
+		Else
+			Det := Det + Space(42)+" |"
+		Endif
+		
+		If Det <> Space(42)+"|"+Space(42)+"|"+Space(42)+" |"
+	    	@ nLi,001 PSAY "|" + Det
+		   nLi := nLi + 1
+		   nContar := nContar + 1
+		Else
+	      Exit
+		Endif
+	Else
+		If Imprime <= Len(aPdv)/2 .And. Imprime <= Len(aPdv)
+			Det := Space(1) + aPdv[Imprime]+"|"
+		Else
+			Det := Space(42)+"|"
+		Endif
+		
+		If Imprime + If(Len(aPdv)%2>0,Len(aPdv)/2-1,Len(aPdv)/2) <= Len(aPdv)
+			Det := Det + Space(1) + aPdv[Imprime + Len(aPdv)/2]+"|"
+		Else
+			Det := Det + Space(42)+"|"
+		Endif
+		
+		If Imprime <= Len(aPdd)
+			Det := Det + Space(1) + aPdd[Imprime]+" |"
+		Else
+			Det := Det + Space(42)+" |"
+		Endif
+		
+		If Det <> Space(42)+"|"+Space(42)+"|"+Space(42)+" |"
+	    	@ nLi,001 PSAY "|" + Det
+		   nLi := nLi + 1
+		   nContar := nContar + 1
+		Else
+	      Exit
+		Endif
+		If nContar > 16
+			lNull := .T.
+			fRodape()
+			lNull := .F.
+			fCabecalho()
+		EndIf
+	EndIf
+Next
+
+fRodape()
+
+EJECT
+Set(5,nEpoca)
+Setprc(0,0)
+
+Return Nil   
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºfCabecalho³ImpLiFin ºAutor  ³Alexandre Silva     º Data ³  11/03/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³fCabecalho - Impressao do Cabecalho da Rescisao.            º±±
+±º           ³                                                            º±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+Static Function fCabecalho()
+Local cCateg := fCateg(0)
+
+@ 00,001 PSAY &cCompac
+
+@ 01,001 PSAY " "+SPACE(43)+STR0002				//"TERMO DE RESCISAO DO CONTRATO DE TRABALHO"
+
+nLi     := 02
+@ nLi,001 PSAY STR0018 												//_______________________
+nLi := nLi + 1
+@ nLi,001 PSAY STR0003 												//| Identificacao do Empregador  " 
+nLi := nLi + 1
+@ nLi,001 PSAY  "|  " +aTitulo[CGC] + SUBSTR(aInfo[8]+Space(20),1,20) + STR0001 + aInfo[3] + "-" + aTitulo[FILIAL] +SRA->RA_FILIAL 	//"|01- CNPJ/CEI: "##|02- Razao Social / Nome:" ##" Filial: "
+@ nLi,131 PSAY "|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|"+Replicate("-",129)+ "|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|  " + aTitulo[ENDERE]+aInfo[4]	+ Space(1)+ aInfo[14]		//"|03 Endereco   : "
+@ nLi,080 PSAY "|  " + aTitulo[BAIRRO]+aInfo[13] 							//"|04 Bairro : "
+@ nLi,131 PSAY "|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|" + Replicate("-",129)+"|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|  " + aTitulo[MUNICIP]+aInfo[5]								//"|05 Munic.: "
+@ nLi,035 PSAY "|  " + aTitulo[ESTADO]+aInfo[6]								//"|06 UF : "
+@ nLi,058 PSAY "|  " + aTitulo[CEP]+aInfo[7]								//"|07 Cep: "
+@ nLi,078 PSAY STR0006+Subs(aInfo[16],1,7)							//"|08 CNAE"
+@ nLi,096 PSAY aTitulo[CC]+Substr(fDesc("SI3",SRA->RA_CC,"I3_CEI")+Space(2),1,15)	//"|09 CNPJ/CEI Tomador/Obra: " 
+@ nLi,131 PSAY "|"
+nLi := nLi + 1
+@ nLi,001 PSAY STR0018 												//_______________________
+nLi := nLi + 1
+@ nLi,001 PSAY STR0004 												//| Identificacao do Trabalhador//
+nLi := nLi + 1
+
+@ nLi,001 PSAY "|  "+ aTitulo[NOME]+Subs(SRA->RA_NOME,1,30)					   	//"|11 NOME:"
+@ nLi,080 PSAY "|  "+ aTitulo[MAT]+SRA->RA_MAT									//"|Matricula: "
+@ nLi,131 PSAY "|"     
+nLi := nLi + 1
+@ nLi,001 PSAY "|"+Replicate("-",129)+"|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|  "+aTitulo[ENDERE]+SRA->RA_ENDEREC+SPACE(1)+SRA->RA_COMPLEM //"|12 Endereco   : "
+@ nLi,080 PSAY "|  "+aTitulo[BAIRRO]+SRA->RA_BAIRRO	 						 //"|13 Bairro : "
+@ nLi,131 PSAY "|"     
+nLi := nLi + 1
+@ nLi,001 PSAY "|"+Replicate("-",129)+"|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|  " + aTitulo[MUNICIP]+Alltrim(SRA->RA_MUNICIP) 									//"|05 Munic.: "
+@ nLi,050 PSAY "|  " + aTitulo[ESTADO]+SRA->RA_ESTADO 		 							//"|15 UF : "  
+@ nLi,078 PSAY "  |  " + aTitulo[CEP]+SRA->RA_CEP										//"|16 Cep: "      
+@ nLi,131 PSAY "|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|"+Replicate("-",129)+"|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|  " + aTitulo[CIC]+SRA->RA_CIC									//"|18 CPF:"
+@ nLi,025 PSAY aTitulo[NASC]+DTOC(SRA->RA_NASC)				 			//"|19 Nasc.:"
+@ nLi,048 PSAY aTitulo[MAE]+SUBSTR(SRA->RA_MAE+SPACE(30),1,40) 			//"|20 Nome da Mae"
+@ nLi,131 PSAY "|"                                                                       
+nLi := nLi + 1
+@ nLi,001 PSAY STR0018 												//_______________________
+nLi := nLi + 1
+@ nLi,001 PSAY STR0005											   		//"|Dados do Contrato "
+nLi := nLi + 1				
+@ nLi,001 PSAY  "|  " + aTitulo[SALMEN]+Transform(SRG->RG_SALMES,"@E 999,999,999.99")//"|21 Remuneracao p/ fins rescisorios
+@ nLi,045 PSAY aTitulo[ADMISSA]+DtoC(SRA->RA_ADMISSA)							//"|22 Admis:"
+@ nLi,070 PSAY aTitulo[DTAVISO]+DtoC(SRG->RG_DTAVISO)							//"|23 Data do Aviso Previo"
+@ nLi,100 PSAY aTitulo[DTDEM]+DtoC(SRG->RG_DATADEM)							//"|24 Data do afastamento: 
+@ nLi,131 PSAY "|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|"+Replicate("-",129)+"|"
+nLi := nLi + 1
+
+@ nLi,001 PSAY STR0007+ cCodSaq			   							//"|26 Cod. afastamento:"## Cod.Saque FGTS.		
+@ nLi,131 PSAY "|"
+nLi := nLi + 1
+@ nLi,001 PSAY STR0018						  						 //_______________________
+nLi := nLi + 1
+@ nLi,001 PSAY STR0008 
+nLi := nLi + 1														 //_______________________
+
+nContar := 1
+  
+Return Nil
+
+
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºfRodape   ³ImpLiFin  ºAutor  ³Microsiga           º Data ³  10/30/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³fRodape - Impressao do Rodape da Rescisao.                  º±±
+±±º          ³                                                            º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+Static Function fRodape()
+
+nContar := nContar - 1
+For X := 1 to 17 - nContar
+    @ nLi,001 PSAY "|"+Space(42)+"|"+Space(42)+"|"+Space(42)+" |"
+    nLi := nLi + 1
+Next
+
+@ nLI,001 PSAY "*"+REPLICATE("-",129)+"*"
+nLI := nLi + 1
+@ nLI,001 PSAY STR0009+If(lNull,Space(14),Transform(nProv,"@E 999,999,999.99"))			//"|30-TOTAL BRUTO              "
+@ nLI,044 PSAY STR0010+If(lNull,Space(14),Transform(nDesc,"@E 999,999,999.99"))			//"|TOTAL DESCONTOS             "
+@ nLI,087 PSAY STR0011+If(lNull,Space(14),Transform(nProv - nDesc,"@E 999,999,999.99"))	//"|LIQUIDO A RECEBER           "
+@ nLI,131 PSAY "|"
+nLI := nLi + 1
+
+@ nLi,001 PSAY STR0018 						//_______________________
+nLi := nLi + 1
+@ nLi,001 PSAY STR0012  				 	//"|FORMALIZACAO DA RESCISAO"
+nLi := nLi + 1
+@ nLi,001 PSAY STR0013 						//"|56 Local e data do Recebimento"
+@ nLi,065 PSAY STR0015 						//"|57 Carimbo e assinatura do empregador ou preposto"     
+@ nLi,131 PSAY "|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|" +Space(63)+"|"+ Space(65) + "|"
+nLi := nLi + 1
+@ nLi,001 PSAY STR0017						//"|_______________________________________________________________|_________________________________________________________________|"
+nLi := nLi + 1
+@ nLi,001 PSAY STR0013				  		//"|58 Assinatura do trabalhador"
+@ nLi,065 PSAY STR0015						//"|59 Assinatura Responsavel legal"
+@ nLi,131 PSAY "|"
+nLi := nLi + 1
+@ nLi,001 PSAY "|" +Space(63)+"|"+ Space(65) + "|"
+nLi := nLi + 1
+@ nLi,001 PSAY STR0018						//"|_______________________________________________________________|_________________________________________________________________|
+
+Return Nil

@@ -1,0 +1,476 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ NHQDO008  ³ Autor ³ Alexandre R. Bento     Data ³ 22/12/05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Liçoes Aprendidas                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Rdmake                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Geral                                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+#include "rwmake.ch"
+#include "ap5mail.ch"
+#include "colors.ch"
+#include "font.ch"
+#Include "prtopdef.ch"    
+#Include "FiveWin.ch"
+#Include "Folder.ch"
+
+User Function NhQDO008()
+
+SetPrvt("CCADASTRO,AROTINA")
+cCadastro := OemToAnsi("Lições Aprendidas")
+aRotina := {{ "Pesquisa"      ,"AxPesqui"       , 0 , 1},;
+            { "Visualizacao"  ,"U_QDO08(2)"     , 0 , 2},;
+            { "Inclui"        ,"U_QDO08(3)"     , 0 , 3},;
+            { "Altera"        ,"U_QDO08(4)"     , 0 , 4},;
+            { "Legenda"       ,"U_FLegLic"      , 0 , 2}}
+            
+mBrowse( 6, 1,22,75,"SZO",,,,,,fCriaCor())
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FUNCAO PRINCIPAL ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function QDO08(nParam)
+Local bEnchoice := {||}
+Local bOk       := {||}
+Local bCanc     := {||}
+Private nPar    := nParam
+Private aSize   := MsAdvSize()
+
+	If nPar==2     //visualizar 
+	    bOk := {|| oDlg:End()}
+	ElseIf nPar==3 //incluir
+		bOk := {|| fInclui()}
+		bCanc := {||RollBackSx8(), oDlg:End()}
+	ElseIf nPar==4 //alterar
+		bOk := {|| fAltera()}
+	EndIf
+
+	bEnchoice := {||EnchoiceBar(oDlg,bOk,bCanc)}
+	
+	cItem     := Space(03)
+	cTitulo   := Space(100)
+	dData     := Date()
+	dUltAtu   := CtoD("  /  /  ")
+	
+	cProd     := Space(15)
+	cDescProd := ""
+	cEmit     := cUserName
+	aTipoAC   := {"","RC=Reclamação do cliente",;
+				   "RF=Reclamação de fornecedor",;
+				   "RI=Reclamação Interna",;
+				   "RA=Reclamação Ambiental"}
+	cTipoAC   := ""
+	cDescCli  := ""
+	cCli      := Space(06)
+	cLoja     := Space(02)
+	cSintoma  := Space(100)
+	cResp     := Space(06)
+	cNomResp  := ""
+	cDocOri   := Space(06)
+	cLidResp  := Space(06)
+	cNomLidR  := ""
+	cGerResp  := Space(06)
+	cNomGerR  := ""
+	cMembro1  := Space(06)
+	cMembro2  := Space(06)
+	cMembro3  := Space(06)
+	cMembro4  := Space(06)
+	cNomMem1  := ""
+	cNomMem2  := ""
+	cNomMem3  := ""
+	cNomMem4  := ""
+	cReincid  := Space(100) 
+	cACCli   := ""
+	cPrevCli := 0       
+	cRealCli := 0
+	cACWHB   := ""
+	cPrevWHB := 0       
+	cRealWHB := 0
+	cACTra   := ""	
+	cPrevTra := 0       
+	cRealTra := 0
+	
+	
+	oFont := tFont():New("Arial",,16,,.F.)
+	
+	//ÚÄÄÄÄÄÄ¿
+	//³ TELA ³
+	//ÀÄÄÄÄÄÄÙ
+	oDlg  := MsDialog():New(aSize[7],0,aSize[6],aSize[5],"Liçoes Aprendidas",,,,,CLR_BLACK,CLR_WHITE,,oMainWnd,.T.)
+
+//	oGroup := tGroup():New(20,05,22,(aSize[5]/2)-5,,oDlg,,,.T.)
+
+	oSay1 := tSay():New(20,15,{||"RAC Nº"},oDlg,,,,,,.T.)
+    oSay2 := tSay():New(18,60,{||cItem},oDlg,,oFont,,,,.T.)
+
+	oSay3 := tSay():New(20,105,{||"Data"},oDlg,,,,,,.T.)
+	oGet1 := tGet():New(18,125,{|u| if(Pcount() > 0, dData := u,dData)},oDlg,40,8,"99/99/99",/*valid*/,;
+		,,,,,.T.,,,{||.F.},,,,,,,"dData")
+
+	oSay3 := tSay():New(20,190,{||"Última atualização"},oDlg,,,,,,.T.)
+	oGet1 := tGet():New(18,235,{|u| if(Pcount() > 0, dUltAtu := u,dUltAtu)},oDlg,40,8,"99/99/99",/*valid*/,;
+		,,,,,.T.,,,{||.F.},,,,,,,"dUltAtu")
+
+	oSay4 := tSay():New(32,15,{||"Titulo"},oDlg,,,,,,.T.)
+	oGet2 := tGet():New(30,60,{|u| if(Pcount() > 0, cTitulo := u,cTitulo)},oDlg,250,8,"@!",/*valid*/,;
+		,,,,,.T.,,,{||.T.},,,,,,,"cTitulo")
+
+	oSay5 := tSay():New(44,15,{||"Produto"},oDlg,,,,,,.T.)
+	oGet3 := tGet():New(42,60,{|u| if(Pcount() > 0, cProd := u,cProd)},oDlg,60,8,"@!",{||fValProd()},;
+		,,,,,.T.,,,{||.T.},,,,,,"SB1","cProd")
+	oGet4 := tGet():New(42,120,{|u| if(Pcount() > 0, cDescProd := u,cDescProd)},oDlg,178,8,"@!",/*valid*/,;
+		,,,,,.T.,,,{||.F.},,,,,,,"cDescProd")
+	
+	oSay6 := tSay():New(56,15,{||"Emitente"},oDlg,,,,,,.T.)
+	oGet5 := tGet():New(54,60,{|u| if(Pcount() > 0, cEmit := u,cEmit)},oDlg,60,8,"@!",/*valid*/,;
+		,,,,,.T.,,,{||.F.},,,,,,,"cEmit")
+		
+	oSay7 := tSay():New(56,140,{||"Tipo de AC"},oDlg,,,,,,.T.)
+	oCombo1 := TComboBox():New(54,175,{|u| if(Pcount() > 0,cTipoAC := u,cTipoAC)},;
+		aTipoAC,100,20,oDlg,,{||},,,,.T.,,,,{||.T.},,,,,"cTipoAC")
+
+	oSay8 := TSay():New(68,15,{||"Cliente"},oDlg,,,,,,.T.,,)
+	oGet6 := tGet():New(66,60,{|u| if(Pcount() > 0, cCli := u,cCli)},oDlg,40,8,"@!",{||fValCli()},;
+		,,,,,.T.,,,{||.T.},,,,,,"SA1","cCli")
+	oGet7 := tGet():New(66,100,{|u| if(Pcount() > 0, cLoja := u,cLoja)},oDlg,10,8,"@!",{||fValLoja()},;
+		,,,,,.T.,,,{||.T.},,,,,,,"cLoja")
+	oGet8 := tGet():New(66,110,{|u| if(Pcount() > 0, cDescCli := u,cDescCli)},oDlg,200,8,"@!",/*valid*/,;
+		,,,,,.T.,,,{||.F.},,,,,,,"cDescCli")
+
+	oSay9 := tSay():New(80,15,{||"Sintoma"},oDlg,,,,,,.T.)
+	oGet9 := tGet():New(78,60,{|u| if(Pcount() > 0, cSintoma := u,cSintoma)},oDlg,250,8,"@!",/*valid*/,;
+		,,,,,.T.,,,{||.T.},,,,,,,"cSintoma")
+		                                    
+    oSay10 := TSay():New(92,15,{||"Responsável"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet10 := tGet():New(90,60,{|u| if(Pcount() > 0, cResp := u,cResp)},oDlg,40,8,"@!",{||fValQAA(cResp,@cNomResp,oGet11,"Responsável")},;
+		,,,,,.T.,,,{||.T.},,,,,,"QAA","cResp")
+	oGet11 := tGet():New(90,100,{|u| if(Pcount() > 0, cNomResp := u,cNomResp)},oDlg,180,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cNomResp")
+		
+	oSay11 := tSay():New(104,15,{||"Doc. de Origem"},oDlg,,,,,,.T.)
+	oGet12 := tGet():New(102,60,{|u| if(Pcount() > 0, cDocOri := u,cDocOri)},oDlg,50,8,"@!",/*valid*/,;
+		,,,,,.T.,,,{||.T.},,,,,,,"cDocOri")
+
+    oSay12 := TSay():New(116,15,{||"Gerente Resp."},oDlg,,,,,,.T.,,)
+	oGet13 := tGet():New(114,60,{|u| if(Pcount() > 0, cGerResp := u,cGerResp)},oDlg,40,8,"@!",{||fValQAA(cGerResp,@cNomGerR,oGet14,"Gerente")},;
+		,,,,,.T.,,,{||.T.},,,,,,"QAA","cGerResp")
+	oGet14 := tGet():New(114,100,{|u| if(Pcount() > 0, cNomGerR := u,cNomGerR)},oDlg,180,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cNomGerR")
+
+    oSay13 := TSay():New(128,15,{||"Líder Resp."},oDlg,,,,,,.T.,,)
+	oGet15 := tGet():New(126,60,{|u| if(Pcount() > 0, cLidResp := u,cLidResp)},oDlg,40,8,"@!",{||fValQAA(cLidResp,@cNomLidR,oGet16,"Lider")},;
+		,,,,,.T.,,,{||.T.},,,,,,"QAA","cLidResp")
+	oGet16 := tGet():New(126,100,{|u| if(Pcount() > 0, cNomLidR := u,cNomLidR)},oDlg,180,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cNomLidR")
+
+    oSay14 := TSay():New(140,15,{||"Membro 1"},oDlg,,,,,,.T.,,)
+	oGet17 := tGet():New(138,60,{|u| if(Pcount() > 0, cMembro1 := u,cMembro1)},oDlg,40,8,"@!",{||fValQAA(cMembro1,@cNomMem1,oGet18,"Membro")},;
+		,,,,,.T.,,,{||.T.},,,,,,"QAA","cMembro1")
+	oGet18 := tGet():New(138,100,{|u| if(Pcount() > 0, cNomMem1 := u,cNomMem1)},oDlg,180,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cNomMem1")
+
+    oSay15 := TSay():New(152,15,{||"Membro 2"},oDlg,,,,,,.T.,,)
+	oGet19 := tGet():New(150,60,{|u| if(Pcount() > 0, cMembro2 := u,cMembro2)},oDlg,40,8,"@!",{||fValQAA(cMembro2,@cNomMem2,oGet20,"Membro")},;
+		,,,,,.T.,,,{||.T.},,,,,,"QAA","cMembro2")
+	oGet20 := tGet():New(150,100,{|u| if(Pcount() > 0, cNomMem2 := u,cNomMem2)},oDlg,180,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cNomMem2")
+
+    oSay16 := TSay():New(164,15,{||"Membro 3"},oDlg,,,,,,.T.,,)
+	oGet21 := tGet():New(162,60,{|u| if(Pcount() > 0, cMembro3 := u,cMembro3)},oDlg,40,8,"@!",{||fValQAA(cMembro3,@cNomMem3,oGet22,"Membro")},;
+		,,,,,.T.,,,{||.T.},,,,,,"QAA","cMembro3")
+	oGet22 := tGet():New(162,100,{|u| if(Pcount() > 0, cNomMem3 := u,cNomMem3)},oDlg,180,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cNomMem3")
+
+    oSay17 := TSay():New(176,15,{||"Membro 4"},oDlg,,,,,,.T.,,)
+	oGet23 := tGet():New(174,60,{|u| if(Pcount() > 0, cMembro4 := u,cMembro4)},oDlg,40,8,"@!",{||fValQAA(cMembro4,@cNomMem4,oGet24,"Membro")},;
+		,,,,,.T.,,,{||.T.},,,,,,"QAA","cMembro4")
+	oGet24 := tGet():New(174,100,{|u| if(Pcount() > 0, cNomMem4 := u,cNomMem4)},oDlg,180,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cNomMem4")
+
+    oSay18 := TSay():New(188,15,{||"Reincidência (RAC)"},oDlg,,,,,,.T.,,)
+	oGet25 := tGet():New(186,60,{|u| if(Pcount() > 0, cReincid := u,cReincid)},oDlg,250,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.T.},,,,,,,"cReincid")
+		
+	oGroup := tGroup():New(200,15,255,220/*(aSize[5]/2)-5*/,"Ações de Contenção",oDlg,,,.T.)
+	
+	oSay22 := TSay():New(208,143,{||"Previsto"},oDlg,,,,,,.T.,,)
+	oSay23 := TSay():New(208,175,{||"Realizado"},oDlg,,,,,,.T.,,)
+
+	oSay19 := TSay():New(216,20,{||"Contenção no Cliente"},oDlg,,,,,,.T.,,)
+
+	oCombo2 := TComboBox():New(214,80,{|u| if(Pcount() > 0,cACCli := u,cACCli)},;
+		{"S=Sim","N=Nao"},40,20,oDlg,,{||},,,,.T.,,,,{||.T.},,,,,"cACCli")
+	oGet26 := tGet():New(214,140,{|u| if(Pcount() > 0, cPrevCli := u,cPrevCli)},oDlg,30,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.T.},,,,,,,"cPrevCli")
+	oGet27 := tGet():New(214,172,{|u| if(Pcount() > 0, cRealCli := u,cRealCli)},oDlg,30,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.T.},,,,,,,"cRealCli")
+	
+	oSay20 := TSay():New(228,20,{||"Contenção na WHB"},oDlg,,,,,,.T.,,)
+	oCombo3 := TComboBox():New(226,80,{|u| if(Pcount() > 0,cACWHB := u,cACWHB)},;
+		{"S=Sim","N=Nao"},40,20,oDlg,,{||},,,,.T.,,,,{||.T.},,,,,"cACWHB")
+	oGet28 := tGet():New(226,140,{|u| if(Pcount() > 0, cPrevWHB := u,cPrevWHB)},oDlg,30,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.T.},,,,,,,"cPrevWHB")
+	oGet29 := tGet():New(226,172,{|u| if(Pcount() > 0, cRealWHB := u,cRealWHB)},oDlg,30,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.T.},,,,,,,"cRealWHB")
+
+	oSay21 := TSay():New(240,20,{||"Contenção em Trânsito"},oDlg,,,,,,.T.,,)
+	oCombo4 := TComboBox():New(238,80,{|u| if(Pcount() > 0,cACTra := u,cACTra)},;
+		{"S=Sim","N=Nao"},40,20,oDlg,,{||},,,,.T.,,,,{||.T.},,,,,"cACTra")
+	oGet28 := tGet():New(238,140,{|u| if(Pcount() > 0, cPrevTra := u,cPrevTra)},oDlg,30,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.T.},,,,,,,"cPrevTra")
+	oGet29 := tGet():New(238,172,{|u| if(Pcount() > 0, cRealTra := u,cRealTra)},oDlg,30,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.T.},,,,,,,"cRealTra")
+
+
+	oDlg:Activate(,,,.F.,{||.T.},,bEnchoice)		
+
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA O PRODUTO E TRAZ A DESCRICAO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValProd()
+
+	SB1->(DbSetOrder(1)) // FILIAL + COD 
+	SB1->(DbSeek(xFilial("SB1")+cProd))
+	If SB1->(!Found())
+		Alert("Produto não encontrado!")
+		Return .F.
+	Else
+		cDescProd := SB1->B1_DESC
+		oGet4:Refresh()
+	EndIf
+
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA O CLIENTE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValCli()
+	SA1->(DbSetOrder(1)) // filial + cod
+	SA1->(DbSeek(xFilial("SA1")+cCli))
+	If SA1->(!Found())
+		Alert("Cliente não encontrado!")
+		Return .F.
+	EndIf
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A LOJA DO CLIENTE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValLoja()
+	SA1->(DbSetOrder(1))
+	SA1->(DbSeek(xFilial("SA1")+cCli+cLoja))
+	If SA1->(!Found())
+		Alert("Loja do Cliente não encontrada!")
+		Return .F.
+	Else
+		cDescCli := SA1->A1_NOME
+		oGet8:Refresh()
+	EndIf
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA SE EXISTE NA TABELA QAA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValQAA(cCampo,cNome,oGetNome,cAtor)
+	QAA->(DbSetOrder(1)) //FILIAL + MAT
+	QAA->(DbSeek(xFilial("QAA")+cCampo))
+	If QAA->(!Found())
+		Alert(cAtor+" não encontrado!")
+		Return .F.
+	Else
+		cNome := QAA->QAA_NOME
+		oGetNome:Refresh()
+	EndIf
+Return .T.
+
+Static Function fvazio(_cparam)
+Local _lRet := .T.
+   
+   If Empty(_cParam)
+      MsgBox(OemToAnsi("Campos Obrigatórios em Branco"),OemToAnsi("Atenção"),"INFO")   
+      _lRet := .F.
+   Endif
+
+Return(_lRet)
+
+
+Static Function fGrvHist()
+
+   Define MsDialog oDlgHis Title OemToAnsi("Historico das Lições Aprendidas") From 100,050 To 310,570 Pixel 
+   @ 110,055 To 010,245                                     
+   @ 015,010 Say OemToAnsi("Vai Utilizar esta Informação em Algum Documento?") Color CLR_BLUE Size 450,8 Object oItem                        
+      oItem:Setfont(oFont)                      
+   @ 030,100 Say OemToAnsi("ESCOLHA UMA OPÇÃO")   Size 180,8 Object oOpcao 
+   @ 045,120 Radio oRadio VAR _nPos ITEMS OemToAnsi("SIM"),OemToAnsi("NÃO") 3D SIZE 50,10 OF oDlgHis PIXEL ON Change frad() // "&Remessa" ### "R&etorno"   
+   @ 090,200 BMPBUTTON TYPE 01 ACTION Close(oDlgHis)
+   Activate msDialog oDlgHis Centered Valid fSaida()
+
+
+   Reclock("SZP",.T.)                  
+      SZP->ZP_FILIAL  := xFilial("SZP")
+      SZP->ZP_ITEM    := SZO->ZO_ITEM
+      SZP->ZP_DATA    := Date()
+      SZP->ZP_HORA    := Time()
+      SZP->ZP_LOGIN   := __cUserid	      
+      If _nPos == 1
+         SZP->ZP_INFORMA := "SIM"
+	  Else   	                
+ 	     SZP->ZP_INFORMA := "NAO"
+ 	  Endif  
+	  SZP->ZP_DOCUME  := _cDocume
+		               
+   MsUnlock("SZP")               	   
+   Close(oDialog)
+
+Return           
+
+
+Static Function fSaida()
+   If lSaida 
+      Return(.T.)
+   Else
+      Return(.F.)
+   Endif 
+Return
+
+
+Static Function frad()
+Local lretp := .F.
+
+   If _nPos == 1
+      _nPos:= 1
+      @ 067,070 Say OemToAnsi("Qual Documento :") Size 050,8 Object oDocume            
+      @ 065,120 Get _cDocume Picture "@!" When (_nPos == 1) Size 70,8 Valid fDocume() Object oDocume 
+      lretp := .T.            
+   ElseIf _nPos == 2 
+      _nPos:= 2
+      @ 067,070 Say Space(200) Size 200,8 Object oSpaco
+      lretp := .T.                              
+      lSaida := .T. //permite fechar o dialogo
+   Endif   
+
+Return(lRetp)
+
+Static Function fDocume()
+Local lRt := .T.
+   If _nPos == 1 .and. Empty(_cDocume)   
+      lRt := .F.
+   Else
+      lSaida := .T. //permite fechar o dialogo      
+   Endif   
+   
+Return(lRt)
+
+Static Function fCodpro()
+Local lRet := .F.
+   SB1->(DbsetOrder(1)) //filial+codigo produto
+   If SB1->(DbSeek(xFilial("SB1")+_cProd),Found())	
+   	  lRet := .T.
+   Else
+      MsgBox(OemToAnsi("Produto não Encontrado"),OemToAnsi("Atenção"),"INFO")
+	  lRet := .F.
+   Endif
+
+Return(lRet)
+
+
+Static Function fEnd() 
+   If _lPar==2 .or._lPar==4
+      RollBackSx8() //Volta a numeração da Ordem de Liberação
+   Else              
+     If Empty(_cIdent) .And.  _lPar==3
+        RollBackSx8() //Volta a numeração da Ordem de Liberação     
+     Else
+       fGrvHist()
+     Endif  
+   Endif                  
+   Close(oDialog) 
+
+Return
+
+Static Function fGrvLic()
+       If _lPar==3	  
+	      Reclock("SZO",.T.)
+	         SZO->ZO_FILIAL  := xFilial("SZO")
+		     SZO->ZO_ITEM    := _cItem
+		     SZO->ZO_STATUS  := _cStatus
+		     SZO->ZO_IDENTIF := _cIdent
+		     SZO->ZO_DESCRI  := _cDesc
+		     SZO->ZO_ACAO    := _cAcao
+	   	     SZO->ZO_AREA    := _cArea
+		     SZO->ZO_DTABERT := _dDataab
+		     SZO->ZO_DTREAL  := _dDatafe
+		     SZO->ZO_FMEA    := _cFmea 
+		     SZO->ZO_PCONTRO := _cPcont
+		     SZO->ZO_CAUSA   := _cCausa
+		     SZO->ZO_RESP    := _cResp
+		     SZO->ZO_FLUXO   := _cFluxo
+             SZO->ZO_COD     := _cProd 
+             SZO->ZO_DATA    := Date()  //data da inclusão           
+	      MsUnlock("SZO")     
+
+	      ConfirmSX8()  
+          lSaida := .T. //permite fechar o dialogo	      
+	   Elseif _lPar == 4
+		    Reclock("SZO",.F.)
+	         SZO->ZO_FILIAL  := xFilial("SZO")
+		     SZO->ZO_ITEM    := _cItem
+		     SZO->ZO_STATUS  := _cStatus
+		     SZO->ZO_IDENTIF := _cIdent
+		     SZO->ZO_DESCRI  := _cDesc
+		     SZO->ZO_ACAO    := _cAcao
+	   	     SZO->ZO_AREA    := _cArea
+		     SZO->ZO_DTABERT := _dDataab
+		     SZO->ZO_DTREAL  := _dDatafe
+		     SZO->ZO_FMEA    := _cFmea 
+		     SZO->ZO_PCONTRO := _cPcont
+		     SZO->ZO_CAUSA   := _cCausa
+		     SZO->ZO_RESP    := _cResp
+		     SZO->ZO_FLUXO   := _cFluxo
+             SZO->ZO_COD     := _cProd 
+	        MsUnlock("SZO")     
+            lSaida := .T. //permite fechar o dialogo	      
+	   Else               
+   	     fGrvHist() //Grava historicos
+       Endif           
+
+       Close(oDialog)
+Return
+              
+
+User Function FLegLic()       
+
+Local aLegenda :=	{ {"BR_VERDE"   , OemToAnsi("Ação Implementada com Sucesso") },;
+                      {"BR_LARANJA" , OemToAnsi("Ação não Implementada") },;                      
+  					  {"BR_AZUL"    , OemToAnsi("Ação Ineficaz")   }}
+
+BrwLegenda(OemToAnsi("Lições Aprendidas"), "Legenda", aLegenda)
+
+Return  
+
+
+Static Function fCriaCor()       
+
+Local aLegenda :=	{ {"BR_VERDE"   , OemToAnsi("Ação Implementada com Sucesso")  },;
+                      {"BR_LARANJA" , OemToAnsi("Ação não Implementada") },;                      
+  					  {"BR_AZUL"    , OemToAnsi("Ação Ineficaz")   }}
+
+Local uRetorno := {}
+Aadd(uRetorno, { 'ZO_STATUS == "1" ' , aLegenda[1][1] } )
+Aadd(uRetorno, { 'ZO_STATUS == "2" ' , aLegenda[2][1] } )
+Aadd(uRetorno, { 'ZO_STATUS == "3" ' , aLegenda[3][1] } )
+Return(uRetorno)
+

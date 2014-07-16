@@ -1,0 +1,68 @@
+#INCLUDE "rwmake.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³FA080PE   ºAutor  ³Microsiga           º Data ³  08/30/10   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function FA080PE()
+
+Local _Prefixo, _Num, _Naturez, _nRecno, _nE2Pis, _nE2Cofins, _nE2Csll, _nE2Irrf, _nE2Iss
+
+DbSelectArea("SE2")
+_Prefixo 	:= SE2->E2_PREFIXO
+_Num 		:= SE2->E2_NUM
+_Naturez 	:= SE2->E2_NATUREZ
+_nRecno 	:= SE2->(RECNO())
+_nE2Pis     := SE2->E2_PIS
+_nE2Cofins  := SE2->E2_COFINS
+_nE2Csll    := SE2->E2_CSLL
+_nE2Irrf    := SE2->E2_IRRF
+_nE2Iss     := SE2->E2_ISS
+_cForUniao  := Alltrim(GETMV("MV_UNIAO"))
+
+If _cForUniao == "UNIAO"
+	_cForUniao := "UNIAO "
+Endif
+
+// Pesquisa tipo TX - 
+SE2->(DbGotop())
+SE2->(DbSeek(xFilial("SE2")+_Prefixo + _Num + "1TX "+_cForUniao+"00")) // Fixo parcela, tipo e Fornecedor = parametro MV_UNIAO
+While !SE2->(Eof()) .And. (SE2->E2_PREFIXO  == _Prefixo .And. SE2->E2_NUM == _Num .And. ;
+					       SE2->E2_TIPO == "TX " .And. SE2->E2_FORNECE == _cForUniao .And. SE2->E2_LOJA == "00")
+	If SE2->E2_VALOR == _nE2Pis
+		RecLock("SE2",.F.)
+		SE2->E2_HIST := "PIS"
+		MsUnlock("SE2")
+	Elseif SE2->E2_VALOR == _nE2Cofins
+		RecLock("SE2",.F.)
+		SE2->E2_HIST := "COFINS"
+		MsUnlock("SE2")
+	Elseif SE2->E2_VALOR == _nE2Csll
+		RecLock("SE2",.F.)
+		SE2->E2_HIST := "CSLL"
+		MsUnlock("SE2")
+	Elseif SE2->E2_VALOR == _nE2Irrf
+		RecLock("SE2",.F.)
+		SE2->E2_HIST := "IRRF"
+		MsUnlock("SE2")
+	Elseif SE2->E2_VALOR == _nE2Iss
+		RecLock("SE2",.F.)
+		SE2->E2_HIST := "ISS"
+		MsUnlock("SE2")
+	Endif
+	SE2->(Dbskip())
+Enddo
+SE2->(DbGoto(_nRecno))         
+
+Return(.T.)

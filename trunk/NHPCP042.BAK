@@ -1,0 +1,103 @@
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³NHPCP042 Autor ³Jose Henrique M Felipetto Data ³ 10/28/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Código de Barras com filtro na ordem de produção           º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+               
+User Function NHPCP042
+
+oFnt1 := TFont():New("Arial"		,,12,,.T.,,,,,.F.)
+oFnt2 := TFont():New("Arial"		,,14,,.T.,,,,,.T.)
+
+If !Pergunte("PCP042",.T.)
+	Return .F.
+EndIf
+oPrn:= tmsPrinter():New("Protheus")
+oPrn:StartPage()
+Cabecalho()
+oPrn:EndPage()
+oPrn:Preview()
+Return (.T.)
+
+Static Function Cabecalho()
+
+nAlt := 20
+nAltBar := 4.0
+nCont := 1
+
+SC2->(DbSetOrder(1) )
+SC2->(DbSeek(xFilial("SC2") + mv_par01))
+SB1->(DbSetOrder(1) )
+SB1->(DbSeek(xFilial("SB1") + SC2->C2_PRODUTO) )
+SA1->(DbSetOrder(1) )
+SA1->(DbSeek(xFilial("SA1") + Alltrim(SC2->C2_CODCLI) + Alltrim(SC2->C2_LOJA) ))
+SA7->(DbSetOrder(2) )
+SA7->(DbSeek(xFilial("SA7") + Alltrim(SC2->C2_PRODUTO) + Alltrim(SC2->C2_CODCLI) + Alltrim(SC2->C2_LOJA) ))
+
+SB5->(DbSeek(xFilial("SB5") + SC2->C2_PRODUTO) )
+For x := 1 to mv_par02 
+
+	If nCont == 2
+		nAlt := 780
+		nAltBar := 10.2
+	Elseif nCont == 3
+		nAlt :=  1520
+		nAltBar := 16.2
+	ElseIf nCont == 4
+		nAlt := 2300
+		nAltBar := 22.6
+	ElseIf nCont > 4
+		oPrn:EndPage()
+		oPrn:StartPage()
+		nCont := 1
+		nAlt := 20
+		nAltBar := 4.0
+	EndIf
+
+	
+	oPrn:Say(nAlt + 300,20,"WHB - Fundição",oFnt1)
+	oPrn:Say(nAlt + 360,20,"ORDEM DE PRODUÇÃO:  " + mv_par01,oFnt1)
+	oPrn:Line(nAlt + 430,20,nAlt + 430,2500)
+    MSBAR("CODE128",nAltBar,0.2,mv_par01,oPrn,.F., ,.T.  ,0.0394,1.0,NIL,NIL,NIL,.F.,,,.F.)//imprime cod. de barra correto
+	oPrn:Say(nAlt + 610,20,"Produto:  ",oFnt1)
+	oPrn:Say(nAlt + 610,210,SC2->C2_PRODUTO,oFnt2)
+	oPrn:Say(nAlt + 610,700,"Desc: " + Substr(SB1->B1_DESC,1,20),oFnt1)
+	oPrn:Say(nAlt + 610,1420,"Part Number Cliente: " + Alltrim(SA7->A7_CODCLI),oFnt1)
+	oPrn:Say(nAlt + 690,700,"Cliente: " + Substr(SA1->A1_NOME,1,16),oFnt1)
+	oPrn:Say(nAlt + 690,1330,"    Data embalagem:   __/__/____ ",oFnt1)
+	oPrn:Say(nAlt + 690,20,"Emissão:  " + DTOC(SC2->C2_EMISSAO),oFnt1)
+	oPrn:Say(nAlt + 820,1365,"Funcionário:  ___________________",oFnt1)
+
+	oPrn:Say(nAlt + 760,20,"Qtde Prod.:       " + Transform(SC2->C2_QUJE,"@e 999999")  + "    Qtde Orig.:      " + Transform(SC2->C2_QUANT,"@e 999999"),oFnt1)
+	oPrn:Say(nAlt + 820,700,"Embalagem Padrão: ",oFnt1)
+	oPrn:Say(nAlt + 820,1190,Alltrim(Str(SB5->B5_QPA)),oFnt2)
+	oPrn:Say(nAlt + 820,20,"C.Custo:  " + SC2->C2_CC,oFnt1)
+	oPrn:Say(nAlt + 760,1330,"    Turno: (  ) 1º Turno -- (  ) 2º Turno -- (  ) 3º Turno ",oFnt1)
+	oPrn:Line(nAlt + 900,20,nAlt + 900,2500)
+
+	nCont++
+
+Next x 
+
+
+Return
+
+
+
+
+	
+	
+	
+
+    
+

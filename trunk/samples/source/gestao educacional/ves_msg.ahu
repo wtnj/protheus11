@@ -1,0 +1,45 @@
+<%#INCLUDE 'VES_MSG.CH'%>
+<table width="70%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td width="351" valign="top" align="center"> 
+        <br>
+        <table width="681" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td width="22">&nbsp;</td>
+          <td width="659" align="center"> <table width="100%" border="0" cellpadding="2" cellspacing="0" class="texto">
+              <tr> 
+                <td align="center" class="texto"><font size="2" face="Verdana, Arial, Helvetica, sans-serif">
+                  <b><%=STR0001%></b></font></td> <!-- //::: Protocolo de Inscri&ccedil;&atilde;o no Processo Seletivo ::: -->
+              </tr>
+              <tr> 
+                <td align="center" class="texto">&nbsp;</td>
+              </tr>
+              <tr> 
+                <td align="center" class="texto"><font size="1" face="Verdana, Arial, Helvetica, sans-serif">
+                  <%=STR0002%></font></td> <!-- //Sua pr&eacute;-inscri&ccedil;&atilde;o foi finalizada com sucesso! -->
+              </tr>
+              <tr> 
+                <td align="center" class="texto">&nbsp;</td>
+              </tr>
+<% if cFree == "N" %>
+              <tr> 
+                <td align="center" class="texto"><font size="1" face="Verdana, Arial, Helvetica, sans-serif">
+                  <%=STR0003%> <!-- //Imprima esta tela e o boleto banc&aacute;rio. Ap&oacute;s efetuar o pagamento, a inscri&ccedil;&atilde;o ser&aacute; processada. -->
+                  <br>
+                  <%=STR0004%> <!-- //Voc&ecirc; poder&aacute; pagar o boleto na rede banc&aacute;ria ou pela Internet. -->
+                  <%=STR0005%> <!-- //Caso o pagamento n&atilde;o seja efetuado, sua inscri&ccedil;&atilde;o ser&aacute; automaticamente cancelada. -->
+                  <br>
+                  <br>
+                  <strong> <%=STR0006%> <!-- //RECOMENDAMOS TRAZER O BOLETO BANC&Aacute;RIO E PROTOCOLO NO DIA DA PROVA -->
+                  <br>
+                  </strong><br>
+                  </font></td>
+              </tr>  
+<% endif %>              
+            </table></td>
+          <td width="10">&nbsp;</td>
+        </tr>
+      </table>
+     </td>
+  </tr>
+</table>

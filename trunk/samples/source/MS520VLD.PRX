@@ -1,0 +1,87 @@
+#INCLUDE 'RWMAKE.CH'
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³MS520VLD  ºAutor  ³Equipe Materiais II º Data ³  Out/98     º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ RAS - Exclui cupom fiscal para BEMATECH (DOS/WINDOWS)      º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±³ Uso      ³ Verifica se ‚ possivel excluir cupom e NF atraves do       ³±±
+±±³          ³ programa MATA520 (SIGAFAT PADRAO)                          ³±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function MS520VLD()
+
+Local lRet           := .T.
+Local nRet           := 0
+
+Private _cPorta      := GetMv("MV_PORTFIS")
+Private _cImpressora	:= GetMv("MV_IMPFIS")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Caso a serie NAO SEJA DO CUPOM FISCAL, processa nota normalmente³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+// Se tiver mais de uma impressora incluir no if
+// .And. Alltrim(SF2->F2_SERIE) != "Serie da segunda impressora"
+
+If Alltrim(SF2->F2_SERIE) != Alltrim(GETMV("MV_SERCUP"))
+	Return(lRet)
+Else
+	// Numero do PDV que efetuou a venda
+	If !Empty(SF2->F2_PDV)
+		cNumPdv:=SF2->F2_PDV
+		// Verifica se a Porta de Comunicacao com a Impressora Fiscal esta aberta
+		// Senao estiver efetua a abertura e guarda o valor de comunicacao
+		// Verifica a existencia da variavel de controle de Comunicacao com a ECF
+		If Type("nHdlECF") == "U" .Or. nHdlEcf == -1
+			Public nHdlECF
+			nHdlECF := IFAbrir( _cImpressora,_cPorta )
+		EndIf
+		nRet := IfAbrECF( nHdlECF )
+		If nRet <> 0
+			MsgStop("Falha na comunicação com o ECF")
+			Return(.F.)
+		Endif
+		
+		cNumPdvAtu := Space(10)
+		iRet := IFPEGPDV( nHdlECF, @cNumPdvAtu )
+		If AllTrim(cNumPdv) != AllTrim(cNumPdvAtu)
+			Tone(3000,1)
+			Aviso("Aten‡„o","Esta venda foi efetuada por outro caixa .O Pdv que efetuou a venda foi: "+cNumPdv,{"Ok"})
+			lRet:=.F.
+		EndIf
+		
+		If lRet
+			dbSelectArea("SD2")
+			dbSetOrder(3)
+			MsSeek(xFilial("SD2")+SF2->F2_DOC+SF2->F2_SERIE)
+			If SD2->(Found()) .And. SD2->D2_ORIGLAN == "LO"
+				Aviso("Atençäo","Este cupom fiscal foi emitido pelo SigaLoja e deve ser excluido/cancelado pelo SigaLoja.",{"Ok"})
+				lRet := .F.
+			EndIf
+			dbSelectArea("SF2")
+		EndIf
+		
+	EndIf
+	
+	
+	If lRet
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Obtem o numero do cupom para gravar no SF2 para identificar ³
+		//³ o numero da venda na impressora 									 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		cNumAnt := Space(10)
+		iRet := IFPegCupom( nHdlECF, @cNumAnt )
+		cNumAnt := StrZero(Val(cNumAnt),6)
+		If !(SF2->F2_DOC == cNumAnt)
+			Help(" ",1,"ULTCUP")
+			lRet:=.F.
+		Else
+			iRet := IFCancCup( nHdlECF )
+		EndIf
+	EndIf
+	Return(lRet)
+EndIf

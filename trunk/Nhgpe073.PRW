@@ -1,0 +1,1116 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณNHGPE073  บAutor  ณMarcos R Roquitski  บ Data ณ  17/01/07   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Movimento mensal de terceiros.                             บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ WHB                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+#include "rwmake.ch"                                                                    
+#include "protheus.ch"
+
+
+User Function Nhgpe073()
+
+SetPrvt("aRotina,cCadastro,")
+
+
+aRotina := { {"Pesquisar","AxPesqui",0,1} ,;
+             {"Visualizar","AxVisual",0,2} ,;
+             {"Alterar","U_fMovmen()",0,4} ,;
+             {"Calcula Folha","U_fcalfol()",0,4} ,;
+             {"Calcula PPR","U_fcalPpr()",0,4} ,;
+             {"Gera Liquido(s)","U_fGerLiq()",0,4} ,;
+             {"E-mail/Individual","U_Nhgpe200()",0,4} }
+                          
+cCadastro := "Movimento mensal de Terceiros"
+
+mBrowse(,,,,"ZRA",,"ZRA_FIM<>Ctod(Space(08))",)
+
+Return
+
+
+User Function fMovmen()
+
+SetPrvt("aRotina,cCadastro,dDti,dDtf")
+
+	aRotina := { {"Pesquisar","AxPesqui",0,1},;
+	             {"Visualizar","AxVisual",0,2},;
+	             {"Incluir","AxInclui",0,3},;
+	             {"Alterar","AxAltera",0,4},;
+	             {"Excluir","AxDeleta",0,5} }
+
+	cCadastro := "Matricula: "+ZRA->ZRA_MAT + " " + Alltrim(ZRA->ZRA_NOME)
+
+	DbSelectArea("ZRC")
+	SET FILTER TO ZRC->ZRC_MAT == ZRA->ZRA_MAT 
+	//Substr(DTOS(ZRC->ZRC_DATA),5,2)+Substr(DTOS(ZRC->ZRC_DATA),1,4) >= mv_par01 .AND. Substr(DTOS(ZRC->ZRC_DATA),5,2)+Substr(DTOS(ZRC->ZRC_DATA),1,4) <= mv_par02)
+	ZRC->(DbGotop())
+
+	mBrowse(,,,,"ZRC",,,)
+
+	SET FILTER TO
+	ZRC->(DbGotop())
+
+	DbSelectArea("ZRA")
+
+Return(.T.)
+
+                                                             
+User Function fCalFol()
+Local _cVb101   := .F.
+Local _nTotpro  := 0
+Local _nTotdes  := 0
+Local _cPd      := Space(1)
+Local _VlrRef   := 0
+Local _nNu      := 0   
+Local _nTeto    := 0
+Local _nMaior   := 0
+Local _nMaior18 := 0
+Local _nRaSal   := 0
+Local _nBaseImp := 0
+ZRC->(DbSetOrder(1))
+
+DbSelectArea("SX1")
+DbSetOrder(1)
+SX1->(DbSeek("GPE074"))
+While !SX1->(Eof()) .and. SX1->X1_GRUPO = "GPE074"
+	If SX1->X1_ORDEM == '01'
+		RecLock('SX1',.f.)
+		SX1->X1_CNT01 := ZRA->ZRA_MAT
+		MsUnLock('SX1')
+	Endif	
+
+	If SX1->X1_ORDEM == '02'
+		RecLock('SX1',.f.)
+		SX1->X1_CNT01 := ZRA->ZRA_MAT
+		MsUnLock('SX1')
+	Endif	
+	SX1->(DbSkip())	
+Enddo
+    
+
+If Pergunte("GPE074")
+
+	DbSelectArea("ZRA")
+	ZRA->(DbSetOrder(1))
+	If !Empty(mv_par01)
+		ZRA->(DbSeek(xFilial("ZRA") + mv_par01))
+	Else
+	    ZRA->(DbGotop())	
+	Endif	
+	While !ZRA->(Eof()) .AND. ZRA->ZRA_MAT >= mv_par01 .AND. ZRA->ZRA_MAT <= mv_par02
+
+
+		If !Empty(Alltrim(ZRA->ZRA_SITFOLH))
+			ZRA->(DbSkip())
+			Loop
+		Endif
+
+		// Cria salario	do mes
+		DbSelectArea("ZRC")
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "101"))
+		If !ZRC->(Found())
+			RecLock("ZRC",.T.)
+			ZRC->ZRC_FILIAL := xFilial("ZRC")
+			ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+			ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+			ZRC->ZRC_PD     := "101"
+			ZRC->ZRC_DESCPD := "SALARIO MENSAL"
+			ZRC->ZRC_TIPO1  := "V"
+			ZRC->ZRC_VALOR  := ZRA->ZRA_SALARIO
+			ZRC->ZRC_DATA   := dDataBase
+			ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+			ZRC->ZRC_TIPO2  := "C"
+			DbUnLock("ZRC")
+			_nRaSal := ZRA->ZRA_SALARIO
+		Else
+			_nRaSal := ZRC->ZRC_VALOR 
+		Endif	
+	
+		DbSelectArea("ZRC")
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "147"))
+		If ZRC->(Found())
+			_nRaSal += ZRC->ZRC_VALOR 
+		Endif	
+
+		// Cria salario	do mes
+		DbSelectArea("ZRC")
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "101"))
+		If !ZRC->(Found())
+			RecLock("ZRC",.T.)
+			ZRC->ZRC_FILIAL := xFilial("ZRC")
+			ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+			ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+			ZRC->ZRC_PD     := "101"
+			ZRC->ZRC_DESCPD := "SALARIO MENSAL"
+			ZRC->ZRC_TIPO1  := "V"
+			ZRC->ZRC_VALOR  := ZRA->ZRA_SALARIO
+			ZRC->ZRC_DATA   := dDataBase
+			ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+			ZRC->ZRC_TIPO2  := "C"
+			DbUnLock("ZRC")
+			_nRaSal := ZRA->ZRA_SALARIO
+		Else
+			_nRaSal := ZRC->ZRC_VALOR 
+		Endif	
+
+
+
+		// Base do Imposto                       
+		_nBaseImp := 0
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT))
+		While !ZRC->(Eof()) .AND. ZRC->ZRC_MAT == ZRA->ZRA_MAT
+
+			If ZRC->ZRC_PD == '799'
+				ZRC->(DbSkip())
+				Loop
+			Endif	
+			// Pesquisa verba 1 - Provento 2 - Desconto				
+			ZRV->(DbSeek(xFilial("ZRV") + ZRC->ZRC_PD))
+			If ZRV->(Found())
+				_cPd := ZRV->ZRV_TIPOCO
+			Endif
+
+			If _cPd == "1"
+				_nBaseImp += ZRC->ZRC_VALOR
+			Endif
+			ZRC->(DbSkip())
+		Enddo
+		
+		
+		// Calculo dos impostos
+		If  ZRA->ZRA_PERPIS > 0 // IR Verba: 501
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "501"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "501"
+				ZRC->ZRC_DESCPD := "PIS"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nBaseImp * ZRA->ZRA_PERPIS)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "501"
+				ZRC->ZRC_DESCPD := "PIS"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nBaseImp * ZRA->ZRA_PERPIS)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Endif
+		Endif
+
+		If	ZRA->ZRA_PERPIS > 0 // Confins Verba: 502
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "502"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "502"
+				ZRC->ZRC_DESCPD := "COFINS"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nBaseImp * ZRA->ZRA_PERCOF)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "502"
+				ZRC->ZRC_DESCPD := "COFINS"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nBaseImp * ZRA->ZRA_PERCOF)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Endif
+		Endif
+
+		If	ZRA->ZRA_PERCSL > 0 // CSL Verba: 503
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "503"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "503"
+				ZRC->ZRC_DESCPD := "CSL"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nBaseImp * ZRA->ZRA_PERCSL)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "503"
+				ZRC->ZRC_DESCPD := "CSL"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nBaseImp * ZRA->ZRA_PERCSL)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Endif
+		Endif
+
+		If ZRA->ZRA_PERIRF > 0 // IR Verba: 504
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "504"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "504"
+				ZRC->ZRC_DESCPD := "I.R"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nBaseImp * ZRA->ZRA_PERIRF)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "504"
+				ZRC->ZRC_DESCPD := "I.R"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nBaseImp * ZRA->ZRA_PERIRF)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"
+				DbUnLock("ZRC")
+			Endif
+        Endif
+
+
+		// Tabela de refeicao
+		If  ZRA->ZRA_SALARIO <= 2003.00
+			_nVlrRef := 28.36
+		Elseif ZRA->ZRA_SALARIO >= 2003.01 .and. ZRA->ZRA_SALARIO <= 3334.00
+			_nVlrRef := 33.32
+		Elseif ZRA->ZRA_SALARIO >= 3334.01 .and. ZRA->ZRA_SALARIO <= 6563.00
+			_nVlrRef := 49.29
+		Elseif ZRA->ZRA_SALARIO >= 6563.01
+			_nVlrRef := 59.54
+		Endif
+
+		If Alltrim(ZRA->ZRA_VALERE) <> "" // Refeicao Verba: 505
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "505"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "505"
+				ZRC->ZRC_DESCPD := "REFEICAO"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := _nVlrRef
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "505"
+				ZRC->ZRC_DESCPD := "REFEICAO"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := _nVlrRef
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Endif
+        Endif
+
+	    _nValor := _nNu := _nMaior := _nMaior18 := 0
+		_nTeto  := 163.88
+		If ZRA->ZRA_ASMEDI <> Space(02)
+			//SRX->(DbSeek(xFilial("SRX")+"22"+Space(02)+ZRA->ZRA_ASMEDI+Space(07),.T.))
+			//If SRX->RX_TIP=="22" .AND. Substr(SRX->RX_COD,3,2)==ZRA->ZRA_ASMEDI
+
+				_Depend := 97.30 //Val(SubStr(SRX->RX_TXT,36,9))
+				_nValor := 97.30 //Val(SubStr(SRX->RX_TXT,24,9))
+				
+				If ZRA->ZRA_ASMEDI == "02"
+					_nSalario := ZRA->ZRA_SALARIO
+
+
+		 	         If _nSalario <= 2188.37 
+		    	        _nValor := 40.84
+
+			         Elseif _nSalario >= 2188.38 .and. _nSalario <= 3643.31 
+			            _nValor := 44.77 
+
+			         Elseif _nSalario >= 3643.32 .and. _nSalario <= 7172.13 
+			            _nValor := 50.19 
+
+			         Elseif _nSalario > 7172.14 
+			            _nValor := 52.07 
+
+			         Endif 
+	         
+				     _nTeto := 86.17 
+
+				Endif
+  
+		      _nNu := _nNu + 1
+		      _nMaior18 := 0
+		      ZRB->(DbSeek(ZRA->ZRA_FILIAL+ZRA->ZRA_MAT,.T.))
+		      While !ZRB->(Eof()) .and. ZRA->ZRA_FILIAL==ZRB->ZRB_FILIAL .and. ZRA->ZRA_MAT==ZRB->ZRB_MAT
+				If ZRB->ZRB_ASMEDIC <> Space(02)
+					If (ZRB->ZRB_GRAUPA == "F" .OR. ZRB->ZRB_GRAUPA == "E")
+						If Year(dDataBase) - Year(ZRB->ZRB_DTNASC) < 17
+    			        _nNu++
+
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) >=19
+						    _nMaior18++
+
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) == 17 .and. Month(ZRB->ZRB_DTNASC) < Month(dDatabase)
+    				        _nNu++
+
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) == 17 .and. Month(ZRB->ZRB_DTNASC) > Month(dDatabase)
+    				        _nNu++
+
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) == 17 .and. Month(ZRB->ZRB_DTNASC) == Month(dDatabase) .and. Day(ZRB->ZRB_DTNASC) <=14
+    				        _nNu++
+ 
+
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) == 17 .and. Month(ZRB->ZRB_DTNASC) == Month(dDatabase) .and. Day(ZRB->ZRB_DTNASC) >=14
+    				        _nNu++
+
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) == 18 .and. Month(ZRB->ZRB_DTNASC) < Month(dDatabase)
+							    _nMaior18++
+			    
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) == 18 .and. Month(ZRB->ZRB_DTNASC) > Month(dDatabase)
+    			        _nNu++
+
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) == 18 .and. Month(ZRB->ZRB_DTNASC) == Month(dDatabase) .and. Day(ZRB->ZRB_DTNASC) > 14
+    			        _nNu++
+
+						Elseif Year(dDataBase) - Year(ZRB->ZRB_DTNASC) == 18 .and. Month(ZRB->ZRB_DTNASC) == Month(dDatabase) .and. Day(ZRB->ZRB_DTNASC) <= 14
+						    _nMaior18++
+						Endif
+					Else
+	   		        _nNu := _nNu + 1
+					Endif
+		        Endif
+        	    ZRB->(DbSkip())
+		      Enddo
+
+		
+			//Endif
+
+
+			If Alltrim(ZRA->ZRA_ASMEDI) <> "" // Ass. medica: 506
+				ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "506"))
+				If !ZRC->(Found())
+					RecLock("ZRC",.T.)
+					ZRC->ZRC_FILIAL := xFilial("ZRC")
+					ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+					ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+					ZRC->ZRC_PD     := "506"
+					ZRC->ZRC_DESCPD := "ASS. MEDICA"
+					ZRC->ZRC_TIPO1  := "V"
+					ZRC->ZRC_VALOR  := ((_nVAlor * _nNu) + (_nTeto * _nMaior18))
+					ZRC->ZRC_DATA   := dDataBase
+					ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+					ZRC->ZRC_TIPO2  := "C"					
+					DbUnLock("ZRC")
+				Else
+					RecLock("ZRC",.F.)
+					ZRC->ZRC_FILIAL := xFilial("ZRC")
+					ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+					ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+					ZRC->ZRC_PD     := "506"
+					ZRC->ZRC_DESCPD := "ASS. MEDICA"
+					ZRC->ZRC_TIPO1  := "V"
+					ZRC->ZRC_VALOR  := ((_nVAlor * _nNu) + (_nTeto * _nMaior18))
+					ZRC->ZRC_DATA   := dDataBase
+					ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+					ZRC->ZRC_TIPO2  := "C"					
+					DbUnLock("ZRC")
+				Endif
+	        Endif
+		Endif
+
+		_nTotpro := _nTotdes := 0
+		// Totaliza Proventos/Descontos
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT))
+		While !ZRC->(Eof()) .AND. ZRC->ZRC_MAT == ZRA->ZRA_MAT
+
+			If ZRC->ZRC_PD == '799'
+				ZRC->(DbSkip())
+				Loop
+			Endif	
+			// Pesquisa verba 1 - Provento 2 - Desconto				
+			ZRV->(DbSeek(xFilial("ZRV") + ZRC->ZRC_PD))
+			If ZRV->(Found())
+				_cPd := ZRV->ZRV_TIPOCO
+			Endif
+			If _cPd == "1"
+				_nTotpro += ZRC->ZRC_VALOR
+			Elseif 	_cPd == "2"
+				_nTotdes += ZRC->ZRC_VALOR
+			Endif
+			ZRC->(DbSkip())
+		Enddo
+
+		// Grava Liquido
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "799"))
+		If !ZRC->(Found())
+			RecLock("ZRC",.T.)
+			ZRC->ZRC_FILIAL := xFilial("ZRC")
+			ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+			ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+			ZRC->ZRC_PD     := "799"
+			ZRC->ZRC_DESCPD := "LIQUIDO A RECEBER"
+			ZRC->ZRC_TIPO1  := "V"
+			ZRC->ZRC_VALOR  :=(_nTotpro  - _nTotdes)
+			ZRC->ZRC_DATA   := dDataBase
+			ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+			ZRC->ZRC_TIPO2  := "C"				
+			DbUnLock("ZRC")
+		Else
+			RecLock("ZRC",.F.)
+			ZRC->ZRC_FILIAL := xFilial("ZRC")
+			ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+			ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+			ZRC->ZRC_PD     := "799"
+			ZRC->ZRC_DESCPD := "LIQUIDO A RECEBER"
+			ZRC->ZRC_TIPO1  := "V"
+			ZRC->ZRC_VALOR  :=(_nTotpro  - _nTotdes)
+			ZRC->ZRC_DATA   := dDataBase
+			ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+			ZRC->ZRC_TIPO2  := "C"				
+			DbUnLock("ZRC")
+		Endif
+		DbSelectArea("ZRA")
+		ZRA->(DbSkip())
+	Enddo                                                                                                    
+                                                   
+Endif
+
+Return(.T.)                                             
+
+
+User Function fBasFin()
+	_cNumero  := Space(06)     
+	_cPrefixo := "RH "
+	_dVencto  := dDataBase
+	_dEmissao := dDataBase          
+
+	ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT ))
+	If ZRC->(Found())
+		_cNumero  := ZRC->ZRC_NUMERO
+		_cPrefixo := ZRC->ZRC_PREFIX
+		_dVencto  := ZRC->ZRC_VENCTO
+		_dEmissao := ZRC->ZRC_EMISSA
+	Endif
+	If Empty(Alltrim(_cPrefixo))
+		_cPrefixo := "RH "
+	Endif
+	@ 100,050 To 320,500 Dialog oDlg Title OemToAnsi("Financeiro")
+    @ 005,005 To 090,222 PROMPT "Dados Nota Fiscal" OF oDlg  PIXEL
+	@ 015,010 Say OemToAnsi("Prefixo ") Size 30,8 OF oDlg PIXEL
+	@ 030,010 Say OemToAnsi("Nota Fiscal") Size 30,8 OF oDlg PIXEL
+	@ 045,010 Say OemToAnsi("Emissao    ") Size 30,8 OF oDlg PIXEL
+	@ 060,010 Say OemToAnsi("Vencimento ") Size 30,8 OF oDlg PIXEL
+
+	@ 015,050 Get _cPrefixo  PICTURE "@!"  Size 15,8  OF oDlg PIXEL
+	@ 030,050 Get _cNumero   PICTURE "@!"  Size 25,8  OF oDlg PIXEL
+	@ 045,050 Get _dEmissao  PICTURE "99/99/99"  Size 45,8  OF oDlg PIXEL
+	@ 060,050 Get _dVencto   PICTURE "99/99/99"  Size 45,8  OF oDlg PIXEL
+        
+	@ 095,155 BMPBUTTON TYPE 01 ACTION fGravaFin()
+	@ 095,192 BMPBUTTON TYPE 02 ACTION Close(oDlg)
+	Activate Dialog oDlg CENTERED
+
+Return
+
+Static Function fGravaFin()
+	ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT ))
+	While !ZRC->(Eof()) .AND. ZRC->ZRC_MAT == ZRA->ZRA_MAT
+
+		RecLock("ZRC",.F.)
+		ZRC->ZRC_PREFIX := _cPrefixo      
+		ZRC->ZRC_NUMERO := _cNumero
+		ZRC->ZRC_EMISSA := _dEmissao
+		ZRC->ZRC_VENCTO := _dVencto
+		DbUnLock("ZRC")
+		ZRC->(DbSkip())	
+
+	Enddo
+	Close(oDlg)
+
+Return
+
+
+User Function GerFin()
+Local _nIrrf := _nPis := _nCofins := _nCsll := 0
+Local _cFornece := Space(06) 
+Local _cNomFor  := Space(30)
+
+If MsgBox("Confirme lancamento no Financeiro ?","Financeiro","YESNO")
+
+	// Pesquisao movimento do mes.
+	ZRC->(DbSeek(xFilial("ZRC") + ZRA->ZRA_MAT))
+	If ZRC->(Found())
+
+  		If !Empty(ZRC->ZRC_PREFIX) .AND. !Empty(ZRC->ZRC_NUMERO) .AND. ZRA->ZRA_SALARI > 0
+
+			SA2->(DbSetOrder(1))
+			SA2->(DbSeek(xFilial("SA2") + ZRA->ZRA_FORNEC + ZRA->ZRA_LOJA))
+			If SA2->(Found())
+                    
+				If Alltrim(SM0->M0_CODIGO) == 'NH'
+					_cFornece := "002285"
+					_cNomFor  := "IMPOSTOS S/SERVICOS"
+				Elseif Alltrim(SM0->M0_CODIGO) == 'FN'
+					_cFornece := "UNIAO"
+					_cNomFor  := "UNIAO"
+				Endif
+
+
+				nPar := 1
+				// Grava imposto PIS
+				ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "501")) 
+				If ZRC->(Found())
+					DbSelectArea("SE2")
+					DbSeek(xFilial("SE2")+ZRC->ZRC_PREFIX+ZRC->ZRC_NUMERO+StrZero(nPar,1)+"TX "+ZRA->ZRA_FORNEC+ZRA->ZRA_LOJA)
+					If !SE2->(Found())
+						RecLock("SE2",.T.)
+						SE2->E2_FILIAL    := xFilial("ZRA")
+				        SE2->E2_PREFIXO   := ZRC->ZRC_PREFIX
+				        SE2->E2_NUM       := ZRC->ZRC_NUMERO
+				        SE2->E2_TIPO      := "TX"
+				        SE2->E2_PARCELA   := StrZero(nPar,1)
+				        SE2->E2_NATUREZ   := SA2->A2_NATUREZ
+				        SE2->E2_FORNECE   := _cFornece
+				        SE2->E2_LOJA      := ZRA->ZRA_LOJA
+				        SE2->E2_NOMFOR    := _cNomFor
+				        SE2->E2_EMISSAO   := ZRC->ZRC_EMISSA
+				        SE2->E2_VENCTO    := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCREA   := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCORI   := ZRC->ZRC_VENCTO
+				        SE2->E2_VALOR     := ZRC->ZRC_VALOR 
+				        SE2->E2_EMIS1     := ZRC->ZRC_EMISSA
+				        SE2->E2_SALDO     := ZRC->ZRC_VALOR
+				        SE2->E2_MOEDA     := 1
+				        SE2->E2_FATURA    := ""
+				        SE2->E2_VLCRUZ    := ZRC->ZRC_VALOR
+				        SE2->E2_ORIGEM    := "NHGPE079"
+				        SE2->E2_CC        := ZRA->ZRA_CCUSTO
+								SE2->E2_FLUXO     := "S"
+								SE2->E2_FILORIG   := xFilial("SE2")
+								SE2->E2_DESDOBR   := "N"
+								SE2->E2_RATEIO    := "N"
+								SE2->E2_CODRET    := "5952"
+								_nPis             := ZRC->ZRC_VALOR						
+				        MsUnlock("SE2")
+					Endif			        
+				Endif	
+
+				nPar++
+				// Grava imposto COFINS
+				ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "502"))
+				If ZRC->(Found())
+					DbSelectArea("SE2")
+					DbSeek(xFilial("SE2")+ZRC->ZRC_PREFIX+ZRC->ZRC_NUMERO+StrZero(nPar,1)+"TX "+ZRA->ZRA_FORNEC+ZRA->ZRA_LOJA)
+					If !SE2->(Found())
+						RecLock("SE2",.T.)
+						SE2->E2_FILIAL    := xFilial("ZRA")
+				        SE2->E2_PREFIXO   := ZRC->ZRC_PREFIX
+				        SE2->E2_NUM       := ZRC->ZRC_NUMERO
+				        SE2->E2_TIPO      := "TX"
+				        SE2->E2_PARCELA   := StrZero(nPar,1)
+				        SE2->E2_NATUREZ   := SA2->A2_NATUREZ
+				        SE2->E2_FORNECE   := _cFornece
+				        SE2->E2_LOJA      := ZRA->ZRA_LOJA
+				        SE2->E2_NOMFOR    := _cNomFor
+				        SE2->E2_EMISSAO   := ZRC->ZRC_EMISSA
+				        SE2->E2_VENCTO    := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCREA   := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCORI   := ZRC->ZRC_VENCTO
+				        SE2->E2_VALOR     := ZRC->ZRC_VALOR 
+				        SE2->E2_EMIS1     := ZRC->ZRC_EMISSA
+				        SE2->E2_SALDO     := ZRC->ZRC_VALOR
+				        SE2->E2_MOEDA     := 1
+				        SE2->E2_FATURA    := ""
+				        SE2->E2_VLCRUZ    := ZRC->ZRC_VALOR
+				        SE2->E2_ORIGEM    := "NHGPE079"
+				        SE2->E2_CC        := ZRA->ZRA_CCUSTO
+	 							SE2->E2_FLUXO     := "S"
+								SE2->E2_FILORIG   := xFilial("SE2")
+								SE2->E2_DESDOBR   := "N"
+								SE2->E2_RATEIO    := "N"
+								SE2->E2_CODRET    := "5952"
+								_nCofins          := ZRC->ZRC_VALOR												
+				        MsUnlock("SE2")
+					Endif			        
+				Endif	
+				nPar++
+
+				// Grava imposto CSL
+				ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "503"))
+				If ZRC->(Found())
+					DbSelectArea("SE2")
+					DbSeek(xFilial("SE2")+ZRC->ZRC_PREFIX+ZRC->ZRC_NUMERO+StrZero(nPar,1)+"TX "+ZRA->ZRA_FORNEC+ZRA->ZRA_LOJA)
+					If !SE2->(Found())
+						RecLock("SE2",.T.)
+						SE2->E2_FILIAL    := xFilial("ZRA")
+				        SE2->E2_PREFIXO   := ZRC->ZRC_PREFIX
+				        SE2->E2_NUM       := ZRC->ZRC_NUMERO
+				        SE2->E2_TIPO      := "TX"
+				        SE2->E2_PARCELA   := StrZero(nPar,1)
+				        SE2->E2_NATUREZ   := SA2->A2_NATUREZ
+				        SE2->E2_FORNECE   := _cFornece
+				        SE2->E2_LOJA      := ZRA->ZRA_LOJA
+				        SE2->E2_NOMFOR    := _cNomFor
+				        SE2->E2_EMISSAO   := ZRC->ZRC_EMISSA
+				        SE2->E2_VENCTO    := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCREA   := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCORI   := ZRC->ZRC_VENCTO
+				        SE2->E2_VALOR     := ZRC->ZRC_VALOR 
+				        SE2->E2_EMIS1     := ZRC->ZRC_EMISSA
+				        SE2->E2_SALDO     := ZRC->ZRC_VALOR
+				        SE2->E2_MOEDA     := 1
+				        SE2->E2_FATURA    := ""
+				        SE2->E2_VLCRUZ    := ZRC->ZRC_VALOR
+				        SE2->E2_ORIGEM    := "NHGPE079"
+				        SE2->E2_CC        := ZRA->ZRA_CCUSTO
+								SE2->E2_FLUXO     := "S"
+								SE2->E2_FILORIG   := xFilial("SE2")
+								SE2->E2_DESDOBR   := "N"
+								SE2->E2_RATEIO    := "N"
+								SE2->E2_CODRET    := "5952"
+								_nCsll            := ZRC->ZRC_VALOR						
+				        MsUnlock("SE2")
+					Endif			        
+				Endif	
+				nPar++
+
+
+				// Grava imposto IR
+				ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "504"))
+				If ZRC->(Found())
+					DbSelectArea("SE2")
+					DbSeek(xFilial("SE2")+ZRC->ZRC_PREFIX+ZRC->ZRC_NUMERO+StrZero(nPar,1)+"TX "+ZRA->ZRA_FORNEC+ZRA->ZRA_LOJA)
+					If !SE2->(Found())
+						RecLock("SE2",.T.)
+						SE2->E2_FILIAL    := xFilial("ZRA")
+				        SE2->E2_PREFIXO   := ZRC->ZRC_PREFIX
+				        SE2->E2_NUM       := ZRC->ZRC_NUMERO
+				        SE2->E2_TIPO      := "TX"
+				        SE2->E2_PARCELA   := StrZero(nPar,1)
+				        SE2->E2_NATUREZ   := SA2->A2_NATUREZ
+				        SE2->E2_FORNECE   := _cFornece
+				        SE2->E2_LOJA      := ZRA->ZRA_LOJA
+				        SE2->E2_NOMFOR    := _cNomFor
+				        SE2->E2_EMISSAO   := ZRC->ZRC_EMISSA
+				        SE2->E2_VENCTO    := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCREA   := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCORI   := ZRC->ZRC_VENCTO
+				        SE2->E2_VALOR     := ZRC->ZRC_VALOR
+				        SE2->E2_EMIS1     := ZRC->ZRC_EMISSA
+				        SE2->E2_SALDO     := ZRC->ZRC_VALOR
+				        SE2->E2_MOEDA     := 1
+				        SE2->E2_FATURA    := ""
+				        SE2->E2_VLCRUZ    := ZRC->ZRC_VALOR
+				        SE2->E2_ORIGEM    := "NHGPE079"
+				        SE2->E2_CC        := ZRA->ZRA_CCUSTO
+						SE2->E2_FLUXO     := "S"
+						SE2->E2_FILORIG   := xFilial("SE2")
+						SE2->E2_DESDOBR   := "N"
+						SE2->E2_RATEIO    := "N"
+						SE2->E2_CODRET    := "5952"
+						_nIrrf            := ZRC->ZRC_VALOR						
+				        MsUnlock("SE2")
+					Endif			        
+				Endif	
+				nPar++
+
+
+
+
+
+				// Grava total da N. Fiscal
+				// Grava imposto CSL
+				ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "101"))
+				If ZRC->(Found())
+					DbSelectArea("SE2")
+					DbSeek(xFilial("SE2")+ZRC->ZRC_PREFIX+ZRC->ZRC_NUMERO+" FOL"+ZRA->ZRA_FORNEC+ZRA->ZRA_LOJA)
+					If !SE2->(Found())
+						RecLock("SE2",.T.)
+						SE2->E2_FILIAL    := xFilial("ZRA")
+				        SE2->E2_PREFIXO   := ZRC->ZRC_PREFIX
+				        SE2->E2_NUM       := ZRC->ZRC_NUMERO
+				        SE2->E2_TIPO      := "NF"
+				        SE2->E2_NATUREZ   := SA2->A2_NATUREZ
+				        SE2->E2_FORNECE   := ZRA->ZRA_FORNEC
+				        SE2->E2_LOJA      := ZRA->ZRA_LOJA
+				        SE2->E2_NOMFOR    := SA2->A2_NREDUZ
+				        SE2->E2_EMISSAO   := ZRC->ZRC_EMISSA
+				        SE2->E2_VENCTO    := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCREA   := ZRC->ZRC_VENCTO
+				        SE2->E2_VENCORI   := ZRC->ZRC_VENCTO
+				        SE2->E2_VALOR     := (ZRA->ZRA_SALARI - _nIrrf - _nPis - _nCofins - _nCsll)
+				        SE2->E2_EMIS1     := ZRC->ZRC_EMISSA
+				        SE2->E2_SALDO     := (ZRA->ZRA_SALARI - _nIrrf - _nPis - _nCofins - _nCsll)
+				        SE2->E2_MOEDA     := 1
+				        SE2->E2_FATURA    := ""
+				        SE2->E2_VLCRUZ    := (ZRA->ZRA_SALARI - _nIrrf - _nPis - _nCofins - _nCsll)
+				        SE2->E2_ORIGEM    := "NHGPE079"
+				        SE2->E2_CC        := ZRA->ZRA_CCUSTO
+						SE2->E2_FLUXO     := "S"
+						SE2->E2_FILORIG   := xFilial("SE2")
+						SE2->E2_DESDOBR   := "N"
+						SE2->E2_RATEIO    := "N"
+						SE2->E2_IRRF      := _nIrrf
+						SE2->E2_PIS       := _nPis
+						SE2->E2_COFINS    := _nCofins
+						SE2->E2_CSLL      := _nCsll
+				        MsUnlock("SE2")
+					Endif			        
+				Endif
+				_nTotImp := _nIrrf := _nPis := _nCofins := _nCsll := 0					
+
+			Endif
+        	Alert("Nota fiscal gravada com sucesso !")
+		Endif
+	Endif
+			
+Endif
+
+Return
+
+
+
+
+User Function fCalPpr()
+Local _cVb101  := .F.
+Local _nTotpro := 0
+Local _nTotdes := 0
+Local _cPd     := Space(1)
+Local _VlrRef  := 0
+Local _nNu     := 0
+Local _nTeto   := 0
+Local _nMaior  := 0
+Local _nRaSal  := 0
+
+ZRC->(DbSetOrder(1))
+
+DbSelectArea("SX1")
+DbSetOrder(1)
+SX1->(DbSeek("GPE074"))
+While !SX1->(Eof()) .and. SX1->X1_GRUPO = "GPE074"
+	If SX1->X1_ORDEM == '01'
+		RecLock('SX1',.f.)
+		SX1->X1_CNT01 := ZRA->ZRA_MAT
+		MsUnLock('SX1')
+	Endif	
+
+	If SX1->X1_ORDEM == '02'
+		RecLock('SX1',.f.)
+		SX1->X1_CNT01 := ZRA->ZRA_MAT
+		MsUnLock('SX1')
+	Endif	
+	SX1->(DbSkip())	
+Enddo
+    
+
+If Pergunte("GPE074")
+
+	DbSelectArea("ZRA")
+	If !Empty(mv_par01)
+		ZRA->(DbSeek(xFilial("ZRA") + mv_par01))
+	Else
+	    ZRA->(DbGotop())	
+	Endif	
+	While !ZRA->(Eof()) .AND. ZRA->ZRA_MAT >= mv_par01 .AND. ZRA->ZRA_MAT <= mv_par02
+
+
+		If !Empty(Alltrim(ZRA->ZRA_SITFOLH))
+			ZRA->(DbSkip())
+			Loop
+		Endif
+
+		// Cria salario	do mes
+		DbSelectArea("ZRC")
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "110"))
+		If !ZRC->(Found())
+			RecLock("ZRC",.T.)
+			ZRC->ZRC_FILIAL := xFilial("ZRC")
+			ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+			ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+			ZRC->ZRC_PD     := "110"
+			ZRC->ZRC_DESCPD := "ADIANTAMENTO PPR"
+			ZRC->ZRC_TIPO1  := "V"
+			ZRC->ZRC_VALOR  := ZRA->ZRA_SALARIO
+			ZRC->ZRC_DATA   := dDataBase
+			ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+			ZRC->ZRC_TIPO2  := "C"
+			DbUnLock("ZRC")
+			_nRaSal := ZRA->ZRA_SALARIO
+		Else
+			_nRaSal := ZRC->ZRC_VALOR 
+
+		Endif	
+			
+		
+		// Calculo dos impostos
+		If  ZRA->ZRA_PERPIS > 0 // IR Verba: 501
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "501"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "501"
+				ZRC->ZRC_DESCPD := "PIS"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nRaSal * ZRA->ZRA_PERPIS)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "501"
+				ZRC->ZRC_DESCPD := "PIS"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nRaSal * ZRA->ZRA_PERPIS)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Endif
+		Endif
+
+		If	ZRA->ZRA_PERPIS > 0 // Confins Verba: 502
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "502"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "502"
+				ZRC->ZRC_DESCPD := "COFINS"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nRaSal * ZRA->ZRA_PERCOF)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "502"
+				ZRC->ZRC_DESCPD := "COFINS"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nRaSal * ZRA->ZRA_PERCOF)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Endif
+		Endif
+
+		If	ZRA->ZRA_PERCSL > 0 // CSL Verba: 503
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "503"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "503"
+				ZRC->ZRC_DESCPD := "CSL"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nRaSal * ZRA->ZRA_PERCSL)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "503"
+				ZRC->ZRC_DESCPD := "CSL"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nRaSal * ZRA->ZRA_PERCSL)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"					
+				DbUnLock("ZRC")
+			Endif
+		Endif
+
+		If ZRA->ZRA_PERIRF > 0 // IR Verba: 504
+			ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "504"))
+			If !ZRC->(Found())
+				RecLock("ZRC",.T.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "504"
+				ZRC->ZRC_DESCPD := "I.R"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nRaSal * ZRA->ZRA_PERIRF)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"
+				DbUnLock("ZRC")
+			Else
+				RecLock("ZRC",.F.)
+				ZRC->ZRC_FILIAL := xFilial("ZRC")
+				ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+				ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+				ZRC->ZRC_PD     := "504"
+				ZRC->ZRC_DESCPD := "I.R"
+				ZRC->ZRC_TIPO1  := "V"
+				ZRC->ZRC_VALOR  := ((_nRaSal * ZRA->ZRA_PERIRF)/100)
+				ZRC->ZRC_DATA   := dDataBase
+				ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+				ZRC->ZRC_TIPO2  := "C"
+				DbUnLock("ZRC")
+			Endif
+        Endif
+
+		_nTotpro := _nTotdes := 0
+		// Totaliza Proventos/Descontos
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT))
+		While !ZRC->(Eof()) .AND. ZRC->ZRC_MAT == ZRA->ZRA_MAT
+
+			If ZRC->ZRC_PD == '799'
+				ZRC->(DbSkip())
+				Loop
+			Endif	
+			// Pesquisa verba 1 - Provento 2 - Desconto				
+			ZRV->(DbSeek(xFilial("ZRV") + ZRC->ZRC_PD))
+			If ZRV->(Found())
+				_cPd := ZRV->ZRV_TIPOCO
+			Endif
+			If _cPd == "1"
+				_nTotpro += ZRC->ZRC_VALOR
+			Elseif 	_cPd == "2" .AND. ZRC->ZRC_TIPO2 <> "I"
+				_nTotdes += ZRC->ZRC_VALOR
+			Endif
+			ZRC->(DbSkip())
+		Enddo
+
+		// Grava Liquido
+		ZRC->(DbSeek(xFilial("ZRC") +ZRA->ZRA_MAT + "799"))
+		If !ZRC->(Found())
+			RecLock("ZRC",.T.)
+			ZRC->ZRC_FILIAL := xFilial("ZRC")
+			ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+			ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+			ZRC->ZRC_PD     := "799"
+			ZRC->ZRC_DESCPD := "LIQUIDO A RECEBER"
+			ZRC->ZRC_TIPO1  := "V"
+			ZRC->ZRC_VALOR  :=(_nTotpro  - _nTotdes)
+			ZRC->ZRC_DATA   := dDataBase
+			ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+			ZRC->ZRC_TIPO2  := "C"				
+			DbUnLock("ZRC")
+		Else
+			RecLock("ZRC",.F.)
+			ZRC->ZRC_FILIAL := xFilial("ZRC")
+			ZRC->ZRC_MAT    := ZRA->ZRA_MAT
+			ZRC->ZRC_NOME   := ZRA->ZRA_NOME
+			ZRC->ZRC_PD     := "799"
+			ZRC->ZRC_DESCPD := "LIQUIDO A RECEBER"
+			ZRC->ZRC_TIPO1  := "V"
+			ZRC->ZRC_VALOR  :=(_nTotpro  - _nTotdes)
+			ZRC->ZRC_DATA   := dDataBase
+			ZRC->ZRC_CC     := ZRA->ZRA_CCUSTO
+			ZRC->ZRC_TIPO2  := "C"				
+			DbUnLock("ZRC")
+		Endif
+		DbSelectArea("ZRA")
+		ZRA->(DbSkip())
+	Enddo                                                                                                    
+                                                   
+Endif
+
+Return(.T.)
+
+
+User function fGerLiq()
+
+If MsgBox("Confirma geracao dos liquidos ?","Gera liquidos","YESNO")
+
+	Pergunte("NHGP073")
+	
+	DbSelectArea("ZRC")
+	ZRC->(DbGotop())
+	While !ZRC->(Eof())
+		If Mv_par01 == 1
+			If ZRC->ZRC_PD == '799' 
+				ZR1->(DbSeek(xFilial("ZR1") +ZRC->ZRC_MAT+DTOS(dDataBase)))
+				If !ZR1->(Found())
+					RecLock("ZR1",.T.)
+					ZR1->ZR1_FILIAL := xFilial("ZRC")
+					ZR1->ZR1_MAT    := ZRC->ZRC_MAT
+					ZR1->ZR1_TIPO   := "1"
+					ZR1->ZR1_VALOR  := ZRC->ZRC_VALOR              
+					ZR1->ZR1_DATA   := dDataBase
+					DbUnLock("ZR1")
+				Endif
+			Endif		
+		Elseif Mv_par01 == 2
+			If ZRC->ZRC_PD == '508'
+				ZR1->(DbSeek(xFilial("ZR1") +ZRC->ZRC_MAT+DTOS(dDataBase)))
+				If !ZR1->(Found())
+					RecLock("ZR1",.T.)
+					ZR1->ZR1_FILIAL := xFilial("ZRC")
+					ZR1->ZR1_MAT    := ZRC->ZRC_MAT
+					ZR1->ZR1_TIPO   := "2"
+					ZR1->ZR1_VALOR  := ZRC->ZRC_VALOR              
+					ZR1->ZR1_DATA   := dDataBase
+					DbUnLock("ZR1")
+				Endif
+			Endif		
+ 		Endif	
+		ZRC->(DbSkip())
+	Enddo
+Endif	
+
+Return(.t.)

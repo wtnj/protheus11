@@ -1,0 +1,186 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³EST214  ºAutor:José Henrique M Felipetto º Data ³  10/16/12  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Etq. Fiat Exportação                                       º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ EST                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "RWMAKE.CH"
+
+User Function NHEST214()
+Private oPrN,oFnt01,oFnt02,nAlt,nLar,_nQuant
+                                            
+oFnt01  := TFont():New("Arial",,16,,.T.,,,,,.F.)
+oFnt02  := TFont():New("Arial",,08,,.F.,,,,,.F.)
+oFnt03  := TFont():New("Arial",,14,,.T.,,,,,.F.)
+oFnt04  := TFont():New("Arial",,26,,.T.,,,,,.F.)
+oFnt05  := TFont():New("Arial",,18,,.T.,,,,,.F.)
+
+nAlt := 40
+nLar := 40
+_nLarBar := 2.0
+_nCont := 1
+_nQuant := 0
+
+If !Pergunte("EST214",.T.)
+	Return
+EndIf
+
+dadosDaNf()
+
+SB1->( DbSetOrder(1) )
+SB1->( DbSeek(xFilial("SB1") + mv_par01 ))
+
+_cCodAP5 := Len(Alltrim(SB1->B1_CODAP5))
+_cCod2   := Replicate("0" , 11 - _cCodAP5) + SB1->B1_CODAP5
+_cCodBar := Substr(_cCod2,0,11) + '00008FZA19424'
+
+_cClass := ""
+If mv_par03 == 1
+	_cClass := "11"
+Elseif mv_par03 == 2
+	_cClass := "12"
+Elseif mv_par03 == 3
+	_cClass := "21"
+Elseif mv_par03 == 4
+	_cClass := "22"
+EndIf
+
+SD2->( DbSetOrder(3) )
+SD2->( DbSeek(xFilial("SD2") + mv_par05 + mv_par06 + mv_par07 + mv_par08 ))
+
+oPrn := tMsPrinter():New("Protheus")
+oPrn:StartPage()
+
+For i := 1 to mv_par02
+	If _nCont > 2
+		oPrn:EndPage()
+		nAlt := 40
+		nLar := 40
+		_nLarBar := 1.0
+		_nCont := 1
+		oPrn:StartPage()
+	EndIf
+	oPrn:Line(nAlt,nLar,nAlt, nLar + 1165.6) 			 	   	 // 1ª Linha Horizontal
+	oPrn:Line(nAlt,nLar,nAlt + 1773.2,nLar)  				   	 // 1ª Linha Vertical
+	oPrn:Line(nAlt,nLar + 1165.6,nAlt + 1773.2,nLar + 1165.6)  	 // 2ª Linha Vertical
+	oPrn:Line(nAlt + 1773.2,nLar,nAlt + 1773.2, nLar + 1165.6) 	 // 2ª Linha Horizonte
+
+	oPrn:Line(nAlt + 180 ,nLar,nAlt + 180, nLar + 1165.6) 	   	 // 2ª Linha Horizontal
+	oPrn:Line(nAlt + 300 ,nLar,nAlt + 300, nLar + 1165.6) 	   	 // 3ª Linha Horizontal
+	oPrn:Line(nAlt + 420 ,nLar,nAlt + 420, nLar + 1165.6) 	   	 // 4ª Linha Horizontal
+
+	oPrn:Line(nAlt + 960 ,nLar,nAlt + 960, nLar + 1165.6) 	   	 // 5ª Linha Horizontal
+	oPrn:Line(nAlt + 1080 ,nLar,nAlt + 1080, nLar + 1165.6)    	 // 6ª Linha Horizontal
+	oPrn:Line(nAlt + 1200 ,nLar,nAlt + 1200, nLar + 1165.6)    	 // 7ª Linha Horizontal
+	oPrn:Line(nAlt + 1320 ,nLar,nAlt + 1320, nLar + 1165.6)    	 // 8ª Linha Horizontal
+	oPrn:Line(nAlt + 1440 ,nLar,nAlt + 1440, nLar + 1165.6)    	 // 9ª Linha Horizontal
+	oPrn:Line(nAlt + 1560 ,nLar,nAlt + 1560, nLar + 1165.6)    	 //10ª Linha Horizontal
+
+	oPrn:Line(nAlt,nLar + 582.8,nAlt + 420,nLar + 582.8) 	   	 // 3ª Linha Vertical
+	oPrn:Line(nAlt + 960,nLar + 582.8,nAlt + 1080,nLar + 582.8)  // 5ª Linha Vertical
+
+	oPrn:Line(nAlt + 1080,nLar + 422.8,nAlt + 1200,nLar + 422.8) // 6ª Linha Vertical
+	oPrn:Line(nAlt + 1080,nLar + 722.8,nAlt + 1200,nLar + 722.8) // 7ª Linha Vertical
+	oPrn:Line(nAlt + 1200,nLar + 422.8,nAlt + 1320,nLar + 422.8) // 8ª Linha Vertical
+	oPrn:Line(nAlt + 1200,nLar + 722.8,nAlt + 1320,nLar + 722.8) // 9ª Linha Vertical
+
+	oPrn:Line(nAlt + 1320,nLar + 582.8,nAlt + 1440,nLar + 582.8) // 10ª Linha Vertical
+
+	oPrn:Line(nAlt + 1560,nLar + 442.8,nAlt + 1560,nLar + 442.8) // 11ª Linha Vertical
+	oPrn:Line(nAlt + 1560,nLar + 742.8,nAlt + 1560,nLar + 742.8) // 12ª Linha Vertical
+
+	oPrn:Line(nAlt + 1440,nLar + 482.8,nAlt + 1560,nLar + 482.8) // 13ª Linha Vertical
+	oPrn:Line(nAlt + 1440,nLar + 782.8,nAlt + 1560,nLar + 782.8) // 14ª Linha Vertical
+
+	oPrn:Say(nAlt + 40,nLar + 30,OemtoAnsi("FIAT AUTOMÓVEIS S.A"), oFnt03 )
+	oPrn:Say(nAlt + 40,nLar + 642.8,OemtoAnsi("WHB FUNDIÇÃO"), oFnt01 )
+
+	oPrn:Say(nAlt + 180,nLar + 10,OemtoAnsi("Data"), oFnt02 )
+	oPrn:Say(nAlt + 220,nLar + 20,OemtoAnsi( DTOC( Date() ) ), oFnt03 )
+
+	oPrn:Say(nAlt + 180,nLar + 592.8,OemtoAnsi("Cód. Fornecedor"), oFnt02 )
+	oPrn:Say(nAlt + 220,nLar + 602.8,OemtoAnsi("19424"), oFnt03 )
+
+	oPrn:Say(nAlt + 310,nLar + 10,OemtoAnsi("Denominação"), oFnt02 )
+	oPrn:Say(nAlt + 350,nLar + 20,OemtoAnsi(Substr(SB1->B1_DESC,1,15) ), oFnt03 )
+
+	oPrn:Say(nAlt + 310,nLar + 592.8,OemtoAnsi("Nº Doc. Fiscal (BAM)"), oFnt02 )
+	oPrn:Say(nAlt + 350,nLar + 602.8,OemtoAnsi(mv_par05), oFnt03 )
+
+	oPrn:Say(nAlt + 420,nLar + 10,OemtoAnsi("Desenho"), oFnt02 )
+
+	oPrn:Say(nAlt + 530,nLar + 220,"000" + OemtoAnsi(SB1->B1_CODAP5), oFnt04 )
+	MSBAR("CODE128",5.5,_nLarBar,"000" + Alltrim(SB1->B1_CODAP5),oPrn,.F., ,.T.  ,0.0524,0.85,NIL,NIL,NIL,.F.,,,.F.)//imprime cod. de barraS correto
+	oPrn:Say(nAlt + 760,nLar + 140,OemtoAnsi(_cCodBar), oFnt05 )
+
+	oPrn:Say(nAlt + 960,nLar + 10,OemtoAnsi("Data Produção do Lote"), oFnt02 )
+	oPrn:Say(nAlt + 1000,nLar + 20,OemtoAnsi(DTOC(SD2->D2_EMISSAO)), oFnt03 )
+
+	oPrn:Say(nAlt + 960,nLar + 592.8,OemtoAnsi("Código da Embalagem"), oFnt02 )
+	oPrn:Say(nAlt + 1000,nLar + 602.8,OemtoAnsi("FZA"), oFnt03 )
+
+	oPrn:Say(nAlt + 1080,nLar + 10,OemtoAnsi("Nº do Lote"), oFnt02 )
+	_cLote := U_NHEST002(SD2->D2_EMISSAO)
+	oPrn:Say(nAlt + 1120,nLar + 20,OemtoAnsi(_cLote), oFnt03 )
+
+	oPrn:Say(nAlt + 1080,nLar + 442.8,OemtoAnsi("Quant. do Lote"), oFnt02 )
+	oPrn:Say(nAlt + 1120,nLar + 402.8,OemtoAnsi(Str(_nQuant)), oFnt03 )
+
+	oPrn:Say(nAlt + 1080,nLar + 732.8,OemtoAnsi("Quant. da Embalagem"), oFnt02 )
+	oPrn:Say(nAlt + 1120,nLar + 822.8,Alltrim(mv_par09), oFnt03)
+
+	oPrn:Say(nAlt + 1200,nLar + 10,OemtoAnsi("Classe Funcional"), oFnt02 )
+	oPrn:Say(nAlt + 1240,nLar + 20,_cClass, oFnt03 )
+
+	oPrn:Say(nAlt + 1200,nLar + 442.8,OemtoAnsi("Vínculo"), oFnt02 )
+	oPrn:Say(nAlt + 1240,nLar + 452.8,OemtoAnsi("W"), oFnt03 )
+
+	oPrn:Say(nAlt + 1200,nLar + 732.8,OemtoAnsi("Indicação suplementar"), oFnt02 )
+
+	oPrn:Say(nAlt + 1320,nLar + 10,OemtoAnsi("Tipo de Veículo"), oFnt02 )
+
+	oPrn:Say(nAlt + 1320,nLar + 592.8,OemtoAnsi("Ponto de entrega"), oFnt02 )
+	oPrn:Say(nAlt + 1360,nLar + 602.8,OemtoAnsi("Fiat"), oFnt03 )
+
+	oPrn:Say(nAlt + 1440,nLar + 10,OemtoAnsi("Embarque Controlado"), oFnt02)
+	oPrn:Say(nAlt + 1480,nLar + 20,"NAO", oFnt03)
+
+	oPrn:Say(nAlt + 1440,nLar + 502.8,OemtoAnsi("Lote Sob Desvio"), oFnt02 )
+	oPrn:Say(nAlt + 1480,nLar + 528.8,OemtoAnsi("NAO"), oFnt03 )
+
+	oPrn:Say(nAlt + 1440,nLar + 792.8,OemtoAnsi("DUM"), oFnt02 )
+	oPrn:Say(nAlt + 1480,nLar + 832.8,OemtoAnsi("13092006"), oFnt03 )
+	_nLarBar := 11.5
+	nLar := 1245.6
+	_nCont++
+Next i
+
+oPrn:Preview()
+oPrn:EndPage()
+oPrn:End()
+Return
+
+Static Function dadosdaNf()
+
+SD2->( DbSetOrder(3) )
+SD2->( DbSeek(xFilial("SD2") + mv_par05 + mv_par06 + mv_par07 + mv_par08 ))
+
+//_cDoc := SD2->D2_DOC
+//While SD2->( !Eof() ) .and. _cDoc == SD2->D2_DOC
+WHILE SD2->(!EOF()) .AND. SD2->D2_DOC+SD2->D2_SERIE+SD2->D2_CLIENTE+SD2->D2_LOJA==mv_par05+MV_PAR06+MV_PAR07+MV_PAR08
+	_nQuant += SD2->D2_QUANT
+	SD2->( DbSkip() )
+EndDo
+
+Return

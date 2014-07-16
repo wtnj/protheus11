@@ -1,0 +1,371 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±º Programa ³ S500BAR	º Autor ³Aline Correa do Valeº Data ³Tue 05/06/98 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescri‡„o ³ Imprime etiquetas de codigo de barras em impressoras		  º±±
+±±º			 ³ INTERMEC 3400															  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso		 ³ Espec¡fico para clientes Microsiga								  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas																³
+//ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+//³ mv_par01	 Do Produto 															³
+//³ mv_par02	 Ate o Produto 														³
+//³ mv_par03	 Do Grupo																³
+//³ mv_par04	 Ate o Grupo															³
+//³ mv_par05	 Tabela de Preco														³
+//³ mv_par06	 Quantidade 															³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nCont   := 99
+
+cPerg   := "S500BR"
+
+ValidPerg()
+
+Pergunte(cPerg,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montagem da tela 																	³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+#IFNDEF WINDOWS
+	 MemoWrit("Label.bat","MODE "+GetMv("MV_PORTCBA")+":96,e,7,1,n")
+	 Run Label.bat
+	 ScreenDraw("SMT250",3,0,0,0)
+
+	 @03,06 Say "Impress„o de Etiquetas de C¢digo de Barras" Color "B/W"
+
+	 @11,08 Say " Este programa imprimir  etiquetas de c¢digo de barras na im- " Color "B/BG"
+	 @12,08 Say " pressora INTERMEC 3400 EAN13,de acordo com os parƒmetros de-  " Color "B/BG"
+	 @13,08 Say " finidos pelo usu rio.  As definicoes do padrao do codigo bem  " Color "B/BG"
+	 @14,08 Say " como da porta, devem ser definidas no menu IMPRESSORAS.       " Color "B/BG"
+	 @17,04 Say Space(73) Color "B/W"
+
+	 While .T.
+		  nResp := MenuH({"Parƒmetros","Confirma","Abandona"},17,04,"b/w,w+/n,r/w","PCA","",1)
+		  If nResp == 2
+				S500Imp()
+				Exit
+		  ElseIf nResp == 1
+				Pergunte(cPerg,.T.)
+				Loop
+		  Else
+				Exit
+		  Endif
+	 EndDo
+	 MemoWrit("Label.bat","MODE "+GetMv("MV_PORTCBA")+":96,n,8,1")
+	 Run Label.bat
+#ELSE
+
+	 @ 200,1 TO 380,380 DIALOG oDlg TITLE "Impressao de Etiquetas de Codigo de Barras"
+	 @ 02,05 TO 070,185
+	 @ 16,018 Say " Este programa imprimir  etiquetas de c¢digo de barras na impre-" SIZE 160,7
+	 @ 24,018 Say " ssora INTERMEC 3400 EAN13,de acordo com os parƒmetros"           SIZE 160,7
+	 @ 32,018 Say " definidos pelo usu rio.  As definicoes do padrao do codigo bem"  SIZE 160,7
+	 @ 40,018 Say " como da porta, devem ser definidas no menu IMPRESSORAS."         SIZE 160,7
+
+	 @ 75,098 BMPBUTTON TYPE 05 ACTION Pergunte(cPerg,.T.)
+	 @ 75,128 BMPBUTTON TYPE 01 ACTION Execute(S500Imp)
+	 @ 75,158 BMPBUTTON TYPE 02 ACTION Close(oDlg)
+
+	 Activate Dialog oDlg Centered
+
+#ENDIF
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±º Fun‡„o	 ³ S500Imp	º Autor ³ Luiz Carlos Vieira º Data ³Tue	27/01/98º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescri‡„o ³ Imprime as etiquetas 												  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso		 ³ Espec¡fico para clientes Microsiga								  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Function S500Imp
+cPorta	:= UPPER(AllTrim(GetMv("MV_PORTCBA")))
+cPadrao	:= AllTrim(GetMV("MV_PADBARR"))
+If mv_par06 <= 0
+	mv_par06 := 1
+Endif
+IF mv_par05 <= 0
+	mv_par05 := 1
+Endif
+
+If cPadrao == "EAN13" .and. GetMv("MV_IMPCBAR") == "INTERMEC 3400"
+	cPadrao := ""
+Endif
+
+If !(cPorta $ "COM1úCOM2úCOM3úCOM4") .or. !Empty(cPadrao)
+	 #IFNDEF WINDOWS
+		  Alert("Aten‡„o!;;A porta configurada deve ser uma sa¡da serial. Configure a porta no menu IMPRESSORAS.")
+	 #ELSE
+		  MsgAlert(OemToAnsi("A porta configurada deve ser uma sa¡da serial. Configure a porta no menu IMPRESSORAS."),OemToAnsi("Aten‡„o"))
+	 #ENDIF
+	 Return
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Prepara a porta para impressao													³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+#IFNDEF WINDOWS
+	 Set Printer to &cPorta
+	 Set Device To Print
+#ELSE
+	 nHdll := 0
+	 MsOpenPort(nHdll,cPorta+":9600,e,7,1,n")  // Abre a porta serial
+
+	 RptStatus({|| Execute(S500Run) })
+	 Return
+	 Function S500Run
+#ENDIF
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carregando o Padrao de Impressao na Memoria (F2) da impressora		³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+#IFNDEF WINDOWS
+	@ 0,0 say "<STX><ESC>P;<ETX>"
+	@ 0,0 say "<STX>E2;F2;<ETX>"
+	@ 0,0 say "<STX>L39;D0;<ETX>"
+	@ 0,0 say "<STX>H0,txtDes;o6,315;f1;r0;c0;h2;w1.99;b0;d1,30;<ETX>"
+	@ 0,0 say "<STX>D39;<ETX>"
+	@ 0,0 say "<STX>H1,txtUM;o4,55;f1;r0;c0;h2;w2;b0;d1,2;<ETX>"
+	@ 0,0 say "<STX>H2,lblLo2;o30,313;f1;r0;c0;h2;w2;b0;d3,Local:;<ETX>"
+	@ 0,0 say "<STX>H3,txtLo2;o33,211;f1;r0;c0;h2;w2;b0;d0,2;<ETX>"
+	@ 0,0 say "<STX>H4,lblPr2;o51,313;f1;r0;c0;h2;w2;b0;d3,Preco:;<ETX>"
+	@ 0,0 say "<STX>H5,txtPr2;o53,211;f1;r0;c0;h2;w2;b0;d0,7;<ETX>"
+	@ 0,0 say "<STX>B6,BarCod;o79,337;f1;c7,0,2;h59;w3;r1;i0;d0,13;<ETX>"
+	@ 0,0 say "<STX>H7,txtCo2;o140,276;f1;r0;c0;h2;w2;b0;d2,6,0;<ETX>"
+	@ 0,0 say "<STX>H8,txtPro;o6,661;f1;r0;c0;h2;w1.99;b0;d1,30;<ETX>"
+	@ 0,0 say "<STX>H9,txtUM2;o8,404;f1;r0;c0;h2;w2;b0;d0,2;<ETX>"
+	@ 0,0 say "<STX>H10,lblLoc;o28,661;f1;r0;c0;h2;w2;b0;d3,Local:;<ETX>"
+	@ 0,0 say "<STX>H11,txtLoc;o28,559;f1;r0;c0;h2;w2;b0;d0,2;<ETX>"
+	@ 0,0 say "<STX>H12,lblPre;o53,663;f1;r0;c0;h2;w2;b0;d3,Preco:;<ETX>"
+	@ 0,0 say "<STX>H13,txtPre;o57,563;f1;r0;c0;h2;w2;b0;d0,7;<ETX>"
+	@ 0,0 say "<STX>B14,BarCod2;o81,685;f1;c7,0,2;h59;w3;r1;i0;d0,13;<ETX>"
+	@ 0,0 say "<STX>H15,txtCod;o142,626;f1;r0;c0;h2;w2;b0;d2,14,0;<ETX>"
+	@ 0,0 say "<STX>R<ETX>"
+#ELSE
+	MsWrite(nHdll,"<STX><ESC>P;<ETX>")
+	MsWrite(nHdll,"<STX>E2;F2;<ETX>")
+	MsWrite(nHdll,"<STX>L39;D0;<ETX>")
+	MsWrite(nHdll,"<STX>H0,txtDes;o6,315;f1;r0;c0;h2;w1.99;b0;d1,30;<ETX>")
+	MsWrite(nHdll,"<STX>D39;<ETX>")
+	MsWrite(nHdll,"<STX>H1,txtUM;o4,61;f1;r0;c0;h2;w2;b0;d1,2;<ETX>")
+	MsWrite(nHdll,"<STX>H2,lblLo2;o30,313;f1;r0;c0;h2;w2;b0;d3,Local:;<ETX>")
+	MsWrite(nHdll,"<STX>H3,txtLo2;o33,211;f1;r0;c0;h2;w2;b0;d0,2;<ETX>")
+	MsWrite(nHdll,"<STX>H4,lblPr2;o51,313;f1;r0;c0;h2;w2;b0;d3,Preco:;<ETX>")
+	MsWrite(nHdll,"<STX>H5,txtPr2;o53,211;f1;r0;c0;h2;w2;b0;d0,7;<ETX>")
+	MsWrite(nHdll,"<STX>B6,BarCod;o79,337;f1;c7,0,2;h59;w3;r1;i0;d0,13;<ETX>")
+	MsWrite(nHdll,"<STX>H7,txtCo2;o140,276;f1;r0;c0;h2;w2;b0;d2,6,0;<ETX>")
+	MsWrite(nHdll,"<STX>H8,txtPro;o6,661;f1;r0;c0;h2;w1.99;b0;d1,30;<ETX>")
+	MsWrite(nHdll,"<STX>H9,txtUM2;o8,404;f1;r0;c0;h2;w2;b0;d0,2;<ETX>")
+	MsWrite(nHdll,"<STX>H10,lblLoc;o28,661;f1;r0;c0;h2;w2;b0;d3,Local:;<ETX>")
+	MsWrite(nHdll,"<STX>H11,txtLoc;o28,559;f1;r0;c0;h2;w2;b0;d0,2;<ETX>")
+	MsWrite(nHdll,"<STX>H12,lblPre;o53,663;f1;r0;c0;h2;w2;b0;d3,Preco:;<ETX>")
+	MsWrite(nHdll,"<STX>H13,txtPre;o57,563;f1;r0;c0;h2;w2;b0;d0,7;<ETX>")
+	MsWrite(nHdll,"<STX>B14,BarCod2;o81,685;f1;c7,0,2;h59;w3;r1;i0;d0,13;<ETX>")
+	MsWrite(nHdll,"<STX>H15,txtCod;o142,626;f1;r0;c0;h2;w2;b0;d2,14,0;<ETX>")
+	MsWrite(nHdll,"<STX>R<ETX>")
+#ENDIF
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Imprimindo as etiquetas															³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+dbSelectArea("SB1")
+dbSeek(xFilial("SB1")+mv_par01,.T.)
+SetRegua(RecCount())
+
+cLinha1 := ""
+cLinha2 := ""
+cLinha3 := ""
+cCol1   := ""
+cCol2   := ""
+cCol3   := ""
+
+If mv_par01 == mv_par02
+	If Mod(mv_par06,2) > 0
+		mv_par06 := Int(mv_par06 / 2) + 1
+	Else
+		mv_par06 := mv_par06 / 2
+	EndIF
+EndIf
+While !Eof() .and. xFilial("SB1") == SB1->B1_FILIAL .and. SB1->B1_COD <= mv_par02
+	IncRegua()
+	If SB1->B1_GRUPO < mv_par03 .or. SB1->B1_GRUPO > mv_par04
+		dbSkip()
+		Loop
+	Endif
+
+	dbSelectArea("SB0")
+	dbSetOrder(1)
+	dbSeek(xFilial("SB0")+SB1->B1_COD)
+	dbSelectArea("SB1")
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Emite quantas etiquetas forem solicitadas, atravez da definicao de mv_par06 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	S500Etq()
+	dbSkip()
+EndDo
+
+If Mod(nCont,2) <> 0 //se for numero impar
+	dbSkip(-1)
+	s500Etq()
+EndIF
+
+#IFNDEF WINDOWS
+	 Set Device To Screen
+	 Set Printer To
+#ELSE
+	 MsClosePort(nHdll) // Fecha a porta
+#ENDIF
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o	 ³VALIDPERG ³ Autor ³  Luiz Carlos Vieira   ³ Data ³ 16/07/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica as perguntas inclu¡ndo-as caso n„o existam		  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso		 ³ Espec¡fico para clientes Microsiga								  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Function ValidPerg
+_sAlias := Alias()
+dbSelectArea("SX1")
+dbSetOrder(1)
+cPerg := PADR(cPerg,6)
+aRegs:={}
+
+// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05
+AADD(aRegs,{cPerg,"01","Do Produto         ?","mv_ch1","C",15,0,0,"G","","mv_par01","","","","","","","","","","","","","","","SB1"})
+AADD(aRegs,{cPerg,"02","At‚ o Produto      ?","mv_ch2","C",15,0,0,"G","","mv_par02","","ZZZZZZZZZZZZZZZ","","","","","","","","","","","","","SB1"})
+AADD(aRegs,{cPerg,"03","Do Grupo           ?","mv_ch3","C",04,0,0,"G","","mv_par03","","","","","","","","","","","","","","",""})
+AADD(aRegs,{cPerg,"04","At‚ o Grupo        ?","mv_ch4","C",04,0,0,"G","","mv_par04","","ZZZZ","","","","","","","","","","","","",""})
+AADD(aRegs,{cPerg,"05","Tabela de Pre‡o    ?","mv_ch5","N",01,0,0,"G","","mv_par05","","1","","","","","","","","","","","","",""})
+AADD(aRegs,{cPerg,"06","Quantidade         ?","mv_ch6","N",05,0,0,"G","","mv_par06","","1","","","","","","","","","","","","",""})
+
+For i:=1 to Len(aRegs)
+	 If !dbSeek(cPerg+aRegs[i,2])
+		  RecLock("SX1",.T.)
+		  For j:=1 to FCount()
+				If j <= Len(aRegs[i])
+					 FieldPut(j,aRegs[i,j])
+				Endif
+		  Next
+		  MsUnlock()
+	 Endif
+Next
+
+dbSelectArea(_sAlias)
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±º Fun‡„o	 ³ S500Etq	º Autor ³ Luiz Carlos Vieira º Data ³Tue	27/01/98º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescri‡„o ³ Imprime duas etiquetas de codigo de barras					  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso		 ³ Espec¡fico para clientes Microsiga								  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Function S500Etq
+
+cCol1   := ""
+cCol2   := ""
+cCol3   := ""
+cLinha1 := ""
+cLinha2 := ""
+cLinha3 := ""
+
+If nCont >= 2
+	 #IFNDEF WINDOWS
+		  @00,00 Say "<STX><ESC>E2;<ETX>"     // Inicia bloco de programa na linguagem ZPL II
+		  @00,00 Say "<STX><CAN><ETX>"        // Inicia bloco de programa na linguagem ZPL II
+	 #ELSE
+		  MsWrite(nHdll,"<STX><ESC>E2;<ETX>") // Inicia bloco de programa na linguagem ZPL II
+		  MsWrite(nHdll,"<STX><CAN><ETX>")    // Inicia bloco de programa na linguagem ZPL II
+	 #ENDIF
+	 nCont := 0
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Imprime a etiqueta																	³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+cPreco  := "SB0->B0_PRV"+StrZero(mv_par05,1)
+cPreco  := &cPreco
+cPreco  := Transform(cPreco,"@E 9999.99")
+
+cCol1   := cLinha1					 
+cCol2   := cLinha2
+cCol3   := cLinha3
+cCod	  := If(Empty(SB1->B1_CODBAR),AllTrim(SB1->B1_COD),AllTrim(SB1->B1_CODBAR))
+cLinha1 := "<STX>"+Substr(SB1->B1_DESC,1,30)+"<CR><ETX><STX>"+SB1->B1_UM+"<CR><ETX>"
+cLinha2 := "<STX>"+SB1->B1_LOCPAD+"<CR><ETX><STX>"+cPreco+"<CR><ETX>"
+cLinha3 := "<STX>"+cCod+"<CR><ETX>"
+
+If (mv_par01 == mv_par02 .or. recc() == 1)
+	cCol1 := cLinha1
+	cCol2 := cLinha2
+	cCol3 := cLinha3
+EndIF
+
+#IFNDEF WINDOWS
+	 @ 00,00 Say cCol1+cCol2+cCol3+cLinha1+cLinha2+cLinha3
+#ELSE
+	 Inkey(.01)
+	 MsWrite(nHdll,cCol1)
+	 Inkey(.01)
+	 MsWrite(nHdll,cCol2)
+	 Inkey(.01)
+	 MsWrite(nHdll,cCol3)
+	 Inkey(.01)
+	 MsWrite(nHdll,cLinha1)
+	 Inkey(.01)
+	 MsWrite(nHdll,cLinha2)
+	 Inkey(.01)
+	 MsWrite(nHdll,cLinha3)
+#ENDIF
+
+nCont   := nCont + 1
+
+If nCont >= 2
+	 #IFNDEF WINDOWS
+		  @ 00,00 Say "<STX><US>"+Alltrim(Str(mv_par06,4))+"<ETX>" // Final do bloco de programa em ZPL II
+		  @ 00,00 Say "<STX><ETB><ETX>" // Final do bloco de programa em ZPL II
+	 #ELSE
+		  MsWrite(nHdll,"<STX><US>"+Alltrim(Str(mv_par06,4))+"<ETX>")
+		  MsWrite(nHdll,"<STX><ETB><ETX>")
+	 #ENDIF
+Endif
+
+Return

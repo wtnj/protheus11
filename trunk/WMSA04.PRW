@@ -1,0 +1,315 @@
+/**********************************************************************************************************************************/
+/** WMS                                                                                                                          **/
+/** Rotina para baixa de pré-requisições                                                                                         **/
+/** RSAC Soluções Ltda.                                                                                                          **/
+/** WHB Usinagem                                                                                                                 **/
+/**********************************************************************************************************************************/
+/** Data       | Responsável                    | Descrição                                                                      **/
+/**********************************************************************************************************************************/
+/** 02/07/2011 | Rogério Souza Pereira          | Criação da rotina/procedimento.                                                **/
+/**********************************************************************************************************************************/
+#include "rwmake.ch"
+#include "topconn.ch"
+#include "tbiconn.ch"
+
+/******************************************************************************************/
+/** user function WWMSA03(cNumReq, cOpc, cNomeUsr, cIdCol, cCodEmp, cCodFil)             **/
+/** Executa a baixa das pré-requisições com base no número de marca gerado pelo coletor  **/
+/******************************************************************************************/
+user function WWMSA04(cNumReq, cOpc, cNomeUsr, cIdCol, cCodEmp, cCodFil)
+  
+  // variáveis auxiliares
+  local lErro := .F.
+  local cMsgErro := ""
+  local cRet := ""
+  local aPre := {}
+  local aSd3 := {}
+  local cMsErro := ""
+  local nOpcAuto := 0 
+  local cTm := ""
+  private l185Auto := .T.
+
+  /* teste 
+  cNumReq := "278915"
+  cOpc := "1"
+  cNomeUsr := "RSAC"
+  cIdCol := "8"
+  cCodEmp := "FN"
+  cCodFil := "01"
+  */
+
+
+  // prepara o ambiente
+  prepare environment empresa cCodEmp filial cCodFil modulo "EST"
+  
+  // inicializa as variáveis
+  cTm := GetNewPar("MV_TMBXPRE", "501")                 
+  nOpcAuto := Val(cOpc)
+
+  // recupera as requisições marcadas para baixa
+  QryScp(cIdCol)
+  if QSCP->(Eof())
+                
+    // nao foi localizada a pre-requisicao
+    lErro := .T.                         
+    cMsgErro := "Nao foram localizadas leituras para baixa!"
+  
+  else
+  
+	  // inicia a transação
+	  begin transaction
+	
+		  // faz o loop sobre as pre requisições marcadas
+		  nTotPre := 0
+		  while !QSCP->(Eof())
+		    
+		    // posiciona a pré requisição
+		    SCQ->(DbGoTo(QSCP->CQ_RECNO))
+		    SCP->(DbGoTo(QSCP->CP_RECNO))
+		    
+		    // posiciona o produto
+		    SB1->(DbSetOrder(1))
+		    if !SB1->(DbSeek(XFilial("SB1") + SCQ->CQ_PRODUTO))
+		      lErro := .T.
+		      cMsgErro := "O produto da pre-requisicao nao foi localizado!"
+		      Exit
+		    endIf
+		       
+		    // valida se usa lote
+		    if nOpcAuto == 1 
+		    
+			    /*
+			    if SB1->B1_RASTRO $ "L" .and. Empty(QSCP->ZW4_LOCALI)
+			      lErro := .T.
+			      cMsgErro := "O numero do lote nao foi informado"
+			      Exit
+			    endIf
+			       
+			    
+			    // valida o sub-lote
+			    if SB1->B1_RASTRO $ "S" .and. Empty(cSubLote)
+			      lErro := .T.
+			      cMsgErro := "O numero do sub-lote nao foi informado"
+			      Exit
+			    endIf
+	        */
+	
+			    // valida a localizacao
+			    if SB1->B1_LOCALIZ == "S" .and. Empty(QSCP->ZW4_LOCALI)
+			      lErro := .T.
+			      cMsgErro := "O endereco nao foi informado"
+			      Exit
+			    endIf
+			    
+			    /*
+			    // posiciona o Lote/Sublote
+			    if SB1->B1_RASTRO $ "SL" 
+			      SB8->(DbSetOrder(3))
+			      if !SB8->(DbSeek(XFilial("SB8") + SCQ->CQ_PRODUTO + SB1->B1_LOCPAD + PadR(cLote, TamSx3("B8_LOTECTL")[1]) + PadR(cSubLote, TamSx3("B8_NUMLOTE")[1])))
+			        lErro := .T.
+			        cMsgErro := "Lote/SubLote nao localizado"
+			        Exit
+			      endIf
+			    endIf*/
+		    
+		    endIf
+		    
+		    // monta o array de rotina automatica
+		    cA105Num := SCQ->CQ_NUM
+			              
+			  aPre := {}  
+		    AAdd(aPre, {"CP_NUM", SCQ->CQ_NUM, nil})
+		    AAdd(aPre, {"CP_ITEM", SCQ->CQ_ITEM, nil})
+		    AAdd(aPre, {"CP_PRODUTO", SCQ->CQ_PRODUTO, nil})
+		    AAdd(aPre, {"CP_UM", SCQ->CQ_UM, nil})
+		    AAdd(aPre, {"CP_QUANT", QSCP->ZW4_QTDE, nil})
+		    AAdd(aPre, {"CP_SEGUM", SB1->B1_SEGUM, nil})
+		    AAdd(aPre, {"CP_QTSEGUM", ConvUm(SB1->B1_COD, QSCP->ZW4_QTDE, 0, 2), nil})
+		    AAdd(aPre, {"CP_LOCAL", SB1->B1_LOCPAD, nil})
+		    AAdd(aPre, {"CP_QUJE", QSCP->ZW4_QTDE, nil})
+			
+		    // monta o array com os dados da SD3
+		    if nOpcAuto == 1
+			    aSd3 := {}
+			    AAdd(aSd3, {"D3_TM", cTm, Nil})
+			    AAdd(aSd3, {"D3_LOTECTL", Iif(SB1->B1_RASTRO $ "SL", SB8->B8_LOTECTL, ""), Nil})
+			    AAdd(aSd3, {"D3_NUMLOTE", Iif(SB1->B1_RASTRO $ "SL", SB8->B8_NUMLOTE, ""), Nil})
+			    AAdd(aSd3, {"D3_DTVALID", Iif(SB1->B1_RASTRO $ "SL", SB8->B8_DTVALID, ""), Nil})
+			    AAdd(aSd3, {"D3_LOCALIZ", QSCP->ZW4_LOCALI, Nil})
+			    AAdd(aSd3, {"D3_USUARIO", cNomeUsr, Nil})
+			    AAdd(aSd3, {"D3_W_IDCOL", cIdCol, Nil})
+			  endIf
+			    
+		    // faz a baixa da pré requisição
+		    lMsErroAuto := .F.
+		 		MsExecAuto({|x, y, z| Mata185(x, y, z)}, aPre, aSd3, nOpcAuto)
+			    
+		    // reposiciona o SCP processado
+		    SCQ->(DbGoTo(QSCP->CQ_RECNO))
+		    SCP->(DbGoTo(QSCP->CP_RECNO))
+			    
+	      // grava o usuario, data, hora e coletor que fez a baixa da Pre Requisicao
+	      RecLock("SCQ", .F.)
+ 	      SCQ->CQ_W_USBAI := cNomeUsr
+	      SCQ->CQ_W_HRBAI := Time()
+	      SCQ->CQ_W_DTBAI := Date()
+	      SCQ->CQ_W_ICBAI := cIdCol
+	      MsUnlock()
+		      
+	      // atualiza o status das baixas do coletor
+	      ZW4->(DbSetOrder(1))
+	      ZW4->(DbSeek(XFilial("ZW4") + SCP->CP_NUM + SCP->CP_PRODUTO + PadR(cIdCol, 20) + "P"))
+	      while !ZW4->(Eof()) .and. ZW4->ZW4_FILIAL == XFilial("ZW4") .and. ZW4->ZW4_NUM == SCP->CP_NUM .and. ZW4->ZW4_PRODUT == SCP->CP_PRODUTO .and. ZW4->ZW4_IDCOL == PadR(cIdCol, 20) .and. ZW4->ZW4_STATUS == "P"
+		        
+	        // atualiza o status
+	        RecLock("ZW4", .F.)
+	        ZW4->ZW4_STATUS := "E"
+	        MsUnlock()
+		        
+	        // proximo registro
+	        ZW4->(DbSkip())
+		      
+	      endDo
+
+		    // verifica o retorno
+		    if lMsErroAuto
+		      
+		      // recupera o error.log
+		      cMsgErro := U_WmsErroLog()
+		        
+		      // valida se o erro tem a ver com o DOCSEQ
+		      if !("A240DOC" $ cMsgErro) 
+		        cMsgErro := "Erro ao executar a baixa da pre-requisicao: " + AllTrim(SCQ->CQ_NUM) + "/" + SCQ->CQ_ITEM + "!" + cMsErro
+		        lErro := .T.
+		        Exit
+		      endIf
+		    
+		    endIf
+			
+	    	// proximo registro
+	    	QSCP->(DbSkip())
+		    
+	  	endDo
+		       
+		  // tratamento do erro de transação 
+ 			if ( lErro )
+   			DisarmTransactions()
+   	  endIf
+		
+	  end transaction
+	  
+  endIf
+  
+ 	// fecha a query
+ 	QSCP->(DbCloseArea())
+		
+	// monta o retorno da função	
+ 	if ( lErro )
+ 		cRet := "<ParamOk>NO</ParamOk>
+ 		cRet += "<MsgRet>" + cMsgErro + "</MsgRet>
+ 		cRet += "<DadosRet></DadosRet>
+ 	else
+ 		cRet := "<ParamOk>OK</ParamOk>
+ 		cRet += "<MsgRet>Procedimento concluido com sucesso!</MsgRet>
+ 		cRet += "<DadosRet></DadosRet>
+ 	endIf
+    
+  //MsgInfo(cRet)
+
+return cRet
+
+
+/**********************************************************************************************************************************/
+/** static function QryScp(cNumReq, cItem)                                                                                       **/
+/** Recupera as pré-requisições marcadas para baixa                                                                              **/
+/**********************************************************************************************************************************/
+static function QryScp(cIdCol)
+
+  // variáveis auxiliares
+  local cQr := ""
+  local aArea := GetArea()
+
+
+  // monta a query para recuperar as pré-requisições marcadas pelo coletor
+  cQr := " select SCQ.R_E_C_N_O_ CQ_RECNO,
+  cQr += "        SCP.R_E_C_N_O_ CP_RECNO,
+  cQr += "        SCP.CP_NUM,
+  cQr += "        SCP.CP_ITEM,
+  cQr += "        ZW4.ZW4_LOCALI,
+  cQr += "        sum(ZW4.ZW4_QTDE) ZW4_QTDE
+  cQr += "   from " + RetSqlName("SCQ") + " SCQ
+  
+  cQr += "   left join " + RetSqlName("SB1") + " SB1
+  cQr += "     on SB1.D_E_L_E_T_ = ' '
+  cQr += "    and SB1.B1_FILIAL = '" + XFilial("SB1") + "'
+  cQr += "    and SB1.B1_COD = SCQ.CQ_PRODUTO 
+
+  cQr += "   left join " + RetSqlName("SCP") + " SCP
+  cQr += "     on SCP.D_E_L_E_T_ = ' '
+  cQr += "    and SCP.CP_FILIAL = '" + XFilial("SCP") + "'
+  cQr += "    and SCP.CP_NUM = SCQ.CQ_NUM
+  cQr += "    and SCP.CP_ITEM = SCQ.CQ_ITEM
+   
+  cQr += "   left join " + RetSqlName("ZW4") + " ZW4
+  cQr += "     on ZW4.D_E_L_E_T_= ' '
+  cQr += "    and ZW4.ZW4_FILIAL = '" + XFilial("ZW4") + "'
+  cQr += "    and ZW4.ZW4_NUM = SCQ.CQ_NUM
+  cQr += "    and ZW4.ZW4_PRODUT = SCQ.CQ_PRODUTO
+  
+  cQr += "  where SCQ.D_E_L_E_T_ = ' '
+  cQr += "    and SCQ.CQ_FILIAL = '" + XFilial("SCQ") + "'
+  cQr += "    and SCQ.CQ_QTDISP > 0
+  cQr += "    and SCQ.CQ_NUMREQ = ''
+  cQr += "    and ZW4.ZW4_STATUS = 'P'
+  cQr += "    and ZW4.ZW4_IDCOL = '" + cIdCol + "'  
+
+  cQr += "  group by SCQ.R_E_C_N_O_,
+  cQr += "        SCP.R_E_C_N_O_,
+  cQr += "        SCP.CP_NUM,
+  cQr += "        SCP.CP_ITEM,
+  cQr += "        ZW4.ZW4_LOCALI
+
+  
+  TcQuery cQr new alias "QSCP"
+  RestArea(aArea)
+
+return nil
+
+
+/***************************************************************************************/
+/** user function WMSErroLog()                                                        **/
+/** retorna a string com o ultimo erro do log de erros de rotinas automaticas         **/
+/***************************************************************************************/
+user function WMSErroLog()
+
+  // variáveis auxiliares
+  local cRet := ""
+  local aSysFiles := directory("SC*.LOG")
+  local cUltArq := ""
+  local nI := 0
+  local cMemErr := ""
+
+
+  // loop sobre os arquivos
+  cUltArq := ""
+  for nI := 1 to len(aSysFiles)
+  
+    // verifica se é arquivo
+    if ( valType(aSysFiles[nI][1]) == "C" )
+      // atribui o ultimo arquivo
+      if ( substr(allTrim(aSysFiles[nI][1]), 1, 2) == "SC" )
+        cUltArq := allTrim(aSysFiles[nI][1])
+      endIf
+    endIf
+  
+  next nI
+  
+  
+  // le o arquivo
+  cMemErr := memoRead(cUltArq)
+  nMemLin := MLCount( cMemErr, 40, 3, .T. )
+  for nI := 1 to nMemLin
+    cRet += memoLine(cMemErr, 40, nI, 3, .T. )
+  next nI
+  
+return cRet

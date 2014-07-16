@@ -1,0 +1,118 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ MTA650I ³ Autor ³ Antonio Annies        ³ Data ³ 06/06/03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Grava rotina geradora da OP                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para a WHB                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Arquivos ³ SC2                                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+#include "rwmake.ch" 
+
+User Function MTA650I()   
+
+SetPrvt("CROTINA,cQuery")
+
+If FunName() == "MATA710"
+	CROTINA := "MRP"
+ELSE
+	CROTINA := "MANUAL"
+ENDIF
+
+RecLock("SC2",.F.)
+	   SC2->C2_ROTINA  := CROTINA
+	   SC2->C2_USUARIO := Subs(cUserName,7,15)
+MsUnLock("SC2")    
+
+/*
+cQuery := "Use PCF_Integ "
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'010','Retificar Faces em Desbaste','','','','',"
+cQuery += Stuff(ALLTRIM(Transform(375/3600,"@E 9999999.99999999999999999999999")),At(",",ALLTRIM(Transform(375/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/119',20,'','','-10',2,2,0,3,NULL,3,1,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)" +CHR(13)
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'020','Desbaste dos Olhais / Furos e Roscas','','','','',"
+cQuery +=Stuff(ALLTRIM(Transform(313/3600,"@E 9999999.99999999999999999999999")),AT(",",ALLTRIM(Transform(313/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/120',20,'','','-10',2,2,0,3,NULL,3,2,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'030','Furo do Óleo','','','','',"
+cQuery +=  Stuff(ALLTRIM(Transform(309/3600,"@E 9999999.99999999999999999999999")),At(",",ALLTRIM(Transform(309/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/148',20,'','','-10',2,2,0,3,NULL,3,8,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'037','Lavagem Intermediária','','','','',"
+cQuery +=Stuff(ALLTRIM(Transform(730/3600,"@E 9999999.99999999999999999999999")),At(",",ALLTRIM(Transform(730/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/402',20,'','','-10',2,2,0,3,NULL,3,32,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'040','Laser/Quebra/Torque/Prensa Bucha','','','','',"
+cQuery +=Stuff(ALLTRIM(Transform(360/3600,"@E 9999999.99999999999999999999999")),At(",",ALLTRIM(Transform(360/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/122',20,'','','-10',2,2,0,3,NULL,3,1,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+//		 Stuff(_cStr,AT(",",_cStr),1,".")
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'050','Retificar Faces em Acabamento','','','','',"
+cQuery +=Stuff(ALLTRIM(Transform(360/3600,"@E 9999999.99999999999999999999999")),At(",",ALLTRIM(Transform(360/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/119',20,'','','-10',2,2,0,3,NULL,3,1,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'060','Acabamento dos Olhais','','','','',"
+cQuery += Stuff(ALLTRIM(Transform(378/3600,"@E 9999999.99999999999999999999999")),AT(",",ALLTRIM(Transform(378/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/121',20,'','','-10',2,2,0,3,NULL,3,2,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'070','Lavagem Final','','','','',"
+cQuery +=Stuff(ALLTRIM(Transform(600/3600,"@E 9999999.99999999999999999999999")),at(",",ALLTRIM(Transform(600/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/134',20,'','','-10',2,2,0,3,NULL,3,2,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'080','Inspeção Final','','','','',"
+cQuery +=Stuff(ALLTRIM(Transform(360/3600,"@E 9999999.99999999999999999999999")),AT(",",ALLTRIM(Transform(360/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'020/209',20,'','','-10',2,2,0,3,NULL,3,1,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+
+cQuery += "INSERT INTO TBLInWOComplete " 
+cQuery += " VALUES ( '"+ SC2->C2_NUM+SC2->C2_ITEM+SC2->C2_SEQUEN+"','"+Alltrim(SC2->C2_PRODUTO)+"',"
+cQuery += " '-10','','','','-10','"+DTOS(SC2->C2_EMISSAO)+"','"+DTOS(SC2->C2_DATPRF)+"','"+DTOS(SC2->C2_DATPRI)+"','"+DTOS(SC2->C2_DATPRF)+"',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'-10','','','',0,'999','Linha','','','','',"
+cQuery +=Stuff(ALLTRIM(Transform(309/3600,"@E 9999999.99999999999999999999999")),at(",",ALLTRIM(Transform(309/3600,"@E 9999999.99999999999999999999999"))),1,".")+",3,'L1.0L',20,'','','-10',2,2,0,3,8,3,1,0,0,1,'',"+ ALLTRIM(Transform(SC2->C2_QUANT,"@E 9999999,99"))+",'PC',NULL,'',NULL,'','',0,'','','','','','','',NULL,1,NULL,NULL,"
+cQuery +=" 0,0,getdate(),'','',0,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"+CHR(13)
+
+  */
+/*
+20/119	10	375	Retificar Faces em Desbaste 	1
+20/120	20	313	Desbaste dos Olhais / Furos e Roscas  	2
+20/148	30	309	Furo do Óleo	8
+20/402	37	730	Lavagem Intermediária	32
+20/122	40	360	Laser / Quebra / Torque / Prensa Bucha	1
+20/119	50	360	Retificar Faces em Acabamento	1
+20/121	60	378	Acabamento dos Olhais	2
+020/134	70	600	Lavagem Final 	2
+020/209	80	360	Inspeção Final	1
+L1.0L	999	309	Linha	1
+*/   
+
+/*
+
+MemoWrit('C:\TEMP\PCF.SQL',cQuery)
+
+TCSQLExec(cQuery)  
+*/
+
+Return()

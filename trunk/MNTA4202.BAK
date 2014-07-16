@@ -1,0 +1,142 @@
+#INCLUDE "rwmake.ch"
+#INCLUDE "topconn.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³MNTA4204  ºAutor  ³João Felipe da Rosa º Data ³  08/12/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/   
+
+USER FUNCTION MNTA4202()
+Local _cNum
+Local _cSeq := "01"
+Local _oldAlias := alias()
+     
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ$¿
+//³ SE ESTIVER SENDO ALTERADO DELETA AS S.A'S ALTERADAS ³
+//³ E CRIA NOVAMENTE LA EMBAIXO                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ$Ù
+
+If Altera .AND. STL->TL_TIPOREG$"P"
+	DbSelectArea("SCP")
+	DbSetOrder(1) //CP_FILIAL+CP_NUM+CP_ITEM+DTOS(CP_EMISSAO)
+	
+	If DbSeek(xFilial("SCP")+STL->TL_NUMSA+STL->TL_ITEMSA)
+		
+		If SCP->CP_ORDEM == STL->TL_ORDEM
+			RecLock("SCP",.F.)
+				SCP->(DbDelete())
+			MsUnlock("SCP")
+		EndIf
+	
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³REMOVE AS REQUISICOES DOS INSUMOS DELETADOS NA ALTERACAO ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			
+	For _x := 1 to len(aARIDELET)
+		
+		If DbSeek(xFilial("SCP")+aARIDELET[_x][19]+aARIDELET[_x][20])
+			
+			If SCP->CP_ORDEM == STL->TL_ORDEM
+				RecLock("SCP",.F.)
+					SCP->(DbDelete())
+				MsUnlock("SCP")
+			EndIf
+		
+		EndIf
+		
+	Next    
+
+EndIf
+	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³SE JÁ EXISTIR SA PARA ESTA OS PEGA O MESMO NUMERO DA SA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+IF STL->TL_TIPOREG$"P"
+
+	cQuery := " SELECT CP_NUM, CP_ORDEM FROM "+RetSqlName("SCP")
+	cQuery += " WHERE CP_ORDEM = '"+STL->TL_ORDEM+"'"
+	cQuery += " AND D_E_L_E_T_ = '' AND CP_FILIAL = '"+XFILIAL("SCP")+"'"
+	
+	TCQuery cQuery NEW ALIAS "TRA1"
+	
+	TRA1->(DBGOTOP())
+	
+	IF EMPTY(TRA1->CP_ORDEM)
+		_cNum := GetSxENum("SCP","CP_NUM")
+	ELSE
+		_cNum := TRA1->CP_NUM 
+	ENDIF
+	
+	TRA1->(DBCLOSEAREA())
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ³
+	//³ DEFINE A SEQUENCIA A SER GRAVADA NO SCP ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ³
+	DbSelectArea("SCP")   
+	dbSetOrder(1)
+	 
+	DbSetOrder(1) //FILIAL + NUM + ITEM + SEQ
+	If DbSeek(xFilial("SCP")+_cNum)
+		
+		WHILE SCP->CP_NUM == _cNum
+			_cSeq := SCP->CP_ITEM 
+			SCP->(DBSKIP())
+		ENDDO
+	
+		_cSeq := StrZero(Val(_cSeq) + 1,2)
+	
+	EndIf
+	
+	SB1->(DBSETORDER(1))
+	SB1->(DBSEEK(XFILIAL('SB1')+M->TL_CODIGO))
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Grava Pre-Requisicao DO INSUMO ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	
+	dbSelectArea("SCP")
+	RecLock("SCP",.T.)
+		SCP->CP_FILIAL  := xFilial("SCQ")
+		SCP->CP_NUM     := _cNum
+		SCP->CP_ITEM    := _cSeq
+		SCP->CP_PRODUTO := STL->TL_CODIGO
+		SCP->CP_DESCRI  := SB1->B1_DESC
+		SCP->CP_UM      := STL->TL_UNIDADE
+		SCP->CP_QUANT   := STL->TL_QUANTID
+		SCP->CP_CC      := STJ->TJ_CCUSTO
+		SCP->CP_DATPRF  := STL->TL_DTINICI
+		SCP->CP_LOCAL   := STL->TL_LOCAL
+		SCP->CP_CONTA   := SB1->B1_CONTA
+		SCP->CP_EMISSAO := STL->TL_DTINICI
+		SCP->CP_SOLICIT := Upper(Alltrim(Subs(cUsuario,7,15)))  //Pega o nome do usuario que esta logado no sistema
+		SCP->CP_ORDEM   := STL->TL_ORDEM
+	//  SCP->CP_SEGUM   := _cSegun
+	//	SCP->CP_QTSEGUM := _cQtSeg
+		SCP->CP_PREREQU := ""
+	//	SCP->CP_PECA    := _cPeca
+	MsUnLock("SCP") 
+	   
+	//GRAVA NA TABELA TL O NUMERO DA SA E O ITEM
+	RecLock("STL",.F.)
+		STL->TL_NUMSA  := _cNum
+		STL->TL_ITEMSA := _cSeq
+	MsUnLock("STL")
+	
+ENDIF
+
+DBSELECTAREA(_oldAlias) //RETORNA O ALIAS CORRENTE
+
+Return

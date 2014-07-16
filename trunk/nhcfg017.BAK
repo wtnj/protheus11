@@ -1,0 +1,64 @@
+#include "rwmake.ch"
+#include "tbiconn.ch"
+#include "topconn.ch"
+#include "protheus.ch"
+#include "fileio.ch"      
+
+user Function NHCFG017( __aCookies, __aPostParms, __nProcID, __aProcParms, __cHTTPPage )
+
+
+Local cPswFile := "sigapss.spf" //Tabela de Senhas
+Local cPswId   := ""
+Local cPswName := ""
+Local cPswPwd  := ""
+Local cPswDet  := ""
+Local lEncrypt := .F.
+Local aPswDet
+Local cOldPsw
+Local cNewPsw
+Local nPswRec
+Local cUsrId 
+
+
+cCodEmp := 'FN'
+cCodFil := '01'
+cModulo := 'EST'
+aParamVar := {}
+cRet := 'false'
+
+	prepare environment empresa cCodEmp filial cCodFil modulo cModulo
+
+    // adiciona o array de parametros
+    AAdd( aParamVar, { __aProcParms[1, 1] ,; // nome do parametro                             s
+                       __aProcParms[1, 2]  ; // conteudo
+                     }                     ;
+        )              
+
+
+	//Abro a Tabela de Senhas
+	spf_CanOpen(cPswFile) 
+	
+	PswOrder(2) // Pesquisa por usuario
+	If !PswSeek(alltrim(upper(aParamVar[1][2])),.T.)     
+		Return 'false'
+	Else
+	
+		aUser := PswRet(1)
+	    
+		cXml := '<?xml version="1.0" encode="UTF-8"?>'
+		cXml += '<usuario>'
+		cXml += '<codigo>'+aUser[1][1]+'</codigo>'
+		cXml += '<login>'+aUser[1][2]+'</login>'
+		cXml += '<nome>'+OEMTOANSI(aUser[1][4])+'</nome>'
+		cXml += '<setor>'+aUser[1][12]+'</setor>'
+		cXml += '<cargo>'+aUser[1][13]+'</cargo>'
+		cXml += '<email>'+aUser[1][14]+'</email>'
+		cXml += '<acessossimultaneos>'+alltrim(str(aUser[1][15]))+'</acessossimultaneos>'
+		cXml += '<ramal>'+aUser[1][20]+'</ramal>'
+		cXml += '<bloqueado>'+Iif(aUser[1][17],'S','N')+'</bloqueado>'
+		cXml += '</usuario>'
+		
+		Return cXML
+	Endif
+
+Return

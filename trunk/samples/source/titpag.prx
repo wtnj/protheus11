@@ -1,0 +1,7 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 24/04/00
+
+User Function titpag()        // incluido pelo assistente de conversao do AP5 IDE em 24/04/00
+
+DbSelectArea("SA2")
+FINA050(Nil,2)
+Return

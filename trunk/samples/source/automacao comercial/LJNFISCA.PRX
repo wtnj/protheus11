@@ -1,0 +1,112 @@
+#INCLUDE "RWMAKE.CH"
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o	 ³nFiscal	³ Autor ³ Elaine F. T. Beraldo  ³ Data ³ 08/09/94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina para impressao de Nota Fiscal - Via rdMake			  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso		 ³LOJA010								                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function LJNFISCA()
+
+LOCAL nTotImps    := 0
+LOCAL nX
+LOCAL aTesImpInf  := {}
+
+li := 13
+M->L1_NUM := SL1->L1_NUM
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posiciona no arquivo de Clientes							 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SA1" )
+dbSeek( xFilial("SA1")+SL1->L1_CLIENTE )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posiciona no arquivo de Vendedores 							 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SA3" )
+dbSeek( xFilial("SA3")+SL1->L1_VEND )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posiciona no arquivo de Itens							     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SL2" )
+dbSeek( xFilial("SL2")+M->L1_NUM )
+cTes := SL2->L2_TES 
+nServicos := 0
+nBaseIcms := 0
+
+While !Eof() .and. L2_FILIAL+L2_NUM == xFilial("SL2")+M->L1_NUM
+    
+    If cPaisLoc == "BRA"
+	   nServicos := nServicos + SL2->L2_VALISS
+	EndIf   
+	@ Li,001 PSAY L2_QUANT	  Picture "999"
+	@ Li,010 PSAY L2_PRODUTO
+	dbSelectArea( "SB1" )
+	dbSeek( xFilial("SB1")+SL2->L2_PRODUTO)
+	dbSelectArea( "SL2")
+	@Li,027 PSAY SB1->B1_DESC
+	@li,079 PSAY SB1->B1_UM
+	If cPaisLoc == "BRA"
+	   @li,084 PSAY SB1->B1_CLASFIS
+	   @li,087 PSAY SB1->B1_ORIGEM
+	EndIf   
+	@Li,099 PSAY L2_VRUNIT	picture "@E 99,999.99"
+	@Li,120 PSAY L2_VLRITEM picture "@E 999,999.99"
+	Li:=li+1
+	If cPaisLoc == "BRA"
+	   nBaseIcms:=nBaseIcms+L2_BASEICM
+	Else   //Soma os impostos variaveis que incidem na NF
+	   aTesImpInf  := TesImpInf(SL2->L2_TES)
+	   For nX  := 1 to Len(aTesImpInf)	   
+	      If aTesImpInf[nX][3] == "1"  //Incide na NF			   
+	         nTotImps  += SL2->(FieldGet(FieldPos("L2_"+Substr(aTesImpInf[nX][2],4,7))))	         
+	      EndIf   
+	   Next nX      
+	EndIf   
+	
+	dbSkip( )
+End
+
+dbSelectArea( "SF4" )
+dbSeek( xFilial("SF4"+cTes) )
+
+dbSelectArea("SL1")
+
+If cPaisLoc == "BRA"
+   @30,066 PSAY nServicos			 Picture "@E 99,999.99"
+Else
+   @30,066 PSAY nTotImps Picture PesqPict("SL2","L2_VALIMP1")
+EndIf   
+@30,096 PSAY SL1->L1_VALMERC	 Picture "@E 9,999,999.99"
+@30,107 PSAY SL1->L1_VLRTOT	     Picture "@E 9,999,999.99"
+
+dbSelectArea("SA1")
+
+@31,040 PSAY Trim(A1_NOME + " " + A1_COD)
+@32,040 PSAY Trim(A1_END)+" - "+Trim(A1_BAIRRO) + " " + A1_CEP
+@33,040 PSAY Trim(A1_MUN)+ " " +A1_EST
+@35,040 PSAY SL1->L1_COND		 Picture "999"
+@35,100 PSAY Trim(SA3->A3_NREDUZ)
+
+@37, 07 PSAY DtoC(SL1->L1_EMISNF) + " " + SM0->M0_CGC
+@37,120 PSAY SM0->M0_ESTCOB
+
+@39, 07 PSAY SL1->L1_DOC
+If cPaisLoc == "BRA"
+   @39, 50 PSAY nBaseicms	 
+   @39,100 PSAY SL1->L1_VALICM 
+   @40, 50 PSAY nServicos	 Picture "@E 9,999,999.99"
+   @40, 87 PSAY SB1->B1_ALIQISS	 Picture "@E 9.9"
+   @40,100 PSAY SL1->L1_VALISS	Picture "@E 9,999.99"
+   @41,99 PSAY "RODOVIARIO"  
+EndIf   
+
+Ms_Flush()
+Return()

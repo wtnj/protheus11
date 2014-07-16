@@ -1,0 +1,1390 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³  SF1100I ³ Autor ³  Alexandre R. Bento  ³ Data ³ 27/01/03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Inserir a hora da entrada na nota fiscal                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ HORA Para Controle do PCP verificar a hora que chega o     ³±±
+±±³          ³ Produto na fabrica                                         ³±±
+±±³          ³ Parametro p/ impressao na nota fiscal de entrada qdo o     ³±±
+±±³          ³ Formulario for SIM 										  ³±±
+±±³																	      ³±±
+±±³Manutenção: fTransfere e fTrans2 - José Henrique M Felipetto           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/  
+                                                            
+#include "rwmake.ch"              
+#include "AP5MAIL.CH" 
+#include "colors.ch"
+#include "font.ch"
+#include "Topconn.ch"
+#Include "prtopdef.ch"    
+#include "protheus.ch"
+
+User Function SF1100I()       
+	Local  cMsgD1   := SPACE(200)
+	Local  oMsgD1                         
+	Local  cDoc     := SF1->F1_DOC
+	Local  cSerie   := SF1->F1_SERIE 
+	Local  cFornece := SF1->F1_FORNECE 
+	Local  cLoja    := SF1->F1_LOJA          
+	Local  dData    := Dtos(SF1->F1_DTDIGIT)
+    Local  cErro    := ""
+    Local  nPB      := 0
+    Local  nVol     := 0
+	Local  _cNF     := Space(06)
+	Local  _dDtDig  := Space(06)
+	Local  _cCusto  := Space(09)
+	Local  _cConta  := Space(20)
+	Local  _cPed    := Space(06)
+	Local  _cCcPed  := Space(06)
+	Local  _cCoPed  := Space(06)
+	Local  _cSolic  := Space(06)
+	Local  _cNumSC  := Space(06)		                  
+	Local _cLinha   := " "
+    Local _cNFOri   := ""
+	Local _cEndArq
+    Local cServer	:= Alltrim(GETMV("MV_RELSERV")) //"192.168.1.4"
+    Local cAccount  := Alltrim(GETMV("MV_RELACNT"))//'protheus'
+    Local cPassword := Alltrim(GETMV("MV_RELPSW"))//'siga'
+    Local lConectou
+    Local lEnviado
+    Local cMensagem := 'Erro ao se conectar no servidor: ' 
+    Local CRLFF     := chr(13)+chr(10)   // PULA LINHA  
+    Local cMSG      := ""
+    Local _cNome    := UsrFullName(__cUserID) //Traz o nome completo do usuario
+    Local _aFile        
+    Local aNF       := {}
+    Local _dDtDeb   := Date()
+    Local  _nSaldonf := 0
+    Local  _nSaldopc := 0
+    Local  _nSaldotp := 0
+    Local _cPedido   := Space(06)   
+    Local _cAssunto  := ""
+
+	Local _nRecSD1 := SD1->(RECNO())   
+    Local _nIndSD1 := SD1->(IndexOrd())         	         
+
+	Local _nRecSF1 := SF1->(RECNO())   
+    Local _nIndSF1 := SF1->(IndexOrd())         	         
+
+	Local _nRecSA1 := SA1->(RECNO())   
+    Local _nIndSA1 := SA1->(IndexOrd())         	         
+
+	Local _nRecSA2 := SA2->(RECNO())   
+    Local _nIndSA2 := SA2->(IndexOrd())         	         
+   
+    Local cMENNOTA := SF1->F1_MENNOTA
+    
+    SetPrvt("_motivo,_cGrupo,_aGrupo") 
+
+	_aGrupo := {"1-PCP","2-QUALIDADE","3-FISCAL","4-COMERCIAL"}
+	
+	If SM0->M0_CODIGO$"IT"
+	   _aEmpresa := {"1-NH","2-FN","3-IT"}
+	Else
+	   _aEmpresa := {"1-NH","2-FN"}	
+	Endif   
+	
+	_cGrupo := "1" 
+	_cEmpresa := "1"	
+                          
+	_mot1 := space(50)
+	_mot2 := space(50)
+	_mot3 := space(50)
+    
+    IF SF1->F1_FORMUL == "S"
+    
+    	
+		Define MsDialog oDlg6 Title "Mensagem na Nota Entrada" From 080,042 To 270,500 Pixel 
+		@ 13 ,  14 Say "Digite neste Campo o Conteudo que ira ser Impresso na Nota Fiscal." Object oText
+        @ 25 ,  14 GET oMSGD1 VAR cMSGD1 SIZE 202,08 PIXEL OF oDlg6         
+    	
+    	If Empty(SF1->F1_MENNOTA)
+			@ 37 ,  14 Say "Obs.: Mensagem da NFE VAZIA, conteúdo será gravado também na Mensagem da NFE." Object oText
+		Else
+			@ 37 ,  14 Say "Obs.: Já existe Mensagem na NFE." Object oText
+	        @ 49 ,  14 GET oMENNOTA VAR cMENNOTA WHEN .F. SIZE 202,08 PIXEL OF oDlg6         
+
+		Endif
+		
+		@ 75 , 170 BMPBUTTON TYPE 02 ACTION Close(oDlg6)
+        Activate MsDialog oDlg6 Centered  Valid fDlg6()
+		
+		//Grava os dados adicionais na nota p/ posterior impressao
+		If !Empty(cMSGD1)
+			ZA3->(DbSetOrder(1)) // Filial + Nota	
+			If !ZA3->(DbSeek(xFilial("ZA3")+cDoc))//filial + nota
+	    	   RecLock("ZA3",.T.)               
+	    	     ZA3->ZA3_FILIAL := xFilial("ZA3") //filial	    	   
+	    	     ZA3->ZA3_NOTA   := cDoc      //nota
+			     ZA3->ZA3_DESCRI := cMsgD1   // Grava conteudo da Mensagem na nota de entrada
+			     ZA3->ZA3_TIPO   := "E" //Nota de Entrada
+	    	   MsUnLock("ZA3")           
+	    	Else                            
+	    	
+	    	   RecLock("ZA3",.F.)
+			     ZA3->ZA3_DESCRI := cMsgD1   // Grava conteudo da Mensagem na nota de entrada
+	    	   MsUnLock("ZA3")           
+	    	Endif
+	    	
+	    	If Empty(SF1->F1_MENNOTA)
+		    	Reclock("SF1",.F.)
+		    		SF1->F1_MENNOTA := cMsgD1
+		    	MsUnlock("SF1")
+			Endif
+					    	
+	    Endif                          
+	 /*  Removido devido a gerar problema (zerar o peso bruto na entrada)
+	   If SF1->F1_EST$"EX" 
+		  @ 96,42 TO 250,440 DIALOG oDlg1 TITLE "Nota Fiscal de Entrada"
+		  @ 13,14 Say "Digite o Peso Bruto e Volume que ira ser Impresso na Nota Fiscal."
+	 	  @ 28,14 Say "Peso Bruto :" Size 80,10
+		  @ 38,14 Get nPB Picture "999999.99" Size 030,10 Object oPB
+	 	  @ 28,150 Say "Volume :" Size 70,10
+		  @ 38,150 Get nVol Picture "999999" Size 030,10 Object oVol
+	  
+		  @ 55,135 BUTTON "Fechar" Size 40,15  ACTION Close(oDlg1)
+		  ACTIVATE DIALOG oDlg1 CENTERED
+     
+       Endif
+       */
+   Endif
+   RecLock("SF1")
+	  SF1->F1_HORA    := Subs(Time(),1,5)              
+	  SF1->F1_USER    := CUSERNAME  //grava o login do usuario
+   SF1->(MsUnlock())       
+   
+   SD1->(Dbcommit()) //Instrução para gravar os dados do SD1 no banco de dados
+   SF1->(Dbcommit()) //Instrução para gravar os dados do SD1 no banco de dados
+
+
+   If GetMv("MV_SF100G1") == "S" // Baixa por valor
+ 
+	   // Atualiza o Saldo da Nota Fiscal	
+	   SD1->(DbSeek(xFilial("SD1")+ cDoc + cSerie + cFornece + cLoja ))
+	   WHILE !SD1->(EOF()) .AND. SD1->D1_FORNECE == cFornece .AND. SD1->D1_LOJA == cLoja ;
+    	                   .AND. DTOS(SD1->D1_DTDIGIT) == dData .AND. SD1->D1_DOC == cDoc .AND. SD1->D1_SERIE == cSerie
+
+			_nSaldonf += SD1->D1_TOTAL			
+			_cPedido := SD1->D1_PEDIDO
+			SD1->(DbSkip())
+	   ENDDO
+
+	   // Atualiza o Saldo do Pedido de Compra
+	   SC7->(DbSetOrder(1))	
+	   SC7->(DbSeek(xFilial("SC7") + _cPedido))
+	   While !SC7->(Eof()) .AND. SC7->C7_NUM == _cPedido
+			_nSaldopc += SC7->C7_SALDO
+			SC7->(DbSkip())
+	   Enddo
+   
+	   // Baixa o saldo no pedido de compra
+	   SD1->(DbSeek(xFilial("SD1")+ cDoc + cSerie + cFornece + cLoja ))
+	   WHILE !SD1->(EOF()) .AND. SD1->D1_FORNECE == cFornece .AND. SD1->D1_LOJA == cLoja ;
+	                       .AND. DTOS(SD1->D1_DTDIGIT) == dData .AND. SD1->D1_DOC == cDoc .AND. SD1->D1_SERIE == cSerie
+
+			If (_nSaldopc - _nSaldonf) <= 0 // Atualiza SC7->C7_QUJE 
+
+				SC7->(DbSeek(xFilial("SC7") + SD1->D1_PEDIDO))
+				While !SC7->(Eof()) .AND. SC7->C7_TPBAIXA == "2" .AND. SC7->C7_NUM == SD1->D1_PEDIDO
+					RecLock("SC7")
+					SC7->C7_QUJE  := SC7->C7_QUANT
+					SC7->C7_SALDO := 0
+					MsUnlock("SC7")
+					SC7->(DbSkip())
+				Enddo
+
+			Else // Atualiza somente o saldo no SC7
+
+				SC7->(DbSeek(xFilial("SC7") + SD1->D1_PEDIDO))
+				While !SC7->(Eof()) .AND. SC7->C7_TPBAIXA == "2" .AND. SC7->C7_NUM == SD1->D1_PEDIDO .AND. _nSaldonf > 0
+					If _nSaldonf > SC7->C7_SALDO
+						_nSaldonf -= SC7->C7_SALDO
+						RecLock("SC7")
+						SC7->C7_QUJE  := 0
+						SC7->C7_SALDO := 0
+						MsUnlock("SC7")
+					Else
+						_nSaldotp := SC7->C7_SALDO
+						RecLock("SC7")
+						SC7->C7_QUJE  := 0
+						SC7->C7_SALDO -= _nSaldonf
+						_nSaldonf -= _nSaldotp
+						MsUnlock("SC7")
+					Endif
+					SC7->(DbSkip())
+				Enddo
+
+			Endif
+			SD1->(DbSkip())
+
+	   Enddo
+
+   Endif	
+
+   //verifica mudança no CC e conta contabil
+    aNF  := {}   
+   	SD1->(DbSetOrder(1)) // Filial + Variavel
+   	SC7->(DbSetOrder(1)) // Filial + Variavel
+   	SC1->(DbSetOrder(1)) // Filial + Variavel
+	IF SD1->(DbSeek(xFilial("SD1")+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA,.T.))
+	   While( SD1->(!EOF()) .And. SD1->D1_DOC == SF1->F1_DOC .And. SD1->D1_SERIE == SF1->F1_SERIE .And.;
+	          SD1->D1_FORNECE == SF1->F1_FORNECE .And. SD1->D1_LOJA == SF1->F1_LOJA)                              
+	       _cNF :=_dDtDig:=_cCusto:=_cConta:=_cPed:=_cCcPed:=_cCoPed:=_cSolic:=_cNumSC:=" "
+		   If !Empty(SD1->D1_PEDIDO)      
+	       	  _cNF   := SD1->D1_DOC
+	       	  _dDtDig:= SD1->D1_DTDIGIT
+	       	  _cCusto:= SD1->D1_CC
+	       	  _cConta:= SD1->D1_CONTA
+	       	  _cPed  := SD1->D1_PEDIDO
+		      If SC7->(DbSeek(xFilial("SC7")+SD1->D1_PEDIDO+SD1->D1_ITEMPC,.F.))
+		         If SD1->D1_CC <> SC7->C7_CC .OR. SD1->D1_CONTA <> SC7->C7_CONTA
+		            _cCcPed := SC7->C7_CC
+		            _cCoPed := SC7->C7_CONTA
+		         Endif   
+	  	         If SC1->(DbSeek(xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC,.F.))	   
+	           	    _cSolic := SC1->C1_SOLICIT
+	           	    _cNumSC := SC1->C1_NUM
+		         Endif
+		      Endif
+	       Endif    
+	       //cLinha := " Solicitação Numero "+ _cNumSC
+	       If !Empty(_cCcPed)
+	          Aadd(aNF,{_cNF+"-"+SD1->D1_SERIE,SD1->D1_COD+"-"+SD1->D1_DESCRI,_cSolic,_cCusto,_cConta,_cPed,_cCcPed,_cCoPed,_cNumSC })
+	       Endif   
+	       SD1->(Dbskip())
+	   Enddo    
+	Endif               
+	
+	If Len(aNF) > 0
+
+	   CONNECT SMTP SERVER cServer ACCOUNT cAccount PASSWORD cPassword Result lConectou
+
+	   cMsg := '<html>' + CRLF
+	   cMsg += '<head>' + CRLF
+   	   cMsg += '<title> E X E M P L O </title>' + CRLF
+   	   cMsg += '</head>' + CRLF
+//       cMsg += ' <P><IMG SRC="WHBL.BMP" ALIGN=BOTTOM><b><font size="5" face="Times New Roman">'+CRLF+'          Digitação de Nota Fiscal</font></b></P>'+ CRLF	 
+       cMsg += '<b><font size="5" face="Times New Roman">'+CRLF+'          Digitação de Nota Fiscal</font></b>'+ CRLF	 
+       cMsg += '<b><font size="3" face="Arial"> Email Enviado Automaticamente pelo Sistema AP11</font></b>' + CRLF+CRLF
+  	   cMsg += '<font size="2" face="Arial"> Nota '+aNF[1,1]  + ' Digitada as '+time() +' na data: '+Dtoc(ddatabase)+'</font>' + CRLF
+       cMsg += CRLF	 
+       cMsg += '<font size="2" face="Arial"> Nota Digitada Por '+_cNome+' Na Empresa '+Iif(SM0->M0_CODIGO == "NH"," WHB USINAGEM S.A."," WHB FUNDIÇÃO S.A.") +' </font>' + CRLF	 
+
+		cMsg += '<table border="1" width="100%" bgcolor="#1E679A">'	
+		cMsg += '<tr>'
+		cMsg += '<td width="80%">'
+		cMsg += '<font size="2" face="Arial">Produto</font></td>'
+		cMsg += '<td width="10%">'
+		cMsg += '<font size="2" face="Arial">Solicitante</font></td>'
+		cMsg += '<td width="10%">'
+		cMsg += '<font size="2" face="Arial">C.Custo NF</font></td>'
+		cMsg += '<td width="10%">'
+		cMsg += '<font size="2" face="Arial">Conta NF</font></td>'
+		cMsg += '<td width="10%">'
+		cMsg += '<font size="2" face="Arial">Pedido</font></td>'
+
+		cMsg += '<td width="10%">'
+		cMsg += '<font size="2" face="Arial">C.Custo Ped.</font></td>'
+		cMsg += '<td width="10%">'
+		cMsg += '<font size="2" face="Arial">Conta Ped.</font></td>'
+		cMsg += '<td width="10%">'
+		cMsg += '<font size="2" face="Arial">Solicitação</font></td>'
+		cMsg += '</tr>' + CRLF
+
+		//Preenche Tabela
+		For x:= 1 to Len(aNF)
+		    cMsg += '<tr>'        
+		    cMsg += '<td width="80%">'
+		    cMsg += '<font size="2" Color="#FFFFFF" face="Arial">' + aNF[x,2] + '</font></td>'
+		    cMsg += '<td width="10%">'
+		    cMsg += '<font size="2" Color="#FFFFFF" face="Arial">' + aNF[x,3] + '</font></td>'
+		    cMsg += '<td width="10%">'
+		    cMsg += '<font size="2" Color="#FFFFFF" face="Arial">' + aNF[x,4] + '</font></td>'
+		    cMsg += '<td width="10%">'
+		    cMsg += '<font size="2" Color="#FFFFFF" face="Arial">' + aNF[x,5] + '</font></td>'
+		    cMsg += '<td width="10%">'
+		    cMsg += '<font size="2" Color="#FFFFFF" face="Arial">' + aNF[x,6] + '</font></td>'
+		    cMsg += '<td width="10%">'
+		    cMsg += '<font size="2" Color="#FFFFFF" face="Arial">' + aNF[x,7] + '</font></td>'
+		    cMsg += '<td width="10%">'
+		    cMsg += '<font size="2" Color="#FFFFFF" face="Arial">' + aNF[x,8] + '</font></td>'
+		    cMsg += '<td width="10%">'
+		    cMsg += '<font size="2" Color="#FFFFFF" face="Arial">' + aNF[x,9] + '</font></td>'
+		    cMsg += '</tr>' + CRLF
+		Next
+
+		//Fecha Tabela
+		cMsg += '</table>'
+		cMsg += '</body>' + CRLF
+		cMsg += '</html>' + CRLF
+		a_email = 'fernandow@whbbrasil.com.br;anapp@whbbrasil.com.br'
+ //a_email = 'alexandrerb@whbbrasil.com.br'jeffersonmf
+//		_aFile := { "\SigaAdv\WHBL.BMP" }
+		If lConectou
+		    Send Mail from 'protheus@whbbrasil.com.br' To a_email;
+		    SUBJECT aNF[1,1] +' ***** ALTERAÇÃO DO CC ou CONTA NA DIGITAÇÃO DA NOTA ***** ';
+		    BODY cMsg;                      
+		    RESULT lEnviado
+		    If !lEnviado
+		   	   Get mail error cMensagem
+			   Alert(cMensagem)
+		    EndIf                             
+		else
+		   Alert("Erro ao se conectar no servidor: " + cServer)		
+		Endif
+	
+Endif
+          
+//
+If SF1->F1_TIPO = 'D'
+	SD1->(DbSeek(xFilial("SD1")+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA))
+	While( SD1->(!EOF()) .And. SD1->D1_DOC == SF1->F1_DOC .And. SD1->D1_SERIE == SF1->F1_SERIE .And.;
+	       SD1->D1_FORNECE == SF1->F1_FORNECE .And. SD1->D1_LOJA == SF1->F1_LOJA)                              
+		If (SE1->E1_NUM+SE1->E1_PREFIXO+SE1->E1_CLIENTE+SE1->E1_LOJA == SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)
+			DbSelectArea("SE1")
+			RecLock("SE1",.F.)
+			SE1->E1_HIST := "NF "+SD1->D1_NFORI
+			MsUnLock("SE1")
+		Endif	
+		SD1->(DbSkip())
+	Enddo
+Endif
+
+//------------------------------------------------------------------------------------
+// PARA COLOCAR INFORMACAO REFERENTE A NOTA FISCAL DE DEBITO DE CLIENTE
+// A PEDIDO DO DEPTO. FINANCEIRO (LUCAS/RICARDO CECI)
+//------------------------------------------------------------------------------------
+If SF1->F1_ESPECIE = 'NDC'
+
+   	Processa({||mGrava()},"Gravando débito...")
+  
+   	lAchou := .F.
+   	
+   	//POSICIONA A TABELA ZA8 
+   	ZA8->(dbGoTop())
+   	ZA8->(dbSetOrder(2)) //ZA8_FILIAL+ZA8_DOC+ZA8_SERIE
+   	ZA8->(dbSeek(xFilial("ZA8")+SF1->F1_DOC+SF1->F1_SERIE))
+   
+   	While ZA8->(!EOF()) .AND. ZA8->ZA8_DOC==SF1->F1_DOC .AND. ZA8->ZA8_SERIE==SF1->F1_SERIE
+   		If ZA8->ZA8_CLIENT==SF1->F1_FORNECE .AND. ZA8->ZA8_LOJA==SF1->F1_LOJA
+   			lAchou := .T.
+   			exit
+   		EndIf
+   		ZA8->(dbSkip())
+    EndDo
+   
+   	If lAchou
+   		Processa({||U_fEmailNDC("Inclusao")},"Gerando aviso de débito...")
+   	EndIf
+	
+ELSE    
+
+	fMntMail() //envia email para manutencao caso seja produto solicitado por com numero da os
+	
+	If SM0->M0_CODIGO=="FN"
+		                                                                                                          
+		fMailEnt('PA01') // envia email avisando da entrada de produto quando for PA01 para pessoal do pcp fundicao
+		fMailEnt('PA02') // envia email avisando da entrada de produto quando for PA02 para pessoal do pcp usinagem/fundicao
+		fMailEnt('FJE4') // envia email avisando da entrada de produto quando for FJ e FE4 para pessoal Ferramentaria Forjaria
+		fMailEnt('MP04') // envia email avisando da entrada de produto quando for MP04 para pessoal da Forjaria (chamado 027231)
+		fMailEnt('CERT') // envia email avisando da entrada de produto quando for entrada de produto com campo B1_CERFIF == 'S'
+		fMailEnt('IM19') // envia email avisando quando for IM19 para o pessoal da manutencao 
+		fMailEnt('QUAL') // envia email avisando o retorno dos fornecedores ELETROLAK e METALCOR
+		fMailEnt('OLEO') // envia email avisando da entrada de oleo na empresa (chamado 011881 portal)
+		fMailEnt('AMZ1') // envia email avisando da entrada de produto para armazem 32/33 para pessoal do PCP (chamado 13920 portal)
+		fMailEnt('AMZ2') // envia email avisando da entrada de produto para armazem 31    para pessoal do PCP (chamado 13920 portal)
+		fMailEnt('AMZ3') // envia email avisando da entrada de produto para armazem 21    para pessoal do ESTOQUE (chamado 15922 portal)
+		fMailEnt('AMZ4') // envia email avisando da entrada de produto para armazem 41    para pessoal do PCP (chamado 028007 portal)
+		fMailEnt('AMZ5') // envia email avisando da entrada de produto para armazem 36    para pessoal do PCP (chamado 043399 portal)
+		fMailEnt('AMZ6') // envia email avisando da entrada de produto para armazem 51    para pessoal do PCP (chamado 047972 portal)
+		fMailEnt('FIPQ') // envia email avisando da entrada de produto quimico
+		fMailEnt('6664') // envia email avisando da entrada de nota para fornecedor 006664 (chamado 034153 portal)
+		fMailEnt('PAXX') // envia email avisando da entrada de produto quando for do grupo PA para pessoal do Logistica Interna/Lista Custos/Qualidade Devolução
+		fMailEnt('SC00') // envia email para o solicitante da SC  
+		fMailEnt('MA40') // envia email avisando entrada do MA40.000004 para o pessoal da qualidade da forjaria
+		
+		
+		IF SM0->M0_CODFIL$"02"
+			fMailEnt('PEDE') // envia email avisando da entrada de produto quando for pernambuco tes 233 (DEVOLUÇÂO)
+		Endif
+
+	EndIf                  
+	
+	If SM0->M0_CODIGO=="IT"
+	   fMailEnt('ITDE') // envia email avisando da entrada de produto Devolução	
+	Endif
+	
+	U_M103PLAC(.F.) //abre tela para informar a placa do veículo	
+	
+	fTransfere(cDoc,cSerie,cFornece,cLoja)   
+	
+	//Processa({|| U_ZB8Importa(SF1->(F1_DOC+F1_SERIE+F1_FORNECE+F1_LOJA))},"Importando...")
+
+    //-- IMPORTANTE: Deixar esta função como sendo a última deste ponto de entrada
+    //-- pois se der algum erro a NF não é gravada no banco de dados e o boletim já vai ter sido impresso
+    U_Nhest001(SF1->F1_DTDIGIT,SF1->F1_DOC,SF1->F1_SERIE,SF1->F1_FORNECE,SF1->F1_LOJA)//imprime boletim de entrada
+
+endif          
+
+SD1->(Dbgoto(_nRecSD1))
+SD1->(DbSetOrder(_nIndSD1))         	         
+
+SF1->(Dbgoto(_nRecSF1))   
+SF1->(DbSetOrder(_nIndSF1))         	         
+
+SA1->(Dbgoto(_nRecSA1))   
+SA1->(DbSetOrder(_nIndSA1))         	         
+
+SA2->(Dbgoto(_nRecSA2))   
+SA2->(DbSetOrder(_nIndSA2))         	         
+
+Return
+
+Static Function fDlg6()
+
+	If empty(cMsgD1) .and. EMPTY(SF1->F1_MENNOTA)
+		Alert("Informe uma mensagem para a NFE!")
+		RETURN .F.
+	Endif
+
+Return .t.
+      
+//-- transfere produtos MP OBSOLETOS da fundicao para MP01.000002
+Static Function fTransfere(cDoc,cSerie,cFornece,cLoja)
+Private aItens := {}
+
+	SD1->(DbSetOrder(1) )//D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+D1_COD+D1_ITEM                                                                                                     
+	SD1->(DbSeek(xFilial("SD1") + cDoc + cSerie + cFornece + cLoja))
+	
+	While SD1->(!Eof().AND. cDoc + cSerie + cFornece + cLoja == SD1->D1_DOC+SD1->D1_SERIE+SD1->D1_FORNECE+SD1->D1_LOJA)
+		If Alltrim(SD1->D1_COD) $ 'MP01.000033/MP01.000031/MP01.000037/MP01.000038'
+			_n := aScan(aItens,{|x| x[1]==SD1->D1_COD .and. x[2]==SD1->D1_LOCAL .and. x[4]==SD1->D1_LOTECTL })
+			
+			If _n==0
+				aAdd(aItens,{SD1->D1_COD,SD1->D1_LOCAL,SD1->D1_QUANT,SD1->D1_LOTECTL,SD1->D1_CC})
+			Else
+				aItens[_n][3] += SD1->D1_QUANT
+			Endif
+		EndIf		
+		SD1->(DbSkip())
+	EndDo
+	
+	If Len(aItens) > 0
+		fTrans2(aItens)
+	EndIf
+	
+Return
+ 
+Static Function fTrans2(aItens)
+
+Private lMsErroAuto
+Private aSB1	 := {}
+
+SB1->(DbSetOrder(1))
+SB1->(DbSeek(xFilial("SB1") + "MP01.000002"))
+aAdd(aSB1,{SB1->B1_DESC,SB1->B1_UM})
+	
+	_cDoc  := NextNumero("SD3",2,"D3_DOC",.T.)//pega o proximo numero do documento do d3_doc
+
+	//-- CABECALHO	
+	aArray := {{_cDoc,;		// 01.Numero do Documento
+				Date()}}	// 02.Data da Transferencia	
+
+	For x:= 1 to Len(aItens)
+
+    	SB1->(DbSeek(xFilial("SB1") + aItens[x][1]))
+
+    	If SB1->B1_LOCALIZ == "S"
+    		Loop
+    	EndIf
+
+    	//--DETALHE					
+		aAdd(aArray,{   SB1->B1_COD,;					// 01.Produto Origem
+					    SB1->B1_DESC,;  				// 02.Descricao
+						SB1->B1_UM	,; 	                // 03.Unidade de Medida
+						aItens[x][2],; 					// 04.Local Origem
+						CriaVar("D3_LOCALIZ",.F.),;		// 05.Endereco Origem
+						"MP01.000002    ",;				// 06.Produto Destino
+						aSB1[1][1],;					// 07.Descricao
+						aSB1[1][2],;					// 08.Unidade de Medida
+						aItens[x][2],;					// 09.Armazem Destino
+						CriaVar("D3_LOCALIZ",.F.),;		// 10.Endereco Destino
+						CriaVar("D3_NUMSERI",.F.),;		// 11.Numero de Serie
+						aItens[x][4],; 					// 12.Lote Origem
+						CriaVar("D3_NUMLOTE",.F.),;		// 13.Sublote
+						CriaVar("D3_DTVALID",.F.),;		// 14.Data de Validade
+						CriaVar("D3_POTENCI",.F.),;		// 15.Potencia do Lote
+						aItens[x][3],;					// 16.Quantidade
+						CriaVar("D3_QTSEGUM",.F.),;		// 17.Quantidade na 2 UM             	
+						CriaVar("D3_ESTORNO",.F.),;		// 18.Estorno
+						CriaVar("D3_NUMSEQ",.F.),;		// 19.NumSeq
+						aItens[x][4],;			 		// 20.Lote Destino
+						CRIAVAR("D3_DTVALID",.F.),;     // 21.Data Validade
+						CRIAVAR("D3_ITEMGRD",.F.),;     // 22.Item da grade
+						CRIAVAR("D3_CARDEF",.F.),;
+						CRIAVAR("D3_DEFEITO",.F.),;
+						CRIAVAR("D3_OPERACA",.F.),;
+						CRIAVAR("D3_FORNECE",.F.),;
+						CRIAVAR("D3_LOJA",.F.),;
+						CRIAVAR("D3_LOCORIG",.F.),;
+						aItens[x][5],;
+						CRIAVAR("D3_TURNO",.F.),;
+						CRIAVAR("D3_MAQUINA",.F.),;
+						CRIAVAR("D3_LINHA",.F.),;
+						CRIAVAR("D3_CODPA",.F.),;
+						CRIAVAR("D3_DTREF",.F.),;
+						CRIAVAR("D3_CORRID",.F.),;
+						CRIAVAR("D3_CORRIDA",.F.),;						
+						CRIAVAR("D3_OP",.F.)})	
+    Next x
+                                                  
+	SB2->(dbSetOrder(1))
+	Processa({|| MSExecAuto({|x| MATA261(x)},aArray)},"Aguarde. Transferindo...") 
+
+	If lMsErroAuto
+		mostraerro()
+		DisarmTransaction()
+		Return
+	EndIf
+Return                    
+
+Static Function mGrava()
+	_qtde := 0
+ 	Define MsDialog _TMotivo Title OemToAnsi("Aviso de Debito de Cliente") From 030,015 To 250,375 Pixel
+    @ 010,006 To 100,180 Title OemToAnsi(" INFORMACOES DO AVISO DE DEBITO ") //Color CLR_HBLUE
+	@ 015,010 Say "Motivo do Debito : " Size 50,50
+	@ 025,010 Get _mot1 Picture "@!" Size 150,75 Object oMot1
+	@ 040,010 Get _mot2 Picture "@!" Size 150,75 Object oMot2
+	@ 055,010 Get _mot3 Picture "@!" Size 150,75 Object oMot3  
+	
+	@ 070,010 Say "Grupo:" Size 050,8 object olgrupo                    
+	@ 070,030 COMBOBOX _cGrupo ITEMS _aGrupo SIZE 40,10 object oGrupo
+
+	@ 070,080 Say "Empresa:" Size 050,8 object olEmpresa                    
+	@ 070,110 COMBOBOX _cEmpresa ITEMS _aEmpresa SIZE 40,10 object oEmpresa
+	
+    @ 085,085 BMPBUTTON TYPE 01 ACTION fGravam()
+	Activate MsDialog _TMotivo Center 
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ grava os motivos do debito ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fGravam()
+
+	If Empty(AllTrim(_cEmpresa))
+		MsgBox("A empresa deve ser informada!","Atencao","ALERT")
+		Return .F.
+	EndIf
+	
+	If Empty(_mot1) .AND. Empty(_mot2) .AND. Empty(_mot3)
+		MsgBox("Pelo menos 1 motivo deve ser informado!","Atencao","ALERT")
+		Return .F.
+	EndIf
+	
+	DbSelectArea("ZA8")   // AVISO DE DEBITO.
+	RecLock("ZA8",.T.)
+		ZA8->ZA8_DOC    := SF1->F1_DOC
+		ZA8->ZA8_SERIE  := SF1->F1_SERIE
+		ZA8->ZA8_CLIENT := SF1->F1_FORNECE
+		ZA8->ZA8_LOJA   := SF1->F1_LOJA
+		ZA8->ZA8_DESCLI := Posicione("SA1",1,xFilial("SA1")+SF1->F1_FORNECE+SF1->F1_LOJA,"A1_NOME")
+		ZA8->ZA8_MOT1   := _mot1
+		ZA8->ZA8_MOT2   := _mot2
+		ZA8->ZA8_MOT3   := _mot3   
+		ZA8->ZA8_GRUPO  := _cGrupo
+		ZA8->ZA8_EMISSA := SF1->F1_EMISSAO
+		ZA8->ZA8_VALOR  := SF1->F1_VALMERC 
+		ZA8->ZA8_VENCTO := SE1->E1_VENCREA 
+		ZA8->ZA8_DTDIGI := SF1->F1_DTDIGIT
+		ZA8->ZA8_EMPRES := Substr(_cEmpresa,1,1)
+		ZA8->ZA8_ESTORN := ""
+		ZA8->ZA8_DTAEST := CTOD("  /  /  ")
+	MsUnLock("ZA8")
+
+	Close(_TMotivo)
+
+return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄX¿
+//³ ABRE JANELA PARA DIGITACAO DA PLACA DO VEICULO AO FINAL DA ENTRADA DA NOTA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄXÙ
+User Function M103PLAC(lCanc)   
+Local oFont     := TFont():New("Arial",,-16,.T.)
+Private cPlaca  := ""
+Private aPlaca  := {}
+Private lFecha  := .F.
+
+	IF SELECT("TRA1") > 0
+		TRA1->(DbCloseArea())
+	EndIf
+	                                    
+	cQuery := " SELECT O5_CODIGO, O5_PLACA, O5_EMPRESA FROM "+RetSqlName("SO5")
+	cQuery += " WHERE O5_HORASAI = '' AND O5_DTSAIDA = ''"
+	cQuery += " AND D_E_L_E_T_ = '' AND O5_FILIAL = '"+xFilial("SO5")+"'"    
+	cQuery += " ORDER BY O5_EMPRESA"
+	
+	TCQUERY cQuery NEW ALIAS "TRA1"
+	                               
+    TRA1->(DbGoTop())
+    While TRA1->(!EOF())
+    	aAdd(aPlaca,SUBSTR(alltrim(TRA1->O5_EMPRESA),1,1)+ALLTRIM(TRA1->O5_CODIGO)+"="+alltrim(TRA1->O5_EMPRESA)+" ( "+TRA1->O5_PLACA+" )")
+    	TRA1->(DbSkip())
+    Enddo  
+    
+	TRA1->(DbCloseArea())
+    
+    aAdd(aPlaca,"=N/A")
+    
+    oDlg := MsDialog():New(0,0,240,340,"Placa do veículo",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+    oSay := TSay():New(20,25,{||"Informe a Placa do Veículo"},oDlg,,oFont,,,,.T.,CLR_BLUE,)
+
+	oCombo1 := TComboBox():New(40,10,{|u| if(Pcount() > 0,cPlaca := u,cPlaca)},;
+		aPlaca,150,20,oDlg,,{||},,,,.T.,,,,{||.T.},,,,,"cPlaca")
+
+	oBtn := tButton():New(60,45,"Gravar",oDlg,{|| GrvPlac()},80,30,,,,.T.)
+	
+	If lCanc
+		oBtn2 := tButton():New(95,55,"Cancelar",oDlg,{|| lFecha:=.t.,oDlg:End()},60,10,,,,.T.)
+	Endif	
+	
+	oDlg:Activate(,,,.T.,{||lFecha},,{||})    
+	
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ GRAVA O CODIGO DA TABELA SO5 NA TABELA SF1 PARA AMARRAR COM A PLACA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function GrvPlac()
+Local lAlt := .t.
+	
+	if !empty(SF1->F1_CODPLAC)
+		lAlt := .f.
+		If MsgYESNO("Esta NF já possúi Placa de Veículo amarrada, deseja alterar?")
+			lAlt := .t.
+    	EndIf
+  	EndIf
+   
+   	If lAlt
+		RecLock("SF1",.F.)
+			SF1->F1_CODPLAC := SUBSTR(cPlaca,2,6)
+		MsUnlock("SF1")
+	Endif
+	
+	lFecha := .T.
+	
+	oDlg:End()
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ ENVIA EMAIL PARA MANUTENCAO QUANDO FOR MATERIAL DE UMA ORDEM DE SERVICO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fMntMail()
+Local cTo
+Local cItems   := ""
+Local lEnvia   := .F.
+Local cEmpresa := "NH"
+
+	SC7->(DbSetOrder(1)) //C7_FILIAL+C7_NUM+C7_ITEM+C7_SEQUEN
+	SC1->(DbSetOrder(1)) //C1_FILIAL+C1_NUM+C1_ITEM
+	SD1->(DbSetOrder(1)) //D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+D1_COD+D1_ITEM
+
+	STJ->(dbSetOrder(1)) //TJ_FILIAL + TJ_ORDEM
+	TPY->(dbSetOrder(1)) //TPY_FILIAL+TPY_CODBEM+TPY_CODPRO+TPY_LOCGAR
+	
+	SD1->(DbSeek(xFilial("SD1")+SF1->F1_DOC+SF1->F1_SERIE))
+
+	//Varre todos os itens da NF em questão
+	While SD1->(!EOF()) .AND. SD1->D1_DOC==SF1->F1_DOC .AND. SD1->D1_SERIE==SF1->F1_SERIE
+		//Se for o mesmo fornecedor e loja
+		If SF1->F1_FORNECE==SD1->D1_FORNECE .AND. SF1->F1_LOJA==SD1->D1_LOJA
+			//Busca o pedido de compras pelo PEDIDO e ITEMPC do SD1
+			If SC7->(DbSeek(xFilial("SC7")+SD1->D1_PEDIDO+SD1->D1_ITEMPC))
+				//Se encontrar busca a SC pelo NUMSC e ITEMSC do SC7
+				If SC1->(DbSeek(xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC))
+					//Se encontrar verifica se existe OS informada e por garantia se o produto da SC é o mesmo 
+					If !Empty(SC1->C1_OS) .AND. SC1->C1_PRODUTO==SD1->D1_COD
+				
+						If AllTrim(SD1->D1_LOCAL)$"21"
+							cEmpresa := "FN"
+						ElseIf AllTrim(SD1->D1_LOCAL)$"31"
+							cEmpresa := "NH"
+						ElseIf AllTrim(SD1->D1_LOCAL)$"51"
+							cEmpresa := "VIRABREQUIM"							
+						Else
+							cEmpresa := SM0->M0_CODIGO
+						EndIf
+						
+						lEnvia := .T.
+
+						cItems += '<tr>'
+						cItems += '<td>'+SD1->D1_COD+'</td>'
+						cItems += '<td>'+SD1->D1_DESCRI+'</td>'
+						cItems += '<td>'+SC1->C1_OBS+'</td>'
+						cItems += '<td>'+STR(SD1->D1_QUANT)+'</td>'
+						cItems += '<td>'+SC1->C1_SOLICIT+'</td>'
+						cItems += '<td>'+SC1->C1_OS+'</td>'
+						cItems += '</tr>'
+						
+						//FAZ A IMPORTACAO DAS PECAS DE REPOSICAO PARA O BEM AMARRADO A ORDEM DE SERVICO DE MANUTENCAO
+						//If SM0->M0_CODIGO == "FN" //EMPRESA FUNDICAO
+						If cEmpresa=="FN"
+						    
+							lIncPR := .T. //inclui peça de reposicao
+							
+							STJ->(dbSeek(xFilial("STJ")+SC1->C1_OS))
+							TPY->(dbSeek(xFilial("TPY")+STJ->TJ_CODBEM))
+
+							//verifica se não existe a peça de reposicao cadastrada para o bem da OS
+							While TPY->(!EOF()) .AND. TPY->TPY_CODBEM == STJ->TJ_CODBEM
+								If TPY->TPY_CODPRO==SD1->D1_COD
+									lIncPR := .F.
+								EndIf
+								
+								TPY->(dbSkip())
+							EndDo
+								
+							//GRAVA A PEÇA DE REPOSICAO
+						    If lIncPR .AND. ALLTRIM(STJ->TJ_CODBEM)<>'720/000'
+							    RecLock("TPY",.T.)
+								    TPY->TPY_FILIAL := xFilial("TPY")
+								    TPY->TPY_CODBEM := STJ->TJ_CODBEM
+								    TPY->TPY_CODPRO := SD1->D1_COD
+								    TPY->TPY_QUANTI := 1
+								    TPY->TPY_CRITIC := "M"
+								    TPY->TPY_QTDGAR := 0
+								    TPY->TPY_UNIGAR := ""
+								    TPY->TPY_CONGAR := ""
+								    TPY->TPY_QTDCON := 0
+								    TPY->TPY_LOCGAR := ""
+								MsUnLock("TPY")
+							EndIf
+							                                                         
+							IF SELECT("TRB") > 0
+								TRB->(dbCloseArea())
+							EndIf
+							
+							// VERIFICA SE PRA ESTA O.S. EXISTEM MAIS S.C'S PENDENTES
+							cQry := " SELECT C1_NUM"
+							cQry += " FROM "+RetSqlName("SC1")+" C1, "+RetSqlName("SC7")+" C7 "
+							cQry += " WHERE C1.C1_NUM = C7.C7_NUMSC"
+							cQry += " AND C1.C1_OS = '"+SC1->C1_OS+"'"
+							cQry += " AND C1.C1_NUM != '"+SC1->C1_NUM+"'"							
+							cQry += " AND C7.C7_ITEMSC = C1.C1_ITEM"
+							cQry += " AND C1.C1_ITEMPED = C7.C7_ITEM"
+							cQry += " AND C1.D_E_L_E_T_ = ''"
+							cQry += " AND C7.D_E_L_E_T_ = ''"
+							cQry += " AND C7.C7_QUANT > C7.C7_QUJE"
+							cQry += " AND C7.C7_RESIDUO = ''"
+
+							TCQUERY cQry NEW ALIAS "TRB"
+							
+							lTemSC := .F.
+							
+							TRB->(dbGoTop())
+							
+							WHILE TRB->(!EOF())
+								lTemSC := .T.
+								exit
+								TRB->(DBSKIP())
+							ENDDO
+							
+							If !lTemSC
+								STJ->(dbsetorder(1))
+								If STJ->(dbseek(xfilial("STJ")+SC1->C1_OS))
+									RECLOCK("STJ")
+										STJ->TJ_STFOLUP := "EXEC"
+									MSUNLOCK("STJ")
+								EndIf
+							EndIf
+							
+							TRB->(dbCloseArea())
+
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+		SD1->(DbSkip())
+	EndDo
+	
+	If lEnvia
+	
+		cMsg := '<html>'
+		cMsg += '<body style="font-family:arial">'
+		cMsg += '<p></p>'
+		cMsg += '<table width="100%" border="1">'
+		cMsg += '<tr style="background:#ccc">'
+		cMsg += '<td colspan="6" style="background:ccc">'
+		cMsg += 'Entrada de Material - NF: '+SF1->F1_DOC+'-'+SF1->F1_SERIE
+		cMsg += '</td></tr>'
+		cMsg += '<tr style="background:#abc">'
+		cMsg += '<td>Produto</td>'
+		cMsg += '<td>Descrição</td>'
+		cMsg += '<td>Observação</td>'
+		cMsg += '<td>Quant</td>'
+		cMsg += '<td>Solicitante</td>'
+		cMsg += '<td>OS</td>'
+		cMsg += '</tr>'
+
+		cMsg += cItems
+					
+		cMsg += '</table><br />'
+		cMsg += '</body>'
+		cMsg += '</html>
+		
+//		If SM0->M0_CODIGO == "FN" //EMPRESA FUNDICAO
+		If cEmpresa=="FN"
+			cTo := "marcelop@whbusinagem.com.br;"
+			//cTo += "ricardocs@whbfundicao.com.br;"
+			cTo += "antoniofs@whbfundicao.com.br;"
+			//cTo += "marcelogs@whbfundicao.com.br;"
+			//cTo += "ricardocs@whbfundicao.com.br;"
+			cTo += "ricardoa@whbfundicao.com.br;"
+			cTo += "jonathags@whbfundicao.com.br;"
+			cTo += "francisvb@whbfundicao.com.br;"
+			cTo += "guilhermecm@whbfundicao.com.br;"
+			cTo += "jefersonav@whbfundicao.com.br;"
+			cTo += "nerbalbj@whbfundicao.com.br;"
+			cTo += "luizmb@whbfundicao.com.br;"
+			cTo += "ruicr@whbfundicao.com.br;"
+			cTo += "lucianodb@whbfundicao.com.br;"
+			cTo += "vilmartw@whbfundicao.com.br;" 
+			cTo += "cristovaolg@whbfundicao.com.br;"
+			cTo += "evandrona@whbfundicao.com.br;"
+			cTo += "fabioca@whbfundicao.com.br;"
+			cTo += "fabiolc@whbfundicao.com.br;"
+			cTo += "douglasg@whbfundicao.com.br;"
+			cTo += "rodrigobr@whbbrasil.com.br;"
+			cTo += "thiagol@whbfundicao.com.br;"
+			cTo += "fabricioes@whbbrasil.com.br;"
+			cTo += "andersonri@whbbrasil.com.br;"			
+			cTo += "clebert@whbbrasil.com.br;"
+			cTo += "fabiorm@whbbrasil.com.br;"
+			cTo += "silveteac@whbfundicao.com.br;"			
+//		ElseIf SM0->M0_CODIGO == "NH" //EMPRESA FUNDICAO
+		ElseIf cEmpresa=="NH"
+			cTo := "ricardok@whbusinagem.com.br;"
+			cTo += "leonardojb@whbusinagem.com.br;"
+			cTo += "rogeriojs@whbusinagem.com.br;"
+			cTo += "andersong@whbusinagem.com.br;"
+			cTo += "giovanib@whbusinagem.com.br;"
+			cTo += "vilsonj@whbusinagem.com.br;"
+			cTo += "claudiosa@whbusinagem.com.br;"
+			cTo += "edsonlm@whbusinagem.com.br;"
+			cTo += "altevirms@whbusinagem.com.br;"
+			cTo += "cristianem@whbbrasil.com.br;"
+			cTo += "glalberez@whbbrasil.com.br;"
+			cTo += "marciocv@whbusinagem.com.br;"
+			cTo += "jaudacirsb@whbusinagem.com.br;"
+			cTo += "alissonss@whbusinagem.com.br;"
+			cTo += "fabriciocp@whbusinagem.com.br;"
+  		cTo += "alinebm@whbusinagem.com.br;"
+		ElseIf cEmpresa=="VIRABREQUIM" //EMPRESA VIRABREQUIM
+			cTo := "andersonsc@whbusinagem.com.br;"
+			cTo += "diogoba@whbbrasil.com.br;"
+			cTo += "lista-manutencao-virabrequim@whbbrasil.com.br;"
+		EndIf
+
+		oMail          := Email():New()
+		oMail:cMsg     := cMsg
+		oMail:cAssunto := "*** ENTRADA DE MATERIAL - NF: "+SF1->F1_DOC+"-"+SF1->F1_SERIE+" ***"
+		oMail:cTo      := cTo
+		
+		oMail:Envia()
+	
+	EndIf
+Return
+                      
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³                                    ³
+//³ ENVIA EMAIL DE ENTRADA DE MATERIAL ³
+//³                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fMailEnt(cPar)
+Local cMsg     := ""
+Local cItems   := ""
+Local lEnvia   := .F.
+Local cDescCli := ""
+Local aMail    := {}
+Local cAssunto := ""
+Local cCondic  := ".F."
+Local lPri	   := .T.
+	
+	//ENVIA EMAIL INFORMATIVO DE ENTRADA DE PRODUTO PA02
+	If cPar=="PA02"
+
+		cCondic  := "ALLTRIM(UPPER(SB1->B1_GRUPO))$'PA02'"
+		cAssunto := "RETORNO PARA RETRABALHO"
+		aAdd(aMail,"hesslerr@whbbrasil.com.br")
+		aAdd(aMail,"alissonjl@whbbrasil.com.br")
+		aAdd(aMail,"emersondp@whbbrasil.com.br")
+//		aAdd(aMail,"adilsonmj@whbbrasil.com.br")
+//		aAdd(aMail,"suzanasd@whbbrasil.com.br")
+		aAdd(aMail,"diegop@whbusinagem.com.br")
+		aAdd(aMail,"andersonsc@whbusinagem.com.br")
+		aAdd(aMail,"Marciolt@whbusinagem.com.br")
+		aAdd(aMail,"fabianea@whbusinagem.com.br")
+		//aAdd(aMail,"fabiolm@whbbrasil.com.br") 
+		//aAdd(aMail,"lupercioc@whbbrasil.com.br") 
+		aAdd(aMail,"edsonab@whbbrasil.com.br") 	
+//		aAdd(aMail,"allanpr@whbusinagem.com.br")
+		aAdd(aMail,"denisws@whbfundicao.com.br")
+		aAdd(aMail,"tiagojo@whbbrasil.com.br")
+		aAdd(aMail,"cleversoncc@whbbrasil.com.br")
+		aAdd(aMail,"andersonri@whbbrasil.com.br")
+		aAdd(aMail,"darlenesc@whbbrasil.com.br")
+		aAdd(aMail,"andreiap@whbusinagem.com.br")
+		aAdd(aMail,"amabilict@whbbrasil.com.br")
+		aAdd(aMail,"cristianepo@whbbrasil.com.br")
+		aAdd(aMail,"wagnersf@whbfundicao.com.br")
+		aAdd(aMail,"guilhermelf@whbusinagem.com.br")
+		aAdd(aMail,"renatab@whbfundicao.com.br")
+		aAdd(aMail,"diegoah@whbfundicao.com.br")
+		aAdd(aMail,"josiass@whbfundicao.com.br")
+		aAdd(aMail,"luizh@whbbrasil.com.br")	
+		aAdd(aMail,"renatoc@whbbrasil.com.br")
+		aAdd(aMail,"brunorf@whbfundicao.com.br")
+		aAdd(aMail,"karinalr@whbbrasil.com.br")
+		aAdd(aMail,"josefc@whbbrasil.com.br")
+		aAdd(aMail,"gilvanios@whbbrasil.com.br")
+		aAdd(aMail,"graffpj@whbbrasil.com.br")
+		aAdd(aMail,"tiagoms@whbusinagem.com.br")
+	//	aAdd(aMail,"luizgb@whbfundicao.com.br")
+		
+	
+	//ENVIA EMAIL INFORMATIVO DE ENTRADA DE PRODUTO PA01
+	ElseIf cPar=="PA01"
+
+		cCondic  := "ALLTRIM(UPPER(SB1->B1_GRUPO))$'PA01'"
+		cAssunto := "RETORNO PARA RETRABALHO"
+		//aAdd(aMail,"lilianeg@whbfundicao.com.br")
+		//aAdd(aMail,"geandroo@whbfundicao.com.br")
+		//aAdd(aMail,"andresd@whbbrasil.com.br")
+		aAdd(aMail,"aroldor@whbfundicao.com.br")
+		//aAdd(aMail,"lupercioc@whbbrasil.com.br") 
+		//aAdd(aMail,"fabiolm@whbbrasil.com.br") 
+		//aAdd(aMail,"DiogoSM@whbusinagem.com.br")
+		aAdd(aMail,"cleversoncc@whbbrasil.com.br")
+		aAdd(aMail,"andersonri@whbbrasil.com.br")
+		aAdd(aMail,"darlenesc@whbbrasil.com.br")
+		aAdd(aMail,"andreiap@whbusinagem.com.br")
+		aAdd(aMail,"amabilict@whbbrasil.com.br")
+		aAdd(aMail,"cristianepo@whbbrasil.com.br")
+		aAdd(aMail,"wagnersf@whbfundicao.com.br")
+		aAdd(aMail,"guilhermelf@whbusinagem.com.br")
+		aAdd(aMail,"renatab@whbfundicao.com.br")
+		aAdd(aMail,"diegoah@whbfundicao.com.br")
+//		aAdd(aMail,"allanpr@whbusinagem.com.br")
+		aAdd(aMail,"josiass@whbfundicao.com.br")
+//		aAdd(aMail,"eltongf@whbfundicao.com.br")
+		aAdd(aMail,"renatoc@whbbrasil.com.br")
+		aAdd(aMail,"brunorf@whbfundicao.com.br")
+		aAdd(aMail,"karinalr@whbbrasil.com.br")
+		aAdd(aMail,"josefc@whbbrasil.com.br")
+		aAdd(aMail,"gilvanios@whbbrasil.com.br")
+		aAdd(aMail,"graffpj@whbbrasil.com.br")
+		aAdd(aMail,"denisws@whbfundicao.com.br")
+		aAdd(aMail,"tiagoms@whbusinagem.com.br")
+//		aAdd(aMail,"luizfr@whbbrasil.com.br")
+//		aAdd(aMail,"luizgb@whbfundicao.com.br")
+	
+	//ENVIA EMAIL INFORMATIVO DE ENTRADA DE PRODUTO TES DE DEVOLUCAO 233
+	ElseIf cPar=="PEDE"
+
+		cCondic  := "ALLTRIM(UPPER(SD1->D1_TES))$'233'"  //-- TES PASSADA PELO HESSLERR
+		cAssunto := "DEVOLUÇÃO DE MATERIAL"
+		aAdd(aMail,"gilsonrc@whbbrasil.com.br")
+		aAdd(aMail,"diegorrs@whbbrasil.com.br")
+		aAdd(aMail,"valmirp@whbbrasil.com.br")                                                                
+		aAdd(aMail,"sergioss@whbbrasil.com.br")
+		
+	//ENVIA EMAIL INFORMATIVO DE ENTRADA DE PRODUTO FE e FE4
+	ElseIf cPar=="FJE4"
+		cCondic  := "(UPPER(SubStr(SB1->B1_COD,1,2))== 'FJ' .OR. UPPER(SubStr(SB1->B1_COD,1,3))== 'FE4')"
+		cAssunto := "ENTRADA DE FERRAMENTAS FORJARIA"
+		aAdd(aMail,"maiconmt@whbfundicao.com.br") 
+		
+	
+	//ENVIA EMAIL INFORMATIVO DE ENTRADA DE PRODUTO MP04
+	ElseIf cPar=="MP04"
+	
+		cCondic  := "ALLTRIM(UPPER(SB1->B1_GRUPO))$'MP04'"
+		cAssunto := "MATERIA PRIMA MP04 FORJARIA"
+		aAdd(aMail,"mariocp@whbbrasil.com.br")
+		aAdd(aMail,"rosivalcl@whbbrasil.com.br") 
+		aAdd(aMail,"geovanebl@whbbrasil.com.br") 
+		aAdd(aMail,"argleygmb@whbbrasil.com.br")  
+		aAdd(aMail,"carlost@whbbrasil.com.br")
+		
+	//ENVIA EMAIL INFORMATIVO DE ENTRADA DE PRODUTO MA40.000004
+	ElseIf cPar=="MA40"
+	
+		cCondic  := "ALLTRIM(UPPER(SB1->B1_COD))$'MA40.000004'"
+		cAssunto := "MA40.000004 FORJARIA"             
+		
+		aAdd(aMail,"rosivalcl@whbfundicao.com.br")
+		aAdd(aMail,"argleygmb@whbfundicao.com.br")
+		aAdd(aMail,"rodrigoac@whbbrasil.com.br")		 
+	
+	// ENVIA EMAIL PARA LOGISTICA FUNDICAO QUANDO FOR ENTRADA DE PRODUTO COM B1_CERTIF == 'S'
+	ElseIf cPar=="CERT"
+
+		cCondic  := "SB1->B1_CERTIF=='S'"
+		cAssunto := "MATERIAL COM CERTIFICADO"
+		aAdd(aMail,"evertong@whbusinagem.com.br")
+		aAdd(aMail,"evaldomc@whbbrasil.com.br")
+		aAdd(aMail,"antoniofs@whbfundicao.com.br")
+		aAdd(aMail,"marcelogs@whbfundicao.com.br")
+		aAdd(aMail,"joaofs@whbfundicao.com.br")
+		aAdd(aMail,"lucianodb@whbfundicao.com.br")
+		aAdd(aMail,"paulorg@whbusinagem.com.br")
+		aAdd(aMail,"michaelrp@whbfundicao.com.br")
+		
+	// ENVIA EMAIL PARA MANUTENCAO QUANDO FOR ENTRADA DE MATERIAL IM19.000025 A PEDIDO DO SR. DAITON (OS: 004611)
+	ElseIf cPar=="IM19"
+		
+		cCondic  := "ALLTRIM(UPPER(SB1->B1_COD))$'IM19.000025/IM19.000113'"
+		cAssunto := "MATERIAL IM19"
+		aAdd(aMail,"daiaraki@whbfundicao.com.br")
+//		aAdd(aMail,"kurtm@whbfundicao.com.br")
+		aAdd(aMail,"robertopt@whbfundicao.com.br")
+		aAdd(aMail,"luizag@whbfundicao.com.br")
+		aAdd(aMail,"ricardocs@whbfundicao.com.br")
+		aAdd(aMail,"fleningws@whbfundicao.com.br")
+		               
+	// OS - 003985 - HelpDesk		
+	ElseIf cPar=='QUAL'
+		cCondic := 'SF1->F1_FORNECE$"002361/000284"'
+		cAssunto := "ENTRADA DE MATERIAL DE RETORNO"
+		aAdd(aMail,"eliom@whbbrasil.com.br")
+//		aAdd(aMail,"uandersonn@whbbrasil.com.br")
+		aAdd(aMail,"josegcs@whbbrasil.com.br")
+	                   
+	// OS - 011881 - Portal
+	ElseIf cPar=='OLEO'
+		cCondic := "ALLTRIM(UPPER(SB1->B1_COD))$'"
+		cCondic += "OL03.000010/"
+		cCondic += "OL53.000001/"
+		cCondic += "OL53.000002/"
+		cCondic += "OL53.000003/"
+		cCondic += "OL53.000004/"
+		cCondic += "OL53.000006/"
+		cCondic += "OL53.000020/"
+		cCondic += "OL53.000023/"
+		cCondic += "OL53.000024/"
+		cCondic += "OL53.000025/"
+		cCondic += "OL53.000026/"
+		cCondic += "OL53.000027/"
+		cCondic += "OL53.000028/"
+		cCondic += "OL53.000029/"
+		cCondic += "OL53.000030/"
+		cCondic += "OL53.000031/"
+		cCondic += "OL53.000033/"
+		cCondic += "OL53.000034/"
+		cCondic += "OL53.000036/"
+		cCondic += "OL53.000037/"
+		cCondic += "OL53.000038/"
+		cCondic += "OL53.000044/"
+		cCondic += "OL53.000047/"
+		cCondic += "OL53.000048/"
+		cCondic += "PQ50.000002/"
+		cCondic += "PQ50.000003/"
+		cCondic += "PQ50.000004/"
+		cCondic += "PQ50.000025/"
+		cCondic += "PQ50.000026/"
+		cCondic += "PQ50.000032'"
+		cAssunto := "ENTRADA DE OLEO"
+		aAdd(aMail,"diogoba@whbfundicao.com.br")  
+		aAdd(aMail,"edersonsf@whbfundicao.com.br")
+		aAdd(aMail,"mateushd@whbbrasil.com.br")
+		
+	ElseIf cPar == "AMZ1"
+	
+		cCondic  := "ALLTRIM(SD1->D1_LOCAL)$'32/33'"
+		cAssunto := "Entrada de Produto para Armazém "
+		aAdd(aMail,"ericalp@whbbrasil.com.br")
+		aAdd(aMail,"marciolt@whbbrasil.com.br")
+		aAdd(aMail,"tiagoms@whbbrasil.com.br")
+		aAdd(aMail,"elenitaou@whbusinagem.com.br")
+		aAdd(aMail,"leandrojs@whbusinagem.com.br")
+//		aAdd(aMail,"adilsonmj@whbusinagem.com.br")
+		aAdd(aMail,"josems@whbbrasil.com.br")
+		aAdd(aMail,"antoniovg@whbusinagem.com.br")
+		aAdd(aMail,"elibertoso@whbusinagem.com.br")
+		aAdd(aMail,"marcosc@whbbrasil.com.br")
+		aAdd(aMail,"luizac@whb.interno")
+		aAdd(aMail,"josemarsp@whb.interno")   
+		aAdd(aMail,"almirantec@whbbrasil.com.br")   
+		aAdd(aMail,"rodrigots@whbbrasil.com.br")   
+		aAdd(aMail,"diogoba@whbbrasil.com.br")
+		aAdd(aMail,"andersonsc@whbbrasil.com.br")
+		aAdd(aMail,"elibertoso@whbbrasil.com.br")
+		
+		
+	ElseIf cPar == "AMZ2"
+	
+		cCondic  := "ALLTRIM(SD1->D1_LOCAL)$'31' .AND. ALLTRIM(SD1->D1_GRUPO)$'FE31/FE32/FE33/FE35'"
+		cAssunto := "Entrada de Produto para Armazém "
+		aAdd(aMail,"luisc@whbbrasil.com.br")
+		aAdd(aMail,"eneiasc@whbbrasil.com.br")
+		aAdd(aMail,"Crisvaldo@whbbrasil.com.br")
+		aAdd(aMail,"julianorj@whbbrasil.com.br")
+		aAdd(aMail,"JoelmaMB@whbbrasil.com.br")
+		aAdd(aMail,"diogoan@whbusinagem.com.br")
+		aAdd(aMail,"samueldo@whbusinagem.com.br")
+        aAdd(aMail,"paulohp@whbusinagem.com.br")
+        aAdd(aMail,"luisrs@whbbrasil.com.br")        
+        aAdd(aMail,"aldoaf@whbbrasil.com.br")
+        aAdd(aMail,"gilbertot@whbusinagem.com.br")
+        
+	ElseIf cPar == 'AMZ3'
+
+		cCondic  := "ALLTRIM(SD1->D1_LOCAL)$'21/22/2E' .AND. ALLTRIM(SD1->D1_CC)$'ALMOXARI'"
+		cAssunto := "Entrada de Produto para Armazém "
+		aAdd(aMail,"lucianodb@whbfundicao.com.br")
+		aAdd(aMail,"reginaldoar@whbbrasil.com.br")
+		aAdd(aMail,"brunorf@whbbrasil.com.br")
+		aAdd(aMail,"paulorg@whbbrasil.com.br")	
+			
+	ElseIf cPar == 'AMZ4'
+
+		cCondic  := "ALLTRIM(SD1->D1_LOCAL)$'41'"
+		cAssunto := "Entrada de Produto para Armazém "
+		aAdd(aMail,"mariocp@whbbrasil.com.br")
+		aAdd(aMail,"edersonsf@whbbrasil.com.br")
+		aAdd(aMail,"angelamh@whbfundicao.com.br")
+		
+	ElseIf cPar == 'AMZ5'
+
+		cCondic  := "ALLTRIM(SD1->D1_LOCAL)$'36'"
+		cAssunto := "Entrada de Produto para Armazém "
+		aAdd(aMail,"tiagoms@whbbrasil.com.br")
+
+	ElseIf cPar == 'AMZ6'
+
+		If SM0->M0_CODFIL == "01"
+			cCondic  := "ALLTRIM(SD1->D1_LOCAL)$'51'"
+			cAssunto := "Entrada de Produto para Armazém "
+			aAdd(aMail,"antoniovg@whbusinagem.com.br")
+		ElseIf SM0->M0_CODFIL == "02"
+			cCondic  := "ALLTRIM(SD1->D1_LOCAL)$'51/52/53'"
+			cAssunto := "Entrada de Produto para Armazém "
+			aAdd(aMail,"hesslerr@whbbrasil.com.br")  
+			aAdd(aMail,"rubenssr@whbbrasil.com.br")
+			aAdd(aMail,"jonestonbm@whbbrasil.com.br")
+			aAdd(aMail,"emanuelbm@whbbrasil.com.br")
+			aAdd(aMail,"EricaLP@whbbrasil.com.br")
+		EndIf
+			
+	ElseIf cPar == 'FIPQ'
+		
+		cCondic  := "ALLTRIM(SB1->B1_FISPQ)$'S'"
+		cAssunto := "Entrada de Produto Quimico "
+		aAdd(aMail,"evaldomc@whbfundicao.com.br")
+	
+	//-- OS Nº: 034153 
+	ElseIf cPar == '6664'
+		
+		cCondic  := "SD1->D1_FORNECE$'006664' .AND. ALLTRIM(SD1->D1_TES)$'194'"
+		cAssunto := "Entrada de NF para Fornecedor 006664 TES 194 "
+		aAdd(aMail,"lilianeg@whbbrasil.com.br")
+		aAdd(aMail,"brunorf@whbfundicao.com.br")
+		aAdd(aMail,"josinaldosp@whbfundicao.com.br")
+		aAdd(aMail,"joaosn@whbfundicao.com.br")
+		aAdd(aMail,"andrelr@whb.interno")
+		aAdd(aMail,"lucianoc@whbfundicao.com.br")
+	
+	// -- OS. 038956  *  guilhermedc  *  02/10/2012 -- //
+	//-- ENVIA EMAIL INFORMATIVO DE ENTRADA DE PRODUTO DO GRUPO PA
+	ElseIf cPar == 'PAXX'
+
+			cCondic  := "SB1->B1_GRUPO$'PA01/PA02/PA03/PA04/PA06' .And. SF1->F1_TIPO$'B/D'"
+			cAssunto := "MATERIAL RECEBIDO DO CLIENTE"
+			
+			//-- Logistica Interna
+			aAdd(aMail,"comp@whbbrasil.com.br")
+			aAdd(aMail,"suzaneic@whbusinagem.com.br")
+			aAdd(aMail,"jianct@whbbrasil.com.br")
+			aAdd(aMail,"lupercioc@whbbrasil.com.br")
+			
+			//-- Lista-Custos
+			aAdd(aMail,"anapp@whbbrasil.com.br")		// Ana Paula Pelhuca
+			aAdd(aMail,"cibelleh@whbusinagem.com.br")	// Cibelle Hinke
+			aAdd(aMail,"daianesc@whbbrasil.com.br")		// Daiane S. Camargo
+	//		aAdd(aMail,"devanirlo@whbbrasil.com.br")	// Devanir Lino de Oliveira
+			aAdd(aMail,"douglasfs@whbfundicao.com.br")	// Douglas Fernando dos Santos
+			aAdd(aMail,"reginasm@whbbrasil.com.br")		// Regina S. Moreira
+			
+			//-- Qualidade Devolução
+//			aAdd(aMail,"allanpr@whbusinagem.com.br")	// Allan Dioni Pinheiro Ribeiro
+			aAdd(aMail,"edsonab@whbbrasil.com.br")		// Edson Araujo Barbosa
+			aAdd(aMail,"thiagoei@whbfundicao.com.br")	// Thiago Eliasaf Iaczkowski <thiagoei@whbfundicao.com.br>
+			
+			
+	ElseIf cPar == 'ITDE'
+
+			cCondic  := "SF1->F1_TIPO$'D'"
+			cAssunto := "NOTA DEVOLUCAO"
+			
+			//-- Logistica Interna
+			aAdd(aMail,"luciano.camargo@itesapar.com.br")
+			aAdd(aMail,"emanuelle.plodek@itesapar.com.br")
+			aAdd(aMail,"fabricio.gurski@itesapar.com.br")
+			
+			//-- Qualidade Devolução
+			//aAdd(aMail,"fabricio.gurski@itesapar.com.br")	
+			//aAdd(aMail,"louise.ferreira@itesapar.com.br")	
+			aAdd(aMail,"eloir.voichicoski@itesapar.com.br")				
+			aAdd(aMail,"andressa.valle@itesapar.com.br")
+			//aAdd(aMail,"dilmar.franca@itesapar.com.br")
+			aAdd(aMail,"evandro.iachinski@itesapar.com.br")						
+			aAdd(aMail,"luiz.ripka@itesapar.com.br")						
+			//aAdd(aMail,"evandro.iachinski@itesapar.com.br")									
+
+	EndIf
+	
+	
+	SD1->(DbSetOrder(1)) //D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+D1_COD+D1_ITEM
+	SB1->(DbSetOrder(1)) //B1_FILIAL+B1_COD
+	SA1->(DbSetOrder(1)) //filial + cod + loja
+	
+	SD1->(DbSeek(xFilial("SD1")+SF1->F1_DOC+SF1->F1_SERIE))
+	
+	//aVarre todos os itens da NF em questão
+	While SD1->(!EOF()) .AND. SD1->D1_FILIAL == SF1->F1_FILIAL .AND. SD1->D1_DOC==SF1->F1_DOC .AND. SD1->D1_SERIE==SF1->F1_SERIE
+		//Se for o mesmo fornecedor e loja
+		If SF1->F1_FORNECE==SD1->D1_FORNECE .AND. SF1->F1_LOJA==SD1->D1_LOJA
+		
+			SB1->(DbSeek(xFilial("SB1")+SD1->D1_COD))	
+
+			//-- ENVIA AVISO DE ENTRADA DE MATERIAL PARA O SOLICITANTE DA SC
+			//-- OS:052930,054478
+			If cPar=='SC00'
+				cCondic := ".F."
+				If SC7->(DbSeek(xFilial("SC7")+SD1->D1_PEDIDO+SD1->D1_ITEMPC))
+					//Se encontrar busca a SC pelo NUMSC e ITEMSC do SC7
+					If SC1->(DbSeek(xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC))
+	
+						aMailX := U_mailLogin(SC1->C1_SOLICIT) //funcao esta no fonte MT110STTS.PRW
+								
+						If(!empty(aMailX[1]))
+							
+							_n := aScan(aMail,{|x| x==aMailX[1] })
+							If _n==0
+								aAdd(aMail,aMailX[1])
+							Endif
+							
+							If Empty(cAssunto)
+								cAssunto := "ENTRADA DE MATERIAL DA(s) SC(s): "+alltrim(SC1->C1_NUM)
+							ElseIf !alltrim(SC1->C1_NUM)$cAssunto
+								cAssunto += "/"+alltrim(SC1->C1_NUM)
+							Endif
+							cCondic := ".T."
+						Endif
+					
+					Endif
+				Endif
+        	Endif
+        	
+			If &(cCondic)
+				
+				lEnvia := .T.   
+				
+				If cPar $ "AMZ1/AMZ2/AMZ3/AMZ4/AMZ5/AMZ6" .AND. lPri
+					cAssunto += SD1->D1_LOCAL
+					lPri := .F.
+				EndIf
+
+				cItems += '<tr>'
+				cItems += '<td>'+SD1->D1_COD+'</td>'
+				cItems += '<td>'+SD1->D1_DESCRI+'</td>'
+				cItems += '<td>'+STR(SD1->D1_QUANT)+'</td>'
+				cItems += '<td>'+AllTrim(Transform(SD1->D1_VUNIT,"@e 9,999,999.99"))+'</td>'
+				cItems += '<td>'+Alltrim(SD1->D1_DOC)+' - '+SD1->D1_SERIE+'</td>'
+				cItems += '<td>'+SD1->D1_FORNECE+'</td>'
+				cItems += '<td>'+SD1->D1_LOJA+'</td>'
+
+				//BUSCA A DESCRICAO DO CLIENTE
+			   	If SF1->F1_TIPO = 'N'
+					SA2->(DbSeek(xFilial("SA2") +SD1->D1_FORNECE+SD1->D1_LOJA))
+					If SA2->(Found())
+						cDescCli := SA2->A2_NOME
+					Endif
+			   	Else
+					SA1->(DbSeek(xFilial("SA1")+SD1->D1_FORNECE+SD1->D1_LOJA))
+					If SA1->(Found())
+						cDescCli := SA1->A1_NOME
+					Endif
+			   	EndIf                        
+				
+				cItems += '<td>'+cDescCli+'</td>'
+				
+				//BUSCA A DESCRICAO DA TES
+				SF4->(dbSetOrder(1))//F4_FILIAL+F4_CODIGO
+				SF4->(dbSeek(xFilial("SF4")+SD1->D1_TES))
+
+				cItems += '<td>'+SD1->D1_TES+'</td>'
+				cItems += '<td>'+SF4->F4_TEXTO+'</td>'
+				
+				cItems += '</tr>'
+			EndIf
+
+		EndIf
+		
+		SD1->(DbSkip())
+	EndDo
+            
+	If lEnvia
+		cMsg := '<html>'
+		cMsg += '<body style="font-family:arial">'
+		cMsg += '<p></p>'
+		cMsg += '<table width="100%" border="1">'
+		
+		cMsg += '<tr style="background:#ccc">'
+		cMsg += '<td colspan="10" style="background:#ccc">'
+		cMsg += cAssunto
+		cMsg += '</td></tr>'
+		
+		cMsg += '<tr style="background:#abc">'
+		cMsg += '<td>Produto</td>'
+		cMsg += '<td>Descrição</td>'
+		cMsg += '<td>Quant</td>'
+		cMsg += '<td>Valor Unit.</td>'
+		cMsg += '<td>NF/Serie</td>'
+		cMsg += '<td>Cliente</td>'
+		cMsg += '<td>Loja</td>'		
+		cMsg += '<td>Descrição Cli.</td>'
+		cMsg += '<td>Tes</td>'
+		cMsg += '<td>Desc. Tes</td>'
+		
+		cMsg += '</tr>'
+		
+		cMsg += cItems
+					
+		cMsg += '</table>'
+		cMsg += '</body>'
+		cMsg += '</html>
+		
+		cTo := ""
+		
+		For x:=1 to Len(aMail)
+			cTo += aMail[x]+";"	
+		Next					
+
+		oMail          := Email():New()
+		oMail:cMsg     := cMsg
+		oMail:cAssunto := "*** "+cAssunto+" ***"
+		oMail:cTo      := cTo
+		
+		oMail:Envia()
+	EndIf
+
+Return
