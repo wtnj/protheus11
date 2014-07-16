@@ -1,0 +1,304 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 20/10/99
+
+User Function incvetor()        // incluido pelo assistente de conversao do AP5 IDE em 20/10/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_AMATA010,_AMATA020,_AMATA030,_AMATA040,_AMATA040,_AMATA680")
+SetPrvt("_AMATA681,_AMATA140CAB,_AMATA140ITENS,_AMATA120CAB,_AMATA120ITENS,_AMATA410CAB")
+SetPrvt("_AMATA410ITEM,_AMATA415CAB,_AMATA415ITEM,_ACONA050CAB")
+SetPrvt("_ACONA050ITENS,_AMATA240,_AMATA241CAB,_AMATA241ITENS,_AMATA250,_AMATA270")
+SetPrvt("_AFINA040,_AFINA050,_AALTSA1,_CVETOR,_aMATA115,_aMATA080,_aQIEA030")
+SetPrvt("_aCFGX016Cab,_aCFGX016Itens,_aMata110Cab,_aMata110Itens,_aMata416Cab,_aMata416Item")
+SetPrvt("_aMATA265cab,_aMATA265ITENS")
+
+aTam := TamSX3("F4_CF")
+
+_aMATA010 := {}
+aadd(_aMATA010,{"B1_COD"                ,"C",15,0})
+aadd(_aMATA010,{"B1_DESC"               ,"C",30,0}) 
+//aadd(_aMATA010,{"B1_GRUPO"              ,"C",04,0}) 
+//aadd(_aMATA010,{"B1_PRV1"               ,"N",12,2}) 
+//aadd(_aMATA010,{"B1_CODBAR"             ,"C",18,0}) 				
+aadd(_aMATA010,{"B1_TIPO"               ,"C",02,0})
+aadd(_aMATA010,{"B1_UM"                 ,"C",02,0})
+aadd(_aMATA010,{"B1_LOCPAD"             ,"C",02,0})
+//aadd(_aMATA010,{"B1_TS"                 ,"C",03,0})		  
+ 	  
+_aMata020   := {{"A2_COD"    ,"C" ,06,0},;
+					{"A2_LOJA"   ,"C" ,02,0},;
+					{"A2_NOME"   ,"C" ,40,0},;
+					{"A2_NREDUZ" ,"C" ,20,0},;
+					{"A2_END"    ,"C" ,40,0},;
+					{"A2_MUN"    ,"C" ,15,0},;
+					{"A2_EST"    ,"C" ,02,0}}
+
+_aMATA030 := {}
+	aadd(_aMATA030,{"A1_COD"                ,"C",06,0}) // Codigo
+	aadd(_aMATA030,{"A1_LOJA"               ,"C",02,0}) // Loja
+	aadd(_aMATA030,{"A1_NOME"               ,"C",40,0}) // Nome
+	aadd(_aMATA030,{"A1_NREDUZ"             ,"C",20,0})
+	aadd(_aMATA030,{"A1_TIPO"               ,"C",01,0})
+	aadd(_aMATA030,{"A1_END"                ,"C",40,0}) // Endereco
+	Aadd(_aMATA030,{"A1_MUN"                ,"C",15,0})
+	aadd(_aMATA030,{"A1_EST"                ,"C",02,0})
+
+_aMata040   :={{"A3_COD"    ,"C" , 6,0},;
+					{"A3_NOME"   ,"C" ,40,0}}
+
+_aMata050   :={{"A4_COD"    ,"C" , 6,0},;
+					{"A4_NOME"   ,"C" ,40,0}}
+
+_aMata080   :={{"F4_CODIGO" ,"C"  , 3,0},;
+					{"F4_TIPO"   ,"C"  , 1,0},;
+					{"F4_ICM"    ,"C"  , 1,0},;
+					{"F4_IPI"    ,"C"  , 1,0},;
+					{"F4_CREDICM","C"  , 1,0},;
+					{"F4_CREDIPI","C"  , 1,0},;
+					{"F4_DUPLIC" ,"C"  , 1,0},;
+					{"F4_ESTOQUE","C"  , 1,0},;
+                    {"F4_CF"     ,"C"  , aTam[1],0},;
+					{"F4_TEXTO"  ,"C"  ,20,0},;
+					{"F4_PODER3" ,"C"  , 1,0},;
+					{"F4_LFICM"  ,"C"  , 1,0},;
+					{"F4_LFIPI"  ,"C"  , 1,0},;
+					{"F4_DESTACA","C"  , 1,0},;
+					{"F4_INCIDE" ,"C"  , 1,0},;
+					{"F4_COMPL"  ,"C"  , 1,0}}
+
+_aMATA115cab :=  {}
+aadd(_aMATA115cab,{"MV_PAR11"   ,"D" ,08,0})
+aadd(_aMATA115cab,{"MV_PAR12"   ,"D" ,08,0})
+aadd(_aMATA115cab,{"MV_PAR13"   ,"N" ,01,0})
+aadd(_aMATA115cab,{"MV_PAR14"   ,"C" ,06,0})
+aadd(_aMATA115cab,{"MV_PAR15"   ,"C" ,02,0})
+aadd(_aMATA115cab,{"MV_PAR16"   ,"N" ,01,0})
+aadd(_aMATA115cab,{"MV_PAR17"   ,"N" ,01,0})
+aadd(_aMATA115cab,{"MV_PAR18"   ,"C" ,02,0})
+aadd(_aMATA115cab,{"MV_PAR21"   ,"N" ,14,2})
+aadd(_aMATA115cab,{"MV_PAR22"   ,"N" ,01,0})
+aadd(_aMATA115cab,{"MV_PAR23"   ,"C" ,06,0})
+aadd(_aMATA115cab,{"MV_PAR24"   ,"C" ,03,0})
+aadd(_aMATA115cab,{"MV_PAR25"   ,"C" ,06,0})
+aadd(_aMATA115cab,{"MV_PAR26"   ,"C" ,02,0})
+aadd(_aMATA115cab,{"MV_PAR27"   ,"C" ,03,0})
+aadd(_aMATA115cab,{"MV_PAR28"   ,"N" ,14,2})
+aadd(_aMATA115cab,{"MV_PAR29"   ,"N" ,14,2})
+
+_aMATA115itens:= {}
+aadd(_aMATA115itens,{"AUTNOTA" ,"C" ,09,0})
+					
+_aMata680   :={{"H6_OP"     ,"C" ,11,0},;
+			      {"H6_PRODUTO","C" ,15,0},;
+               {"H6_DTAPONT","D" ,08,0},;
+					{"H6_DATAINI","D" ,08,0},;
+					{"H6_DATAFIN","D" ,08,0},;
+					{"H6_QTDPROD","N" ,11,2},;
+					{"H6_QTDPERD","N" ,11,2},;					
+					{"H6_HORAINI","C" ,05,0},;
+					{"H6_HORAFIN","C" ,05,0}}
+				  
+
+
+_aMata681   :={{"H6_OP"     ,"C" ,11,0},;
+               {"H6_PRODUTO","C" ,15,0},;
+					{"H6_OPERAC" ,"C" ,02,0},;
+		         {"H6_DTAPONT","D" ,08,0},;
+					{"H6_DATAINI","D" ,08,0},;
+					{"H6_DATAFIN","D" ,08,0},;
+					{"H6_HORAINI","C" ,05,0},;
+					{"H6_HORAFIN","C" ,05,0},;
+					{"H6_QTDPROD","N" ,11,2},;
+					{"H6_QTDPERD","N" ,11,2}}
+
+_aMata520   :={{"F2_DOC"    ,"C" ,06,0},;
+					{"F2_SERIE"  ,"C" ,03,0}}
+
+_aCFGX016Cab   := {{"X5_TABELA"  ,"C" ,02,0}}
+
+_aCFGX016Itens := {{"X5_CHAVE"   ,"C" ,06,0},;
+					    {"X5_DESCRI"  ,"C" ,55,0}}
+
+_aMata110Cab   :={{"C1_NUM"	  ,"C",06,0},;
+					   {"C1_EMISSAO" ,"C",06,0}}
+
+_aMata110Itens :={{"C1_ITEM"   ,"C",02,0},;
+						{"C1_PRODUTO","C",15,0},;
+						{"C1_QUANT"  ,"N",12,2},;
+						{"C1_FORNECE","C",06,0}}
+
+_aMata140Cab   :={{"F1_DOC"    ,"C",  6,0},;
+                 {"F1_SERIE"  ,"C",  3,0},;
+                 {"F1_TIPO"   ,"C",  1,0},;
+                 {"F1_FORNECE","C",  6,0},;
+                 {"F1_LOJA"   ,"C",  2,0},;
+                 {"F1_EMISSAO","D",  8,0}}
+
+_aMata140Itens :={{"D1_COD"    ,"C", 15,0},;
+                 {"D1_QUANT"  ,"N", 11,2},;
+		           {"D1_VUNIT"  ,"N", 14,2},;
+                 {"D1_TOTAL"  ,"N", 14,2},;
+					  {"D1_PEDIDO" ,"C",  6,0},;
+					  {"D1_ITEMPC" ,"C",  2,0}}
+
+_aMata120Cab   :={{"C7_NUM"    ,"C",  6,0},;
+                 {"C7_EMISSAO","D",  8,0},;
+                 {"C7_FORNECE","C",  6,0},;
+                 {"C7_LOJA"   ,"C",  2,0},;
+                 {"C7_COND"   ,"C",  3,0},;
+					  {"C7_FILENT" ,"C",  2,0},;
+					  {"C7_CONTATO","C", 15,0},;
+					  {"C7_TPFRETE","C",  1,0},;
+					  {"C7_DESC1"  ,"N",  5,2},;
+					  {"C7_DESC2"  ,"N",  5,2},;
+					  {"C7_DESC3"  ,"N",  5,2}}
+
+_aMata120Itens :={{"C7_ITEM"   ,"C",  2,0},;
+                 {"C7_PRODUTO","C", 15,0},;
+                 {"C7_QUANT"  ,"N", 12,2},;
+		           {"C7_PRECO"  ,"N", 14,2},;
+		           {"C7_DATPRF" ,"D", 08,0},;
+		           {"C7_FLUXO"  ,"C", 01,0}}
+
+
+_aMata410Cab := {}
+aadd(_aMATA410Cab,{"C5_NUM"                ,"C",06,0}) // Numero do pedido
+aadd(_aMATA410Cab,{"C5_CLIENTE"            ,"C",06,0}) // Codigo do cliente
+aadd(_aMATA410Cab,{"C5_LOJACLI"            ,"C",02,0}) // Loja do cliente
+aadd(_aMATA410Cab,{"C5_TIPO"               ,"C",01,0}) // Tipo de pedido
+aadd(_aMATA410Cab,{"C5_CONDPAG"            ,"C",03,0}) // Codigo da condicao de pagamanto
+aadd(_aMATA410Cab,{"C5_VEND1"              ,"C",06,0}) // Codigo do vendedor
+aadd(_aMATA410Cab,{"C5_MENNOTA"            ,"C",30,0}) // Mensagem da nota
+aadd(_aMATA410Cab,{"C5_EMISSAO"            ,"D",08,0}) // Data de emissao
+aadd(_aMATA410Cab,{"C5_TABELA"             ,"C",01,0})
+aadd(_aMATA410Cab,{"C5_TIPOCLI"            ,"C",01,0})
+
+_aMata410Item :={{"C6_NUM"    ,"C",06,0},;
+					  {"C6_ITEM"   ,"C",  2,0},;
+                 {"C6_PRODUTO","C", 15,0},;
+                 {"C6_QTDVEN" ,"N",  9,2},;
+		           {"C6_PRCVEN" ,"N", 11,2},;
+		           {"C6_VALOR"  ,"N", 12,2},;
+					  {"C6_ENTREG" ,"D", 08,0},;
+                 {"C6_UM"     ,"C",  2,0},;
+					  {"C6_TES"    ,"C",  3,0},;
+					  {"C6_LOCAL"  ,"C",  2,0}}
+
+_aMata415Cab := {{"CJ_CLIENTE","C", 6,0},;
+					  {"CJ_LOJA"   ,"C", 2,0},;
+                 {"CJ_CONDPAG","C", 3,0}}
+
+_aMata415Item :={{"CK_ITEM"   ,"C", 2,0},;
+                 {"CK_PRODUTO","C",15,0},;
+					  {"CK_UM"     ,"C", 2,0},;
+					  {"CK_QTDVEN" ,"N", 9,2},;
+                 {"CK_PRCVEN" ,"N",11,2},;
+                 {"CK_TES"    ,"C", 3,0},;
+					  {"CK_PEDCLI" ,"C", 9,0}}
+
+_aMata416Cab := {{"CJ_NUM"    ,"C", 6,0},;
+					  {"CJ_CLIENTE","C", 6,0},;
+					  {"CJ_LOJA"   ,"C", 2,0},;
+                 {"CJ_CONDPAG","C", 3,0}}
+
+_aMata416Item :={{"CK_ITEM"   ,"C", 2,0},;
+                 {"CK_PRODUTO","C",15,0},;
+					  {"CK_UM"     ,"C", 2,0},;
+					  {"CK_QTDVEN" ,"N", 9,2},;
+                 {"CK_PRCVEN" ,"N",11,2},;
+                 {"CK_TES"    ,"C", 3,0},;
+					  {"CK_PEDCLI" ,"C", 9,0},;
+					  {"CK_NUM"    ,"C", 6,0}}			  
+
+_aCona050Cab := {{'DDATALANC' ,'D',08,0},;
+                {'CLOTECONT' ,'C',04,0}}
+
+_aCona050ITens:={{"I2_LINHA"  ,'C', 02,0},;
+                {"I2_DC"     ,'C', 01,0},;
+		          {"I2_DEBITO" ,'C', 15,0},;
+                {"I2_CREDITO",'C', 15,0},;
+		          {"I2_VALOR"  ,'N', 17,2},;
+		          {"I2_HIST"   ,'C', 32,0}}
+
+
+_aMata240      :={{"D3_TM"     ,"C", 03,0},;
+                 {"D3_COD"    ,"C", 15,0},;
+                 {"D3_UM"     ,"C", 02,0},;
+					  {"D3_QUANT"  ,"N", 11,2},;
+                 {"D3_OP"     ,"C", 11,0},;
+                 {"D3_LOCAL"  ,"C", 02,0},;
+                 {"D3_EMISSAO","D", 08,0}}
+
+_aMata241Cab   :={{"D3_TM"     ,"C", 03,0},;
+                 {"D3_DOC"    ,"C",  6,0},;
+                 {"D3_EMISSAO","D", 08,0}}
+
+_aMata241Itens :={{"D3_COD"    ,"C", 15,0},;
+                 {"D3_UM"     ,"C", 02,0},;
+					  {"D3_QUANT"  ,"N", 11,2},;
+                 {"D3_OP"     ,"C", 11,0},;
+                 {"D3_LOCAL"  ,"C", 02,0}}
+
+_aMata250      :={{"D3_TM"     ,"C", 03,0},;
+                 {"D3_COD"    ,"C", 15,0},;
+                 {"D3_UM"     ,"C", 02,0},;
+					  {"D3_QUANT"  ,"N", 11,2},;
+                 {"D3_OP"     ,"C", 11,0},;
+                 {"D3_LOCAL"  ,"C", 02,0},;
+                 {"D3_EMISSAO","D", 08,0}}
+
+_aMata270      :={{"B7_COD"    ,"C", 15,0},;
+                 {"B7_LOCAL"  ,"C",  2,0},;
+                 {"B7_DOC"    ,"C",  6,0},;
+	              {"B7_DATA"   ,"D",  8,0},;
+					  {"B7_QUANT"  ,"N", 12,2}}
+
+_aFina040      :={{'E1_PREFIXO',"C", 03,0},;
+                 {'E1_NUM'      ,"C", 06,0},;
+                 {'E1_TIPO'     ,"C", 03,0},;                  
+                 {'E1_NATUREZ'  ,"C", 10,0},;
+                 {'E1_CLIENTE'  ,"C", 06,0},;
+                 {'E1_LOJA'     ,"C", 02,0},;
+                 {'E1_EMISSAO'  ,"D", 08,0},;
+	              {'E1_VENCTO'   ,"D", 08,0},;
+	              {'E1_VALOR'    ,"N", 17,2}}
+                                            
+//{'E1_VENCREA',"D", 08,0},;	      
+
+_aFina050      :={{'E2_PREFIXO',"C", 03,0},;
+					  {'E2_NUM'    ,"C", 06,0},;
+                 {'E2_TIPO'   ,"C", 03,0},;
+                 {'E2_NATUREZ',"C", 10,0},;
+                 {'E2_FORNECE',"C", 06,0},;
+	              {'E2_LOJA'   ,"C", 02,0},;
+                 {'E2_EMISSAO',"D", 08,0},;
+	              {'E2_VENCTO' ,"D", 08,0},;
+	              {'E2_VALOR'  ,"N", 17,2}}
+
+//	              {'E2_VENCREA',"D", 08,0},;
+					  
+_aAltSA1	     :={{"B1_COD"    ,"C" ,15,0},;
+                 {"B1_DESC"   ,"C" ,30,0}}
+
+_aQIEA030     :={{"AH_UNIMED" ,"C" ,02,0}}
+
+_aMATA265CAB  :={{"DA_PRODUTO","C", 15,0},;
+					  {"DA_LOCAL"  ,"C", 02,0},;
+					  {"DA_NUMSEQ" ,"C", 06,0},;
+					  {"DA_DOC"    ,"C", 06,0}}
+					  
+_aMATA265ITENS:={{"DB_ITEM"   ,"C", 03,0},;
+                 {"DB_LOCALIZ","C", 15,0},;
+                 {"DB_QUANT"  ,"N", 12,2},;
+					  {"DB_DATA"   ,"D", 08,0}}
+
+_cVetor  := ParamIxb
+
+// Substituido pelo assistente de conversao do AP5 IDE em 20/10/99 ==> __Return(&_cVetor)
+Return(&_cVetor)        // incluido pelo assistente de conversao do AP5 IDE em 20/10/99
+

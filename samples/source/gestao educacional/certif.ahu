@@ -1,0 +1,116 @@
+<% 
+#INCLUDE 'CERTIF.CH'
+local cDescLoc := ""
+local dData1
+local dData2     
+local cDescCoo := ""                
+local cEmp  := substr(RetSqlName("JAR"),4,2)
+local cFil  := xFilial("SRA")
+
+dbselectarea("JAR")
+dbsetorder(1)
+
+dbselectarea("JAH")
+dbsetorder(1)
+
+dbselectarea("SM0")
+
+// tabela do sistema empresa + filial
+SM0->( dbseek( cEmp + cFil ) )
+
+
+if JAH->(dbseek(xFilial("JAH")+HttpSession->ccurso))
+	
+	cDescLoc := alltrim(Posicione("JA3",1,xFilial("JA3")+JAH->JAH_UNIDAD,"JA3_DESLOC"))
+	
+	if JAR->( dbseek(xFilial("JAR")+HttpSession->ccurso) )
+		
+		dData1 := JAR->JAR_DATA1		
+		
+		While JAR->( ! Eof () .and. JAR_FILIAL + JAR_CODCUR == xFilial("JAR")+HttpSession->ccurso )
+			dData2 := JAR->JAR_DATA2
+			JAR->( dbSkip() )
+		End
+		
+	endif
+                              
+// procurar o nome do coordenador do curso          
+JAJ->( dbSetorder(1) )
+JAJ->( dbSeek(xFilial("JAJ")+HttpSession->ccurso) )
+While ! JAJ->( eof() ) .and. JAJ->JAJ_FILIAL+JAJ->JAJ_CODCUR == xFilial("JAJ")+HttpSession->ccurso  
+  if JAJ->JAJ_TIPO == "1" // titular
+     cDescCoo := Posicione("SRA",1,xFilial("SRA")+JAJ->JAJ_CODCOO,"RA_NOME")
+  endif
+     
+ JAJ->(dbskip())    
+end         
+%>
+
+<html>
+<head>
+<title> <%=STR0001%> </title> <!-- //CERTIFICADO DE CONCLUSÃO -->
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
+  <tr>
+    <td align="center" valign="top"> 
+<table width="788" height="475" border="1" cellpadding="0" cellspacing="0" bordercolor="E1E1E1">
+<tr>
+          <td><table width="788" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="10"><img src="../Imagens/cert_01.gif" width="64" height="82"></td>
+                <td width="778"><img src="<%=HttpSession->cPastaImg%>/cert-logo.gif" width="184" height="82"></td>
+              </tr>
+              <tr> 
+                <td><img src="../Imagens/cert_03.gif" width="64" height="383"></td>
+                <td valign="top"> <table width="100%" border="0" cellspacing="5" cellpadding="0">
+<tr> 
+                      <td><div align="center"><img src="../Imagens/cert_04.gif" width="218" height="42"></div></td>
+                    </tr>
+                    <tr> 
+                      <td><div align="center"></div></td>
+                    </tr>
+                    <tr> 
+                      <td><div align="center"><font size="4" face="Arial, Helvetica, sans-serif"><br>
+                          <br>
+                          <%=STR0002%> <%=HttpSession->aluno%> <!-- //Certificamos que -->
+                          <br>
+                          <%=STR0003%> <%=Httpsession->dcurso%> <!-- //participou do nosso curso -->
+                          <%=STR0004%> <!-- //", cumprindo toda a carga hor&aacute;ria" -->
+                          (<%=JAH->JAH_CARGA%> 
+                          <%=STR0005%> <!-- //h) -->
+                          <br>
+                          <%=STR0006%> <!-- //estabelecida, do dia  -->
+                          <%=dData1%> 
+                          <%=STR0007%> <!-- //at&eacute;  -->
+                          <%=dData2%>
+                          <br>
+                          <%=STR0008%> <!-- //na -->
+                          <%=ALLTRIM(SM0->M0_NOMECOM)%>&nbsp;-&nbsp;<%=cDescLoc%><p></p>
+                          </font></div></td>
+                    </tr>
+                    <tr> 
+                      <td>&nbsp;</td>
+                    </tr>
+                    <tr> 
+                      <td><div align="center"><font size="3" face="Arial, Helvetica, sans-serif"><%=SM0->M0_CIDCOB%>, <%=date()%></font></div></td>
+                    </tr>
+                    <tr> 
+                      <td><div align="center"><img src="../Imagens/cert_05.gif" width="228" height="62"></div></td>
+                    </tr>
+                    <tr> 
+                      <td><div align="center"><font size="3" face="Arial, Helvetica, sans-serif"><%=cDescCoo%><br>
+                          <%=iif(SRA->RA_SEXO=="M",STR0009,STR0010)%></font></div></td> <!-- //"Coordenador" - "Coordenadora" -->
+                    </tr>
+                  </table></td>
+              </tr>
+            </table></td>
+        </tr>
+      </table></td>
+  </tr>
+</table>
+</body>
+</html>
+<% endif %>

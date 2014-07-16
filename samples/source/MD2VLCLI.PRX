@@ -1,0 +1,6 @@
+#IFDEF WINDOWS
+	MSGSTOP("Voce digitou o Cliente :"+cCliente)
+#ELSE
+	Alert("Voce digitou o Cliente :"+cCliente)
+#ENDIF
+__RETURN(.T.)

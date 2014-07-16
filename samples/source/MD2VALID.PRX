@@ -1,0 +1,7 @@
+nLinGetD:=n
+#IFDEF WINDOWS
+	MsgStop(n)
+#ELSE
+	ALERT(Str(n))
+#ENDIF
+__RETURN(.T.)

@@ -1,0 +1,97 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ MA261IN         ³ Alexandre R. Bento    ³ Data ³ 15.01.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³  Ponto de Entrada que grava origem dos novos campos adi-  ´±± 
+±±³          ³  cionados no browse da transferencias modelo II (MATA261) ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+
+#INCLUDE "rwmake.ch"
+
+User Function MA261IN() 
+
+Local nOrdem    := 0 //_n  := PARAMIXB //Posicao do acols (item)
+Local nReg      := 0
+Local cProd     
+Local _nCarDef  
+Local _nDefeito 
+Local _nOper    
+Local _nForne   
+Local _nLoja    
+Local _nLocOri  
+Local _nCC      
+Local _nTur     
+Local _nMaq     
+Local _nLinha
+Local _nCodPa  // Adicionado em 13/12/12 
+Local _nCorrid  // Adicionado em 13/12/12 
+Local aArea := GetArea()
+Local aAreaSD3 := SD3->(GetArea())
+
+/*conout(UPPER(FUNNAME()))
+conout(UPPER(PROCNAME(1)))
+conout(UPPER(PROCNAME(2)))
+conout(UPPER(PROCNAME(3)))
+conout(UPPER(PROCNAME(4)))
+conout(UPPER(PROCNAME(5)))
+conout(UPPER(PROCNAME(6)))
+conout(UPPER(PROCNAME(7)))$"U_WMSA06"
+conout(UPPER(PROCNAME(8)))
+  */
+
+IF UPPER(FUNNAME())$"NHEST139/NHEST186/NHEST184/ACDT150/T_ACDT150/T_ACDV150/MATA250/WMSA06/WCFGA01" .Or. UPPER(PROCNAME(7))$"U_WMSA06"
+	RETURN
+ENDIF
+
+cProd     := Iif( Len(aCols[len(acols),1]) > 1,aCols[len(acols),1],aCols[len(acols),2])
+// posicao do campo no aHeader
+_nCarDef  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_CARDEF"})
+_nDefeito := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_DEFEITO"})
+_nOper    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_OPERACA"})
+_nForne   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_FORNECE"})
+_nLoja    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOJA"})
+_nLocOri  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOCORIG"})
+_nCC      := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_CC"})
+_nTur     := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_TURNO"})
+_nMaq     := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_MAQUINA"})
+_nLinha   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LINHA"})
+_nCodPa   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_CODPA"}) // Adicionado em 13/12/12
+_dDtRef   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_DTREF"}) // Adicionado em 26/04/13 - RNC
+_nCorrid  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_CORRID"}) // Adicionado em 30/09/13 - RASTREIO DA CORRIDA FORJARIA
+
+If !Inclui	 //so entra na visualização 
+   //Gravando os novos campos de Origem
+   //nOrdem := SD3->(IndexOrd()) // Guarda indice atual
+   //nReg   := SD3->(Recno()) // Guarda o registro atual
+   SD3->(DbSetOrder(2)) //filial + doc + produto  
+   SD3->(DbSeek(xFilial("SD3")+cDocumento+cProd))
+		
+   aCols[len(acols),_nCarDef]  := SD3->D3_CARDEF     
+   aCols[len(acols),_nDefeito] := SD3->D3_DEFEITO     
+   aCols[len(acols),_nOper]    := SD3->D3_OPERACA   
+   aCols[len(acols),_nForne]   := SD3->D3_FORNECE   
+   aCols[len(acols),_nLoja]    := SD3->D3_LOJA 
+   aCols[len(acols),_nLocOri]  := SD3->D3_LOCORIG   
+   aCols[len(acols),_nCC]	   := SD3->D3_CC    
+   aCols[len(acols),_nTur]	   := SD3->D3_TURNO       
+   aCols[len(acols),_nMaq]	   := SD3->D3_MAQUINA    
+   aCols[len(acols),_nLinha]   := SD3->D3_LINHA          
+   aCols[len(acols),_nCodPa]   := SD3->D3_CODPA          
+   aCols[len(acols),_dDtRef]   := SD3->D3_DTREF
+   aCols[len(acols),_nCorrid]  := SD3->D3_CORRID
+   
+   //SD3->(DbGoto(nReg)) //volta posicao do registro
+   //SD3->(DbSetOrder(nOrdem)) // Volta order de indice do arquivo
+Endif
+
+RestArea(aArea)
+RestArea(aAreaSD3)
+
+Return

@@ -1,0 +1,37 @@
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ A261TOK  ºAutor  ³ João Felipe da Rosaº Data ³  19/03/2010 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ VALIDA A ROTINA MATA261 (TRANSF. MOD. 2)                   º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ ESTOQUE / CUSTOS                                           º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+               
+User Function A261TOK()
+Local nProd  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_COD"})
+Local nLocal := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOCAL"})
+Local nQuant := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_QUANT"})
+Local nSaldo := 0
+
+
+	// VERIFICA SE EXISTE SALDO DO PRODUTO
+	SB2->(dbSetOrder(1)) // FILIAL + COD + LOCAL 
+	For x:=1 to Len(aCols)
+		If SB2->(dbSeek(xFilial("SB2")+Acols[n][nProd]+Acols[n][nLocal]))
+			nSaldo := SB2->B2_QATU - SB2->B2_QEMPSA
+		
+			If nSaldo - Acols[n][nQuant] < 0
+				Alert("Saldo insuficiente no armazém "+Acols[n][nLocal]+"!")
+				Return .F.
+			EndIf 
+		EndIf
+	Next
+	
+Return .T.

@@ -1,0 +1,7 @@
+User Function MTA265I()
+Local nLinha := ParamIxb[1]// Atualização de arquivos ou campos do usuário após a Inclusão da Distribuição do Produto
+
+cQuery := "UPDATE "+Retsqlname("SDB")+" SET D_E_L_E_T_ = '' WHERE R_E_C_N_O_ = "+alltrim(str(SDB->(RECNO())))
+TCSQLEXEC(cQuery)
+
+Return Nil

@@ -1,0 +1,83 @@
+
+/*
+As Variaveis PRIVATE que voce tem acesso sƒo:
+_oB          -> "Objeto TBrowser"
+_nAt         -> "Numero" com Registro no Browser
+_lAglutina   ->  "Logica" aglutina os registros TRUE/FALSE
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Elemento [01]- Titulo do campo                                              ³
+³ Elemento [02]- Nome do campo, se este existir no SX2,os outros elementos que³
+³                estiverem com NIL,serÆo atualizados com excessÆo do  element-³
+³                to[11]                                                       ³
+³ Elemento [03]- Mascara do Campo                                             ³
+³ Elemento [04]- Tamanho do campo                                             ³
+³ Elemento [05]- Decimais do campo                                            ³
+³ Elemento [06]- String p/ clausula VALID                                     ³
+³ Elemento [07]- Tipo do Usado  "S"                                           ³
+³ Elemento [08]- Tipo do Campo "C,N,D"                                        ³
+³ Elemento [09]- Alias das tabelas ref ao elemento[2]                         ³
+³ Elemento [10]- Obrigatorio ("S"/"N")                                        ³
+³ Elemento [11]- String contendo Numero da proxima coluna para o foco ou "F"  ³
+³                indicando o fim                                              ³
+³ Elemento [12]- Paramentros para Aglutinar ("K"-Campo Chave "A"-Adiciona o   ³
+³                Valor "S"-Subtrair o Valor)                                  ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+*/
+aHeader   :={{;            
+             NIL,;                    //1
+             "B1_CODBAR",;            //2
+             NIL,;                    //3
+             NIL,;                    //4
+             NIL,;                    //5
+             "A140VALIDCB()",;        //6
+             NIL,;                    //7
+             NIL,;                    //8
+             "SB1",;                  //9
+             "S",;                    //10
+				 "F",;                    //11
+				 "K";                     //12				 
+				},; 
+            {;        
+             NIL,;                         //1
+             "D1_COD",;                    //2
+             NIL,;                         //3
+             NIL,;                         //4
+             NIL,;                         //5
+             "A140VALIDCB()",;             //6
+             NIL,;                         //7
+             NIL,;                         //8
+             "SD1",;                       //9
+ 			    "S",;                         //10
+				 "4",;                         //11				 
+				 " ";                          //12
+			   },;
+            {;        
+             NIL,;        //1
+             "B1_DESC",;  //2
+             NIL,;        //3 
+             NIL,;        //4
+             NIL,;        //5
+             "A140VALIDCB()",;        //6
+             NIL,;        //7
+             NIL,;        //8
+             "SB1",;      //9 
+             "N",;        //10 
+				 NIL,;        //11				 	
+				 NIL;         //12			 
+				},; 
+            {;        
+             NIL,;        //1
+             "D1_QUANT",; //2
+             NIL,;        //3
+             NIL,;        //4
+             NIL,;        //5
+             "A140VALIDCB()",;        //6
+             NIL,;        //7
+             NIL,;        //8
+             "SD1",;      //9
+             "S",;        //10 
+				 " ",;        //11
+				 "A";         //12				 				 
+			  }}
+Return

@@ -1,0 +1,145 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ MA261D3          ³ Alexandre R. Bento    ³ Data ³ 15.01.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³  Ponto de Entrada que grava destino do novos campos adi-  ´±± 
+±±³          ³  cionados no browse da transferencias modelo II (MATA261) ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+#INCLUDE "rwmake.ch"
+
+User Function MA261D3()   
+
+Local aVetTmp := {}
+Local _n  := PARAMIXB //Posicao do acols (item)
+// posicao do campo no aHeader
+Local _nCarDef  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_CARDEF"})
+Local _nDefeito := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_DEFEITO"})
+Local _nOper    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_OPERACA"})
+Local _nForne   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_FORNECE"})
+Local _nLoja    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOJA"})
+Local _nLocOri  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOCORIG"})
+Local _nCC      := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_CC"})
+Local _nTur     := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_TURNO"}) //turno
+Local _nMaq     := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_MAQUINA"}) //maquina
+Local _nLinha   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LINHA"}) //maquina
+Local _nCodPa := aScan(aHeader,{|x|UPPER(Alltrim(x[2]))   == "D3_CODPA"}) // cod PA - Adicionado em 13/12/12
+Local _dDtRef   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_DTREF"}) //DATA REFERENCIA RNC - 26/04/13
+Local _nCorrid  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_CORRID"}) // USO NA FORJARIA - CORRIDA WHB
+Local _nCorGer  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_CORRIDA"}) // USO NA FORJARIA - CORRIDA GERDAU
+
+// Adicionado 19/07/13 - Douglas
+Local _cLocal   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOCAL"})        
+Local _cLocDes  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOCAL"},_cLocal+1)       
+Local _cProd    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_COD"})
+Local _cLote    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOTECTL"})
+Local _nQuant   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_QUANT"})
+Local _dEmissao := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_EMISSAO"})
+Local _cDoc		:= aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_DOC"})        
+Local _cSolic   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_SOLICIT"})        
+Local _cTM 		:= aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_TM"})
+Local _nOP 		:= aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_OP"})
+
+//Gravando os novos campos de Destino
+
+RecLock("SD3",.F.)
+    SD3->D3_CARDEF  := aCols[_n,_nCarDef]
+	SD3->D3_DEFEITO := aCols[_n,_nDefeito]
+	SD3->D3_OPERACA := aCols[_n,_nOper]
+	SD3->D3_FORNECE := aCols[_n,_nForne]
+	SD3->D3_LOJA    := aCols[_n,_nLoja] 
+	SD3->D3_LOCORIG := aCols[_n,_nLocOri]
+	SD3->D3_CC      := aCols[_n,_nCC]    
+	SD3->D3_TURNO   := aCols[_n,_nTur]    
+	SD3->D3_MAQUINA := aCols[_n,_nMaq]    		
+	SD3->D3_LINHA   := aCols[_n,_nLinha]    		
+	SD3->D3_CODPA   := aCols[_n,_nCodPa] // cod PA - Adicionado em 13/12/12   				
+	SD3->D3_ORIGEM  := UPPER(ALLTRIM(FUNNAME()))
+	SD3->D3_HORA    := SUBSTR(Time(),1,5)	   
+	SD3->D3_DTREF   := aCols[_n,_dDtRef]  
+	SD3->D3_CORRID  := aCols[_n,_nCorrid]
+	SD3->D3_CORRIDA := aCols[_n,_nCorGer]
+	SD3->D3_OP      := aCols[_n][_nOP]
+MsUnLock("SD3")  
+
+/*-------- FAZ A IMPORTAÇÃO AUTOMÁTICA PARA O QUALITY ---------*/      
+// Adicionado em 24/07/13 por Douglas                          
+
+IF ALLTRIM(aCols[_n,_cLocDes])$'2Q/4Q'
+			
+	//VERIFICA SE EXISTE PRODUTO NO SA5 E NO QE6  
+	                                     
+	   SB1->(DbSetOrder(1))
+	   SB1->(DbSeek(xFilial("SB1")+ aCols[_n,_cProd]))   
+	
+  			IF  SA5->(DBSEEK(XFILIAL("SA5")+"999999"+"01"+SB1->B1_COD)) .AND. ;
+		   	    QE6->(DbSeek(xFilial("QE6")+aCols[_n,_cProd]))
+		   	    
+				nVerifi  := QieSkipLote("999999","01",SB1->B1_COD,SB1->B1_GRUPO,ddatabase,aCols[_n,_cLote],cDocumento,{})    	
+			    
+				cAl := getnextalias()
+			
+				beginSql alias cAl
+					SELECT * FROM %table:QEK%
+					WHERE QEK_FILIAL = %xFilial:QEK%
+					AND %NotDel%
+					AND QEK_PRODUT = %Exp:SB1->B1_COD%
+					AND QEK_REVI   = %Exp:QE6->QE6_REVI%
+					AND QEK_FORNEC = '999999'
+					AND QEK_LOJFOR = '01'
+					AND QEK_TIPONF = 'N'
+					AND QEK_LOTE   = %Exp:aCols[_n,_cLote]%
+					AND QEK_TIPDOC = 'N'
+				endSql
+			
+			If (cAl)->(eof())
+			
+				//ADICIONA O VETOR PARA IMPORTACAO AUTOMATICA NO QUALITY	
+	 			aAdd(aVetTmp,{{"QEK_TIPONF","N",NIL},; 
+							  {"QEK_FORNEC","999999",NIL},;
+							  {"QEK_LOJFOR","01",NIL},;
+							  {"QEK_PRODUT",aCols[_n,_cProd],NIL},; 
+							  {"QEK_LOTE"  ,aCols[_n,_cLote],NIL},;
+							  {"QEK_TAMLOT",AllTrim(str(aCols[_n,_nQuant])),NIL},; 
+							  {"QEK_TAMAMO",AllTrim(str(aCols[_n,_nQuant])),NIL},; 
+							  {"QEK_DTENTR",DA261DATA,NIL},;	// {"QEK_NTFISC","111111",NIL},;//{"QEK_SERINF","UNI",NIL},;
+							  {"QEK_DTNFIS",DA261DATA,NIL},;
+							  {"QEK_DOCENT",cDocumento,NIL},;
+							  {"QEK_HRENTR",Substr(Time(),1,5),NIL},;
+							  {"QEK_TIPDOC","N",NIL},;
+							  {"QEK_PRECO",SB1->B1_UPRC*aCols[_n,_nQuant],NIL},;
+							  {"QEK_CERFOR","N/A",NIL},;
+							  {"QEK_VERIFI",nVerifi,NIL},;//1 = INSPEÇÃO
+						      {"QEK_SOLIC","021174    ",NIL},;
+							  {"QEK_SITENT",'2',NIL}})
+			Endif
+			
+			(cAl)->(dbclosearea())  
+			
+				BEGIN TRANSACTION
+		
+					For _x := 1 to Len(aVetTmp)
+	
+					 	Processa({|| MSExecAuto({|x,y| QIEA200(x,y)},aVetTmp[_X],3)},"Gerando Quality...") //Inclusao
+		 	
+					Next     
+	
+				MsgBox("Transferencia efetuada com sucesso!","Transferido","INFO")
+
+				END TRANSACTION
+
+		ELSE 
+			//fMAILQUALITY()
+			alert('Ok')
+		ENDIF
+
+Endif
+
+
+Return

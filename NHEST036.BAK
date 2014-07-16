@@ -1,0 +1,118 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ NHEST036        ³ Alexandre R. Bento    ³ Data ³09.12.2004³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Permite alterar campos do cadastro de produto em uma deter.±±
+±±³          ³ pasta def. no SX5 tabela ZF ->login(16)pastas "1/2"(10)   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+#INCLUDE "rwmake.ch"
+
+User Function Nhest036()
+public aCampoSB1 := {}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private cAlias := "SB1"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Array contendo as Rotinas a executar do programa      ³
+//³ ----------- Elementos contidos por dimensao ------------     ³
+//³ 1. Nome a aparecer no cabecalho                              ³
+//³ 2. Nome da Rotina associada                                  ³
+//³ 3. Usado pela rotina                                         ³
+//³ 4. Tipo de Transa‡„o a ser efetuada                          ³
+//³    1 - Pesquisa e Posiciona em um Banco de Dados             ³
+//³    2 - Simplesmente Mostra os Campos                         ³
+//³    3 - Inclui registros no Bancos de Dados                   ³
+//³    4 - Altera o registro corrente                            ³
+//³    5 - Remove o registro corrente do Banco de Dados          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aRotina := { {OemToAnsi("Pesquisa")  , "AxPesqui"     , 0 , 1},;  // "Pesquisar"
+					 {OemToAnsi("Visualiza") , "AxVisual"     , 0 , 2},;  // "Visualizar"
+					 {OemToAnsi("Altera")    , "U_fAltProd()" , 0 , 4}}   // "Alterar"  
+							                                  
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define o cabe‡alho da tela de atualiza‡”es                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE cCadastro := OemToAnsi("Alteração de Produtos") 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Endereca a funcao de BROWSE                                  ³                        
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+mBrowse( 6, 1,22,75,"SB1")
+
+Return
+
+User Function fAltProd()
+local nReg      := SB1->(RECNO())
+local nOpca     := 0
+//local aCampoSB1 := {}
+local lOK       := .F.
+local cFolder   := " "                
+local oDlg
+Local nOpc      := 3   //1-2-VISUALIZA  4-ERRO  3-ALTERA
+
+SX5->(DbGotop())
+SX5->(DbSetOrder(1))
+SX5->(DbSeek(xFilial("SX5")+"ZF")) // Tabela de validação de Usuarios, para alterar o produto por FOLDER                  
+While !SX5->(Eof()) .And. SX5->X5_TABELA == "ZF"
+   If Alltrim(Substr(SX5->X5_DESCRI,1,16)) == Upper(Alltrim(cUserName)) //Verifica se o Usuario é o mesmo da tabela ZU no SX5
+      cFolder := AllTrim(Subs(SX5->X5_DESCRI,17,10)) //Traz o Folder que o usuario pode alterar 
+      lOK := .T. //Flag de Controle          
+      Exit //achou força a saida
+    
+   Endif
+   SX5->(DbSkip())                      
+   
+Enddo
+
+/*
+If !lOK  // Usuario sem permissão para cadastrar o Grupo
+   MsgBox("Usuario sem Permissão para Alterar Dados deste Produto","Atencao","STOP")
+   Return(.F.)  // retorna
+Endif                        
+*/
+
+      
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega matriz com campos que serao alterados neste cadastro ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+AADD(aCampoSB1,"B1_COD")
+AADD(aCampoSB1,"B1_DESC")
+AADD(aCampoSB1,"B1_TE") //tes de entrada
+AADD(aCampoSB1,"B1_TS") // tes de saida
+//AADD(aCampoSB1,"B1_MSBLQL") //Campo que bloqueia produto sim ou não  
+AADD(aCampoSB1,"B1_RPRODEP") //Campo que bloqueia produto sim ou não  
+
+
+dbSelectArea("SX3")
+dbSeek("SB1")
+While !EOF() .And. (X3_ARQUIVO == cAlias)
+	//IF X3USO(X3_USADO) .and. cNivel >= X3_NIVEL 
+	   If Alltrim(X3_FOLDER)$cFolder
+		  AADD(aCampoSB1,X3_CAMPO)
+	   Endif	  
+//	EndIF 
+	DbSkip()
+EndDO
+dbSelectArea(cAlias)
+If !SoftLock(cAlias)
+	Return
+EndIF
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a entrada de dados do arquivo                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aTELA[0][0],aGETS[0]
+                                                          
+nOpca := AxAltera(cAlias,nReg,nOpc,aCampoSB1,,,,)
+dbSelectArea(cAlias)
+MsUnlock()
+Return

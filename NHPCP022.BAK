@@ -1,0 +1,2569 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³NHPCP022  ºAutor  ³João Felipe da Rosa º Data ³  13/08/09   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ CADASTRO DE CARREGAMENTO                                   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ PCP                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±ºAlterações³ Felipe Ciconini    08/12/10                                ±±±
+±±			³   >Alterações no e-mail enviado							  ±±±
+±±			   														      ±±±
+±±               José Henrique M Felipetto 18/07/2011					  ±±±
+±±			   	 >Inclusão de campo e puxar informações de acordo 		  ±±±
+±±			   	 com a empresa.											  ±±±
+±±			   José Henrique M Felipetto 21/07/2011						  ±±±
+±±			     >Inclusão de novos campos, Resp.Débito e Centro de custo ±±±
+±±			      e a inclusão dessas informações no relatório. 		  ±±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#include "protheus.ch"
+#include "topconn.ch"
+#include 'rwmake.ch'
+
+User Function NHPCP022()
+
+Private aRotina, cCadastro
+Private aModTran  := {"1=Car. 27 Ton.",;
+                      "2=Car. 29 Ton.",;
+                      "3=Truck",;
+                      "4=Bug",;
+                      "5=Outros",;
+                      "6=CNTR 20'' ",;
+                      "7=CNTR 40'' "}
+
+cCadastro := "Cadastro de Carregamento"
+aRotina   := {}
+aAdd(aRotina,{ "Pesquisa"       ,"AxPesqui"      , 0 , 1})
+aAdd(aRotina,{ "Visualizar"	    ,"U_PCP22(2)" 	 , 0 , 2})
+aAdd(aRotina,{ "Incluir"		,"U_PCP22(3)" 	 , 0 , 3})
+aAdd(aRotina,{ "Alterar"        ,"U_PCP22(4)"    , 0 , 4})
+aAdd(aRotina,{ "Excluir"        ,"U_PCP22(5)"    , 0 , 5})
+aAdd(aRotina,{ "Finalizar"      ,"U_PCP22Fin()"  , 0 , 5})
+aAdd(aRotina,{ "Sol. Transp"    ,"U_PCP22SOL()"  , 0 , 3})
+aAdd(aRotina,{ "Relatorio"      ,"U_PCP22Rel()"  , 0 , 5})
+aAdd(aRotina,{ "Emails"         ,"U_PCP22MAI()" , 0 , 5})
+aAdd(aRotina,{ "Legenda"        ,"U_PCP22Leg()"  , 0 , 5})
+
+mBrowse(6,1,22,75,"ZD9",,,,,,fCriaCor())
+
+If Select("TRA1") > 0 
+	TRA1->(dbCloseArea())
+EndIf
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TELA DO CADASTRO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22(nParam) 
+
+Local bOk         := {||}
+Local bCanc       := {||oDlg:End()}
+Local bEnchoice   := {||}
+Local aButtons    := {}
+Private nPar 	  := nParam  
+Private aSize     := MsAdvSize()
+Private aObjects  := {{ 100, 100, .T., .T. },{ 300, 300, .T., .T. }}
+Private aInfo     := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 5, 5 , 5, 5}
+Private aPosObj   := MsObjSize( aInfo, aObjects, .T.)
+Private cNum      := Space(6)
+Private cCli      := Space(6)
+Private cLoja     := Space(2)
+Private cDesCli   := ""
+Private cTransp   := Space(6)
+Private cDesTran  := ""
+Private cTpFrete  := 0
+Private aTpFrete  := {"C=CIF","F=FOB"}
+Private cEspecia  := '1'
+Private aEspecia  := {"1=NÃO","2=SIM"}
+Private cJanCar   := Space(5)
+Private cJanEnt   := Space(5)
+Private cSequen   := 0
+Private cCarga    := "1"
+Private dData     := date() //CtoD("  /  /  ")
+Private dDataEnt  := (date()+1)
+Private aCarnum   := {} 
+Private cFretEsp  := 0
+Private aNumeros  := {"1","2","3","4","5","6","7","8","9"}
+Private aPara     := {"","C=Cliente","F=Fornecedor"}
+Private cPara     := "" //Space(1)
+Private aHeader   := {}
+Private aCols     := {}
+Private nPesCarg  := 0
+Private nPesAnte  := 0
+Private nPesTot   := 0
+Private cObs      := Space(100)
+Private cPedido   := Space(6)
+Private cModTran  := 0 
+Private cRDeb	  := space(50)
+Private cCC		  := space(9)
+Private cPlanta   := 0
+Private nPrecoTt  := 0
+Private aPlanta   := {"","1=Usinagem","2=Fundição","3=Usinagem","4=Forjaria","5=Virabrequim"}
+Private cConjEmb  := ""
+
+	For _x:=1 to 80
+		aAdd(aCarnum,AllTrim(Str(_x)))
+	Next
+
+	aAdd(aHeader,{"Item"                  , "ZDA_ITEM"    , PesqPict("ZDA","ZDA_ITEM")   , 04,00, ".F."           ,"","C","ZDA"}) // 1
+	aAdd(aHeader,{"Produto"               , "ZDA_COD"     , PesqPict("ZDA","ZDA_COD")    , 15,00, "U_PCP22PRD()"  ,"","C","ZDA"}) // 2
+	aAdd(aHeader,{"Descrição"             , "B1_DESC"     , PesqPict("SB1","B1_DESC")    , 50,00, ".F."           ,"","C","SB1"}) // 3
+	aAdd(aHeader,{"Preço"                 , "ZDA_PRECO"   , PesqPict("ZDA","ZDA_PRECO")  , 09,02, ".T."           ,"","N","ZDA"}) // 4
+	aAdd(aHeader,{"Ped. Cli/Forn"         , "ZAP_PEDCLI"  , PesqPict("ZAP","ZAP_PEDCLI") , 20,00, ".F."           ,"","C","ZAP"}) // 5
+	aAdd(aHeader,{"Status"                , "ZAP_ATRASO"  , PesqPict("ZAP","ZAP_ATRASO") , 09,00, ".F."           ,"","N","ZAP"}) // 6
+	aAdd(aHeader,{"Release"               , "ZAP_PREV01"  , PesqPict("ZAP","ZAP_PREV01") , 09,00, ".F."           ,"","N","ZAP"}) // 7
+	aAdd(aHeader,{"Saldo Exp."            , "B2_QATU"     , PesqPict("SB2","B2_QATU")    , 09,00, ".F."           ,"","N","SB2"}) // 8
+	aAdd(aHeader,{"Saldo Release"         , "ZAP_ATRASO"  , PesqPict("ZAP","ZAP_ATRASO") , 09,00, ".F."           ,"","N","ZAP"}) // 9
+	aAdd(aHeader,{"Volume"                , "ZDA_VOLUME"  , PesqPict("ZDA","ZDA_VOLUME") , 06,00, "U_PCP22VOL()"  ,"","N","ZDA"}) //10
+	aAdd(aHeader,{"Quant"         		  , "ZDA_QUANT"   , PesqPict("ZDA","ZDA_QUANT")  , 09,00, "U_PCP22QTD()"  ,"","N","ZDA"}) //11
+	aAdd(aHeader,{"Peso"           		  , "ZDA_PESO"    , PesqPict("ZDA","ZDA_PESO")   , 13,02, "U_PCP22PES()"  ,"","N","ZDA"}) //12
+	aAdd(aHeader,{"Item Rel."             , "ZDA_ITEMRE"  , PesqPict("ZDA","ZDA_ITEMRE") , 04,00, ".F."           ,"","C","ZDA"}) //13
+	aAdd(aHeader,{"Frete Especial"        , "ZDA_FRESP"   , PesqPict("ZDA","ZDA_FRESP")  , 04,00, "U_PCP22VFR()"  ,"","C","ZDA"}) // 14
+	aAdd(aHeader,{"C. de Custo"           , "ZDA_CC"      , PesqPict("ZDA","ZDA_CC")     , 04,00, "U_PCP22VCC()"           ,"","C","ZDA"}) // 15
+	aAdd(aHeader,{"Desc. C. de Custo"     , "CTT_DESC01"  , PesqPict("CTT","CTT_DESC01") , 50,00, ".F."           ,"","C","CTT"})//16
+			
+	aAdd(aButtons,{"MENURUN",{||Processa({||fPCP22Ca()},"Carregando ítens... Aguarde")},"Carrega ítens do último release","Carrega"})
+
+	oFont1 := TFont():New("Arial",,18,,.t.,,,,,.f.)
+
+	If nPar==2     //visualizar
+		Processa({||fCarrega()},"Carregando dados... ")
+	    bOk := {|| oDlg:End()}
+	ElseIf nPar==3 //incluir 
+		cNum  := GetSxeNum("ZD9","ZD9_NUM")
+		bOk   := {|| fInclui()}
+		bCanc := {||RollBackSx8(), oDlg:End()}
+	ElseIf nPar==4 //alterar
+		Processa({||fCarrega()},"Carregando dados... ")
+		bOk := {|| fAltera()}
+	ElseIf nPar==5 //excluir
+		Processa({||fCarrega()},"Carregando dados... ")
+		bOk := {|| fExclui()}
+	EndIf
+
+	bEnchoice := {||EnchoiceBar(oDlg,bOk,bCanc,,aButtons)}
+			
+	oDlg  := MsDialog():New(aSize[7],0,aSize[6],aSize[5],"Cadastro de Carregamento",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+	oSay1 := TSay():New(20,10,{||"Número"},oDlg,,,,,,.T.,,)
+	oSay2 := TSay():New(20,50,{||cNum},oDlg,,oFont1,,,,.T.,,)
+	
+    TSay():New(20,100,{||"Carregamento Para"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oCombo1 := TComboBox():New(18,160,{|u| if(Pcount() > 0,cPara := u,cPara)},;
+		aPara,50,10,oDlg,,{||fAltF3()},,,,.T.,,,,{||nPar==3 .or. nPar==4},,,,,"cPara")
+
+    TSay():New(20,260,{||"Planta"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oCombo5 := TComboBox():New(18,300,{|u| if(Pcount() > 0,cPlanta := u,cPlanta)},;
+		aPlanta,50,10,oDlg,,{||},,,,.T.,,,,{||nPar==3 .or. nPar==4},,,,,"cPlanta")
+
+	oSay3 := TSay():New(32,10,{||"Cli/Forn"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet1 := tGet():New(30,50,{|u| if(Pcount() > 0, cCli := u,cCli)},oDlg,40,8,"@!",{||fClient()},;
+		,,,,,.T.,,,{||nPar==3},,,,,,"SA1","cCli")
+	oGet2 := tGet():New(30,93,{|u| if(Pcount() > 0, cLoja := u,cLoja)},oDlg,10,8,"@!",{||fLoja()},;
+		,,,,,.T.,,,{||nPar==3},,,,,,,"cLoja")
+	oGet3 := tGet():New(30,108,{|u| if(Pcount() > 0, cDesCli := u,cDesCli)},oDlg,150,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cDesCli")
+
+	oSay3 := TSay():New(44,10,{||"Transportadora"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet4 := tGet():New(42,50,{|u| if(Pcount() > 0, cTransp := u,cTransp)},oDlg,40,8,"@!",{||fTransp()},;
+		,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,"SA4","cTransp")
+	oGet5 := tGet():New(42,93,{|u| if(Pcount() > 0, cDesTran := u,cDesTran)},oDlg,150,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||.F.},,,,,,,"cDesTran")
+
+    oSay4   := TSay():New(44,260,{||"Tipo Frete"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oCombo1 := TComboBox():New(42,300,{|u| if(Pcount() > 0,cTpFrete := u,cTpFrete)},;
+		aTpFrete,40,10,oDlg,,{||},,,,.T.,,,,{||nPar==3 .or. nPar==4},,,,,"cTpFrete")
+
+    oSay5   := TSay():New(56,10,{||"Carga"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oCombo2 := TComboBox():New(54,50,{|u| if(Pcount() > 0,cCarga := u,cCarga)},;
+		aCarnum ,20,10,oDlg,,{||fCarga()},,,,.T.,,,,{||nPar==3 .or. nPar==4},,,,,"cCarga")
+
+	oSay6 := TSay():New(56,120,{||"Jan. Carreg."},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet6 := tGet():New(54,160,{|u| if(Pcount() > 0, cJanCar := u,cJanCar)},oDlg,40,8,"99:99",{||fJan()},;
+		,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,,"cJanCar")
+
+	oSay7 := TSay():New(56,260,{||"Jan. Entrega"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet7 := tGet():New(54,300,{|u| if(Pcount() > 0, cJanEnt := u,cJanEnt)},oDlg,40,8,"99:99",{||fJan()},;
+		,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,,"cJanEnt")
+
+    oSay9   := TSay():New(68,10,{||"Seq. Entrega"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oCombo3 := TComboBox():New(66,50,{|u| if(Pcount() > 0,cSequen := u,cSequen)},;
+		aNumeros,20,10,oDlg,,{||fSequen()},,,,.T.,,,,{||nPar==3 .or. nPar==4},,,,,"cSequen")
+
+	oSay8 := TSay():New(68,120,{||"Data Coleta"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet8 := tGet():New(66,160,{|u| if(Pcount() > 0, dData := u,dData)},oDlg,50,8,"99/99/99",{||fData()},;
+		,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,,"dData")
+
+	oSay8 := TSay():New(68,260,{||"Data Entrega"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oGet8 := tGet():New(66,300,{|u| if(Pcount() > 0, dDataEnt := u,dDataEnt)},oDlg,50,8,"99/99/99",{||.T.},;
+		,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,,"dDataEnt")
+
+	oSay10 := TSay():New(80,10,{||"Peso Carga"},oDlg,,,,,,.T.,,)
+	oGet9  := tGet():New(78,50,{|u| if(Pcount() > 0, nPesCarg := u,nPesCarg)},oDlg,50,8,"@e 9,999,999,999.99",{||},;
+		,,,,,.T.,,,{||.F.},,,,,,,"nPesCarg")
+
+	oSay11 := TSay():New(80,120,{||"Peso Total"},oDlg,,,,,,.T.,,)
+	oGet10  := tGet():New(78,160,{|u| if(Pcount() > 0, nPesTot := u,nPesTot)},oDlg,50,8,"@e 9,999,999,999.99",{||},;
+		,,,,,.T.,,,{||.F.},,,,,,,"nPesTot")
+
+    oSay14   := TSay():New(80,260,{||"Mod. Transporte"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oCombo4 := TComboBox():New(78,300,{|u| if(Pcount() > 0,cModTran := u,cModTran)},;
+		aModTran,50,10,oDlg,,{||},,,,.T.,,,,{||nPar==3 .or. nPar==4},,,,,"cModTran")
+
+	oSay12 := TSay():New(92,10,{||"Observação"},oDlg,,,,,,.T.,,)
+	oGet11  := tGet():New(90,50,{|u| if(Pcount() > 0, cObs := u,cObs)},oDlg,200,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,,"cObs")
+
+	oSay13 := TSay():New(92,260,{||"Release"},oDlg,,,,,,.T.,,)
+	oGet12 := tGet():New(90,300,{|u| if(Pcount() > 0, cPedido := u,cPedido)},oDlg,50,8,"@!",{||.T.},;
+		,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,,"cPedido")
+		
+	oSay16 := TSay():New(104,10,{||"Resp.Débito"},oDlg,,,,,,.T.,/*CLR_HBLUE*/,)
+	oGet13 := tGet():New(102,50,{|u| if(Pcount() > 0, cRDeb := u,cRDeb)},oDlg,200,8,"@!",{||.T.},;
+		,,,,,.T.,,,/*{||nPar==3 .or. nPar==4}*/,,,,,,,"cRDeb") 
+		
+	
+	oSay17   := TSay():New(104,260,{||"Frete Especial ?"},oDlg,,,,,,.T.,CLR_HBLUE,)
+	oCombo5 := TComboBox():New(102,300,{|u| if(Pcount() > 0,cEspecia := u,cEspecia)},;
+		aEspecia,40,10,oDlg,,{||},,,,.T.,,,,{||nPar==3 .or. nPar==4},,,,,"Especia")
+		
+		
+	oSay18 := TSay():New(104,360,{||"Preço Frete"},oDlg,,,,,,.T.,,)
+	oGet14 := tGet():New(102,390,{|u| if(Pcount() > 0, nPrecoTt := u,nPrecoTt)},oDlg,50,8,"9,999,999.99",{||.T.},;
+		,,,,,.T.,,,{||nPar==3 .or. nPar==4},,,,,,,"nPrecoTt")	
+	
+	dbSelectArea("ZDA")
+	
+    // cria o getDados
+	oGeTD := MsGetDados():New( /*aPosObj[2,1]*/116 ,; //superior
+	                           aPosObj[2,2]       ,; //esquerda
+	                           aPosObj[2,3]       ,; //inferior
+	                           aPosObj[2,4]       ,; //direita
+	                           4                  ,; // nOpc
+	                           "U_PCP22LOK"       ,; // CLINHAOK
+	                           "AllwaysTrue"      ,; // CTUDOOK
+	                           ""                 ,; // CINICPOS
+	                           .T.                ,; // LDELETA
+	                           nil                ,; // aAlter
+	                           nil                ,; // uPar1
+	                           .F.                ,; // LEMPTY
+	                           200                ,; // nMax
+	                           nil                ,; // cCampoOk
+	                           "AllwaysTrue()"    ,; // CSUPERDEL
+	                           nil                ,; // uPar2
+	                           "AllwaysTrue()"    ,; // CDELOK
+	                           oDlg                ; // oWnd
+	                          )
+
+	If nPar==2 .or. nPar==5 //visualizar ou excluir
+		oGetD:nMax := len(aCols) //nao deixa adicionar mais uma linha no acols
+	EndIf
+
+	If nPar==2 .or. nPar==4 .or. nPar=5//visualizar ou alterar ou excluir
+		fAtuPeso(0)
+	EndIf
+	
+	oDlg:Activate(,,,.F.,{||.T.},,bEnchoice)
+	
+Return
+
+Static Function fAltF3()
+    
+	If cPara=='C'
+		oGet1:cF3 := "SA1"	
+	ElseIf cPara=='F'
+		oGet1:cF3 := "SA2"
+	EndIf
+	
+	cCli     := space(6)
+	cLoja    := space(2)
+	cDesCli  := ""
+	cTransp  := space(6)
+	cDesTran := ""
+	cCarga   := "1"
+	
+	oCombo2:Refresh()
+	oGet1:Refresh()
+
+	fCarga()
+	
+Return
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TELA DE LEGENDA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22Leg()
+Local aLegenda :=	{ {"BR_VERDE"   , "Pendente" },;
+  					  {"BR_VERMELHO", "Encerrado"}}
+
+BrwLegenda("Cadastro de Carregamento", "Legenda", aLegenda)
+
+Return  
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ CRIA A LEGENDA DO BROWSE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fCriaCor()
+Local aLegenda :=	{	{"BR_VERDE"   , "Pendente"   },;
+  						{"BR_VERMELHO", "Encerrado"  }}
+
+Local uRetorno := {}
+Aadd(uRetorno, { "ZD9_STATUS=='P'" , aLegenda[1][1] })
+Aadd(uRetorno, { "ZD9_STATUS=='E'" , aLegenda[2][1] })
+
+Return(uRetorno)
+
+//ÚÄÄÄÄÄÄÄÄ¿
+//³ VALIDA ³
+//ÀÄÄÄÄÄÄÄÄÙ
+Static Function fValida()
+Local nPosProd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_COD"})
+Local nOldRec  := 0
+	
+	If Empty(cPlanta) 
+		Alert("Informe o campo Planta!")
+		Return .F.
+	EndIf
+	
+	If Empty(cCli) .or. Empty(cLoja)
+		Alert("Cliente ou loja não informado!")
+		Return .F.
+	EndIf
+	
+	If Empty(cTransp)
+		Alert("Transportadora não informada!")
+		Return .F.
+	EndIf
+	
+	If Empty(cTpFrete)
+		Alert("Tipo do frete não informado!")
+		Return .F.
+	EndIf
+	
+	If Empty(cJanCar)
+	    Alert("Janela de Carregamento não informada!")
+		Return .F.
+	EndIf
+	
+	If Empty(cJanEnt)
+	    Alert("Janela de Entrega não informada!")
+		Return .F.
+	EndIf
+	
+	If Empty(cCarga)
+	    Alert("Carga não informada!")
+		Return .F.
+	EndIf
+	         
+	If Empty(dData)
+	    Alert("Data não informada!")
+		Return .F.
+	EndIf
+	
+	If Empty(cSequen)
+	    Alert("Sequencia de entrega não informada!")
+		Return .F.
+	EndIf
+
+	If Len(aCols) <= 1 .AND. Empty(aCols[1][nPosProd])
+		Alert("Ao menos um produto deve ser informado!")
+		Return .F.
+	EndIf
+
+	If Empty(cModTran)
+		Alert("Informe a modalidade do transporte!")
+		Return .F.
+	EndIf
+
+	If Empty(dDataEnt)
+		Alert("Informe a data de entrega!")
+		Return .F.
+	EndIf
+	
+	If dDataEnt < dData
+		Alert("Data de entrega não pode ser inferior a data de coleta!")
+		Return .F.
+	EndIf
+
+	nOldRec := ZD9->(RecNo())
+
+	ZD9->(dbSetOrder(3)) // FILIAL + DATA	
+	If ZD9->(dbSeek(xFilial("ZD9")+DTOS(dData)))
+			
+		While ZD9->(!EOF()) .AND. DTOS(ZD9->ZD9_DATA)==DTOS(dData)
+			
+			If ValType(cCarga)=="C" .and. ;
+			   AllTrim(ZD9->ZD9_CARGA)==AllTrim(cCarga) .AND. ;
+			   ZD9->ZD9_SEQUEN==cSequen .AND. ;
+			   nPar==3 .AND. ;
+			   ZD9->ZD9_PARA==cPara
+			   
+				Alert("Já existe sequência cadastrada para esta carga!"+CHR(13)+CHR(10)+;
+					  "Carregamento nº: "+ZD9->ZD9_NUM)
+					  
+				cSequen := ''
+				ZD9->(dbGoTo(nOldRec))
+				oCombo3:SetFocus()
+				Return .F.
+					  
+			EndIf
+
+			ZD9->(dbSkip())
+
+		EndDo	
+
+	EndIf	
+	
+	fAtuPeso(0)
+	
+	ZD9->(dbGoTo(nOldRec))
+
+	If Val(cCarga) > 80
+		Alert("Erro, carga incorreta, a carga não pode ser maior que 80!")
+		return .F.
+	EndIf
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄ¿
+//³ INCLUI ³         
+//ÀÄÄÄÄÄÄÄÄÙ
+Static Function fInclui()
+	
+	If !fValida()
+		Return
+	EndIf     
+
+	//Grava o cabeçalho do cadastro de carregamento
+	RecLock("ZD9",.T.)
+		ZD9->ZD9_FILIAL := xFilial("ZD9")
+		ZD9->ZD9_NUM    := cNum
+		ZD9->ZD9_PARA   := cPara
+		ZD9->ZD9_CLIENT := cCli
+		ZD9->ZD9_LOJA   := cLoja
+		ZD9->ZD9_TRANSP := cTransp
+		ZD9->ZD9_TIPFRE := Substr(cTpFrete,1,1)
+		ZD9->ZD9_JANCAR := cJanCar
+		ZD9->ZD9_JANENT := cJanEnt
+		ZD9->ZD9_SEQUEN := cSequen
+		ZD9->ZD9_CARGA  := cCarga
+		ZD9->ZD9_DATA   := dData
+		ZD9->ZD9_DATAEN	:= dDataEnt
+		ZD9->ZD9_PESOCA := nPesCarg 	
+		ZD9->ZD9_STATUS := "P"
+		ZD9->ZD9_RELCLI := cPedido
+		ZD9->ZD9_OBS    := cObs
+		ZD9->ZD9_MODTRA := Substr(cModTran,1,1)
+//		ZD9->ZD9_FREESP := Substr(cFretEsp,1,1)
+		ZD9->ZD9_USRINC := UPPER(ALLTRIM(cUserName))
+		ZD9->ZD9_RDEB	:= cRDeb
+		ZD9->ZD9_PLANTA := cPlanta  
+		ZD9->ZD9_ESPECI := cEspecia   
+		ZD9->ZD9_PRECO := nPrecoTt
+//		ZD9->ZD9_CC		:= cCC
+	MsUnLock("ZD9")
+	
+	//Grava os ítens do cadastro de carregamento
+	For x:=1 to Len(aCols)
+		If !aCols[x][len(aHeader)+1] //nao pega quando estiver deletado
+			RecLock("ZDA",.T.)
+				ZDA->ZDA_FILIAL := xFilial("ZDA")
+				ZDA->ZDA_NUM    := cNum
+				ZDA->ZDA_ITEM   := aCols[x][1]
+				ZDA->ZDA_COD    := aCols[x][2]
+				ZDA->ZDA_PRECO  := aCols[x][4]
+				ZDA->ZDA_VOLUME := aCols[x][10]
+				ZDA->ZDA_QUANT  := aCols[x][11]
+				ZDA->ZDA_PESO   := aCols[x][12]
+				ZDA->ZDA_ITEMRE := aCols[x][13]
+				ZDA->ZDA_CC		:= aCols[x][15]
+				ZDA->ZDA_FRESP  := aCols[x][14]
+		    MsUnLock("ZDA")
+		EndIf
+	Next
+
+	ConfirmSx8()
+	         
+	If MSGYESNO("Solicitar Transporte?")
+		U_PCP22SOL(dData,cCarga)
+	EndIf
+	
+	oDlg:End()
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄ¿
+//³ ALTERA ³
+//ÀÄÄÄÄÄÄÄÄÙ
+Static Function fAltera()
+	
+	If !fValida()
+		Return
+	EndIf
+	RecLock("ZD9",.F.)
+		ZD9->ZD9_PLANTA := cPlanta		
+	MsUnlock("ZD9")
+	
+	If ZD9->ZD9_STATUS != 'P'
+		Alert("Carregamento deve estar pendente para alterar!")
+		Return
+	EndIf
+
+	//Grava o cabeçalho do cadastro de carregamento
+	RecLock("ZD9",.F.)
+		ZD9->ZD9_TRANSP := cTransp
+		ZD9->ZD9_TIPFRE := Substr(cTpFrete,1,1)
+		ZD9->ZD9_JANCAR := cJanCar
+		ZD9->ZD9_JANENT := cJanEnt
+		ZD9->ZD9_SEQUEN := cSequen
+		ZD9->ZD9_CARGA  := cCarga
+		ZD9->ZD9_DATA   := dData   
+		ZD9->ZD9_DATAEN	:= dDataEnt
+		ZD9->ZD9_PESOCA := nPesCarg
+		ZD9->ZD9_STATUS := "P"
+		ZD9->ZD9_RELCLI := cPedido
+		ZD9->ZD9_OBS    := cObs
+		ZD9->ZD9_ESPECI := cEspecia   
+		ZD9->ZD9_PRECO  := nPrecoTt
+		ZD9->ZD9_MODTRA := Substr(cModTran,1,1) 
+		ZD9->ZD9_USRALT := UPPER(ALLTRIM(cUserName))
+
+		/*
+		If ValType(cFretEsp)=="N"
+			cFretEsp := Iif(cFretEsp==1,"S","N")
+		EndIf
+		
+		ZD9->ZD9_FREESP := Substr(cFretEsp,1,1)
+		*/
+		
+	MsUnLock("ZD9")
+	
+	ZDA->(dbSetOrder(1)) //FILIAL + NUM + ITEM
+	
+	//Grava os ítens do cadastro de carregamento
+	For x:=1 to Len(aCols)
+		If !aCols[x][len(aHeader)+1] //nao pega quando estiver deletado
+			If ZDA->(dbSeek(xFilial("ZDA")+cNum+aCols[x][1]))
+				RecLock("ZDA",.F.)
+					ZDA->ZDA_COD    := aCols[x][2]
+					ZDA->ZDA_PRECO  := aCols[x][4]
+					ZDA->ZDA_VOLUME := aCols[x][10]
+					ZDA->ZDA_QUANT  := aCols[x][11]
+					ZDA->ZDA_PESO   := aCols[x][12]
+					ZDA->ZDA_ITEMRE := aCols[x][13]
+					ZDA->ZDA_CC		:= aCols[x][15]
+					ZDA->ZDA_FRESP  := aCols[x][14]
+			    MsUnLock("ZDA")
+			Else
+				RecLock("ZDA",.T.)
+					ZDA->ZDA_FILIAL := xFilial("ZDA")
+					ZDA->ZDA_NUM    := cNum
+					ZDA->ZDA_ITEM   := aCols[x][1]
+					ZDA->ZDA_COD    := aCols[x][2]
+					ZDA->ZDA_PRECO  := aCols[x][4]
+					ZDA->ZDA_VOLUME := aCols[x][10]
+					ZDA->ZDA_QUANT  := aCols[x][11]
+					ZDA->ZDA_PESO   := aCols[x][12]
+					ZDA->ZDA_ITEMRE := aCols[x][13]
+					ZDA->ZDA_CC		:= aCols[x][15]
+					ZDA->ZDA_FRESP  := aCols[x][14]
+			    MsUnLock("ZDA")
+			EndIf		
+		Else
+			If ZDA->(dbSeek(xFilial("ZDA")+cNum+aCols[x][1]))
+				RecLock("ZDA",.F.)
+					ZDA->(dbDelete())
+				MsUnlock("ZDA")
+			EndIf
+		EndIf
+	Next  
+	
+	If MSGYESNO("Solicitar Transporte?")
+		U_PCP22SOL(dData,cCarga)
+	EndIf
+
+	oDlg:End()
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄ¿
+//³ EXCLUI ³
+//ÀÄÄÄÄÄÄÄÄÙ
+Static Function fExclui()
+
+	If MsgYesNo("Tem certeza de que deseja excluir?")
+		RecLock("ZD9",.F.)
+			ZD9->(dbDelete())
+		MsUnLock("ZD9")
+		
+		ZDA->(dbSetOrder(1)) // filial + num + item
+		ZDA->(dbSeek(xFilial("ZDA")+cNum))
+		
+		WHILE ZDA->(!EOF()) .AND. ZDA->ZDA_NUM==cNum
+			
+			RecLock("ZDA",.F.)
+				ZDA->(dbDelete())
+			MsUnlock("ZDA")
+			ZDA->(dbSkip())
+		ENDDO
+		
+	EndIf	
+	
+	oDlg:End()
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ OS DADOS PARA VISUALIZACAO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fCarrega()
+Local aRelease := {}
+Local nOldRec  := ZD9->(Recno())
+
+	cNum     := ZD9->ZD9_NUM
+	cCli     := ZD9->ZD9_CLIENT
+	cLoja    := ZD9->ZD9_LOJA
+	cPara    := ZD9->ZD9_PARA 
+	cRDeb	 := ZD9->ZD9_RDEB
+	cPlanta  := ZD9->ZD9_PLANTA
+	cEspecia := ZD9->ZD9_ESPECI
+	nPrecoTt := ZD9->ZD9_PRECO
+
+
+	If cPara=='C'	
+		SA1->(dbSetOrder(1)) // FILIAL + CODIGO + LOJA
+		If SA1->(dbSeek(xFilial("SA1")+cCli+cLoja))
+			cDesCli := SA1->A1_NOME
+		EndIf
+	ElseIf cPara=='F'
+		SA2->(dbSetOrder(1)) // FILIAL + CODIGO + LOJA
+		If SA2->(dbSeek(xFilial("SA2")+cCli+cLoja))
+			cDesCli := SA2->A2_NOME
+		EndIf
+	EndIf
+		
+	cTransp := ZD9->ZD9_TRANSP
+	
+	SA4->(dbSetOrder(1)) // FILIAL + CODIGO
+	SA4->(dbSeek(XFilial("SA4")+cTransp))
+	cDesTran := SA4->A4_NOME
+	            
+	cTpFrete := ZD9->ZD9_TIPFRE
+	cJanCar  := ZD9->ZD9_JANCAR
+	cJanEnt  := ZD9->ZD9_JANENT
+	cSequen  := ZD9->ZD9_SEQUEN
+	cCarga   := ZD9->ZD9_CARGA
+	dData    := ZD9->ZD9_DATA  
+	dDataEnt := ZD9->ZD9_DATAEN
+	cPedido  := ZD9->ZD9_RELCLI
+	cObs     := ZD9->ZD9_OBS
+    cModTran := ZD9->ZD9_MODTRA
+   // cFretEsp := Iif(ZD9->ZD9_FREESP == "S","Sim","Não")
+    
+	ZDA->(dbSetOrder(1)) // FILIAL + NUM + ITEM
+	ZDA->(dbSeek(xFilial("ZDA")+cNum))
+	
+	//nZAONum := fZAONUM(cCli,cLoja,dData) //retorna o numero do release correspondente
+	
+	SB1->(dbSetOrder(1)) // FILIAL + CODIGO
+	While ZDA->(!EOF()) .AND. ZDA->ZDA_NUM==cNum
+		SB1->(dbSeek(xFilial("SB1")+ZDA->ZDA_COD))
+		
+		If cPara=='C'
+			aRelease := U_PCP22Rls(dData,cCli,cLoja,ZDA->ZDA_COD,ZDA->ZDA_ITEMRE)
+		ElseIf cPara=='F'
+			aRelease := U_2PCP22Rls(dData,cCli,cLoja,ZDA->ZDA_COD,ZDA->ZDA_ITEMRE)
+		EndIf
+
+		aAdd(aCols,{ZDA->ZDA_ITEM,;
+		            ZDA->ZDA_COD,;
+		            SB1->B1_DESC,;
+		            ZDA->ZDA_PRECO,;
+					aRelease[1],; // pedido cliente
+					aRelease[2],; // ATRASO
+					aRelease[3],; // Release
+					aRelease[4],; // saldo a expedir
+					aRelease[6],; // saldo do release
+		            ZDA->ZDA_VOLUME,;
+		            ZDA->ZDA_QUANT,;
+		            ZDA->ZDA_PESO,;
+		            ZDA->ZDA_ITEMRE,; //item do release
+		            Iif(ZDA->ZDA_FRESP=="S","S","N"),;//FRETE ESPECIAL
+		            ZDA->ZDA_CC,; //CC
+		            Posicione("CTT",1,xFilial("CTT")+ZDA->ZDA_CC,"CTT_DESC01"),;//DESC CC
+		            .F.})
+	
+		ZDA->(dbSkip())
+	EndDo
+
+	ZD9->(dbSetOrder(3)) // FILIAL + DATA
+	ZD9->(dbSeek(xFilial("ZD9")+DTOS(dData)))
+	
+	//percorre as cargas do dia procurando cargas com o mesmo numero
+	While ZD9->(!EOF()) .AND. DTOS(ZD9->ZD9_DATA) == DTOS(dData)
+		
+		If ZD9->ZD9_CARGA==cCarga .AND. ZD9->ZD9_NUM!=cNum
+			nPesAnte += ZD9->ZD9_PESOCA //soma o peso das cargas encontradas
+	    EndIF                                            
+	 
+	 	ZD9->(dbSkip())
+	EndDo
+	
+	ZD9->(dbGoTo(nOldRec))
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA O CLIENTE /FORNECE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fClient()
+	   
+	If !Empty(cCli)
+
+		If cPara=='C'
+			If cCli!=SA1->A1_COD
+				SA1->(dbSetOrder(1)) //FILIAL+COD+LOJA
+				If !SA1->(dbSeek(xFilial("SA1")+cCli))
+					Alert("Cliente não encontrado!")
+					Return .F.
+				EndIf
+			EndIf
+		
+			cLoja := SA1->A1_LOJA
+			oGet2:Refresh()
+			cDesCli := SA1->A1_NOME
+			oGet3:Refresh()
+			
+			If !Empty(SA1->A1_TRANSP)
+				SA4->(dbSetOrder(1))
+				SA4->(dbSeek(xFilial("SA4")+SA1->A1_TRANSP))
+				cTransp  := SA1->A1_TRANSP
+				oGet4:Refresh()
+				cDesTran := SA4->A4_NOME
+				oGet5:Refresh()
+			EndIf
+			
+			If !Empty(SA1->A1_TPFRET)
+				cTpFrete := SA1->A1_TPFRET
+				oCombo1:Refresh()
+			Else
+				cTpFrete := 0
+				oCombo1:Refresh()
+			EndIf
+			
+			If !Empty(dData) .AND. !Empty(cCli) .AND. !Empty(cLoja)
+				fPedido()
+			EndIf
+		ElseIf cPara=='F'
+			
+			If cCli!=SA2->A2_COD
+				SA2->(dbSetOrder(1)) // FILIAL + COD + LOJA
+				If !SA2->(dbSeek(xFilial("SA2")+cCli))
+					Alert("Fornecedor não encontrado!")
+					Return .F.
+				EndIF
+			EndIf
+			
+			cLoja := SA2->A2_LOJA
+			oGet2:Refresh()
+			cDesCli := SA2->A2_NOME
+			oGet3:Refresh()
+			
+		EndIf
+	EndIf
+		
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A LOJA DO CLIENTE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fLoja()
+
+	If !Empty(cLoja)
+		If cPara=='C'
+			SA1->(dbSetOrder(1)) //FILIAL+COD+LOJA
+			SA1->(dbSeek(xFilial("SA1")+cCli+cLoja))
+			If SA1->(!FOUND())
+				Alert("Cliente ou Loja não encontrado!")
+				Return .F.
+			Else		
+				cDesCli := SA1->A1_NOME
+				oGet3:Refresh()
+		
+				If !Empty(SA1->A1_TRANSP)
+					SA4->(dbSetOrder(1))
+					SA4->(dbSeek(xFilial("SA4")+SA1->A1_TRANSP))
+					cTransp  := SA1->A1_TRANSP
+					oGet4:Refresh()
+					cDesTran := SA4->A4_NOME
+					oGet5:Refresh()
+				EndIf
+			
+			EndIf
+		
+			If !Empty(SA1->A1_TPFRET)
+				cTpFrete := SA1->A1_TPFRET
+				oCombo1:Refresh()
+			Else
+				cTpFrete := 0
+				oCombo1:Refresh()
+			EndIf
+			
+			If !Empty(dData) .AND. !Empty(cCli) .AND. !Empty(cLoja)
+				fPedido()
+			EndIf
+		ElseIf cPara=='F'
+			SA2->(dbSetOrder(1)) //FILIAL+COD+LOJA
+			SA2->(dbSeek(xFilial("SA2")+cCli+cLoja))
+			If SA2->(!FOUND())
+				Alert("Fornecedor ou Loja não encontrado!")
+				Return .F.
+			Else
+				cDesCli := SA2->A2_NOME
+				oGet3:Refresh()
+			EndIf
+			
+		EndIf
+	EndIf
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ O PEDIDO CONFORME O RELEASE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fPedido()
+Local cQuery := ""
+
+	If Select("TRA1") > 0 
+		TRA1->(dbCloseArea())
+	EndIf
+
+	cQuery := "SELECT ZAO_RELCLI, ZAO_OBSGER"
+	cQuery += " FROM "+RetSqlName("ZAO")
+	cQuery += " WHERE ZAO_CLIENT = '"+cCli+"'"
+	cQuery += " AND ZAO_LOJA = '"+cLoja+"'"
+	cQuery += " AND MONTH(ZAO_DTINI) = '"+STRZERO(Month(dData),2)+"'"
+	cQuery += " AND YEAR(ZAO_DTINI) = '"+STRZERO(Year(dData),4)+"'"
+	cQuery += " AND D_E_L_E_T_ = '' AND ZAO_FILIAL = '"+xFilial("ZAO")+"'"
+	
+	TCQUERY cQuery NEW ALIAS "TRA1"
+	
+	If !Empty(TRA1->ZAO_RELCLI)
+		cObs    := TRA1->ZAO_OBSGER
+		cPedido := TRA1->ZAO_RELCLI
+		oGet12:Refresh()
+	EndIf
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A TRANSPORTADORA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fTransp()
+
+	If !Empty(cTransp)
+		SA4->(dbSetOrder(1)) // FILIAL + COD
+		SA4->(dbSeek(xFilial("SA4")+cTransp))
+		
+		If SA4->(!Found())
+			Alert("Transportadora não encontrada!")
+			Return .F.
+		Else
+			cDesTran := SA4->A4_NOME
+			oGet5:Refresh()
+		EndIf
+	EndIf
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A JANELA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fJan()
+
+	If !Empty(cJanCar)
+		If Substr(cJanCar,1,2)>"23" .or. Substr(cJanCar,4,2)>"59" .or. ;
+		   Substr(cJanCar,1,2)<"0"  .or. Substr(cJanCar,4,2)<"0"
+			Alert("Janela de Carregamento não pode ser superior a 23:59!")
+			Return .F.
+		EndIf
+		
+		If Len(AllTrim(cJanCar)) != 5
+			Alert("Preencha a hora da janela de carregamento corretamente!")
+			Return .F.
+		EndIf
+		
+	EndIf
+
+	If !Empty(cJanEnt)
+		If Substr(cJanEnt,1,2)>"23" .or. Substr(cJanEnt,4,2)>"59" .or. ;
+		   Substr(cJanCar,1,2)<"0"  .or. Substr(cJanCar,4,2)<"0"
+			Alert("Janela de Entrega não pode ser superior a 23:59!")
+			Return .F.
+		EndIf
+
+		If Len(AllTrim(cJanEnt)) != 5
+			Alert("Preencha a hora da janela de entrega corretamente!")
+			Return .F.
+		EndIf
+
+	EndIf
+
+Return .T.
+          
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A DATA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fData()
+
+	If !Empty(dData) .AND. !Empty(cCli) .AND. !Empty(cLoja)
+		fPedido()
+	EndIf
+
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA O PRODUTO DIGITADO NO ACOLS ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+User Function PCP22PRD()
+
+Local nDesc    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "B1_DESC"})
+Local nRelease := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZAP_PREV01"})
+Local nAtraso  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZAP_ATRASO"})
+Local nPedido  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZAP_PEDCLI"})
+Local nExpedic := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "B2_QATU"})
+Local nItemRe  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_ITEMRE"})
+Local nPreco   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_PRECO"})
+
+Local cQuery   := ""
+Local aRelease := {}
+
+	If Empty(dData)
+		Alert("Digite a data!")
+		Return .F.
+	EndIf
+	
+	If Empty(cCli) .or. Empty(cLoja)
+		Alert("Digite o cli/forn e a loja!")
+		Return .F.
+	EndIf
+	
+	//traz a descricao do produto
+	SB1->(dbSetOrder(1)) // FILIAL + COD
+	SB1->(dbSeek(xFilial('SB1')+M->ZDA_COD))
+	
+	If SB1->(Found())
+		aCols[n][nDesc] := SB1->B1_DESC
+	Else
+		Alert("Produto não encontrado!")
+		Return .F.
+	EndIf
+	
+	If cPara=='C'
+		aRelease := U_PCP22Rls(dData,cCli,cLoja,M->ZDA_COD,"")
+	ElseIf cPara=='F'
+		aRelease := U_2PCP22Rls(dData,cCli,cLoja,M->ZDA_COD,"")
+	EndIf
+	
+	aCols[n][nPedido]  := aRelease[1] //pedido
+	aCols[n][nAtraso]  := aRelease[2] //atraso
+	aCols[n][nRelease] := aRelease[3] //release
+	aCols[n][nExpedic] := aRelease[4] //saldo na expedicao
+	aCols[n][nItemRe]  := aRelease[5] //item do release
+	aCols[n][nPreco]   := aRelease[7] //preco
+	oGetD:Refresh()
+                
+	dbselectArea("ZDA")
+Return .T.
+
+/**
+ * RELEASE DO FORNECEDOR
+ */
+User Function 2PCP22Rls(dData,cForn,cLoja,cProd,cItemRel)
+Local cField
+Local cPedido  := ""
+Local nRelease := 0
+Local nAtraso  := 0
+Local nEntr    := 0
+Local nPrev    := 0
+Local nSaldo   := 0
+Local nSaldoR  := 0
+Local nItemRe  := ""
+Local dMyData  := CtoD("  /  /  ")
+
+	If Select("TRA1") > 0 
+		TRA1->(dbCloseArea())
+	EndIf
+
+	cQuery := " SELECT TOP 1 ZA0.*"
+	cQuery += " FROM "+RetSqlName("ZA0")+" ZA0, "+RetSqlName("ZA9")+" ZA9 "
+	cQuery += " WHERE ZA0.ZA0_NUM = ZA9.ZA9_NUM"
+	cQuery += " AND ZA9.ZA9_FORNEC = '"+cForn+"'"
+	cQuery += " AND ZA9.ZA9_LOJA = '"+cLoja+"'"
+	cQuery += " AND ZA0.ZA0_PROD = '"+cProd+"'" 
+
+	If !Empty(cItemRel)
+		cQuery += " AND ZA0.ZA0_ITEM = '"+cItemRel+"'"
+	EndIf
+	cQuery += " AND ZA9.ZA9_MES = '"+ALLTRIM(str(month(dData)))+"'"
+	cQuery += " AND ZA9.ZA9_ANO = '"+ALLTRIM(str(Year(dData)))+"'"
+	cQuery += " AND ZA9.ZA9_STATUS != 'E'" //nao encerrado
+	cQuery += " AND ZA9.ZA9_FILIAL = '"+xFilial("ZA9")+"' AND ZA9.D_E_L_E_T_ = ''"
+	cQuery += " AND ZA0.ZA0_FILIAL = '"+xFilial("ZA0")+"' AND ZA0.D_E_L_E_T_ = ''"
+	
+	TCQuery cQuery NEW ALIAS "TRA1"
+
+	/*******************
+	* PEDIDO E RELEASE *
+	*******************/          
+	//pega o release daquele produto para o dia do carregamento
+	cField := "ZA0_PREV"+StrZero(Day(dData),2)
+	
+	If !Empty(TRA1->(&(cField)))
+		nRelease := TRA1->(&(cField))
+	EndIf
+
+	If !Empty(TRA1->ZA0_NUM)
+		cPedido  := TRA1->ZA0_PEDIDO
+		nItemRe  := TRA1->ZA0_ITEM
+	EndIf
+
+	/*********
+	* ATRASO *
+	*********/
+//	nAtraso := TRA1->ZA0_ATRASO
+	
+	//-- ENTRADAS
+	//-- TRAZ O QUE RECEBEU ATE O DIA ANTERIOR AO DIA DO PARAMETRO
+	dMyData := CtoD("01/"+StrZero(Month(dData),2)+"/"+StrZero(Year(dData),4))
+	nEntr += fQtdEntr(cProd,cForn,cLoja,dMyData,(dData-1))
+    
+	For x:=1 to day(ultimodia(dData)) 
+		If x < day(dData)
+			nPrev += TRA1->(&("ZA0_PREV"+StrZero(x,2)))
+		EndIf
+		
+		nSaldoR += TRA1->(&("ZA0_PREV"+StrZero(x,2)))
+	Next
+	
+	nSaldoR -= nEntr
+    
+	nAtraso := (TRA1->ZA0_ATRASO + (nPrev - nEntr)) * -1
+	
+	/*********************
+	* SALDO NA EXPEDICAO *
+	*********************/
+	//nSaldo := U_PRDSALEX(cProd)
+	nSaldo := 0
+	
+	TRA1->(dbCloseArea())
+
+	nPreco := Posicione('SB1',1,xFilial('SB1')+cProd,'B1_UPRC')
+	
+Return {cPedido,nAtraso,nRelease,nSaldo,nItemRe,nSaldoR,nPreco}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ O RELEASE DO PRODUTO PASSADO COMO PARAMETRO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22Rls(dData,cCli,cLoja,cProd,cItemRel)
+Local cField
+Local cPedido  := ""
+Local nRelease := 0
+Local nAtraso  := 0
+Local nEntr    := 0
+Local nPrev    := 0
+Local nSaldo   := 0
+Local nSaldoR  := 0
+Local nItemRe  := ""
+Local dMyData  := CtoD("  /  /  ")
+
+	If Select("TRA1") > 0
+		TRA1->(dbCloseArea())
+	EndIf
+
+	cQuery := " SELECT TOP 1 ZAP.*"
+	cQuery += " FROM "+RetSqlName("ZAP")+" ZAP, "+RetSqlName("ZAO")+" ZAO "
+	cQuery += " WHERE ZAP.ZAP_NUM = ZAO.ZAO_NUM"
+	cQuery += " AND ZAO.ZAO_CLIENT = '"+cCli+"'"
+	cQuery += " AND ZAO.ZAO_LOJA = '"+cLoja+"'"
+	cQuery += " AND ZAP.ZAP_PROD = '"+cProd+"'"
+	If !Empty(cItemRel)
+		cQuery += " AND ZAP.ZAP_ITEM = '"+cItemRel+"'"
+	EndIf
+	cQuery += " AND MONTH(ZAO.ZAO_DTINI) = '"+StrZero(Month(dData),2)+"'"
+	cQuery += " AND YEAR(ZAO.ZAO_DTINI) = '"+StrZero(Year(dData),4)+"'"
+	cQuery += " AND ZAO.ZAO_STATUS != 'E'" //nao encerrado
+	cQuery += " AND ZAO.ZAO_FILIAL = '"+xFilial("ZAO")+"' AND ZAO.D_E_L_E_T_ = ''"
+	cQuery += " AND ZAP.ZAP_FILIAL = '"+xFilial("ZAP")+"' AND ZAP.D_E_L_E_T_ = ''"
+	
+	TCQuery cQuery NEW ALIAS "TRA1"
+	
+	/*******************
+	* PEDIDO E RELEASE *
+	*******************/
+	//pega o release daquele produto para o dia do carregamento
+	cField := "ZAP_PREV"+StrZero(Day(dData),2)
+	    
+	If !Empty(TRA1->(&(cField)))
+		nRelease := TRA1->(&(cField))
+	EndIf
+
+	If !Empty(TRA1->ZAP_NUM)
+		cPedido  := TRA1->ZAP_PEDCLI
+		nItemRe  := TRA1->ZAP_ITEM
+	EndIf
+    
+	//-- ENTREGUE
+	//-- TRAZ O QUE ENTREGOU ATE O DIA ANTERIOR AO DIA DO PARAMETRO
+	For x:=1 to (Day(dData-1))
+		dMyData := CtoD(StrZero(x,2)+"/"+StrZero(Month(dData),2)+"/"+StrZero(Year(dData),4))
+		nEntr += fEntr(dMyData,cCli,cLoja,cProd,cPedido)
+	Next
+	
+	//-- PREVISTO
+	//-- TRAZ A PREVISAO ATE O DIA ANTERIOR AO DIA DO PARAMETRO
+	For x:=1 to day(ultimodia(ddata)) //(Day(dData-1))
+		If x < day(dData)
+			nPrev += TRA1->(&("ZAP_PREV"+StrZero(x,2)))
+		EndIf
+		nSaldoR += TRA1->(&("ZAP_PREV"+StrZero(x,2)))
+	Next
+    
+    //-- SALDO RELEASE
+    nSaldoR -= nEntr
+    
+    //-- ATRASO        
+	nAtraso := (nPrev - nEntr) * -1
+	
+	/*********************
+	* SALDO NA EXPEDICAO *
+	*********************/
+	nSaldo := U_PRDSALEX(cProd)
+	
+	nPreco := Posicione('SB1',1,xFilial('SB1')+cProd,'B1_PRV1')
+
+Return {cPedido,nAtraso,nRelease,nSaldo,nItemRe,nSaldoR,nPreco}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ O SALDO DO PRODUTO NA EXPEDICAO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PRDSALEX(cPrd)
+Local nSalExp := 0
+
+	SB1->(dbSetOrder(1)) //B1_FILIAL+B1_COD
+	If SB1->(dbSeek(xFilial("SB1")+cPrd))
+	
+		SB2->(dbSetOrder(1)) //B2_FILIAL+B2_COD+B2_LOCAL
+		If SB2->(dbSeek(xFilial("SB2")+cPrd))
+		
+			WHILE SB2->(!EOF()) .AND. SB2->B2_COD==cPrd
+			
+		    	If SB1->B1_GRUPO=="PA01"
+		    		If SB2->B2_LOCAL=="27"
+		    			nSalExp += SB2->B2_QATU
+		    		EndIf
+		    	Else
+		    		If SB2->B2_LOCAL==SB1->B1_LOCPAD
+		    			nSalExp += SB2->B2_QATU
+		    		EndIf
+		    	EndIf
+		    	
+		    	SB2->(dbSkip())
+	        ENDDO
+	
+	    EndIf
+	EndIf
+
+Return nSalExp
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FINALIZA O CARREGAMENTO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22Fin()
+	If MsgYesNo("Deseja Finalizar o Carregamento "+ZD9->ZD9_NUM+"?")
+		RecLock("ZD9",.F.)
+			ZD9->ZD9_STATUS := "E"
+			ZD9->ZD9_USRALT := UPPER(ALLTRIM(cUserName))
+	    MsUnLock("ZD9")
+    EndIf
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ INICIALIZADOR DO CAMPO ITEM ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function ZDAITEM()
+Local cItem := ""
+Local nItem := n
+
+    For x:=1 to Len(aCols)-1
+    	If Val(aCols[x][1]) >= nItem
+	    	nItem := Val(aCols[x][1])+1
+	    EndIf
+	Next    
+
+	cItem := StrZero(nItem,4)
+
+Return cItem
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA O VOLUME E TRAZ AS QUANTIDADES DOS PRODUTOS ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22VOL()
+Local nPosProd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_COD"})
+Local nPosQtde := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_QUANT"})
+Local nPosPeso := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_PESO"})
+Local nQtde    := 0
+Local nPeso    := 0
+Local cQuery   := ""
+Local cMsg     := ""   
+Local lMsg     := .F.
+Local cNL      := CHR(13)+CHR(10) //nova linha
+Local aConjs   := {}
+Local _lRet    := .f. 
+             
+	//Pega a quantidade padrao de peças por volume no SB5
+	SB5->(dbSetOrder(1)) //B5_FILIAL+B5_COD
+	If SB5->(dbSeek(xFilial("SB5")+aCols[n][nPosProd]))
+		nQtde := SB5->B5_QPA * M->ZDA_VOLUME
+	Else
+		cMsg += "- Quantidade Padrão do produto "+aCols[n][nPosProd]+" não cadastrada!"+cNL
+		lMsg := .T.
+	EndIf
+	
+	//Pega o peso bruto da peça no SB1
+	SB1->(dbSetOrder(1)) //FILIAL + COD
+	If SB1->(dbSeek(xFilial("SB1")+aCols[n][nPosProd]))
+		If !Empty(SB1->B1_PESBRU)
+			nPeso += SB1->B1_PESBRU * nQtde
+		Else
+			cMsg += "- Peso Bruto do produto "+aCols[n][nPosProd]+" não cadastrado!"+cNL
+			lMsg := .T.
+		EndIf
+	EndIf
+	
+	aOldArea := GetArea()
+	
+    cAlConj := getnextalias()
+    
+    beginsql Alias cAlConj 
+    	SELECT DISTINCT ZBV_CONJUN
+    	FROM %Table:ZBV% ZBV
+    	WHERE ZBV_PROD = %Exp:aCols[n][nPosProd]%
+    	AND ZBV_FILIAL = %xFilial:ZBV%
+    	AND ZBV.%Notdel%
+    endSql
+	
+	While (cAlConj)->(!eof()) 
+		aAdd(aConjs,(cAlConj)->ZBV_CONJUN+'= Conjunto '+(cAlConj)->ZBV_CONJUN)
+		(cAlConj)->(dbskip())
+	Enddo
+    
+	(cAlConj)->(dbclosearea())
+	
+	If Len(aConjs) > 1
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  ¿
+		//³FILTRA POR CONJUNTO DE EMBALAGEM ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  Ù
+		
+	   	DEFINE MSDIALOG oDlgConj TITLE "Selecione o Conjunto de Embalagem" FROM 0,0 TO 140,500 Pixel
+	   
+		oSay1 := TSay():New(15,15,{||"Foram encontrados mais de um conjunto de embalagem. Escolha qual será utilizado."},oDlgConj,,,,,,.T.,,)
+
+		oComboCj := TComboBox():New(30,15,{|u| if(Pcount() > 0,cConjEmb := u,cConjEmb)},;
+			aConjs,120,20,oDlgConj,,{||.T.},{||.T.},,,.T.,,,,{|| .t. },,,,,"cConjEmb")
+	
+	   	DEFINE SBUTTON oBtnOk     FROM 45,15 TYPE 1 ACTION (_lRet:=.t.,oDlgConj:END()) ENABLE OF oDlgConj
+		oBtn1 := tButton():New(45,50,"Detalhes" ,oDlgConj,{||fDetEmbal()},40,10,,,,.T.)   	
+	 
+	   	ACTIVATE MSDIALOG oDlgConj CENTERED 
+		
+	ElseIf Len(aConjs)==1
+		cConjEmb := Substr(aConjs[1],1,1)
+	Endif
+	
+	RestArea(aOldArea)
+	
+	//Pega o peso bruto das embalagens da peça na tabela ZBV
+	ZBV->(dbSetOrder(1)) //ZBV_FILIAL+ZBV_PROD+ZBV_EMBAL
+	If ZBV->(dbSeek(xFilial("ZBV")+aCols[n][nPosProd]))
+		
+		WHILE ZBV->(!Eof()) .AND. ZBV->ZBV_PROD==aCols[n][nPosProd]
+			
+			//-- filtra pelo conjunto selecionado
+			If ZBV->ZBV_CONJUN != cConjEmb
+				ZBV->(dbSkip())
+				Loop
+			Endif
+			
+			If SB1->(dbSeek(xFilial("SB1")+ZBV->ZBV_EMBAL))
+				If !Empty(SB1->B1_PESBRU)
+					nPeso += (SB1->B1_PESBRU * ZBV->ZBV_QUANT) * M->ZDA_VOLUME
+				Else
+					cMsg += "- Peso Bruto da embalagem "+ZBV->ZBV_EMBAL+" não cadastrado!"+cNL
+					lMsg := .T.
+				EndIf
+			EndIf
+			
+			ZBV->(dbSkip())
+		ENDDO
+	Else
+		cMsg += "- Embalagens não cadastradas para o produto "+aCols[n][nPosProd]+"!"+cNL
+		lMsg := .T.
+	EndIf
+	
+    If lMsg
+    	MsgInfo("Não foi possível calcular o peso e a quantidade pelos seguintes motivos:"+cNL+cNL+cMsg)
+    	Return .T.
+    EndIf
+	
+	aCols[n][nPosPeso] := nPeso
+	aCols[n][nPosQtde] := nQtde
+
+	oGetD:Refresh()
+	
+	fAtuPeso(0)
+		
+Return .T.
+
+Static function fDetEmbal()
+Local nPosProd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_COD"})
+Local cMsgDet := ''
+Local aOldArea := GetArea()
+	
+    cAlDet := getnextalias()
+    
+    beginsql Alias cAlDet
+    	SELECT ZBV_EMBAL,ZBV_QUANT
+    	FROM %Table:ZBV% ZBV
+    	WHERE ZBV_PROD = %Exp:aCols[n][nPosProd]%
+    	AND ZBV_CONJUN = %Exp:cConjEmb%
+    	AND ZBV_FILIAL = %xFilial:ZBV%
+    	AND ZBV.%Notdel%
+    endSql
+	
+	While (cAlDet)->(!eof()) 
+		cMsgDet += ALLTRIM((cAlDet)->ZBV_EMBAL)+;
+		           ' - '+SUBSTR(Posicione('SB1',1,xFilial('SB1')+(cAlDet)->ZBV_EMBAL,'B1_DESC'),1,30) + CHR(13) + CHR(10)
+		           'Quantidade: '+Transform((cAlDet)->ZBV_QUANT,PesqPict('ZBV','ZBV_QUANT')) + CHR(13) + CHR(10) + CHR(13) + CHR(10)
+		(cAlDet)->(dbskip())
+	Enddo
+    
+    MsgBox(cMsgDet,'Detalhes do Conjunto '+cConjEmb,'INFO')                                                     
+    
+	(cAlDet)->(dbclosearea())
+	
+	RestArea(aOldArea)
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A QUANTIDADE DO PRODUTO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22QTD()
+Local nPosProd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_COD"})
+Local nPosPeso := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_PESO"})
+Local nPosVol  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_VOLUME"})
+Local nQtde := 0
+
+	//Pega a quantidade padrao de peças por volume no SB5
+	SB5->(dbSetOrder(1)) //B5_FILIAL+B5_COD
+	If SB5->(dbSeek(xFilial("SB5")+aCols[n][nPosProd]))
+		nQtde := SB5->B5_QPA * aCols[n][nPosVol]
+	EndIf
+	
+	If ReadVar()=='M->ZDA_QUANT'
+		If M->ZDA_QUANT	!= nQtde
+			aCols[n][nPosPeso] := 0
+		EndIf
+	Endif
+	
+	fAtuPeso(0)
+	
+	oGetD:Refresh()
+
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA O CAMPO PESO DO ACOLS ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22PES()
+	fAtuPeso(n)
+Return .T.
+                     
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ ATUALIZA O PESO DA CARGA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fAtuPeso(nPos)
+Local nPeso := 0
+Local nPosPeso := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_PESO"})
+
+	For x:=1 to Len(aCols)
+		If !aCols[x][len(aHeader)+1] .AND. nPos!=x
+			nPeso += aCols[x][nPosPeso]
+		EndIf
+	Next
+	
+	If nPos!=0
+		nPeso += M->ZDA_PESO
+	EndIf
+
+	nPesCarg := nPeso
+	nPesTot  := nPeso + nPesAnte
+	
+	oGet9:Refresh()
+	oGet10:Refresh()
+	
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A LINHA DO ACOLS ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22LOK()
+
+Local nPosProd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_COD"})
+Local nPosVol  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_VOLUME"})
+Local nPosQtde := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_QUANT"})
+Local nPosPeso := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_PESO"})
+Local nB1 := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_COD"})
+Local nCC := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_CC"}) 
+Local nFrete := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_FRESP"})
+
+If !aCols[n][len(aHeader)+1]
+	If aCols[n][nFrete] == "S" .AND. Empty(aCols[n][nCC])
+		alert(" Quando Frete Especial for sim, Centro de Custo é obrigatório!")
+		Return .F.
+	EndIf
+	
+	If Empty(aCols[n][nFrete] )
+		alert(" Campo Frete Especial é obrigatório!")
+		Return .F.
+	EndIf
+	
+	If !aCols[n][len(aHeader)+1] //nao pega se estiver deletado
+		If Empty(aCols[n][nPosProd])
+			Alert("Produto não informado!")
+			Return .F.
+		EndIf  
+
+		If Empty(aCols[n][nPosVol])
+			Alert("Volume não informado!")
+			Return .F.
+		EndIf
+		
+		If Empty(aCols[n][nPosQtde])
+			Alert("Quantidade não informada!")
+			Return .F.
+		EndIf
+		
+		If Empty(aCols[n][nPosPeso])
+			Alert("Peso não informado!")
+			Return .F.
+		EndIf
+	EndIf
+EndIf		
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ0¿
+//³ CARREGA OS ITENS DO ULTIMO RELEASE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ0Ù
+Static Function fPCP22Ca()
+Local cQuery
+//Local nZAORec := ZAO->(Recno())
+Local nZAONum := 0
+Local nItem
+Local aRelease := {}
+
+	//verifica se foi digitado o fornecedor e a loja
+	If Empty(cCli)
+		Alert("Digite o Cliente!")
+		Return
+	EndIf
+	
+	If Empty(cLoja)
+		Alert("Digite a Loja!")
+		Return
+	EndIf
+	
+	If Empty(dData)
+		Alert("Informe a data!")
+		Return
+	EndIf
+	
+	If cPara=='C'
+
+		nZAONum := fZAONUM(cCli,cLoja,dData) //retorna o numero do release correspondente
+
+		ZAP->(DbSetOrder(1)) //ZAP_FILIAL+ZAP_NUM+ZAP_ITEM 
+		If ZAP->(DbSeek(xFilial("ZAP")+nZAONum))
+	
+			SB1->(DbSetOrder(1)) // filial + cod
+		
+			nItem := 0      
+			aCols := {}
+		
+			WHILE ZAP->(!EOF()) .AND. ZAP->ZAP_NUM == ZAO->ZAO_NUM
+			
+				nItem++
+				
+				aRelease := U_PCP22Rls(dData,cCli,cLoja,ZAP->ZAP_PROD,ZAP->ZAP_ITEM)
+				
+				SB1->(DbSeek(xFilial("SB1")+ZAP->ZAP_PROD ))
+		  	    aAdd(Acols,{StrZero(nItem,4),; //item   
+		   					ZAP->ZAP_PROD,;    //prod
+							SB1->B1_DESC,;     //desc
+	  		   				ZAP->ZAP_PRECUN,;  //preco
+							aRelease[1],;      //pedido cliente
+							aRelease[2],;      //ATRASO
+	  	    				aRelease[3],;      //RELEASE
+	  	    				aRelease[4],;	   //SALDO NA EXPEDICAO
+	  	    				aRelease[6],;      //SALDO DO RELEASE
+	  	    				0,;                //VOLUME
+			    			0,;                //QUANTD
+	  	    				0,;                //PESO
+	  	    				ZAP->ZAP_ITEM,;    //ITEM DO RELEASE
+	  	    				"N",;              // FRETE ESPECIAL
+	  	    				space(9),;
+	  	    				"",;
+	  	    				.F.})             
+	  	   		ZAP->(DBSKIP())
+			ENDDO
+		EndIf
+	ElseIf cPara=='F'
+	    
+		nZA9Num := fZA9NUM(cCli,cLoja,dData)
+		
+		ZA0->(dbSetOrder(1))
+		If ZA0->(DbSeek(xFilial("ZA0")+nZA9Num))
+	
+			SB1->(DbSetOrder(1)) // filial + cod
+		
+			nItem := 0      
+			aCols := {}
+		
+			WHILE ZA0->(!EOF()) .AND. ZA0->ZA0_NUM == ZA9->ZA9_NUM
+			
+				nItem++
+				
+				aRelease := U_2PCP22Rls(dData,cCli,cLoja,ZA0->ZA0_PROD,ZA0->ZA0_ITEM)
+				
+				SB1->(DbSeek(xFilial("SB1")+ZA0->ZA0_PROD))
+		  	    aAdd(Acols,{StrZero(nItem,4),; //item   
+		   					ZA0->ZA0_PROD,;    //prod
+							SB1->B1_DESC,;     //desc
+	  		   				SB1->B1_UPRC,;     //preco
+							aRelease[1],;      //pedido cliente
+							aRelease[2],;      //ATRASO
+	  	    				aRelease[3],;      //RELEASE
+	  	    				aRelease[4],;	   //SALDO NA EXPEDICAO
+	  	    				aRelease[6],;      //SALDO DO RELEASE
+	  	    				0,;                //VOLUME
+			    			0,;                //QUANTD
+	  	    				0,;                //PESO
+	  	    				ZA0->ZA0_ITEM,;    //ITEM DO RELEASE
+	  	    				"N",;              // FRETE ESPECIAL
+	  	    				space(9),;
+	  	    				"",;
+	  	    				.F.})             
+
+				ZA0->(DBSKIP())
+	
+			ENDDO
+		EndIf
+	
+	EndIf		
+	oGetD:Refresh()
+	
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VERIFICA SE CARGA JA EXISTE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fCarga()
+Local lCrg       := .F.
+Local cJanela    := ""
+Local cMod       := 0 
+Local nOldRec    := ZD9->(Recno())
+Local nProxCar   := '1'
+Local nProxSeq   := 1
+Local cAl        := "CARGA"
+Local nCargCnt   := 1
+
+ 	nPesAnte   := 0
+     
+    //Traz todas as cargas do dia ordenado por carga, sequencia
+	beginSql Alias cAl
+		SELECT 
+		    ZD9_PESOCA      peso, 
+			ZD9_JANCAR      jane, 
+			ZD9_MODTRA      modt,
+			ZD9_CARGA       carg,
+			ZD9_SEQUEN      sequ
+		FROM 
+			%Table:ZD9% ZD9 (NOLOCK)
+		WHERE
+			ZD9_DATA = %Exp:DtoS(dData)%
+			AND ZD9_PARA = %Exp:cPara%
+		ORDER BY 
+			CAST(ZD9_CARGA AS INT),
+			ZD9_SEQUEN
+	endSql
+          
+	//percorre as cargas do dia
+	While (cAl)->(!Eof())
+	    
+	    //verifica se ja existe carga igual para este dia
+		If ALLTRIM((cAl)->carg) == ALLTRIM(cCarga)
+			nPesAnte += (cAl)->peso  //soma o peso das cargas encontradas
+			cJanela  := (cAl)->jane  //pega a janela das cargas
+			cMod     := (cAl)->modt  //pega a modalidade de transporte
+			nProxSeq := (cAl)->sequ  //guarda a sequencia da ultima carga
+			lCrg     := .T.          //flag carga existe
+		EndIf
+		            
+		If Val((cAl)->carg) == nCargCnt
+	    	nProxCar := AllTrim(Str(nCargCnt)) //guarda a ultima carga
+		    nCargCnt++
+	    Endif	
+	     
+		(cAl)->(dbSkip())
+	EndDo
+	
+	(cAl)->(dbCloseArea())
+
+	//se encontrou alguma carga igual
+	If lCrg
+		If MsgYesNo("Carga já digitada nesta data!"+chr(13)+chr(10)+;
+		            "Deseja utilizar a mesma carga?")
+				
+			fAtuPeso(0)
+			cJanCar  := cJanela
+			cModTran := cMod
+			cSequen  := AllTrim(Str(Val(nProxSeq)+1)) //muda a sequencia para a proxima da mesma carga
+			oCombo3:Refresh()
+			oCombo4:Refresh()
+			oGet6:Refresh()
+	    Else
+	    	nPesAnte := 0
+	    	fAtuPeso(0)
+	    	cCarga   := AllTrim(Str(Val(nProxCar)+1)) //muda para proxima carga
+	    	oCombo2:Refresh()
+	    EndIf
+	Else
+    	nPesAnte := 0
+    	fAtuPeso(0)
+	EndIf
+	
+	ZD9->(dbGoTo(nOldRec))
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VERIFICA SE EXISTE SEQUENCIA CADASTRADA PARA ESTA CARGA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fSequen()
+Local nOldRec
+
+	nOldRec := ZD9->(RecNo())
+
+	ZD9->(dbSetOrder(3)) // FILIAL + DATA	
+	If ZD9->(dbSeek(xFilial("ZD9")+DTOS(dData)))
+			
+		While ZD9->(!EOF()) .AND. DTOS(ZD9->ZD9_DATA)==DTOS(dData)
+			
+			If ValType(cCarga)=="C" .and. ;
+			   AllTrim(ZD9->ZD9_CARGA)==AllTrim(cCarga) .AND. ;
+			   ZD9->ZD9_SEQUEN==cSequen .AND. ;
+			   nPar==3 .AND. ;
+			   ZD9->ZD9_PARA==cPara
+			
+				Alert("Já existe sequência cadastrada para esta carga!"+CHR(13)+CHR(10)+;
+					  "Carregamento nº: "+ZD9->ZD9_NUM)
+					  
+				cSequen := '0'
+				ZD9->(dbGoTo(nOldRec))
+				oCombo3:SetFocus()
+					  
+			EndIf
+
+			ZD9->(dbSkip())
+
+		EndDo	
+
+	EndIf	
+	
+	ZD9->(dbGoTo(nOldRec))
+
+Return
+
+//*****************************************************//
+// Funcao que traz a quantidade  de  pecas  que  foram //
+// entregues E acumula o total de pecas entregues,     //
+// usando a data da entrega como parametro             //
+//*****************************************************//
+Static Function fEntr(dData,cCli,cLoja,cProd,cPedido)
+Local cQuery 
+Local _nQuant := 0
+	
+	If Select("TMR") > 0 
+		TMR->(DbCloseArea())
+	EndIf
+	
+	//VERIFICA O QUE SAIU DE PRODUTO
+//	cQuery := " SELECT D2.D2_DOC, SUM(D2_QUANT) AS QUANT FROM "+RetSqlName("SD2")+" D2 "
+	cQuery := " SELECT D2.D2_DOC, SUM(D2_QUANT) AS QUANT "//FROM "+RetSqlName("SD2")+" D2 "
+	cQuery += " FROM "+RetSqlName("SD2")+" D2, "+RetSqlName("SF2")+" F2 "
+	cQuery += " WHERE F2.F2_DOC = D2.D2_DOC "
+	cQuery += " AND F2.F2_SERIE = D2.D2_SERIE "
+	cQuery += " AND F2.F2_CLIENTE = D2.D2_CLIENTE "
+	cQuery += " AND F2.F2_LOJA = D2.D2_LOJA "
+	cQuery += " AND D2.D2_CLIENTE = '"+cCli+"'"
+	cQuery += " AND D2.D2_LOJA = '"+cLoja+"'"
+	cQuery += " AND D2.D2_COD = '"+cProd+"'"
+
+	If !Empty(ALLTRIM(ZAP->ZAP_PEDCLI))
+		cQuery += " AND F2.F2_PCCLI = '"+cPedido+"'"
+	EndIf
+	
+	cQuery += " AND D2.D2_EMISSAO = '"+DTOS(dData)+"'"
+	cQuery += " AND D2.D2_FILIAL = '"+xFilial("SD2")+"'"
+	cQuery += " AND D2.D_E_L_E_T_ = ' '"
+	cQuery += "	GROUP BY D2.D2_DOC"
+
+	TCQUERY cQuery NEW ALIAS "TMR"
+	  
+	TMR->(DBGOTOP())
+	
+	WHILE TMR->(!EOF())
+		
+		_nQuant += TMR->QUANT
+                     
+    	IF SM0->M0_CODIGO == "FN"  //empresa FUNDICAO
+    		
+			IF !(cCli$"900004" .AND. cLoja$"02") .AND. ;
+			   !(cCli$"900003" .AND. cLoja$"02") .AND. ;
+			   !(cCli$"900025" .AND. cLoja$"02") .AND. ;
+			   !(cCli$"900022" .AND. cLoja$"01") .AND. ;
+			   !(cCli$"000012" .AND. (cLoja$"02" .OR. cLoja$"03"))
+
+				IF Select("TMT") > 0
+					TMT->(DbCloseArea("TMT"))
+				ENDIF
+				
+				//VERIFICA O QUE HOUVE DE DEVOLUÇÃO DO PRODUTO
+				cQuery2 := " SELECT SUM(D1_QUANT) AS QUANT FROM "+RetSqlName("SD1")+" D1 "
+				cQuery2 += " WHERE D1.D1_TIPO = 'D' "//DEVOLUCAO
+				cQuery2 += " AND D1.D1_FORMUL = 'S' "// ENTRADA COM A PRÓPRIA NOTA				
+				cQuery2 += " AND D1.D1_FORNECE = '"+cCli+"'"
+				cQuery2 += " AND D1.D1_LOJA = '"+cLoja+"'"
+				cQuery2 += " AND D1.D1_COD = '"+cProd+"'"
+				cQuery2 += " AND D1.D1_NFORI = '"+TMR->D2_DOC+"'"
+				cQuery2 += " AND D1.D1_FILIAL = '"+xFilial("SD1")+"'"
+				cQuery2 += " AND D1.D_E_L_E_T_ = ' '"
+			
+				TCQUERY cQuery2 NEW ALIAS "TMT"
+		
+				If !Empty(TMT->QUANT)
+					_nQuant -= TMT->QUANT
+				EndIf
+			EndIf	
+		EndIf	
+		TMR->(DBSKIP())
+	ENDDO
+
+Return _nQuant
+
+Static Function fQtdEntr(cProd,cForn,cLoja,dDtIni,dDtFim)
+Local nQtd := 0
+
+	IF SM0->M0_CODIGO == "FN" .AND. ;
+	   cForn == '999999' .AND. cLoja == '01' //Se for para fundição, pega da ZBB
+
+		cQuery := " SELECT SUM(ZBB.ZBB_QUANT) AS QUANT "
+		cQuery += " FROM ZBAFN0 ZBA, ZBBFN0 ZBB" //TEM QUE SER DA FUNDICAO
+		cQuery += " WHERE ZBA.ZBA_NUM = ZBB.ZBB_NUM"
+		cQuery += " AND ZBA.ZBA_DATA BETWEEN '"+DtoS(dDtIni)+"' AND '"+DtoS(dDtFim)+"'"
+		cQuery += " AND ZBB.ZBB_COD = '"+cProd+"'"
+		cQuery += " AND ZBA.ZBA_STATUS = 'E'"
+		cQuery += " AND ZBB.ZBB_FILIAL = '"+XFILIAL("ZBB")+"' AND ZBB.D_E_L_E_T_ = ''"
+		cQuery += " AND ZBA.ZBA_FILIAL = '"+XFILIAL("ZBA")+"' AND ZBA.D_E_L_E_T_ = ''"
+	Else
+		cQuery := "SELECT SUM(D1.D1_QUANT) AS QUANT "
+		cQuery += " FROM "+RetSqlName("SD1") + " D1, " + RetSqlName( 'SF4' ) +" F4 "
+		cQuery += " WHERE D1.D1_COD = '"+cProd+"'"
+		cQuery += " AND D1.D1_FORNECE = '"+cForn+"' AND D1.D1_LOJA = '"+cLoja+"'"
+		cQuery += " AND D1.D1_DTDIGIT BETWEEN '"+DtoS(dDtIni)+"' AND '"+DtoS(dDtFim)+"'"
+	    cQuery += " AND D1.D1_TES = F4.F4_CODIGO"	
+	    cQuery += " AND F4.F4_ESTOQUE = 'S'" //somente pega as notas que atualizam estoque
+		cQuery += " AND D1.D_E_L_E_T_ = ' '"
+	    cQuery += " AND F4.D_E_L_E_T_ = ' '"
+	EndIf
+
+	TCQUERY cQuery NEW ALIAS 'TMV1'
+	         
+//	TcSetField("TMV1","DTDIGIT","D")  // Muda a data de string para date    
+	                   
+	If TMV1->(!EOF())
+		nQtd := TMV1->QUANT
+	EndIf
+
+	TMV1->(dbCloseArea())
+
+Return(nQtd)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄP¿
+//³ RETORNA O NUMERO DO RELEASE CORRESPONDENTE AO FORNECEDOR LOJA E DATA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄPÙ
+Static Function fZA9NUM(cForn,cLoja,dData)
+	//Localiza o último release deste fornecedor e loja	
+	ZA9->(DbSetOrder(2)) //ZA9_FILIAL+ZA9_FORNEC+ZA9_LOJA+ZA9_ANO+ZA9_MES
+	ZA9->(DbSeek(xFilial("ZA9")+cForn+cLoja))
+	While ZA9->(!EOF()) .AND. ZA9->ZA9_FORNEC==cForn .AND. ZA9->ZA9_LOJA==cLoja
+	    If Month(dData)==ZA9->ZA9_MES //pega o release referente ao mes do carregamento
+		    exit
+		EndIf
+		ZA9->(DBSKIP())
+	EndDo
+Return ZA9->ZA9_NUM
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄP¿
+//³ RETORNA O NUMERO DO RELEASE CORRESPONDENTE AO CLIENTE, LOJA E DATA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄPÙ
+Static Function fZAONUM(cCli,cLoja,dData,cCombo)
+Local nZAORec := ZAO->(Recno())
+
+	//Localiza o último release deste fornecedor e loja	
+	ZAO->(DbSetOrder(2)) //ZAO_FILIAL+ZAO_CLIENT+ZAO_LOJA+DTOS(ZAO_DTINI)
+	ZAO->(DbSeek(xFilial("ZAO")+cCli+cLoja))
+	While ZAO->(!EOF()) .AND. ZAO->ZAO_CLIENT==cCli .AND. ZAO->ZAO_LOJA == cLoja
+	    
+	    If Month(dData)==Month(ZAO->ZAO_DTINI) //pega o release referente ao mes do carregamento
+			nZAORec := ZAO->(RecNo())
+		EndIf
+		
+		ZAO->(DBSKIP())
+		
+	EndDo
+	
+	//Posiciona a tabela ZAO no registro do último release deste fornecedor e loja
+	ZAO->(DbGoTo(nZAORec))
+
+Return ZAO->ZAO_NUM
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ PCP22SOL º Autor ³ João Felipe da Rosaº Data ³  31/08/2009 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ ENVIA EMAIL SOLICITANDO TRANSPORTE PARA CARREGAMENTO       º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ PCP                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function PCP22SOL(dDat,cCarg)//,cRDeb,cCC)
+Local lSai     := .F.
+Local cMsg     := ""
+Local cQuery   := ""
+Local cGrupo   := ""
+Local aDadosCF := {'','','','',''} 
+Private cCarga := ""
+Private aCarga := {}
+Private dData  := date()
+Private cObs   := Space(200)
+
+
+	If ValType( dDat ) <> 'U' .AND. !Empty(dDat)
+		dData := dDat
+	EndIf
+	
+	If ValType( cCarg ) <> 'U' .AND. !Empty(cCarg)
+		aAdd(aCarga,cCarg)
+		cCarga := cCarg
+	EndIf
+
+    oDlgSt  := MsDialog():New(0,0,122,370,"Parâmetros",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+    oSay1 := tSay():New(10,10,{||"Data"},oDlgSt,,,,,,.T.,,)
+   	oGet1 := tGet():New(08,30,{|u| if(Pcount()>0,dData := u, dData)},oDlgSt,;
+   		 45,8,"99/99/9999",{||fTrazCar(dData)},,,,,,.T.,,,{|| ValType(dDat)=="U"},,,,,,,"dData")
+		
+    oSay2 := tSay():New(22,10,{||"Carga"},oDlgSt,,,,,,.T.,,)
+	//combobox
+	oCombo := TComboBox():New(20,30,{|u| if(Pcount() > 0,cCarga := u,cCarga)},;
+		aCarga,90,20,oDlgSt,,{||},,,,.T.,,,,{|| ValType(cCarg)=="U" },,,,,"cCarga")
+
+   	oSay1 := tSay():New(34,10,{||"Obs"},oDlgSt,,,,,,.T.,,)
+   	oGet2 := tGet():New(32,30,{|u| if(Pcount()>0,cObs := u, cObs)},oDlgSt,;
+   		 150,8,"@!",{||.T.},,,,,,.T.,,,{||.T.},,,,,,,"cObs")
+
+	oBtn3 := tButton():New(46,95,"Ok",oDlgSt,{||oDlgSt:End()},40,10,,,,.T.)
+	oBtn4 := tButton():New(46,140,"Cancelar",oDlgSt,{||lSai := .T., oDlgSt:End()},40,10,,,,.T.)
+		
+	oDlgSt:Activate(,,,.T.,{||.T.},,{||})
+
+	If lSai
+		Return
+	EndIf
+	
+	If Empty(cCarga)
+		Return
+	EndIf
+	
+	If Select("TRC1") > 0
+		TRC1->(dbCloseArea())
+	EndIf
+
+	cQuery := "SELECT * "
+	cQuery += " FROM "+RetSqlName("ZD9")+" ZD9, "+RetSqlName("ZDA")+" ZDA "
+	cQuery += " WHERE ZD9.ZD9_NUM = ZDA.ZDA_NUM"
+	cQuery += " AND ZD9.ZD9_DATA = '"+DtoS(dData)+"'"
+	cQuery += " AND ZD9.ZD9_CARGA  = '"+cCarga+"'"
+	cQuery += " AND ZD9.ZD9_PARA = '"+cPara+"'"
+	cQuery += " AND ZD9.ZD9_FILIAL = '"+xFilial("ZD9")+"' AND ZD9.D_E_L_E_T_ = ''"
+	cQuery += " AND ZDA.ZDA_FILIAL = '"+xFilial("ZDA")+"' AND ZDA.D_E_L_E_T_ = ''"
+	cQuery += " ORDER BY ZD9.ZD9_SEQUEN "
+	
+	TCQUERY cQuery NEW ALIAS "TRC1"
+	
+	TcSetField("TRC1","ZD9_DATA"  ,"D")  // Muda a data de string para date
+	TcSetField("TRC1","ZD9_DATAEN","D")  // Muda a data de string para date
+
+	TRC1->(dbGoTop())
+	
+	cMsg := '<html>'
+	cMsg += '<body>'
+	cMsg += '<p></p>'
+	cMsg += '<table width="100%" border="1" style="font-family:arial;font-size:12px">'
+
+	cMsg += '  <tr style="background:#abc">'
+	cMsg += '    <td colspan="6" align="center">'
+	cMsg += '      <strong>CONFIRMAÇÃO DE COLETA '+DTOC(TRC1->ZD9_DATA)+'</strong>'
+	cMsg += '    </td>'
+	cMsg += '  </tr>'
+	
+	cMsg += '  <tr>'
+	cMsg += '    <td style="background:#efefef">SOLICITAÇÃO</td>'
+	cMsg += '    <td>'+TRC1->ZD9_NUM+'</td>'
+	cMsg += '    <td style="background:#efefef">SOLICITANTE</td>'
+	cMsg += '    <td>'+TRC1->ZD9_USRINC+'</td>'
+	cMsg += '    <td style="background:#efefef">TRANSPORTADORA</td>'
+	cMsg += '    <td>'+Posicione("SA4",1,xFilial("SA4")+TRC1->ZD9_TRANSP,"A4_NOME")+'</td>'
+	cMsg += '  </tr>'
+
+	cMsg += '  <tr>'
+	cMsg += '    <td style="background:#efefef">DATA COLETA</td>'
+	cMsg += '    <td>'+DTOC(TRC1->ZD9_DATA)+'</td>'
+	cMsg += '    <td style="background:#efefef">JANELA COLETA</td>'
+	cMsg += '    <td>'+TRC1->ZD9_JANCAR+'</td>'
+	cMsg += '    <td style="background:#efefef">TIPO TRANSPORTE</td>'
+	cMsg += '    <td>'+Substr(aModTran[VAL(TRC1->ZD9_MODTRA)],3,Len(aModTran[VAL(TRC1->ZD9_MODTRA)])-2)+'</td>'
+	cMsg += '  </tr>'
+
+	cMsg += '  <tr>'
+	cMsg += '    <td style="background:#efefef">MODALIDADE</td>'
+	cMsg += '    <td>'+Iif(TRC1->ZD9_TIPFRE=='C','CIF','FOB')+'</td>'
+	cMsg += '    <td>&nbsp;</td>'
+	cMsg += '    <td>&nbsp;</td>'	
+	cMsg += '    <td>&nbsp;</td>'
+	cMsg += '    <td>&nbsp;</td>'
+	cMsg += '  </tr>'
+
+	cMsg += '</table><br />'
+	
+	cMsg += '<table width="100%" border="1" style="font-family:arial;font-size:12px">'
+	cMsg += '  <tr style="font-weight:bold">'
+/*	cMsg += '    <td style="background:#abc">SEQUENCIA DE ENTREGAS</td>'
+	cMsg += '    <td style="background:#abc" align="center">JANELA ENTREGA</td>'
+	cMsg += '    <td style="background:#abc" align="center">VOLUME</td>'
+	cMsg += '    <td style="background:#abc" align="center">PESO</td>'
+*/
+
+	cMsg += '    <td style="background:#abc" colspan="6" align="center">DADOS DE ENTREGA</td>'
+
+	cMsg += '  </tr>'
+
+	nTotVol := 0
+	nTotPes := 0
+	nVolume := 0
+	nPeso   := 0    
+
+    SA1->(dbSetOrder(1)) //FILIAL + COD + LOJA
+	SB1->(dbSetOrder(1)) //FILIAL + COD
+
+	While TRC1->(!EOF())
+		                                   
+		If SM0->M0_CODIGO=="FN"
+			If SB1->(dbSeek(xFilial("SB1")+TRC1->ZDA_COD))
+				If AllTrim(SB1->B1_GRUPO)$"PA01/PA02/PA03"
+					cGrupo := Alltrim(SB1->B1_GRUPO)
+				EndIf
+			EndIf
+			cGrupo := Iif(cGrupo$"PA02/PA03","PA02","PA01")
+        ElseIf SM0->M0_CODIGO=="NH"
+        	cGrupo := AllTrim(SB1->B1_GRUPO)
+        EndIf
+		
+		If TRC1->ZD9_PARA=='C'
+			SA1->(dbSeek(xFilial("SA1")+TRC1->ZD9_CLIENT+TRC1->ZD9_LOJA))
+			aDadosCF := {SA1->A1_NOME,SA1->A1_NREDUZ,SA1->A1_END,SA1->A1_MUN,SA1->A1_EST}
+		ElseIf TRC1->ZD9_PARA=='F'
+			SA2->(dbSeek(xFilial("SA2")+TRC1->ZD9_CLIENT+TRC1->ZD9_LOJA))
+			aDadosCF := {SA2->A2_NOME,SA2->A2_NREDUZ,SA2->A2_END,SA2->A2_MUN,SA2->A2_EST}
+		EndIf
+
+		cMsg += '  <tr>'
+		cMsg += '    <td rowspan="4" style="background:#efefef">SEQUÊNCIA DE ENTREGA</td>'
+		cMsg += '    <td rowspan="4">'+STRZERO(VAL(TRC1->ZD9_SEQUEN),2)+'</td>'
+		cMsg += '    <td style="background:#efefef">CLIENTE</td>'
+		cMsg += '    <td>'+ALLTRIM(aDadosCF[1])+'</td>'
+		cMsg += '    <td style="background:#efefef">DATA ENTREGA</td>'
+		cMsg += '    <td align="center">'+DTOC(TRC1->ZD9_DATAEN)+'</td>'
+		cMsg += '  </tr>'
+		
+		cMsg += '  <tr>'
+		cMsg += '    <td style="background:#efefef">LOJA</td>'
+		cMsg += '    <td>'+ALLTRIM(aDadosCF[2])+'</td>'
+		cMsg += '    <td style="background:#efefef">JANELA ENTREGA</td>'
+		cMsg += '    <td align="center">'+TRC1->ZD9_JANENT+'</td>'
+		cMsg += '  </tr>'
+		
+		cCliLoja := TRC1->ZD9_CLIENT+TRC1->ZD9_LOJA
+		nVolume  := 0
+		nPeso    := 0
+		
+		While cCliLoja==TRC1->ZD9_CLIENT+TRC1->ZD9_LOJA
+			nTotVol += TRC1->ZDA_VOLUME
+			nTotPes += TRC1->ZDA_PESO
+			nVolume += TRC1->ZDA_VOLUME
+			nPeso   += TRC1->ZDA_PESO
+			TRC1->(dbSkip())
+		EndDo
+		
+		cMsg += '  <tr>'
+		cMsg += '    <td style="background:#efefef">ENDEREÇO</td>'
+		cMsg += '    <td align="left">'+aDadosCF[3]+'</td>'
+		cMsg += '    <td style="background:#efefef">VOLUME</td>'
+		cMsg += '    <td align="center">'+STR(nVolume)+'</td>'
+		cMsg += '  </tr>'
+		
+		cMsg += '  <tr>'
+		cMsg += '    <td style="background:#efefef">MUNICÍPIO/ESTADO</td>'
+		cMsg += '    <td align="left">'+aDadosCF[4]+'/'+aDadosCF[5]+'</td>'
+		cMsg += '    <td style="background:#efefef">PESO</td>'
+		cMsg += '    <td align="center">'+Str(nPeso)+'</td>'
+		cMsg += '  </tr>'
+		
+	EndDo
+
+	cMsg += '  <tr style="font-weight:bold">'
+	cMsg += '    <td>&nbsp;</td>'
+	cMsg += '    <td>&nbsp;</td>'
+	cMsg += '    <td>&nbsp;</td>'
+	cMsg += '    <td>&nbsp;</td>'
+	cMsg += '    <td style="background:#efefef">PESO TOTAL</td>'
+//	cMsg += '    <td align="center">'+STR(nTotVol)+'</td>'
+	cMsg += '    <td align="center">'+STR(nTotPes)+'</td>'
+	cMsg += '  </tr>'
+
+	cMsg += '  <tr>'           
+	cMsg += '    <td style="background:#abc">Obs.:</td>'
+	cMsg += '    <td colspan="5">'+cObs+'</td>'
+	cMsg += '  </tr>'
+
+	cMsg += '</table><br />'
+	cMsg += '</body>'
+	cMsg += '</html>'
+
+	cTo := ""
+	ZDI->(dbSetOrder(1)) // filial + transportadora + grupo
+	If ZDI->(dbSeek(xFilial("ZDI")+SA4->A4_COD+cGrupo))
+		While ZDI->(!EOF()) .AND. SA4->A4_COD==ZDI->ZDI_TRANSP .AND. cGrupo$ZDI->ZDI_GRUPO
+			cTo += ZDI->ZDI_EMAIL+";"
+			ZDI->(dbSkip())
+		EndDo
+	EndIf
+
+	oMail          := Email():New()
+	oMail:cMsg     := cMsg
+	oMail:cAssunto := "*** CONFIRMAÇÃO DE COLETA ***"
+	oMail:cTo      := cTo // 'joaofr@whbbrasil.com.br'//
+    /*
+	If !Empty(oMail:cTo)
+		oMail:Envia()
+	Endif
+     */
+	If Select("TRC1") > 0
+		TRC1->(dbCloseArea())
+	EndIf
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ PCP22REL ºAutor  ³ João Felipe da Rosaº Data ³ 16/09/2009  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ RELATÓRIO DE CARREGAMENTO                                  º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LOGÍSTICA / PCP                                            º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function PCP22Rel()
+Local aPergs := {}
+
+	oRelato          := Relatorio():New()
+	
+	oRelato:cString  := "ZD9"
+    oRelato:cPerg    := "PCP022"
+	oRelato:cNomePrg := "NHPCP22"
+	oRelato:wnrel    := oRelato:cNomePrg
+
+	//descricao
+	oRelato:cDesc1   := "Relatório de carregamento"
+	oRelato:cDesc2   := ""
+
+	//titulo
+	oRelato:cTitulo  := "RELATÓRIO DE CARREGAMENTO"
+
+	//cabecalho
+	oRelato:cCabec1  := ""
+    oRelato:cCabec2  := ""
+    
+	aAdd(aPergs,{"De  Grupo ?"         ,"C", 6,0,"G","","","","","","SBM",""})
+	aAdd(aPergs,{"Ate Grupo ?"         ,"C", 6,0,"G","","","","","","SBM",""})
+	aAdd(aPergs,{"De  Data ?"          ,"D", 8,0,"G","","","","","","","99/99/9999"})
+	aAdd(aPergs,{"Ate Data ?"          ,"D", 8,0,"G","","","","","","","99/99/9999"})
+	aAdd(aPergs,{"Cli / Forn ?"        ,"N", 1,0,"C","Cliente","Fornecedor","Ambos","","","",""})
+	aAdd(aPergs,{"De  Cliente ?"       ,"C", 6,0,"G","","","","","","SA1",""})
+	aAdd(aPergs,{"Ate Cliente ?"       ,"C", 6,0,"G","","","","","","SA1",""})
+	aAdd(aPergs,{"De  Fornecedor ?"    ,"C", 6,0,"G","","","","","","SA2",""})
+	aAdd(aPergs,{"Ate Fornecedor ?"    ,"C", 6,0,"G","","","","","","SA2",""})
+	aAdd(aPergs,{"De  Loja ?"          ,"C", 2,0,"G","","","","","","",""})
+	aAdd(aPergs,{"Ate Loja ?"          ,"C", 2,0,"G","","","","","","",""})
+	aAdd(aPergs,{"Status ?"            ,"N", 1,0,"C","Pendentes","Encerrados","Ambos","","","",""})
+	aAdd(aPergs,{"Frete Emergencial ?" ,"N", 1,0,"C","Sim","Nao","Ambos","","","",""})
+	aAdd(aPergs,{"De Usr. Inclui ?"    ,"C",20,0,"G","","","","","","",""})
+	aAdd(aPergs,{"Ate Usr. Inclui ?"   ,"C",20,0,"G","","","","","","",""})
+	aAdd(aPergs,{"Planta ?"            ,"C", 1,0,"C","Usinagem","Fundição","Forjaria","Virabrequim","Todas","",""})
+		
+	oRelato:AjustaSx1(aPergs)
+		    
+	oRelato:Run({||Imprime()})
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FUNCAO DE IMPRESSAO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function Imprime()
+Local dDat    := "  /  /  "
+Local cCarg   := ""
+Local aTotCar := {0,0}
+Local lCarga  := .F.
+
+	cQuery := "SELECT ZD9.*, ZDA.* FROM "
+	cQuery += RetSqlName("ZD9")+" ZD9, "
+	cQuery += RetSqlName("ZDA")+" ZDA, "
+	cQuery += RetSqlName("SB1")+" SB1"
+	cQuery += " WHERE SB1.B1_COD = ZDA.ZDA_COD"
+	cQuery += " AND ZD9.ZD9_NUM = ZDA.ZDA_NUM"
+	cQuery += " AND ZD9.ZD9_DATA BETWEEN '"+DtoS(mv_par03)+"' AND '"+DtoS(mv_par04)+"'"
+	cQuery += " AND SB1.B1_GRUPO BETWEEN '"+mv_par01+"' AND '"+mv_par02+"'"
+	
+	If mv_par05==1 //Cliente
+		cQuery += " AND ZD9.ZD9_PARA = 'C' "
+		cQuery += " AND ZD9.ZD9_CLIENT BETWEEN '"+mv_par06+"' AND '"+mv_par07+"'"
+	ElseIf mv_par05==2 //Fornecedor
+		cQuery += " AND ZD9.ZD9_PARA = 'F' "
+		cQuery += " AND ZD9.ZD9_CLIENT BETWEEN '"+mv_par08+"' AND '"+mv_par09+"'"
+	ElseIf mv_par05==3 //Ambos
+		cQuery += " AND ZD9.ZD9_CLIENT BETWEEN '"+mv_par06+"' AND '"+mv_par07+"'"
+	EndIf
+	
+	If mv_par16==1
+		cQuery += " AND ZD9.ZD9_PLANTA IN ('1','3') "
+	ElseIf mv_par16==2
+		cQuery += " AND ZD9.ZD9_PLANTA = '2' "
+	ElseIf mv_par16==3
+		cQuery += " AND ZD9.ZD9_PLANTA = '4' "
+	ElseIf mv_par16==4
+		cQuery += " AND ZD9.ZD9_PLANTA = '5' "
+ 	EndIf                                                
+	
+	cQuery += " AND ZD9.ZD9_LOJA BETWEEN '"+mv_par10+"' AND '"+mv_par11+"'"	
+	
+	If mv_par12==1 //Pendentes
+		cQuery += " AND ZD9.ZD9_STATUS = 'P'"
+	ElseIf mv_par12==2 //Encerradas
+		cQuery += " AND ZD9.ZD9_STATUS = 'E'"
+	EndIf
+
+	If mv_par13==1 //Frete mergencial sim
+		cQuery += " AND ZDA.ZDA_FRESP = 'S' "
+	ElseIf mv_par13==2 //Frete emergencial nao
+		cQuery += " AND ZDA.ZDA_FRESP = 'N' "
+	EndIf
+	
+	cQuery += " AND ZD9.ZD9_USRINC BETWEEN '"+MV_PAR14+"' AND '"+MV_PAR15+"'"
+	
+	cQuery += " AND ZDA.D_E_L_E_T_ = '' AND ZDA.ZDA_FILIAL = '"+xFilial("ZDA")+"'""
+	cQuery += " AND ZD9.D_E_L_E_T_ = '' AND ZD9.ZD9_FILIAL = '"+xFilial("ZD9")+"'""
+	cQuery += " AND SB1.D_E_L_E_T_ = ''  AND SB1.B1_FILIAL = '"+xFilial("SB1")+"'"
+	cQuery += " ORDER BY ZD9.ZD9_DATA, ZD9.ZD9_JANCAR, ZD9.ZD9_CARGA, ZD9.ZD9_SEQUEN, ZD9.ZD9_PARA"
+		
+	TCQUERY cQuery NEW ALIAS "TRD1" 
+	
+	TCSETFIELD("TRD1","ZD9_DATA"  ,"D") //MUDA DE STRING PARA DATE
+	TCSETFIELD("TRD1","ZD9_DATAEN","D") //MUDA DE STRING PARA DATE
+	
+	TRD1->(DbGoTop())
+	    
+	SA1->(dbSetOrder(1)) //filial + cod + loja
+	SB1->(dbSetOrder(1)) //filial + cod
+	SA4->(dbSetOrder(1)) //filial + cod
+	
+	SetRegua(0)
+	
+    While TRD1->(!EOF())
+	
+		If Prow() > 65
+			oRelato:Cabec()
+		EndIf
+		
+		IncRegua("Carga "+TRD1->ZD9_CARGA)
+		
+		//SE FOR DATA DIFERENTE ESCREVE A DATA E A CARGA
+		If dDat != DtoC(TRD1->ZD9_DATA)
+			oRelato:Cabec() //QUEBRA A PÁGINA POR DATA
+			@Prow()+1 , 001 psay "DATA: "+DtoC(TRD1->ZD9_DATA)
+		EndIf
+			
+	    If cCarg!=TRD1->ZD9_CARGA .OR. dDat != DtoC(TRD1->ZD9_DATA)
+	     	lCarga := .T. 
+	    EndIf
+		
+		dDat     := DtoC(TRD1->ZD9_DATA)
+		cCarg    := TRD1->ZD9_CARGA
+		cSeq     := TRD1->ZD9_SEQUEN
+		cDCliFor := ""
+		cPara    := TRD1->ZD9_PARA
+		aMat     := {}
+					
+		While TRD1->(!EOF()) .AND. dDat==DtoC(TRD1->ZD9_DATA) .AND. cCarg==TRD1->ZD9_CARGA .AND. cSeq==TRD1->ZD9_SEQUEN .and. cPara==TRD1->ZD9_PARA
+			
+			SB1->(dbSeek(xFilial("SB1")+TRD1->ZDA_COD))
+			If TRD1->ZD9_PARA=='C'
+				
+				aRelease := U_PCP22Rls(TRD1->ZD9_DATA,TRD1->ZD9_CLIENT,TRD1->ZD9_LOJA,TRD1->ZDA_COD,TRD1->ZDA_ITEMRE)
+				SA1->(dbSeek(xFilial("SA1")+TRD1->ZD9_CLIENT+TRD1->ZD9_LOJA))
+				cDCliFor := AllTrim(SA1->A1_NOME)
+
+			ElseIF TRD1->ZD9_PARA=='F'
+
+				aRelease := U_2PCP22Rls(TRD1->ZD9_DATA,TRD1->ZD9_CLIENT,TRD1->ZD9_LOJA,TRD1->ZDA_COD,TRD1->ZDA_ITEMRE)
+				SA2->(dbSeek(xFilial("SA2")+TRD1->ZD9_CLIENT+TRD1->ZD9_LOJA))
+				cDCliFor := AllTrim(SA2->A2_NOME)
+
+			EndIF
+			
+			SA4->(dbSeek(xFilial("SA4")+TRD1->ZD9_TRANSP))
+
+			aAdd(aMat,{TRD1->ZD9_CARGA  ,;         //01 - CARGA
+			           TRD1->ZD9_SEQUEN ,;         //02 - SEQUENCIA
+			           TRD1->ZD9_CLIENT ,;         //03 - CLIENTE
+			           TRD1->ZD9_LOJA   ,;         //04 - LOJA
+			           cDCliFor         ,;         //05 - NOME DO CLIENTE
+			           TRD1->ZD9_DATAEN ,;         //06 - DATA ENTREGA
+			           TRD1->ZD9_JANCAR ,;         //07 - JAN. CARREGAMENTO
+			           TRD1->ZD9_JANENT ,;         //08 - JAN. ENTREGA
+			           TRD1->ZD9_TRANSP ,;         //09 - TRANSPORTADORA
+			           AllTrim(SA4->A4_NOME),;     //10 - NOME DA TRANSPORTADORA
+			           TRD1->ZD9_TIPFRE ,;         //11 - TIPO DE FRETE (CIF OU FOB)
+			           TRD1->ZD9_MODTRA ,;         //12 - MODALIDADE DE TRANSPORTE
+			           TRD1->ZDA_COD    ,;         //13 - PRODUTO
+			           AllTrim(SB1->B1_DESC),;     //14 - DESCRICAO DO PRODUTO
+			           aRelease[1]      ,;         //15 - PEDIDO DO CLIENTE
+			           TRD1->ZDA_PRECO  ,;         //16 - PRECO
+			           TRD1->ZDA_VOLUME ,;         //17 - VOLUME
+			           TRD1->ZDA_QUANT  ,;         //18 - QUANT
+			           TRD1->ZDA_PESO   ,;         //19 - PESO
+			           TRD1->ZD9_OBS    ,;		   //20 - OBS
+			           AllTrim(TRD1->ZDA_FRESP),;  //21 - FRETE EMERGENCIAL
+			           TRD1->ZD9_RDEB   ,;		   //22 - RESPONSÁVEL PELO DÉBITO
+			           TRD1->ZDA_CC })			   //23 - CENTRO DE CUSTO
+			
+			TRD1->(dbSkip())
+		EndDo
+			
+		//IMPEDE QUE SEJA IMPRESSO A SEQ. DA CARGA SEPARADA EM DUAS FOLHAS
+		If Prow()+Len(aMat)+15 > 65
+			oRelato:Cabec()
+		EndIf
+		
+		If lCarga
+			@Prow()+2 , 001 psay "CARGA: "+aMat[1][1]+" "+Iif(aMat[1][21]=="S","FRETE EMERGENCIAL "+Repli("-",103),Repli("-",121))
+			lCarga := .F.
+		EndIf
+		
+		@Prow()+1 , 001 psay "SEQUÊNCIA DE ENTREGA: "+aMat[1][2]//TRD1->ZD9_SEQUEN
+
+		@Prow() +1 , 003 psay Iif(cPara=="F","FORNECEDOR","CLIENTE") + " / LOJA: "+aMat[1][3]+" / "+aMat[1][4]+" - "+aMat[1][5]
+		@Prow() +1 , 003 psay "TRANSPORTADORA: "+aMat[1][9]+" - "+aMat[1][10]
+		@Prow()    , 095 psay "MOD. TRANSP.: "+SUBSTR(aModTran[VAL(aMat[1][12])],3,LEN(aModTran[VAL(aMat[1][12])]))
+		@Prow() +1 , 003 psay "DATA ENTREGA: "+DtoC(aMat[1][6])
+		@Prow()    , 033 psay "JAN. ENTREGA: "+aMat[1][8]
+		@Prow()    , 066 psay "TIPO FRETE: "+Iif(aMat[1][11]=="C","CIF","FOB")
+		@Prow()    , 095 psay "JAN. CARREGAMENTO: "+aMat[1][7]
+		@Prow() +1 , 003 psay "Resp.Débito: " + aMat[1][22]
+		@Prow()	+1 , 003 psay "C. de Custo: " + aMat[1][23]
+						    
+		aTotal := {0,0,0}
+                                                                                             
+		@Prow()+2, 003 psay "CÓDIGO           DESCRIÇÃO                  PEDIDO " + Iif(cPara=="F","FORNECEDOR","CLIENTE   ") + "        PREÇO      VOLUME      PEÇAS      PESO        C. de Custo"
+
+		//PRODUTOS DOS CLIENTES
+		For x:=1 to Len(aMat)
+			@Prow()+1, 003 psay aMat[x][13]
+			@Prow()  , 020 psay Substr(aMat[x][14],1,30) //descricao do produto
+			
+			If !Empty(ALLTRIM(aMat[x][15]))
+				@Prow()  , 52 psay ALLTRIM(aMat[x][15])    //PEDIDO DO CLIENTE
+			EndIf
+			
+			@Prow()  , 066 psay aMat[x][16] PICTURE "@E 999,999.99"      //PRECO
+			@Prow()  , 083 psay aMat[x][17] PICTURE "@E 99,999"          //VOLUME
+			@Prow()  , 090 psay aMat[x][18] PICTURE "@E 9,999,999"       //QUANT
+			@Prow()  , 101 psay aMat[x][19] PICTURE "@E 9,999,999.99"    //PESO
+			@Prow()  , 119 psay aMat[x][23]                              //C. de Custo
+			
+            aTotal[1] += aMat[x][17] //total volume
+         	aTotal[2] += aMat[x][18] //total quant
+         	aTotal[3] += aMat[x][19] //total peso
+         	
+         	aTotCar[1] += aMat[x][17] //total geral volume
+         	aTotCar[2] += aMat[x][19] //total geral peso
+		
+		Next
+
+		@Prow()+2, 003 psay "TOTAL:"
+		@Prow()  , 083 psay aTotal[1] PICTURE "@E 99,999"         //VOLUME
+		@Prow()  , 087 psay aTotal[2] PICTURE "@E 9,999,999,999"  //QUANT
+		@Prow()  , 100 psay aTotal[3] PICTURE "@E 999,999,999.99" //PESO
+
+		@Prow()+2, 003 psay "OBS.:"+aMat[1][20]
+  		
+		If dDat != DtoC(TRD1->ZD9_DATA) .OR. cCarg!=TRD1->ZD9_CARGA
+			@Prow() +2 , 001 Psay "TOTAL CARGA:"
+ 			@Prow()    , 078 psay aTotCar[1] PICTURE "@E 999,999,999"      //VOLUME
+			@Prow()    , 097 psay aTotCar[2] PICTURE "@E 9,999,999,999.99" //PESO
+
+			aTotCar := {0,0}
+			If dDat != DtoC(TRD1->ZD9_DATA)	
+		  		@Prow() +1 , 001 Psay __PrtThinLine()
+		 	EndIf
+	 	Else
+		 	@Prow() + 1, 001 Psay ""
+    	EndIf
+    EndDo	
+
+	TRD1->(DbCloseArea())
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ OS CARREGAMENTOS DA DATA INFORMADA COMO PARAMETRO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fTrazCar(dData)
+Local cQuery  := ""
+
+	If Empty(dData)
+		Return .T.
+	EndIf
+
+	If Select("TRB1") > 0
+		TRB1->(dbCloseArea())
+	EndIf
+	
+	cQuery := "SELECT ZD9.ZD9_CARGA FROM "+RetSqlName("ZD9")+" ZD9"
+	cQuery += " WHERE ZD9.ZD9_DATA = '"+DtoS(dData)+"'"
+	cQuery += " AND ZD9.D_E_L_E_T_ = ''"
+	cQuery += " AND ZD9.ZD9_FILIAL = '"+xFilial("ZD9")+"'"
+	cQuery += " GROUP BY ZD9.ZD9_CARGA "
+
+	TCQUERY cQuery NEW ALIAS "TRB1"
+
+	TRB1->(DbGoTop())
+
+	aCarga := {}
+
+	While TRB1->(!EOF())
+	    aAdd(aCarga,TRB1->ZD9_CARGA)
+		TRB1->(Dbskip())
+	ENDDO
+	
+	If Empty(aCarga)
+		aAdd(aCarga,"")
+	EndIf
+
+	oCombo:Refresh()
+	oCombo:aItems := {}
+	oCombo:aItems := aCarga
+	
+	TRB1->(DbCloseArea())
+	
+Return
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ PCP22SNF  ºAutor ³João Felipe da Rosa º Data ³  20/11/2009 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ SOLICITACAO DE NOTA FISCAL VIA CARREGAMENTO                º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ PCP                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+/*
+User Function PCP22SNF()
+
+	_cDoc   := GetSxeNum("SZQ","ZQ_NUM")
+	_cCli   := ZD9->ZD9_CLIENT
+	_cLoja  := ZD9->ZD9_LOJA
+	_cFab   := StrZero(mv_par01,1)
+	_cTiFre := ZD9->ZD9_TIPFRE
+	_cEsp   := ""
+		
+	
+	For _x:=1 to Len(aCols)  
+   		If SZQ->(DbSeek(xFilial("SZQ")+_cDoc),Found())
+  	    	Msgbox("Solicitação já foi Gravada com Este Numero, Verifique !!!" ,"Atencao","ALERT" )     	   
+		Else
+			Reclock("SZQ",.T.)
+				SZQ->ZQ_FILIAL  := xFilial("SZQ")
+				SZQ->ZQ_NUM     := _cDoc
+				SZQ->ZQ_CLIENTE := _cCli
+				SZQ->ZQ_LOJA    := _cLoja
+				SZQ->ZQ_TIPO    := "N" //IIf(_ctipon$"Normal","N",IIf(_ctipon$"Dev.Compra","D","B"))  //Cliente
+				SZQ->ZQ_FABRICA := _cFab //IIf(_cFab$"WHB II","2",IIf(_cFab$"WHB III","3",IIf(_cFab$"WHB IV","4",IIf(_cFab$"WHB V","5",""))))  //Fabrica
+				SZQ->ZQ_EMISSAO := Date()
+				SZQ->ZQ_HORA    := time()
+				SZQ->ZQ_TIPOFRE := _cTiFre
+				SZQ->ZQ_ESPECIE := _cEsp
+				SZQ->ZQ_CONDPG  := _cCond
+				SZQ->ZQ_MENS    := _cMens
+				SZQ->ZQ_OBS     := _cObs
+				SZQ->ZQ_TIPOCLI := Iif(Empty(_cTpCli),IIf(_ctipon$"Normal","F","R"),_cTpCli)
+				SZQ->ZQ_MOEDA   := Iif(_nMoeda==0,1,_nMoeda)
+				SZQ->ZQ_VIA     := _cVia
+				SZQ->ZQ_TRANSP  :=	_cCodTra
+				SZQ->ZQ_USER    := __cUserId
+				SZQ->ZQ_RAMAL   := Val(_cRamal)
+			MsUnlock("SZQ")
+        Endif
+
+		Reclock("SZR",.T.)
+			SZR->ZR_FILIAL  := xFilial("SZR")
+			SZR->ZR_NUM     := _cDoc
+			SZR->ZR_PRODUTO := Acols[_x][2] //produto
+			SZR->ZR_ITEM    := Acols[_x][1] //item do produto
+			SZR->ZR_DESCRI  := Acols[_x][3] //descricao do produto
+			SZR->ZR_QTDE    := Acols[_x][4] //quantidade
+			SZR->ZR_PRECO   := Acols[_x][5] //preco
+			SZR->ZR_TOTAL   := Acols[_x][6] //preco total
+			SZR->ZR_VOLUME  := Acols[_x][7] //volume
+			SZR->ZR_TES     := Acols[_x][8] //TES
+			SZR->ZR_CF      := Acols[_x][9] //CFO
+			SZR->ZR_LOCAL   := Acols[_x][10] //almoxarifado do produto
+			SZR->ZR_PESOL   := Acols[_x][11] // peso liquido
+			SZR->ZR_PESOB   := Acols[_x][12] //Peso bruto
+			SZR->ZR_NFORI   := Acols[_x][13] //nota fiscal original
+			SZR->ZR_SERIORI := Acols[_x][14] //Seria da nota fiscal original
+			SZR->ZR_ITEMORI := Acols[_x][15] //Item da nota fiscal original
+			SZR->ZR_IDENTB6 := Acols[_x][16] //Identificação do SB6
+			SZR->ZR_EMISSAO := Date()       //Valor por item da NF
+		MsUnlock("SZR")
+					       
+		If SB6->(DbSeek(xFilial("SB6")+Acols[_x][13]+Acols[_x][14]+Acols[_x][16]+Acols[_x][2],Found()))
+  		    Reclock("SB6",.F.)   
+  		       SB6->B6_QULIB+=Acols[_x][4] //Reserva/libera a qtde no poder de terceiro
+  		   	MsUnlock("SB6")  			    
+		Endif    
+		   
+	Next _x
+
+Return
+*/
+
+User Function PCP22VFR()
+
+Local nCC := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_CC"})
+Local nDescCC := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "CTT_DESC01"})
+Local nB1 := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_COD"})
+
+SB1->(dbSetOrder(1)) // FILIAL + COD
+SB1->(dbSeek(xFilial('SB1')+aCols[n][nB1]))
+
+If M->ZDA_FRESP == "S"
+   aCols[n][nCC] := SB1->B1_CC
+   CTT->(DbSetOrder(1) )
+   CTT->(DbSeek(xFilial("CTT") + SB1->B1_CC) )
+   aCols[n][nDescCC] := CTT->CTT_DESC01
+EndIf
+
+If M->ZDA_FRESP == "N" .AND. !Empty(aCols[n][nCC])
+	aCols[n][nCC] := space(9)
+	aCols[n][nDescCC] := space(100)
+EndIf
+
+If Empty(M->ZDA_FRESP)
+	alert("Campo Frete Especial é obrigatório!. Favor preencher")
+	Return .F.
+EndIf
+
+Return .T.
+
+User Function PCP22MAI()
+	axCadastro("ZDI")
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA O CENTRO DE CUSTO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function PCP22VCC()
+	Local nCC := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZDA_CC"})
+	Local nDCC := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "CTT_DESC01"})
+	
+	CTT->(DbSetOrder(1) )
+	If !CTT->(DbSeek(xFilial("CTT") + M->ZDA_CC) )
+		alert("Centro de Custo não encontrado!")
+		nDCC := SPACE(100)
+		Return .F.
+	ELSE
+		aCols[n][nDCC] := CTT->CTT_DESC01
+		oGetD:Refresh()
+	EndIf 
+Return .T.

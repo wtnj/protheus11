@@ -1,0 +1,231 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+
+User Function Stdmid()        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CSAVSCR1,CSAVCUR1,CSAVROW1,CSAVCOL1,CSAVCOR1,WNREL")
+SetPrvt("CSTRING,CPERG,ASTMID,ACLIE,APROD,TREGS")
+SetPrvt("M_MULT,P_ANT,P_ATU,P_CNT,M_SAV20,M_SAV7")
+SetPrvt("CCODSERV,CALIAS,I,APERG,")
+
+/*/
+_____________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçào    ¦ STDMID   ¦ Autor ¦ Wagner Serrano        ¦ Data ¦ 21/10/97 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Geracao de Arquivo de Faturamento Comp.Custo Real X Std    ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Sintaxe e ¦ STDMID (void)                                              ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦ Uso      ¦ RDMAKE                                                     ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+/*/
+//+--------------------------------------------------------------+
+//¦ Salva a Integridade dos dados de Entrada                     ¦
+//+--------------------------------------------------------------+
+cSavScr1        := SaveScreen(3,0,24,79)
+cSavCur1        := SetCursor(0)
+cSavRow1        := ROW()
+cSavCol1        := COL()
+cSavCor1        := SetColor("bg+/b,,,")
+wnrel           := "STDMID"
+cString         := "SD2"
+//+-------------------------------------------------------------+
+//¦ Verifica as perguntas selecionadas                          ¦
+//+-------------------------------------------------------------+
+
+cPerg:="STDMID"
+VerPerg()
+
+If Pergunte("STDMID",.T.)
+Else
+    Return
+EndIf
+
+If LastKey() == 27 
+    RestScreen(3,0,24,79,cSavScr1)
+    Return( NIL )
+Endif
+
+If File("STDMID" + GetDBExtension())
+Else
+    aStMid:={}
+    Aadd(aStMid,{"ANO","C",4,0})
+    Aadd(aStMid,{"MES2","C",2,0})
+    Aadd(aStMid,{"MES","C",3,0})
+    Aadd(aStMid,{"CLIENTE","C",6,0})
+    Aadd(aStMid,{"PRODUTO",15,0})
+    Aadd(aStMid,{"QTDE","N",14,2})
+    Aadd(aStMid,{"REAL","N",14,2})
+    Aadd(aStMid,{"STAND","N",14,2})
+    Aadd(aStMid,{"COMIS","N",14,2})
+    dbCreate("STDMID",aStMid,"DBFNTX")
+EndIf
+    
+aClie:={}
+aProd:={}
+dbSelectArea("SX5")
+If dbSeek("  "+mv_par01) 
+    While X5_TABELA==mv_par01
+        Aadd(aClie,X5_DESCRI)
+        dbSkip()
+    EndDo    
+    If dbSeek("  "+mv_par02)
+        While X5_TABELA==mv_par02
+            Aadd(aProd,X5_DESCRI)
+            dbSkip()
+        EndDo
+    Else
+        Return
+    EndIf
+Else
+    Return
+EndIf
+
+tregs  :=RecCount()
+m_mult :=1
+IF tregs>0
+	m_mult:=70/tregs
+Endif
+p_ant  :=4
+p_atu  :=4
+p_cnt  := 0
+m_sav20:= dcursor(3)
+m_sav7 := Savescreen(23,0,24,79)
+cCodServ:=Space(3)
+dbUseArea(.T.,,"STDMID")
+If mv_par05=="S"
+    Zap        
+EndIf
+Index On ANO+MES2+CLIENTE+PRODUTO To STDMID
+
+dbSelectArea("SB1")
+dbSetOrder(1)
+dbSelectArea("SF4")
+dbSetOrder(1)
+dbSelectArea("SD2")
+dbSetOrder(5)
+dbGoTop()
+// dbSeek(xFilial()+Dtos(mv_par01),.t.)
+While !Eof()
+//    Inkey()
+    If LastKey()==286
+        Exit
+    Endif
+    If Dtos(D2_EMISSAO)<Dtos(mv_par03)
+        DbSkip()
+        Loop
+    EndIf
+    If Dtos(D2_EMISSAO)>Dtos(mv_par04)
+        Exit
+    EndIf
+    If Ascan(aClie,D2_CLIENTE)==0
+        DbSkip()
+        Loop
+    EndIf
+    dbSelectArea("SF4")
+    dbSeek(xFilial()+SD2->D2_TES)
+    If F4_DUPLIC <> "S"
+        dbSelectArea("SD2")
+        dbSkip()
+        Loop
+    EndIf
+
+    dbSelectArea("SB1")
+    dbSeek(SD2->D2_FILIAL+SD2->D2_COD) // Posiciona para Obter C.Standard
+
+    dbSelectArea("STDMID")
+    If dbSeek(SubStr(Dtos(SD2->D2_EMISSAO),1,6)+SD2->D2_CLIENTE+SD2->D2_COD)
+        RecLock("STDMID",.F.)
+    Else
+        RecLock("STDMID",.T.)
+        STDMID->ANO    := SubStr(Dtos(SD2->D2_EMISSAO),1,4)
+        STDMID->MES2   := SubStr(Dtos(SD2->D2_EMISSAO),5,2)
+        STDMID->MES    := SubStr(MesExtenso(Val(MES2)),1,3)
+        STDMID->CLIENTE:= SD2->D2_CLIENTE
+        STDMID->PRODUTO:= SD2->D2_COD
+    EndIf
+    STDMID->QTDE   := SD2->D2_QUANT
+    STDMID->REAL   := SD2->D2_TOTAL
+    STDMID->STAND  := (SD2->D2_QUANT*SB1->B1_CUSTD)
+    STDMID->COMIS  := SD2->D2_COMIS1
+
+    //+--------------------------------------------------------------+
+    //¦ Movimentacao do Cursor da Barra de Gauge                     ¦
+    //+--------------------------------------------------------------+
+    p_cnt:=p_cnt+1
+    p_atu:=3+INT(p_cnt*m_mult)
+    If p_atu != p_ant
+        p_ant:=p_atu
+        RestScreen(23,0,24,79,M_SAV7)
+        RestScreen(23,P_ATU,24,P_ATU+3,M_SAV20)
+    EndIf
+    dbSelectArea("SD2")
+    dbSkip()
+EndDo
+
+//+--------------------------------------------------------------+
+//¦ Restaura a Integridade dos dados                             ¦
+//+--------------------------------------------------------------+
+
+RestScreen(3,0,24,79,cSavScr1)
+SetCursor(cSavCur1)
+
+FT_PFLUSH()
+// Substituido pelo assistente de conversao do AP5 IDE em 19/11/99 ==> __Return()
+Return()        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+
+
+
+// Substituido pelo assistente de conversao do AP5 IDE em 19/11/99 ==> Function VerPerg
+Static Function VerPerg()
+Local i
+
+cAlias:=Alias()
+i:=0
+aPerg:={}
+            
+Aadd(aPerg,{"Qual Tabela Cliente?","C",2})
+Aadd(aPerg,{"Qual Tabela Produto?","C",2})
+Aadd(aPerg,{"Data Inicial       ?","D",8})
+Aadd(aPerg,{"Data Final         ?","D",8})
+Aadd(aPerg,{"Append/Replace     ?","C",1})
+
+//+-------------------------------------------------------------+
+//¦ Variaveis utilizadas para parametros                        ¦
+//¦ mv_par01              Qual a Tabela Cliente                 ¦
+//¦ mv_par02              Qual a Tabela Produto                 ¦
+//¦ mv_par03              Data Inicial                          ¦
+//¦ mv_par04              Data Final                            ¦
+//¦ mv_par05              Reprocessa Periodo                    ¦
+//+-------------------------------------------------------------+
+
+dbSelectArea("SX1")
+If !dbSeek(cPerg+"01")
+	FOR i:=1 TO 5
+		RecLock("SX1",.T.)
+		Replace X1_GRUPO   with cPerg
+		Replace X1_ORDEM   with StrZero(i,2)
+		Replace X1_PERGUNT with aPerg[i][1]
+		Replace X1_VARIAVL with "mv_ch"+Str(i,1)
+		Replace X1_TIPO	 with aPerg[i][2]
+		Replace X1_TAMANHO with aPerg[i][3]
+		Replace X1_PRESEL  with 1
+		Replace X1_GSC	    with "G"
+		Replace X1_VAR01   with "mv_par"+Strzero(i,2)
+		Replace X1_DEF01   with ""
+		Replace X1_DEF02   with ""
+		MsUnlock()
+	Next i
+Endif
+dbSelectArea(cAlias)
+Return

@@ -1,0 +1,543 @@
+#Include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 05/07/00
+#INCLUDE "IMPIRPF.CH"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³RdMake    ³ IMPIRPF  ³ Autor ³ R.H. - Recursos Humano³ Data ³ 26.01.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao da DIRF em Formulario Continuo                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ DIRFPF                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ RdMake                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programar ³ Data   ³ BOPS ³  Motivo da Alteracao                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Cristina  ³03/06/98³xxxxxx³ Conversao para outros idiomas              ³±±
+±±³Aldo      ³15/01/98³      ³ Alteracao do Lay-Out para 1998.            ³±±
+±±³Mauro     ³21/01/00³      ³ Alteracao do Lay-Out para 1999.            ³±±
+±±³Marina    ³30/08/00³      ³ Retirada parte DOS.                        ³±±
+±±³Natie     ³05/02/02³      ³ Inclusao Impressao grafica                 ³±±
+±±³Emerson   ³08/02/02³      ³ Inversao dos valores de "Indenizacao de    ³±±
+±±³          ³        ³      ³ Rescisao" e "Outros" na impressao grafica. ³±±
+±±³Andreia   ³07/03/03³062850³ Acerto na impressao do quadro 6 para que as³±±
+±±³          ³        ³      ³ informacoes nao saiam fora do quador( Impr.³±±
+±±³          ³        ³      ³ Grafica).                                  ³±±
+±±³          ³        ³      ³ Verificacao do numero de linhas a serem    ³±±
+±±³          ³        ³      ³ impressas para fazer a quebra de pagina.   ³±±
+±±|          ³08/04/04³------³ Acerto no Driver para Impressao            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß/*/
+User Function Impirpf()        // incluido pelo assistente de conversao do AP5 IDE em 05/07/00
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+                                                             
+SetPrvt("CDESEMP,CDESEND,CDESCID,CUF,CTPINSC,CTELEF")
+SetPrvt("CDESCEP,CCOMPLEMENTO,CCOMPL1,")
+
+cDesEmp := aInfo[3]
+cDesEnd := aInfo[4]
+cDesCid := aInfo[5]
+cUf	  	:= aInfo[6]
+cTpInsc := Str(aInfo[15],1)
+cTelef  := aInfo[10]
+cDesCep := ainfo[7]                  
+cDescOred	:= If (Empty(SRL->RL_COMPLEM),STR0062+SPACE(50),SRL->RL_COMPLEM)
+
+If mv_par12== 1
+	fIrpfPre()
+Else
+	fIrpfGraf()
+Endif		
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fIrpfPre  ºAutor  ³Microsiga           º Data ³  02/05/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Impressao Comprovante de rendimentos e retencao do Imp.Rendaº±±
+±±º          ³Fonte - Formulario Pre Impresso                             º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Especifico                                                 º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function fIrpfPre()
+
+CL := "-"
+cB := "|"
+nLinhas := 0
+
+SET DEVICE TO PRINT
+@ 00,00 PSAY AvalImp( Colunas ) 
+@ 01,00 PSAY " " + Replicate(cL,78) + " "
+@ 02,00 PSAY STR0001	//"|         MINISTERIO DA FAZENDA         |   COMPROVANTE DE RENDIMENTOS PAGOS   |"
+@ 03,00 PSAY STR0002	//"|                                       |          E DE RETENCAO DE            |"
+@ 04,00 PSAY STR0003	//"|     SECRETARIA DA RECEITA FEDERAL     |      IMPOSTO DE RENDA NA FONTE       |"
+@ 05,00 PSAY STR0004+mv_par08+")"+SPACE(9)+cB //"|                                       |      (ANO CALENDARIO - "
+@ 06,00 PSAY " " + Replicate(cl,78) + " "
+
+@ 08,00 PSAY STR0005 	//"  1. - Fonte Pagadora Pessoa Juridica ou Pessoa Fisica"
+@ 09,00 PSAY " " + Replicate(cl,78) + " "
+@ 10,00 PSAY STR0006 // "| Nome Empresarial/Nome                          | CNPJ/CPF                    |"
+@ 11,00 PSAY "| "+PADR(cDesEmp,47)+"| "+PADR(cCgc,28)+cB
+//@ 11,00 PSAY cB + Replicate("-",78) + cB
+//@ 12,00 PSAY STR0007+" "+PADR(cDesEnd,67)+cB // "| Endereco:"
+//@ 13,00 PSAY cB + Replicate("-",78) + cB
+//@ 14,00 PSAY STR0008+" "+PADR(cDesCid,33)+" | "+STR0009+" "+cUf+"  | "+STR0010+" "+PADR(cTelef,17)+cB // "| Cidade:" ### "UF:" ### "FONE:"
+@ 12,00 PSAY " " + Replicate(cL,78) + " "
+
+If SRL->(FieldPos("RL_CC"))== 0
+	@ 14,00 PSAY STR0011+PADL((SRL->RL_FILIAL+"-"+SRL->RL_MAT),29)	//"  2. - PESSOA FISICA BENEFICIARIA DOS RENDIMENTOS "
+Else
+	@ 14,00 PSAY STR0011+PADL((SRL->RL_FILIAL+"-"+SRL->RL_MAT+"-"+SRL->RL_CC),29)	//"  2. - PESSOA FISICA BENEFICIARIA DOS RENDIMENTOS "
+EndIf
+@ 15,00 PSAY " " + Replicate(cL,78) + " "
+@ 16,00 PSAY STR0012 + " "+ SRL->RL_CPFCGC + "   " + STR0013 + " "+PADR(SRL->RL_BENEFIC,40) + cB	//"| CPF:" ### "NOME COMPLETO:"
+@ 17,00 PSAY cB + Replicate(cL,78) + cB
+@ 18,00 PSAY STR0014 +" "+PADR(SRL->RL_CODRET + "-" + cDescRet,53) + cB // "| NATUREZA DO RENDIMENTO:"
+@ 19,00 PSAY " " + Replicate(cL,78) + " "
+
+@ 21,00 PSAY STR0015	//"  3. - Rendimentos Tributaveis, Deducoes e Imposto Retido na Fonte       R$    "
+@ 22,00 PSAY " " + Replicate(cL,78) + " "
+@ 23,00 PSAY STR0016 + cB + Space(5) + Transform(Round(aTotLetra[01],2),"@E 99,999,999.99") + Space(1) + cB	//"| 01. Total dos Rendimentos (Inclusive Ferias)             "
+@ 24,00 PSAY STR0017 + cB + Space(5) + Transform(Round(aTotLetra[02],2),"@E 99,999,999.99") + Space(1) + cB	//"| 02. Contribuicao Previdenciaria Oficial                  "
+@ 25,00 PSAY STR0018 + cB + Space(5) + Transform(Round(aTotLetra[03],2),"@E 99,999,999.99") + Space(1) + cB	//"| 03. Contribuicao a Previdencia Privada                   "
+@ 26,00 PSAY STR0019 + cB + Space(5) + Transform(Round(aTotLetra[04],2),"@E 99,999,999.99") + Space(1) + cB	//"| 04. Pensao Alimenticia (Informar Benefic. no Campo 06)   "
+@ 27,00 PSAY STR0021 + cB + Space(5) + Transform(Round(aTotLetra[06],2),"@E 99,999,999.99") + Space(1) + cB	//"| 06. Imposto Retido na Fonte                              "
+@ 28,00 PSAY " " + Replicate(cL,78) + " "
+
+@ 30,00 PSAY STR0022	//"  4. - Rendimentos Isentos e Nao Tributaveis                             R$    "
+@ 31,00 PSAY " " + Replicate(cL,78) + " "
+@ 32,00 PSAY STR0024 + cB + Space(5) + Transform(Round(aTotLetra[08],2),"@E 99,999,999.99") + Space(1) + cB	//"| 01. Parte dos Proventos Aposentadoria,Reforma ou Pensao  "
+@ 33,00 PSAY STR0025	+ cB + Space(5) + Transform(Round(aTotLetra[09],2),"@E 99,999,999.99") + Space(1) + cB	//"| 02. Diarias e Ajudas de Custo                            "
+@ 34,00 PSAY STR0026 + cB + Space(5) + Transform(Round(aTotLetra[10],2),"@E 99,999,999.99") + Space(1) + cB	//"| 03. Pensao, Prov.de Aposent.ou Reforma por Molestia Grave"
+@ 35,00 PSAY STR0027 + cB + Space(5) + Transform(Round(aTotLetra[11],2),"@E 99,999,999.99") + Space(1) + cB	//"| 04. Lucro e Dividendo a partir de 1996 pago por PJ       "
+@ 36,00 PSAY STR0028 + cB + Space(5) + Transform(Round(aTotLetra[12],2),"@E 99,999,999.99") + Space(1) + cB	//"| 05. Val.Pagos Tit./Soc.Micro-Emp. exceto Pro-Labore      "
+@ 37,00 PSAY STR0023 + cB + Space(5) + Transform(Round(aTotLetra[07],2),"@E 99,999,999.99") + Space(1) + cB	//"| 06. Indenizacao por Rescisao Inc.a Tit.PDV e Acid.Trab.  "
+@ 38,00 PSAY STR0029 + "("+Subs(cDescOred,1,44)+ ")" + cB + Space(5) + Transform(Round(aTotLetra[13],2),"@E 99,999,999.99") + Space(1) + cB	//"| 07. Outros                                               "
+@ 39,00 PSAY " " + Replicate(cL,78) + " "
+
+@ 41,00 PSAY STR0030	//"  5. - Rendimentos Sujeitos a Tributacao Exclusiva (Rend.Liquido)        R$    "
+@ 42,00 PSAY " " + Replicate(cL,78) + " "
+@ 43,00 PSAY STR0031 + cB + Space(5) + Transform(Round(nLiq13o,2),"@E 99,999,999.99") + Space(1) + cB	//"| 01. Decimo Terceiro Salario                              "
+@ 44,00 PSAY STR0032 + cB + Space(5) + Transform(Round(aTotLetra[17],2),"@E 99,999,999.99") + Space(1) + cB	//"| 02. Outros                                               "
+@ 45,00 PSAY " " + Replicate(cL,78) + " "
+
+dbSelectArea(cArqCompl)
+(cArqCompl)->(dbSeek( SRL->RL_FILIAL+SRL->RL_MAT ))
+
+Dbeval( { || nLinhas++ },,{||(cArqCompl)->INF_FILIAL+(cArqCompl)->INF_MAT==SRL->RL_FILIAL+SRL->RL_MAT })
+
+nLin := 47
+
+If (nLinhas + 7 +nLin )>=65
+	@ 01,00 PSAY " " + Replicate(cL,78) + " "
+	@ 02,00 PSAY STR0001	//"|         MINISTERIO DA FAZENDA         |   COMPROVANTE DE RENDIMENTOS PAGOS   |"
+	@ 03,00 PSAY STR0002	//"|                                       |          E DE RETENCAO DE            |"
+	@ 04,00 PSAY STR0003	//"|     SECRETARIA DA RECEITA FEDERAL     |      IMPOSTO DE RENDA NA FONTE       |"
+	@ 05,00 PSAY STR0004+mv_par08+")"+SPACE(9)+cB //"|                                       |      (ANO CALENDARIO - "
+	@ 06,00 PSAY " " + Replicate(cl,78) + " "
+	nLin := 08
+EndIf
+
+@ nLin,00 PSAY STR0033	//"  6. - Informacoes Complementares                                        R$     "
+nLin ++
+@ nLin,00 PSAY " " + Replicate(cL,78) + " "
+nLin ++
+
+nItem := 1  
+
+(cArqCompl)->(dbSeek( SRL->RL_FILIAL+SRL->RL_MAT ))
+While (cArqCompl)->(!eof()) .and. (cArqCompl)->INF_FILIAL+(cArqCompl)->INF_MAT==SRL->RL_FILIAL+SRL->RL_MAT 
+
+	@ nLin,00 PSAY "| " +strzero(nItem,02) +". "+ (cArqCompl)->INF_NOME +space(03)+(cArqCompl)->INF_CIC+space(06)+cB+space(05) +TRANSFORM((cArqCompl)->INF_VALOR,"@E 99,999,999.99") +" |"
+	nLin++	                                      
+	nItem++
+	(cArqCompl)->(dbSkip()	)
+EndDo
+@ nLin,00 PSAY " " + Replicate(cL,78) + " "
+nLin +=2
+@ nLin,00 PSAY STR0034	//"  7. - Responsavel Pelas Informacoes"
+nLin++
+@ nLin,00 PSAY " " + Replicate(cL,78) + " "
+nLin++
+@ nLin,00 PSAY cB+" " + PADR(cResponsa+space(5)+DtoC(dDataBase),77) + cB
+nLin++
+@ nLin,00 PSAY " " + Replicate(cL,78) + " "
+nLin++
+@ nLin,00 PSAY " " + STR0035	// "Aprovado pela IN/SRF No. 120/2000"
+SET DEVICE TO SCREEN
+
+
+/*
+
+LAY-OUT MODELO
+ ------------------------------------------------------------------------------ 
+|         MINISTERIO DA FAZENDA         |   COMPROVANTE DE RENDIMENTOS PAGOS   |
+|                                       |          E DE RETENCAO DE            |
+|     SECRETARIA DA RECEITA FEDERAL     |      IMPOSTO DE RENDA NA FONTE       |
+|                                       |      (ANO CALENDARIO - 9999)         |
+ ------------------------------------------------------------------------------ 
+  1. - Fonte Pagadora Pessoa Juridica ou Pessoa Fisica    
+ ------------------------------------------------------------------------------ 
+| Nome Empresarial/Nome                            CNPJ/CPF                    |
+| XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX         99999999999999              |
+ ------------------------------------------------------------------------------ 
+
+  2. - PESSOA FISICA BENEFICIARIA DOS RENDIMENTOS                    01-000000
+ ------------------------------------------------------------------------------ 
+| CPF: 99999999999   NOME COMPLETO: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX   |
+|                                                                              |
+| NATUREZA DO RENDIMENTO: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX   |
+ ------------------------------------------------------------------------------ 
+
+  3. - Rendimentos Tributaveis, Deducoes e Imposto Retido na Fonte       R$    
+ ------------------------------------------------------------------------------ 
+| 01. Total dos Rendimentos (Inclusive Ferias)             |              0,00 |
+| 02. Contribuicao Previdenciaria Oficial                  |              0,00 |
+| 03. Contribuicao a Previdencia Privada                   |              0,00 |
+| 04. Pensao Alimenticia (Informar Benefic. no Campo 06)   |              0,00 |
+| 05. Imposto Retido na Fonte                              |              0,00 |
+ ------------------------------------------------------------------------------ 
+
+  4. - Rendimentos Isentos e Nao Tributaveis                             R$    
+      123456789012345678901234567890   12345678901234
+ 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+ ------------------------------------------------------------------------------ 
+| 01. Salario Familia                                      |              0,00 |
+| 02. Parte dos Proventos Aposentadoria,Reforma ou Pensao  |              0,00 |
+| 03. Diarias e Ajudas de Custo                            |              0,00 |
+| 04. Prov. de Pensao, Aposent. ou Reforma por Inval.Perm  |              0,00 |
+| 05. Lucro e Dividendo de 1996 pago por PJ                |              0,00 |
+| 06. Val.Pagos Tit./Soc.Micro-Emp. exceto Pro-Labore      |              0,00 |
+| 07. Outros (especificar)                                 |              0,00 |
+ ------------------------------------------------------------------------------ 
+
+  5. - Rendimentos Sujeitos a Tributacao Exclusiva (Rend.Liquido)        R$    
+ ----------------------------------------------------------+------------------- 
+| 01. Decimo Terceiro Salario                              |              0,00 |
+| 02. Outros                                               |              0,00 |
+ ----------------------------------------------------------+------------------- 
+
+  6. - Informacoes Complementares                                        R$     
+ ------------------------------------------------------------------------------ 
+|ASSISTENCIA MEDICA                                                            |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+ ------------------------------------------------------------------------------ 
+
+  7. - Responsavel Pelas Informacoes
+ ------------------------------------------------------------------------------ 
+
+| NOME                                 DATA                   ASSINATURA       |
+| XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     99/99/99                                  |
+ ------------------------------------------------------------------------------ 
+ Aprovado pela IN/SRF No. 120/2000
+*/
+
+Return(nil)        // incluido pelo assistente de conversao do AP5 IDE em 04/02/00
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fIrpfGraf ºAutor  ³Microsiga           º Data ³  02/05/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Impressao Comprovante de rendimentos e retencao do Imp.Rendaº±±
+±±º          ³Fonte - Formulario Grafico                                  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Especifico                                                 º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function  fIrpfGraf()
+
+Local cFileFaz	:= ""
+Local cStartPath:= GetSrvProfString("Startpath","")
+Local nLinhas	:= N := 0
+Local aCompl	:= {}
+Local n  		:= 0 
+
+oPrint:StartPage() 			// Inicia uma nova pagina
+
+/*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+  ³Cabecalho                                                     ³
+  ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+
+cFileFaz 	:= cStartPath+ "RECEITA" + ".BMP" 			// Empresa+Filial
+
+nLin := 030
+nLinI:= 030
+//-- CABECALHO 
+nLin +=20 
+oPrint:Box( nLinI,0030,nLin+190,2350)  		// box Cabecalho 
+oPrint:Line(nLinI,1450,nLin+190,1450)		// Linha Div.Cabecalho
+If File(cFileFaz)
+	oPrint:SayBitmap(nLinI+10,050, cFileFaz,235,195) // Tem que estar abaixo do RootPath
+Endif
+nLin +=20
+oPrint:say(nLin,500 ,STR0036,oFont13n)				//	ministerio da fazenda 
+oPrint:Say(nLin,1500,STR0038,oFont10)				//Comprovante de rendimento
+nLin +=50
+oPrint:say(nLin+10,500 ,STR0037,oFont13)			//secretaria de receita
+oPrint:Say(nLin,1500,STR0039,oFont10)              //Retencao de rendimentos
+nLin +=50
+oPrint:Say(nLin,1560,STR0040,oFont10) 				//ano calendario
+oPrint:Say(nLin,1950,mv_par08,oFont10n)    		  	//ano  base
+oPrint:Say(nLin,2035,")",ofont10)
+
+//--1. Fonte pagadora 
+nLin +=100
+oPrint:Say(nLin,040,STR0005,oFont12n) 			 	//"  1. - Fonte Pagadora Pessoa Juridica ou Pessoa Fisica"
+nLin +=60
+nLinI:=nLin -10
+oPrint:Box(nLinI ,0030,nLin + 120,2350)				//box
+oPrint:Line(nLinI,1800,nLin + 120,1800)
+
+oPrint:Say(nLIn,040,STR0041,ofont08) 				//Nome  empresarial
+oPrint:Say(nLin,1950,STR0042,oFont08)				//CPF/CNPJ
+nLin+=50 
+oPrint:Say(nLin,050,PADR(cDesEmp,100),oFont10)
+oPrint:Say(nLin,1960,PADR(cCgc,100),oFont10)
+
+//--2. Pessoa fisica/benefic.
+nLin+=100
+If SRL->(FieldPos("RL_CC"))== 0
+	oPrint:Say(nLin,040, STR0011+PADL((SRL->RL_FILIAL+"-"+SRL->RL_MAT),29), oFont12n) 							//"  2. - PESSOA FISICA BENEFICIARIA DOS RENDIMENTOS "
+Else
+	oPrint:Say(nLin,040, STR0011+PADL((SRL->RL_FILIAL+"-"+SRL->RL_MAT+"-"+SRL->RL_CC),29), oFont12n)			//"  2. - PESSOA FISICA BENEFICIARIA DOS RENDIMENTOS "
+EndIf
+nLin +=60  
+nLinI:=nLin - 10
+
+oPrint:Box(nLinI,030,nLin+220,2350)						//box
+
+oPrint:Say(nLin,040,STR0043,oFont08)								//cpf
+oPrint:Say(nLin,440,STR0013,oFont08)        						//Nome  completo
+nLin +=50
+oPrint:Say(nLin,050,SRL->RL_CPFCGC ,oFont10)
+oPrint:Say(nLin,450,PADR(SRL->RL_BENEFIC,140),oFont10)
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)									//Linha horizontal
+oPrint:Line(nLinI,430,nLin,430)									//Linha vertical 
+nLin +=20
+oPrint:Say(nLin,040,STR0044,oFont08)								//Natureza do rendimento
+nLin +=30
+oPrint:Say(nLin,050,PADR(SRL->RL_CODRET + "-" + cDescRet,153),oFont10)
+
+//--3. Rendimentos tributaveis/deducoes e irpf
+nLin +=100
+oPrint:say(nLin,0040,left(STR0015,50),oFont12n)										//"  3. - Rendimentos Tributaveis, Deducoes e Imposto Retido na Fonte"
+oPrint:Say(nLIn,1950,STR0050,oFont10n)
+
+nLin +=60
+nLinI:=nLin -10
+oPrint:Box(nLinI ,0030,nLin + 400,2350)													//box
+oPrint:Line(nLinI,1900,nLin + 400,1900)
+
+nLin +=10
+oPrint:Say(nLin,0040,STR0045,oFont10)											//1.Total de rendimentos(+ferias)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[01],2),"@E 99,999,999.99"),oFont12) 	//"| 01. Total dos Rendimentos (Inclusive Ferias)"
+nLin+=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin+=30
+oPrint:say(nLin,0040,STR0046,oFont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[02],2),"@E 99,999,999.99"), oFont12)	//"| 02. Contribuicao Previdenciaria Oficial "
+nLin +=50
+oPrint:Line(nLin,030, nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0047,oFont10)
+oPrint:say(nLin,2000,Transform(Round(aTotLetra[03],2),"@E 99,999,999.99"),oFont12)	//"| 03. Contribuicao a Previdencia Privada"
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0048,ofont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[04],2),"@E 99,999,999.99"),oFont12)	//"| 04. Pensao Alimenticia (Informar Benefic. no Campo 06)   "
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin+=30
+oPrint:Say(nLin,0040,STR0049,oFont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[06],2),"@E 99,999,999.99"),oFont12)			//"| 05. Imposto Retido na Fonte"
+
+//4. Rendimentos Isentos e nao tributaveis
+nLin += 100
+oPrint:Say(nLin,0040,left(STR0022,50),oFont12n)	   									//"  4. - Rendimentos Isentos e Nao Tributaveis"
+oPrint:Say(nLIn,1950,STR0050,oFont10n)
+
+nLin +=60
+nLinI:=nLin -10
+oPrint:Box(nLinI ,0030,nLin + 560,2350)
+oPrint:Line(nLinI,1900,nLin + 560,1900)
+
+nLin +=10
+oPrint:Say(nLin,0040,STR0052,oFont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[08],2),"@E 99,999,999.99"),oFont12)		//"| 01. Parte dos Proventos Aposentadoria,Reforma ou Pensao  "
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0053,oFont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[09],2),"@E 99,999,999.99"),oFont12)		//"| 02. Diarias e Ajudas de Custo  "
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0054,ofont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[10],2),"@E 99,999,999.99"),oFont12)		//"| 03. Pensao, Prov.de Aposent.ou Reforma por Molestia Grave"
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0055,oFont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[11],2),"@E 99,999,999.99"),oFont12)		//"| 04. Lucro e Dividendo a partir de 1996 pago por PJ       "
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0056,oFont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[12],2),"@E 99,999,999.99"),oFont12)		//"| 05. Val.Pagos Tit./Soc.Micro-Emp. exceto Pro-Labore      "
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0051,oFont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[07],2),"@E 99,999,999.99"),oFont12)		//"| 06. Indenizacao por Rescisao Inc.a Tit.PDV e Acid.Trab.  "
+nLin +=50
+oPrint:Line(nLin,030,nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0057+"("+Subs(cDescOred,1,45)+")",oFont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[13],2),"@E 99,999,999.99"),oFont12)		//"| 07. Outros                                               "
+
+//--5.  Rendimentos sujeitos a tributacao exclusiva 
+nLin +=100
+oPrint:Say(nLin,0040,left(STR0030,50),oFont12n)								  					//"  5. - Rendimentos Sujeitos a Tributacao Exclusiva (Rend.Liquido)        R$    "
+oPrint:Say(nLIn,1950,STR0050,oFont10n)
+
+nLin +=60 
+nLinI:=nLin-10
+
+oPrint:Box(nLinI ,0030,nLin+160,2350)
+oPrint:Line(nLinI,1900,nLin+160,1900)
+
+nLin +=10
+oPrint:Say(nLIn,0040,STR0058,oFont10)
+oPrint:Say(nLin,2000,Transform(Round(nLiq13o,2),"@E 99,999,999.99") ,oFont12)			//"| 01. Decimo Terceiro Salario "
+nLin +=50
+oPrint:Line(nLin,040,nLin,2350)
+
+nLin +=30
+oPrint:Say(nLin,0040,STR0059,ofont10)
+oPrint:Say(nLin,2000,Transform(Round(aTotLetra[17],2),"@E 99,999,999.99"),oFont12)		//"| 02. Outros "
+
+//--6. Informacoes complementares
+
+nItem := 1
+dbSelectArea(cArqCompl)
+(cArqCompl)->(dbSeek( SRL->RL_FILIAL+SRL->RL_MAT ))
+aCompl	:= {}
+While (cArqCompl)->(!eof()) .and. (cArqCompl)->INF_FILIAL+(cArqCompl)->INF_MAT==SRL->RL_FILIAL+SRL->RL_MAT 
+	aAdd(aCompl,{strzero(nItem,02) +". "+ (cArqCompl)->INF_NOME +space(03)+(cArqCompl)->INF_CIC+space(06), TRANSFORM((cArqCompl)->INF_VALOR,"@E 99,999,999.99") } )
+	nItem++
+	(cArqCompl)->(dbSkip())
+Enddo
+
+
+If len(aCompl) > 0
+	aEval(aCompl,{|| nLinhas+=80})
+	
+	If (nLinhas+nLin+280) > 3100
+		oPrint:EndPage() 		// Finaliza a pagina
+		//-- CABECALHO 
+		oPrint:StartPage() 			// Inicia uma nova pagina
+		nLin := 030
+		nLinI:= 030
+		nLin +=20 
+		oPrint:Box( nLinI,0030,nLin+190,2350)  			// box Cabecalho 
+		oPrint:Line(nLinI,1450,nLin+190,1450)				// Linha Div.Cabecalho
+		If File(cFileFaz)
+			oPrint:SayBitmap(nLinI+10,050, cFileFaz,235,195) // Tem que estar abaixo do RootPath
+		Endif
+		nLin +=20
+		oPrint:say(nLin,500 ,STR0036,oFont13n)				//	ministerio da fazenda 
+		oPrint:Say(nLin,1500,STR0038,oFont10)				//Comprovante de rendimento
+		nLin +=50
+		oPrint:say(nLin+10,500 ,STR0037,oFont13)			//secretaria de receita
+		oPrint:Say(nLin,1500,STR0039,oFont10)             	//Retencao de rendimentos
+		nLin +=50
+		oPrint:Say(nLin,1560,STR0040,oFont10) 				//ano calendario
+		oPrint:Say(nLin,1950,mv_par08,oFont10n)    		//ano  base
+		oPrint:Say(nLin,2035,")",ofont10)
+	EndIF
+
+EndIF
+
+nLin += 100
+
+oPrint:Say(nLin,0040,left(STR0033,50),oFont12n)	//"  6. - Informacoes Complementares                                        R$     "
+
+nLin +=60
+nLinI:=nLin -10
+nLin +=10
+
+If Empty(aCompl)              
+	nLin+=230
+	oPrint:box(nLinI,0030,nLin ,2350) 
+	oPrint:line(nLinI,1900,nLin ,1900)
+Else 
+	nLinhas += nLin + 70
+	oPrint:box(nLinI,0030,nLinhas,2350)
+	oPrint:line(nLinI,1900,nLinhas,1900)
+
+	For n:= 1 to len(aCompl)
+	    oPrint:say(nLin,0040,aCompl[n,1],oFont10)
+	    oPrint:Say(nLin,2000,aCompl[n,2],oFont12)
+	    nLin +=50
+		oPrint:line(nLinI,1900,nLin,1900)
+		nLin +=30
+	Next n 
+Endif
+
+//--7. Responsavel pelas informacoes
+nLin 	+=100
+oPrint:Say(nLin,0040,STR0034,ofont12n)			//"  7. - Responsavel Pelas Informacoes"
+nLin	+=50 
+oPrint:Box(nLin,0030,nLin + 100,2350)
+oPrint:Line(nLin,1300,nLin+ 100,1300)
+oPrint:Line(nLin,1540,nLin+ 100,1540)
+
+nLin +=20
+oPrint:say(nLin,0040,left(STR0041,4),oFont08)
+oPrint:Say(nLin,1340,STR0060,oFont08)
+oPrint:Say(nLin,1550,STR0061,oFont08)
+
+nLin += 30
+oPrint:say(nLin,0050,cResponsa,ofont10)
+oPrint:say(nLin,1340,DtoC(dDataBase),oFont10)
+
+nLin+=50
+oPrint:say(nLin,0040,STR0035,oFont08)		// "Aprovado pela IN/SRF No. 120/2000"
+
+oPrint:EndPage() 		// Finaliza a pagina
+
+Return

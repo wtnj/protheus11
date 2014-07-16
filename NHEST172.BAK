@@ -1,0 +1,1041 @@
+#INCLUDE "TOPCONN.CH" 
+#INCLUDE "RWMAKE.CH"
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³NHEST172  ºAutor  ³FELIPE CICONINI     º Data ³  25/08/10   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³RELATORIO DE SALDO DE ESTOQUE                               º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ESTOQUE/CUSTOS                                              º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±± Alterado por A.R.B. 18/01/11 Buscar a mov. nas tabelas SD1/SD2/SD3      ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+/*
+Criar relatório "Saldo de Estoque" na Fundição e Usinagem, com campos cfe anexo, e parâmetros cfe relatório do microsiga MATR240.
+Filtro de Data com 1 dia apenas
+Filtro de Produto, Local, Tipo e Grupo.
+
+Perguntas: 
+par01-02 	Produto                                	ADMIN
+par03-04 	Local
+par05-06 	Tipo
+par07-08 	Grupo
+par09 		Data (apenas 1 dia)
+par10		Imprime Zeradas?
+par11		Tipo de impressão (TOTAL ou LOCALIZAÇÃO)
+par12		Apenas negativos
+
+*/
+
+#INCLUDE "TOPCONN.CH" 
+#INCLUDE "RWMAKE.CH"
+
+User Function NHEST172()
+Private nQuant 	 := 0
+Private nTotal	 := 0
+Private aMat	 := {}
+Private _aSalDia := {}
+Private _cLocal 
+Private _nQtdeSB9 := 0
+Private cAliasSB1 
+Private cAliasSD1 
+Private cAliasSD2 
+
+cString		:= "SD3"
+cDesc1		:= "Este relatorio tem como objetivo imprimir o Saldo de Estoque"
+cDesc2		:= ""
+cDesc3		:= ""
+tamanho		:= "M"
+limite		:= 132
+aReturn		:= { "Zebrado", 1, "Administracao", 1, 2, 1, "", 1 }
+nomeprog	:= "NHEST172"
+nLastKey	:= 0
+titulo		:= OemToAnsi("SALDO DE ESTOQUE")
+cabec1		:= " "
+cabec2		:= " "
+cCancel		:= "***** CANCELADO PELO OPERADOR *****"
+_nPag		:= 1
+M_PAG		:= 1
+wnrel		:= "NHEST172"
+_cPerg		:= "EST172"
+
+Pergunte(_cPerg,.F.)
+SetPrint(cString,wnrel,_cPerg,titulo,cDesc1,cDesc2,cDesc3,.F.,,,tamanho)
+
+
+
+If nLastKey == 27
+	Set Filter To
+	Return
+EndIf
+
+SetDefault(aReturn,cString)
+
+nTipo		:= IIF(aReturn[4]==1,GetMV("MV_COMP"),GetMV("MV_NORM"))
+
+aDriver		:= ReadDriver()
+cCompac		:= aDriver[1]
+
+Processa({|| Gerando()  },"Gerando Dados para Impressao")
+
+Set Filter To
+If aReturn[5]==1
+	Set Printer To
+	Commit
+	OurSpool(wnrel)
+EndIf
+MS_FLUSH()
+
+Return
+
+ProcRegua(0)
+
+Static Function Gerando()
+Local cQuery,cQuery1,cQuery2
+Local nUni
+Local nPeca
+Local cProd
+Local nCusto
+Local Ddtaini := Strzero(Year(mv_par09),4)+Strzero(Month(mv_par09),2)+'01' // Data inicial do periodo a ser pesquisado
+Local _cMes   := Upper(Subs(MesExtenso(Month(mv_par09)-1),1,3))//busca o mes anterior para mostrar no titulo do SB9
+Local _cLocP  := GETMV("MV_LOCPROC")
+	
+	ProcRegua(0)
+	IncProc()
+	
+	//888888888888888888888888888888888888
+	//888888888|MONTANDO A QUERY|888888888
+	//888888888888888888888888888888888888
+	
+	                                       
+	/*
+					cAliasSD2 := GetNextAlias()
+				If SD2->(FieldPos("D2_DESCZFC"))<>0 .AND. SD2->(FieldPos("D2_DESCZFP"))<>0
+					BeginSql Alias cAliasSD2
+						SELECT D2_FILIAL,D2_SERIE,D2_DOC,D2_CLIENTE,D2_LOJA,D2_COD,D2_TES,D2_NFORI,D2_SERIORI,D2_ITEMORI,D2_TIPO,D2_ITEM,D2_CF,
+						D2_QUANT,D2_TOTAL,D2_DESCON,D2_VALFRE,D2_SEGURO,D2_PEDIDO,D2_ITEMPV,D2_DESPESA,D2_VALBRUT,D2_VALISS,D2_PRUNIT,
+						D2_CLASFIS,D2_PRCVEN,D2_CODISS,D2_DESCZFR,D2_PREEMB,D2_DESCZFC,D2_DESCZFP,D2_LOTECTL,D2_NUMLOTE
+						FROM %Table:SD2% SD2
+						WHERE
+						SD2.D2_FILIAL = %xFilial:SD2% AND
+						SD2.D2_SERIE = %Exp:SF2->F2_SERIE% AND
+						SD2.D2_DOC = %Exp:SF2->F2_DOC% AND
+						SD2.D2_CLIENTE = %Exp:SF2->F2_CLIENTE% AND
+						SD2.D2_LOJA = %Exp:SF2->F2_LOJA% AND
+						SD2.%NotDel%
+						ORDER BY D2_FILIAL,D2_DOC,D2_SERIE,D2_CLIENTE,D2_LOJA,D2_ITEM,D2_COD
+					EndSql
+				Else
+					BeginSql Alias cAliasSD2
+						SELECT D2_FILIAL,D2_SERIE,D2_DOC,D2_CLIENTE,D2_LOJA,D2_COD,D2_TES,D2_NFORI,D2_SERIORI,D2_ITEMORI,D2_TIPO,D2_ITEM,D2_CF,
+						D2_QUANT,D2_TOTAL,D2_DESCON,D2_VALFRE,D2_SEGURO,D2_PEDIDO,D2_ITEMPV,D2_DESPESA,D2_VALBRUT,D2_VALISS,D2_PRUNIT,
+						D2_CLASFIS,D2_PRCVEN,D2_CODISS,D2_DESCZFR,D2_PREEMB,D2_LOTECTL,D2_NUMLOTE
+						FROM %Table:SD2% SD2
+						WHERE
+						SD2.D2_FILIAL = %xFilial:SD2% AND
+						SD2.D2_SERIE = %Exp:SF2->F2_SERIE% AND
+						SD2.D2_DOC = %Exp:SF2->F2_DOC% AND
+						SD2.D2_CLIENTE = %Exp:SF2->F2_CLIENTE% AND
+						SD2.D2_LOJA = %Exp:SF2->F2_LOJA% AND
+						SD2.%NotDel%
+						ORDER BY D2_FILIAL,D2_DOC,D2_SERIE,D2_CLIENTE,D2_LOJA,D2_ITEM,D2_COD
+					EndSql
+				EndIf
+
+*/	
+
+    cAliasSB1 := GetNextAlias()	            
+    BeginSql Alias cAliasSB1    
+	   SELECT SB1.B1_COD, SB1.B1_TIPO, SB1.B1_GRUPO, SB1.B1_UM, SB1.B1_DESC, SB2.B2_LOCAL, SB2.B2_QATU, SB2.B2_QEMP, SB2.B2_VATU1, SB2.B2_CM1, SB2.B2_LOCALIZ 
+	   FROM %Table:SB1% SB1 (NOLOCK), %Table:SB2% SB2 (NOLOCK)
+	   WHERE 	
+	   SB1.B1_COD 	BETWEEN %Exp:mv_par01% AND %Exp:mv_par02% AND
+	   SB2.B2_LOCAL BETWEEN %Exp:mv_par03% AND %Exp:mv_par04% AND
+	   SB1.B1_TIPO	BETWEEN %Exp:mv_par05% AND %Exp:mv_par06% AND
+	   SB1.B1_GRUPO	BETWEEN %Exp:mv_par07% AND %Exp:mv_par08% AND
+	   SB1.B1_COD = SB2.B2_COD AND
+	   SB1.B1_MSBLQL	<> '1' AND
+	   SB1.%NotDel% AND
+	   SUBSTRING(SB1.B1_COD,1,3) <> 'MOD' AND
+	   SB2.%NotDel% AND
+	   SB1.B1_FILIAL 	=  %xFilial:SB1% AND
+	   SB2.B2_FILIAL 	= %xFilial:SB2%
+	   ORDER BY SB2.B2_COD   
+	EndSql   
+	
+//	MemoWrit('C:/TEMP/EST172B1.SQL',cQuery)
+//	TCQUERY cQuery NEW ALIAS '(cAliasSB1)'
+	
+//----------------------------------------------------------------------------------------------
+	Titulo := " SALDO DE ESTOQUE - "+DtoC(mv_par09)
+
+//	If mv_par11 == 1
+		cabec1 := " SALDO DE ESTOQUE NO DIA "+StrZero(DAY(mv_par09),2)+" DE "+Upper(MesExtenso(MONTH(mv_par09)))+" DE "+StrZero(YEAR(mv_par09),4)              
+		cabec2 := " CODIGO            DESCRICAO               UM TIPO GRUPO LOCAL    SB9 "+_cMes+"      QUANTIDADE     CUSTO MEDIO   CUSTO TOTAL    SB9 "+ Upper(Subs(MesExtenso(Month(mv_par09)),1,3))//busca o mes atual
+
+/*	Else
+		cabec1 := " CODIGO - PRODUTO"
+		cabec2 := "  UM  TIPO   GRUPO   LOCAL   END                              QUANTIDADE                  CUSTO MEDIO       CUSTO TOTAL"
+	EndIf
+	*/
+	ProcRegua(0)
+    SB9->(DbSetOrder(1))
+//----------------------------------------------------------------------------------------------
+	While (cAliasSB1)->(!EoF())
+			
+		IncProc()    
+
+
+       //³ Busca SB9 p/  obter o saldo na Data desejada. ³
+
+	   If SB9->(DbSeek(xFilial("SB9")+(cAliasSB1)->B1_COD+(cAliasSB1)->B2_LOCAL+Dtos(StoD(Ddtaini )-1),.T. ))
+          Aadd(_aSalDia,{SB9->B9_COD,SB9->B9_LOCAL,SB9->B9_QINI,SB9->B9_VINI1})  
+       Endif   
+
+
+       //³ Corre SD1 - Notas fiscais de entrada p/  obter o saldo na Data desejada. ³
+       
+       cAliasSD1 := GetNextAlias()	            
+       BeginSql Alias cAliasSD1    
+	     SELECT SD1.D1_COD,SD1.D1_LOCAL,SUM(SD1.D1_QUANT) AS D1_QUANT,SUM(SD1.D1_CUSTO) AS D1_CUSTO
+	     FROM %Table:SD1% SD1 (NOLOCK), %Table:SF4% SF4 (NOLOCK)  	    
+	     WHERE 
+	     SD1.D1_COD 	= %Exp:(cAliasSB1)->B1_COD% AND
+	     SD1.D1_LOCAL 	= %Exp:(cAliasSB1)->B2_LOCAL% AND
+	     SD1.D1_TP		= %Exp:(cAliasSB1)->B1_TIPO% AND
+	     SD1.D1_GRUPO	= %Exp:(cAliasSB1)->B1_GRUPO% AND
+	     SD1.D1_DTDIGIT BETWEEN %Exp:Ddtaini% AND %Exp:Dtos(mv_par09)% AND
+	     SD1.D1_TES		= SF4.F4_CODIGO AND 
+	     SF4.F4_ESTOQUE = 'S' AND
+	     SD1.D1_ORIGLAN <> 'LF' AND 	//³ Somente Notas Fiscais Nao Lancadas No Modulo do Livro Fiscal ³
+         SD1.%NotDel% AND	    
+         SF4.%NotDel% AND        
+     	 SD1.D1_FILIAL 	= %xFilial:SD1% AND
+    	 SF4.F4_FILIAL 	= %xFilial:SF4% 
+    	 GROUP BY SD1.D1_COD,SD1.D1_LOCAL
+    	 ORDER BY SD1.D1_COD,SD1.D1_LOCAL
+	   EndSql   	
+	
+    	//MemoWrit('C:/TEMP/EST172D1.SQL',cQuery1)
+     	//TCQUERY cQuery1 NEW ALIAS 'TMPA'        
+     	
+     	(cAliasSD1)->(Dbgotop())
+     	
+        _cProd := (cAliasSD1)->D1_COD
+        
+        While (cAliasSD1)->(!Eof()) 
+		   
+		   
+	       _nI := Ascan(_aSalDia, {|x| x[1]+x[2] == (cAliasSD1)->D1_COD+(cAliasSD1)->D1_LOCAL})
+   
+           If _nI <> 0
+
+		      _aSalDia[_nI][3] += (cAliasSD1)->D1_QUANT
+		      _aSalDia[_nI][4] += (cAliasSD1)->D1_CUSTO
+
+		   Else
+		      Aadd(_aSalDia,{(cAliasSD1)->D1_COD,(cAliasSD1)->D1_LOCAL,(cAliasSD1)->D1_QUANT,(cAliasSD1)->D1_CUSTO})
+		   Endif   
+
+           (cAliasSD1)->(Dbskip())
+        Enddo
+     	(cAliasSD1)->(DbCloseArea()) //Fecha area aberta
+     	
+
+       //³ Corre SD2 - Notas fiscais de saida p/  obter o saldo na Data desejada. ³
+
+        cAliasSD2 := GetNextAlias()	            
+        BeginSql Alias cAliasSD2    
+           SELECT SD2.D2_COD,SD2.D2_LOCAL,SUM(SD2.D2_QUANT) AS D2_QUANT,SUM(SD2.D2_CUSTO1) AS D2_CUSTO1
+	       FROM %Table:SD2% SD2 (NOLOCK), %Table:SF4% SF4 (NOLOCK)  	            
+	       WHERE 
+	       SD2.D2_COD 		= %Exp:(cAliasSB1)->B1_COD% AND 
+	       SD2.D2_LOCAL 	= %Exp:(cAliasSB1)->B2_LOCAL% AND 
+	       SD2.D2_TP		= %Exp:(cAliasSB1)->B1_TIPO% AND
+	       SD2.D2_GRUPO	= %Exp:(cAliasSB1)->B1_GRUPO% AND
+     	   SD2.D2_EMISSAO BETWEEN %Exp:Ddtaini% AND %Exp:Dtos(mv_par09)% AND	    
+	       SD2.D2_TES		= SF4.F4_CODIGO AND
+	       SF4.F4_ESTOQUE = 'S' AND 
+	       SD2.D2_REMITO = ' ' AND 	    	    
+	       SD2.D2_ORIGLAN <> 'LF' AND 	//³ Somente Notas Fiscais Nao Lancadas No Modulo do Livro Fiscal ³
+           SD2.%NotDel% AND        	       
+           SF4.%NotDel% AND                   
+     	   SD2.D2_FILIAL 	= %xFilial:SD2% AND    	
+     	   SF4.F4_FILIAL 	= %xFilial:SF4% 
+    	   GROUP BY SD2.D2_COD,SD2.D2_LOCAL 
+    	   ORDER BY SD2.D2_COD,SD2.D2_LOCAL 
+	    EndSql   	
+	
+ //    	MemoWrit('C:/TEMP/EST172D2.SQL',cQuery1)
+//     	TCQUERY cQuery1 NEW ALIAS 'TMPA'
+
+     	(cAliasSD2)->(Dbgotop())
+        _cProd := (cAliasSD2)->D2_COD
+        
+        While (cAliasSD2)->(!Eof()) 
+		   
+		   
+	       _nI := Ascan(_aSalDia, {|x| x[1]+x[2] == (cAliasSD2)->D2_COD+(cAliasSD2)->D2_LOCAL})
+   
+           If _nI <> 0
+
+		      _aSalDia[_nI][3] -= (cAliasSD2)->D2_QUANT
+		      _aSalDia[_nI][4] -= (cAliasSD2)->D2_CUSTO1
+
+		   Else
+		      Aadd(_aSalDia,{(cAliasSD2)->D2_COD,(cAliasSD2)->D2_LOCAL,(cAliasSD2)->D2_QUANT*(1),(cAliasSD2)->D2_CUSTO1*(1)})
+		   Endif   
+
+           (cAliasSD2)->(Dbskip())
+        Enddo
+     	(cAliasSD2)->(DbCloseArea()) //Fecha area aberta
+
+
+       //³ Corre SD3 - Notas fiscais de saida p/  obter o saldo na Data desejada. ³
+
+        cQuery1 := "SELECT SD3.D3_COD,SD3.D3_LOCAL,SD3.D3_QUANT,SD3.D3_CUSTO1,SD3.D3_TM,SD3.D3_CF"
+  	    cQuery1 += " FROM "+RetSqlName("SD3")+" SD3 (NOLOCK)"
+	    cQuery1 += " WHERE SD3.D3_COD 		= '"+(cAliasSB1)->B1_COD+"' 
+	    
+        If  _cLocP == (cAliasSB1)->B2_LOCAL
+	        cQuery1 += " AND (SUBSTRING(SD3.D3_CF,2,2) = 'E3' OR SD3.D3_LOCAL 	= '"+(cAliasSB1)->B2_LOCAL+"')"  	    
+	    Else 
+	        cQuery1 += " AND SD3.D3_LOCAL 	= '"+(cAliasSB1)->B2_LOCAL+"' 	    
+	    Endif    
+	    
+	    cQuery1 += " AND SD3.D3_TIPO		= '"+(cAliasSB1)->B1_TIPO+"'
+	    cQuery1 += " AND SD3.D3_GRUPO	= '"+(cAliasSB1)->B1_GRUPO+"'
+     	cQuery1 += " AND SD3.D3_EMISSAO BETWEEN '"+Ddtaini+"' AND '"+Dtos(mv_par09)+"'"	    
+//	    cQuery1 += " AND SD3.D3_estornoCANCEL <> 'S'" 	    
+//	    cQuery1 += " AND SD2.D2_REMITO = ' '" 	    	    
+//	    cQuery1 += " AND SD2.D2_TPDCENV NOT IN ('A','1')" 	    	    	    
+//	    cQuery1 += " AND SD2.D2_ORIGLAN <> 'LF' " 	//³ Somente Notas Fiscais Nao Lancadas No Modulo do Livro Fiscal ³
+    	cQuery1 += " AND SD3.D_E_L_E_T_ 	= ''"
+     	cQuery1 += " AND SD3.D3_FILIAL 	= '"+xFilial('SD3')+"'"
+    	cQuery1 += " ORDER BY SD3.D3_FILIAL,SD3.D3_COD"
+	
+    	MemoWrit('C:/TEMP/EST172D3.SQL',cQuery1)
+     	TCQUERY cQuery1 NEW ALIAS 'TMPA'
+     	TMPA->(Dbgotop())
+        _cProd := TMPA->D3_COD
+        
+        While TMPA->(!Eof()) 
+		   
+		   If Subs(TMPA->D3_CF,2,2)=="E3"  //verifica quando é local de processo
+ 		      _cLocal := _cLocP 
+           Else
+ 		      _cLocal := TMPA->D3_LOCAL
+		   Endif
+		   
+	       _nI := Ascan(_aSalDia, {|x| x[1]+x[2] == TMPA->D3_COD+_cLocal})
+   
+           If _nI <> 0
+           
+  		      If TMPA->D3_TM >"500"         
+  		      
+  		         If TMPA->D3_CF=="RE3" //Entrada no almox de processo material indireto
+    		        _aSalDia[_nI][3] += TMPA->D3_QUANT
+		            _aSalDia[_nI][4] += TMPA->D3_CUSTO1
+  		         Else
+		            _aSalDia[_nI][3] -= TMPA->D3_QUANT
+		            _aSalDia[_nI][4] -= TMPA->D3_CUSTO1
+		         Endif   
+              Else
+  		         If TMPA->D3_CF=="DE3" //Saida no almox de processo material indireto		         
+		            _aSalDia[_nI][3] -= TMPA->D3_QUANT
+		            _aSalDia[_nI][4] -= TMPA->D3_CUSTO1
+		         Else
+		            _aSalDia[_nI][3] += TMPA->D3_QUANT
+		            _aSalDia[_nI][4] += TMPA->D3_CUSTO1
+		         Endif   
+              Endif
+		   Else
+  		      If TMPA->D3_TM >"500"		   
+  		         If TMPA->D3_CF=="RE3" //Entrada no almox de processo material indireto  		      
+		            Aadd(_aSalDia,{TMPA->D3_COD,_cLocal,TMPA->D3_QUANT,TMPA->D3_CUSTO1})		        		         
+		         Else
+		            Aadd(_aSalDia,{TMPA->D3_COD,_cLocal,TMPA->D3_QUANT*(-1),TMPA->D3_CUSTO1*(-1)})
+		         Endif   
+		      Else  
+  		         If TMPA->D3_CF=="DE3" //Saida no almox de processo material indireto		         		      
+		            Aadd(_aSalDia,{TMPA->D3_COD,_cLocal,TMPA->D3_QUANT*(-1),TMPA->D3_CUSTO1*(-1)})		         
+		         Else
+		            Aadd(_aSalDia,{TMPA->D3_COD,_cLocal,TMPA->D3_QUANT,TMPA->D3_CUSTO1})		      
+		         Endif   
+		      Endif   
+		   Endif   
+
+           TMPA->(Dbskip())
+        Enddo
+     	TMPA->(DbCloseArea()) //Fecha area aberta
+
+		(cAliasSB1)->(DbSkip())
+	EndDo   
+	
+	(cAliasSB1)->(DbCloseArea())
+	If Select("TMPA") > 0
+		TMPA->(DbCloseArea())
+	EndIf
+
+
+  	For _nI:= 1 to len(_aSalDia)	
+
+
+	    If SB9->(DbSeek(xFilial("SB9")+_aSalDia[_nI][1]+_aSalDia[_nI][2]+Subs(Dtos(mv_par09),1,6)+StrZero(Day(UltimoDia(mv_par09)),2),.T. ))
+	       _nQtdeSB9 := SB9->B9_QINI 
+	    Else
+	       _nQtdeSB9 := 0
+	    Endif   
+	    
+	    SB9->(DbSeek(xFilial("SB9")+_aSalDia[_nI][1]+_aSalDia[_nI][2]+Dtos(StoD(Ddtaini )-1),.T. ))
+       
+		If Prow() > 60 .OR. Prow() < 2
+			Cabec(Titulo, Cabec1, Cabec2, NomeProg, Tamanho, nTipo)
+		EndIf
+
+  		If mv_par10 == 1 //1= IMPRIME QTDE  ZERADA
+	    	
+	    	If _aSalDia[_nI][3] == 0
+
+  	           If _aSalDia[_nI][4]+ _aSalDia[_nI][3] == 0
+	              nUni := 0
+	           Else   
+			      nUni := _aSalDia[_nI][4] / _aSalDia[_nI][3]    			//CALCULANDO CUSTO POR PEÇA
+			   Endif  
+
+			   
+			                                                                    
+      	       SB1->(DbSeek( xFilial("SB1")+_aSalDia[_nI][1]))			
+		   
+		       If mv_par11 == 1	 			//Imprime CUSTO ZERADO
+		    	  If _aSalDia[_nI][4] == 0
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+				  EndIf
+			   Elseif mv_par11 == 2 //Imprime CUSTO NEGATIVO
+		    	  If _aSalDia[_nI][4] < 0
+		    	  
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+				  EndIf
+			   Elseif mv_par11 == 3 //Imprime CUSTO pOSITIVO
+		    	  If _aSalDia[_nI][4] > 0                   
+
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+		    	  
+				  EndIf
+			   Else	             					//Não Imprime Quantidade Zerada
+
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+
+			   EndIf
+			Endif
+		ElseIf mv_par10 == 2 // IMPRIME QTDE  NEGATIVA
+
+		   If _aSalDia[_nI][3] < 0
+
+	           If _aSalDia[_nI][4]+ _aSalDia[_nI][3] == 0
+	              nUni := 0
+	           Else   
+			      nUni := _aSalDia[_nI][4] / _aSalDia[_nI][3]    			//CALCULANDO CUSTO POR PEÇA
+			   Endif  
+			                                                                    
+      	       SB1->(DbSeek( xFilial("SB1")+_aSalDia[_nI][1]))			
+		       If mv_par11 == 1	 			//Imprime CUSTO NEGATIVO
+		    	  If _aSalDia[_nI][4] == 0
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+		    	  
+				  EndIf
+			   Elseif mv_par11 == 2 //Imprime CUSTO 
+		    	  If _aSalDia[_nI][4] < 0
+
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+		    	  
+				  EndIf
+			   Elseif mv_par11 == 3 //Imprime CUSTO POSITIVO
+		    	  If _aSalDia[_nI][4] > 0
+		    	  
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+
+				  EndIf
+			   Else	       //Imprime Custo AMBOS
+
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+
+			   EndIf
+			Endif
+		    
+		ElseIf mv_par10 == 3 // IMPRIME QTDE  POSITIVA
+
+		   If _aSalDia[_nI][3] > 0
+
+	           If _aSalDia[_nI][4]+ _aSalDia[_nI][3] == 0
+	              nUni := 0
+	           Else   
+			      nUni := _aSalDia[_nI][4] / _aSalDia[_nI][3]    			//CALCULANDO CUSTO POR PEÇA
+			   Endif  
+			                                                                    
+      	       SB1->(DbSeek( xFilial("SB1")+_aSalDia[_nI][1]))			
+		       If mv_par11 == 1	 			//Imprime CUSTO ZERADO
+		    	  If _aSalDia[_nI][4] == 0
+		    	  
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+
+				  EndIf
+			   Elseif mv_par11 == 2 //Imprime CUSTO NEGATIVO
+		    	  If _aSalDia[_nI][4] < 0
+
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+
+				  EndIf
+			   Elseif mv_par11 == 3 //Imprime CUSTO POSITIVO
+		    	  If _aSalDia[_nI][4] > 0
+		    	  
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+				  EndIf
+			   Else	       //Imprime Custo AMBOS
+			   
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+			   EndIf
+			Endif
+				
+		Else
+		       If _aSalDia[_nI][4]+ _aSalDia[_nI][3] == 0
+	              nUni := 0
+	           Else   
+			      nUni := _aSalDia[_nI][4] / _aSalDia[_nI][3]    			//CALCULANDO CUSTO POR PEÇA
+			   Endif  
+			                                                                    
+      	       SB1->(DbSeek( xFilial("SB1")+_aSalDia[_nI][1]))			
+		       If mv_par11 == 1	 			//Imprime CUSTO ZERADO
+		    	  If _aSalDia[_nI][4] == 0
+		    	  
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+				  EndIf
+			   Elseif mv_par11 == 2 //Imprime CUSTO NEGATIVO
+		    	  If _aSalDia[_nI][4] < 0                   
+
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+		    	  
+				  EndIf
+			   Elseif mv_par11 == 3 //Imprime CUSTO POSITIVO
+		    	  If _aSalDia[_nI][4] > 0
+		    	  
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+
+				  EndIf
+			   Else	       //Imprime Custo AMBOS
+					 @Prow()+1,001 PSAY _aSalDia[_nI][1]
+					 @Prow()  ,017 PSAY SubStr(SB1->B1_DESC,1,25)
+					 @Prow()  ,043 PSAY SB1->B1_UM
+					 @Prow()  ,047 PSAY SB1->B1_TIPO
+					 @Prow()  ,051 PSAY SB1->B1_GRUPO
+					 @Prow()  ,058 PSAY _aSalDia[_nI][2]       
+ 					 @Prow()  ,060 PSAY SB9->B9_QINI Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,076 PSAY _aSalDia[_nI][3]  Picture "@E 9,999,999.999"                      //QUANTIDADE
+					 @Prow()  ,091 PSAY nUni  	Picture "@E 999,999.999"                          //CUSTO
+					 @Prow()  ,102 PSAY _aSalDia[_nI][4]	Picture "@E 999,999,999.999"                      //CUSTO MEDIO
+					 @Prow()  ,117 PSAY _nQtdeSB9	Picture "@E 9,999,999.999"                      //CUSTO MEDIO					 
+			   
+			   EndIf
+        Endif
+	Next _nI	
+	
+Return              
+
+
+/*
+
+	ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+	±±³Fun‡…o    ³ xCalcEst ³ Autor ³ Wilson Junior         ³ Data ³ 28.03.94 ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³Descri‡…o ³ Retorna o Saldo inicial por Produto/Local do arquivo SB9 - ³±±
+	±±³          ³ Saldos Iniciais.                                           ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³Sintaxe   ³ ExpA1 := CalcEst(ExpC1,ExpC2,ExpD1)                        ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³Parametros³ ExpA1 = Array com o Saldo Inicial para o Produto/Local.    ³±±
+	±±³          ³ ExpC1 = Codigo do Produto                                  ³±±
+	±±³          ³ ExpC2 = Local (AlmoxarIfado)                               ³±±
+	±±³          ³ ExpD1 = Data para obter o Saldo Inicial.                   ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³ Uso      ³ SIGACUS                                                    ³±±
+	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+ 
+*/
+
+/*
+	Function xCalcEst(cCod,cLocal,dData,cFilAux,lConsTesTerc)
+#endif
+
+#define F_SB9  1
+#define F_SD1  2
+#define F_SD2  3
+#define F_SD3  4
+#define F_SF4  5
+#define F_SF5  6
+
+Local nReg,nReg1,nOrd,nOrd1,dDtVai
+
+#ifdef TOP
+	Local lHasRec := .F.
+#endif
+
+Local aSaldo     := { 0,0,0,0,0,0,0,0,0,0,0,0 }
+Local cLocProc   := GETMV("MV_LOCPROC")
+Local cArq       := Alias()
+Local nCnt01     := 0
+
+Local aFilial  := { xFilial( "SB9" ),;
+                    xFilial( "SD1" ),;
+                    xFilial( "SD2" ),;
+                    xFilial( "SD3" ),;
+                    xFilial( "SF4" ),;
+                    xFilial( "SF5" ) }
+
+Local lRemInt  := SuperGetMv("MV_REMINT",.F.,.F.)
+
+DEFAULT lConsTesTerc := .F.
+DEFAULT dData        := dDataBase
+
+dData	 := If(Empty(dData),Ctod( "01/01/80","ddmmyy" ),dData)
+
+If !(cFilAux == NIL)
+	For nCnt01 := 1 To Len( aFilial )
+		If !(aFilial[ nCnt01 ] == "  ")
+			aFilial[ nCnt01 ] := cFilAux
+		EndIf
+	Next
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de partida para compor o saldo inicial.        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DbSelectArea( "SB9" )
+
+#ifndef TOP
+	DbSeek( aFilial[ F_SB9 ]+cCod+cLocal+DtoS( dData ),.T. ) ; DbSkip(-1)
+#else
+	If TCSrvType() == "AS/400"
+		DbSeek( aFilial[ F_SB9 ]+cCod+cLocal+DtoS( dData ),.T. ) ; DbSkip(-1)
+	Else
+		DbSeek(aFilial[ F_SB9 ]+cCod+cLocal)
+		lHasRec := .f.
+		While !Eof() .and. (aFilial[ F_SB9 ]+cCod+cLocal == B9_FILIAL + B9_COD+B9_Local)
+			If B9_DATA >= dData .and. lHasRec
+				Exit
+			Else
+				lHasRec := .t.
+			EndIf
+			DbSkip()
+		End
+		If lHasRec
+			DbSkip(-1)
+		EndIf
+	End
+#endif
+
+If ((aFilial[ F_SB9 ]+cCod+cLocal == SB9->B9_FILIAL+SB9->B9_COD+SB9->B9_Local) .And. ;
+	(SB9->B9_DATA < dData))
+
+	aSaldo[01] := SB9->B9_QINI
+	aSaldo[02] := SB9->B9_VINI1
+	aSaldo[03] := SB9->B9_VINI2
+	aSaldo[04] := SB9->B9_VINI3
+	aSaldo[05] := SB9->B9_VINI4
+	aSaldo[06] := SB9->B9_VINI5
+	aSaldo[07] := SB9->B9_QISEGUM
+	If SB9->(FieldPos("B9_CM1")) <> 0 .And. SB9->(FieldPos("B9_CM2")) <> 0 .And. ;
+	   SB9->(FieldPos("B9_CM3")) <> 0 .And. SB9->(FieldPos("B9_CM4")) <> 0 .And. ;
+	   SB9->(FieldPos("B9_CM5")) <> 0
+		aSaldo[08] := SB9->B9_CM1
+		aSaldo[09] := SB9->B9_CM2
+		aSaldo[10] := SB9->B9_CM3
+		aSaldo[11] := SB9->B9_CM4
+		aSaldo[12] := SB9->B9_CM5
+	EndIf	
+	dDtVai    := SB9->B9_DATA+1
+Else
+	dDtVai    := Ctod( "01/01/80","ddmmyy" )
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Correr SD1, SD2 e SD3 para  obter o saldo na Data desejada. ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DbSelectArea( "SF4" )
+nReg1 := Recno()
+nOrd1 := Indexord()
+
+DbSelectArea( "SD1" )
+nReg := Recno()
+nOrd := IndexOrd()
+DbSetOrder( 7 )
+
+DbSeek( aFilial[ F_SD1 ]+cCod+cLocal+Dtos(dDtVai),.T. )
+
+While (!Eof() .And. ;
+	(aFilial[ F_SD1 ]+cCod+cLocal) == (SD1->D1_FILIAL+SD1->D1_COD+SD1->D1_Local) .And.;
+	(SD1->D1_DTDIGIT < dData))
+
+	#ifdef SHELL
+		If SD1->D1_CANCEL == "S"
+			SD1->(DbSkip())
+			Loop
+		EndIf
+	#endif
+
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Somente Notas Fiscais Nao Lancadas No Modulo do Livro Fiscal ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !(SD1->D1_ORIGLAN == "LF")
+		DbSelectArea( "SF4" )
+		If ((SF4->F4_FILIAL+SF4->F4_CODIGO == aFilial[ F_SF4 ]+SD1->D1_TES ) .Or. ;
+			DbSeek( aFilial[ F_SF4 ]+SD1->D1_TES,.F. ))
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Somente TES Que Movimenta Estoque Deve Ser Considerada ³
+			//³ ou TES de poder de terceiros com parametro ligado      ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If (SF4->F4_ESTOQUE == "S") .Or. (lConsTesTerc .And. SF4->F4_PODER3 $ "RD")
+				aSaldo[1] += SD1->D1_QUANT
+				aSaldo[2] += SD1->D1_CUSTO
+				aSaldo[3] += SD1->D1_CUSTO2
+				aSaldo[4] += SD1->D1_CUSTO3
+				aSaldo[5] += SD1->D1_CUSTO4
+				aSaldo[6] += SD1->D1_CUSTO5
+				aSaldo[7] += SD1->D1_QTSEGUM
+			EndIf
+			
+		EndIf
+		DbSelectArea( "SD1" )
+	EndIf
+	DbSkip(1)
+End
+
+DbSetOrder( nOrd ) ; DbGoTo( nReg )
+
+DbSelectArea( "SD2" )
+nReg := Recno()
+nOrd := IndexOrd()
+DbSetOrder( 6 )
+
+DbSeek( aFilial[ F_SD2 ]+cCod+cLocal+DtoS( dDtVai ),.T. )
+
+While (!Eof() .And. ;
+	(aFilial[ F_SD2 ]+cCod+cLocal == SD2->D2_FILIAL+SD2->D2_COD+SD2->D2_Local) .And. ;
+	(SD2->D2_EMISSAO < dData))
+
+	#ifdef SHELL
+		If SD2->D2_CANCEL == "S"
+			SD2->(DbSkip())]
+			Loop
+		EndIf
+	#endif
+
+	If !Empty(SD2->D2_REMITO) .And. !(SD2->D2_TPDCENV $ "A1")
+		SD2->(DbSkip())
+		Loop
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Despreza Notas Fiscais Lancadas Pelo Modulo do Livro Fiscal  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !(SD2->D2_ORIGLAN == "LF")
+		DbSelectArea("SF4")
+		If ((SF4->F4_FILIAL+SF4->F4_CODIGO == aFilial[ F_SF4 ]+SD2->D2_TES ) .Or. ;
+			DbSeek( aFilial[ F_SF4 ]+SD2->D2_TES,.F. ))
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Somente TES Que Movimenta Estoque Deve Ser Considerada ³
+			//³ ou TES de poder de terceiros com parametro ligado      ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If (SF4->F4_ESTOQUE == "S") .Or. (lConsTesTerc .And. SF4->F4_PODER3 $ "RD")
+				aSaldo[1] -= SD2->D2_QUANT
+				aSaldo[2] -= SD2->D2_CUSTO1
+				aSaldo[3] -= SD2->D2_CUSTO2
+				aSaldo[4] -= SD2->D2_CUSTO3
+				aSaldo[5] -= SD2->D2_CUSTO4
+				aSaldo[6] -= SD2->D2_CUSTO5
+				aSaldo[7] -= SD2->D2_QTSEGUM
+			EndIf
+		EndIf
+		DbSelectArea( "SD2" )
+	EndIf
+	DbSkip(1)
+End
+
+DbSetOrder( nOrd ) ; DbGoTo( nReg )
+
+
+DbSetOrder( nOrd ) ; DbGoTo( nReg )
+
+DbSelectArea( "SF4" )
+DbSetOrder( nOrd1 ) ; DbGoTo( nReg1 )
+
+DbSelectArea( "SF5" )
+nReg1 := Recno()
+nOrd1 := IndexOrd()
+
+DbSelectArea( "SD3" )
+nReg := Recno()
+nOrd := IndexOrd()
+DbSetOrder( 7 )
+
+DbSeek( aFilial[ F_SD3 ]+cCod+cLocal+DtoS( dDtVai ),.T. )
+
+While (!Eof() .And. ;
+	(aFilial[ F_SD3 ]+cCod+cLocal == SD3->D3_FILIAL+SD3->D3_COD+SD3->D3_Local) .And. ;
+	(SD3->D3_EMISSAO < dData))
+	If !D3Valido()
+		DbSkip()
+		Loop
+	EndIf
+	DbSelectArea( "SF5" )
+	If ((SF5->F5_FILIAL+SF5->F5_CODIGO == aFilial[ F_SF5 ]+SD3->D3_TM) .Or. ;
+		(SD3->D3_TM == "499") .Or. ;
+		(SD3->D3_TM == "999") .Or. ;
+		DbSeek( aFilial[ F_SF5 ]+SD3->D3_TM,.F. ))
+		If SD3->D3_TM >"500"
+			aSaldo[1] -= SD3->D3_QUANT
+			aSaldo[2] -= SD3->D3_CUSTO1
+			aSaldo[3] -= SD3->D3_CUSTO2
+			aSaldo[4] -= SD3->D3_CUSTO3
+			aSaldo[5] -= SD3->D3_CUSTO4
+			aSaldo[6] -= SD3->D3_CUSTO5
+			aSaldo[7] -= SD3->D3_QTSEGUM
+		Else
+			aSaldo[1] += SD3->D3_QUANT
+			aSaldo[2] += SD3->D3_CUSTO1
+			aSaldo[3] += SD3->D3_CUSTO2
+			aSaldo[4] += SD3->D3_CUSTO3
+			aSaldo[5] += SD3->D3_CUSTO4
+			aSaldo[6] += SD3->D3_CUSTO5
+			aSaldo[7] += SD3->D3_QTSEGUM
+		EndIf
+	EndIf
+	DbSelectArea( "SD3" ) ; DbSkip(1)
+End
+
+If cLocal == cLocProc
+
+	DbSetOrder( 7 )
+
+	DbSeek( aFilial[ F_SD3 ]+cCod,.T. )
+
+	While (!Eof() .And. ;
+		(aFilial[ F_SD3 ]+cCod == SD3->D3_FILIAL+SD3->D3_COD) .And. ;
+		(SD3->D3_EMISSAO < dData))
+
+		If ((SD3->D3_EMISSAO <  dData)      .And. ;
+			(SD3->D3_EMISSAO >= dDtVai)     .And. ;
+			(SubS( SD3->D3_CF,2 ) == "E3")  .And. ;
+			!(SD3->D3_Local == cLocProc))
+
+			If !D3Valido()
+				DbSkip()
+				Loop
+			EndIf
+
+			DbSelectArea( "SF5" )
+
+			If ((SF5->F5_FILIAL+SF5->F5_CODIGO == aFilial[ F_SF5 ]+SD3->D3_TM) .Or. ;
+				(SD3->D3_TM == "499") .Or. ;
+				(SD3->D3_TM == "999") .Or. ;
+				DbSeek( aFilial[ F_SF5 ]+SD3->D3_TM,.F. ))
+
+				If SD3->D3_CF = "RE3"
+
+					aSaldo[1] += SD3->D3_QUANT
+					aSaldo[2] += SD3->D3_CUSTO1
+					aSaldo[3] += SD3->D3_CUSTO2
+					aSaldo[4] += SD3->D3_CUSTO3
+					aSaldo[5] += SD3->D3_CUSTO4
+					aSaldo[6] += SD3->D3_CUSTO5
+					aSaldo[7] += SD3->D3_QTSEGUM
+				ElseIf SD3->D3_CF = "DE3"
+
+					aSaldo[1] -= SD3->D3_QUANT
+					aSaldo[2] -= SD3->D3_CUSTO1
+					aSaldo[3] -= SD3->D3_CUSTO2
+					aSaldo[4] -= SD3->D3_CUSTO3
+					aSaldo[5] -= SD3->D3_CUSTO4
+					aSaldo[6] -= SD3->D3_CUSTO5
+					aSaldo[7] -= SD3->D3_QTSEGUM
+				EndIf
+			EndIf
+		EndIf
+
+		DbSelectArea("SD3")
+		DbSkip()
+	End
+EndIf
+
+DbSetOrder( nOrd ) ; DbGoTo( nReg )
+
+
+DbSelectArea("SF5")
+DbSetOrder( nOrd1 ) ; DbGoTo( nReg1 )
+
+DbSelectArea( cArq )
+
+Return( aSaldo )
+  */

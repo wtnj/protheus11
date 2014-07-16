@@ -1,0 +1,47 @@
+#include "rwmake.ch"
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³MT240TOK  ºAutor  ³Alexandre R. Bento  º Data ³  24/03/10   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Rotina desenvolvida para não permitir que seja feita uma   º±±
+±±º          ³ movimentação de requisição de materiais envolvendo produtosº±±
+±±º          ³ com Apropriacao Direta e TM igual para indireta            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP10                                                       º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+USER FUNCTION Mt240Tok()
+Local _lRet		:= .T.
+
+
+SB1->(DbSetOrder(1)) //filial+cod
+SB1->(DbSeek(xFilial("SB1") + M->D3_COD))
+If SB1->B1_GRUPO$"PA02" .And. M->D3_LOCAL$"23/27"
+	  MsgBox("O Produto nao pode ser Movimentado neste almoxarifado. Verifique!","Atencao","ALERT")
+	  _lRet := .F.
+Endif
+
+If M->D3_TM$"002/502"
+   If SB1->B1_TIPO$"CC/MC"
+      MsgBox("O Tipo MC e CC So pode Ser Movimentado por Transferencia modelo 2. Verifique!","Atencao","ALERT")
+	  _lRet := .F.
+   Elseif SB1->B1_APROPRI <> "I"
+	      MsgBox("Produto de Apropriacao Direta nao pode Utilizar Tipo de Movimetação 502 ou 002. Verifique!","Atencao","ALERT")
+    	  _lRet := .F.
+   Endif
+Endif	
+
+If M->D3_TM$"001/201"
+   If !AllTrim(UPPER(cUserName))$"FERNANDOW/SANDRAMB/DAIANESC/VALDELENEMS/ANAPP/LUCIANODB/LEANDROJS/ADMINISTRADOR/ivonei.ferreira"
+      MsgBox("Somente o Depto de Custo Pode Utilizar Este Tipo de Movimentação, Duvida Ligue p/ Depto de Custo!","Movimentaçao P.E. MT240TOK","ALERT")
+   	  _lRet := .F.
+   Endif  	
+EndIf
+
+
+Return(_lRet)

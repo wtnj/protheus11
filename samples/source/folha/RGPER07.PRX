@@ -1,0 +1,393 @@
+#INCLUDE "FIVEWIN.CH"
+#INCLUDE "RGPER07.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ RGPER07  ³ Autor ³ Silvia Taguti         ³ Data ³ 30.04.03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relacao de Entrada de Funcionarios                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ RGPER07(void)                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+User Function RGPER07()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais (Basicas)                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cString := "SRA"        // alias do arquivo principal (Base)
+Local aOrd    := {STR0001,STR0002,OemtoAnsi(STR0003),STR0012,STR0013,OemtoAnsi(STR0014)}    //"C.Custo + Matricula "###"C.Custo + Nome"###"C.Custo + Fun‡„o"###"Nome"###"Matricula"###"Fun‡„o"
+Local cDesc1  := STR0004		//"Rela‡„o de Cargos e Salario."
+Local cDesc2  := STR0005		//"Ser  impresso de acordo com os parametros solicitados pelo"
+Local cDesc3  := STR0006		//"usuario."
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Private(Basicas)                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aReturn  := {STR0007,1,STR0008,2,2,1,"",1 }	//"Zebrado"###"Administra‡„o"
+Private NomeProg := "RGPER07"
+Private aLinha   := { }
+Private nLastKey := 0
+Private cPerg    := "RGPR07"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis Utilizadas na funcao IMPR                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private Titulo   := STR0009		//"RELA€O DE CARGOS E SALARIOS"
+Private AT_PRG   := "RGPER07"
+Private Wcabec0  := 2
+Private cabec1  := STR0010		//"FI  MATRIC NOME                           ADMISSAO   FUNCAO                  MAO DE       SALARIO   PERC.   PERC.   PERC."
+Private Cabec2 := ""
+Private CONTFL   := 1
+Private LI		  := 0
+Private nTamanho := "M"
+Private cPict1	:=	If (MsDecimais(1)==2,"@E 999,999,999,999.99",TM(999999999999,18,MsDecimais(1)))  // "@E 999,999,999,999.99
+Private cPict2	:=	If (MsDecimais(1)==2,"@E 999,999,999.99",TM(999999999,14,MsDecimais(1)))  // "@E 999,999,999.99
+Private m_pag      := 01
+
+AjustaSx1()
+Pergunte("RGPR07",.F.)
+
+//CODIGO     NOMBRE                         CARGO     INGRESO        ENTRADA      SALARIO    ACCION
+//0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel:="RGPER07"            //Nome Default do relatorio em Disco
+wnrel:=SetPrint(cString,wnrel,cPerg,Titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,,nTamanho)
+
+If nLastKey = 27
+	Return
+EndIf
+
+SetDefault(aReturn,cString)
+
+If nLastKey = 27
+	Return
+EndIf
+
+RptStatus({|lEnd| RGPR07Imp(@lEnd,wnRel,cString)},Titulo)
+
+Return
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ RGPR07IMP³ Autor ³ R.H.                  ³ Data ³ 15.04.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao da Relacao de Empleados                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ RGPR07IMP(lEnd,WnRel,cString)                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function RGPR07IMP(lEnd,WnRel,cString)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais (Programa)                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local nSalario   	:= nSalMes := nSalDia := nSalHora := 0
+Local nTOTCC      	:= 0 //Alterado o Tipo de Array para Numerico
+Local nTotFunc	  	:= 0
+Local nTotFunGer	:= 0
+Local nTotSalGer   := 0
+Local cAcessaSRA := &("{ || " + ChkRH("RGPER07","SRA","2") + "}")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Private(Programa)                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aInfo     := {}
+Private aCodFol   := {}
+Private aRoteiro  := {}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                         ³
+//³ mv_par01        //  Filial De                                ³
+//³ mv_par02        //  Filial Ate                               ³
+//³ mv_par03        //  Centro de Custo De                       ³
+//³ mv_par04        //  Centro de Custo Ate                      ³
+//³ mv_par05        //  Matricula De                             ³
+//³ mv_par06        //  Matricula Ate                            ³
+//³ mv_par07        //  Nome De                                  ³
+//³ mv_par08        //  Nome Ate                                 ³
+//³ mv_par09        //  Situa‡äes                                ³
+//³ mv_par10        //  Categorias                               ³
+//³ mv_par11        //  Data Pagamento De                        ³
+//³ mv_par12        //  Data Pagamento Ate                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carregando variaveis mv_par?? para Variaveis do Sistema.	 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nOrdem := aReturn[8]
+cFilDe	    := mv_par01									//  Filial De
+cFilAte	    := mv_par02									//  Filial Ate
+cCcDe 	    := mv_par03									//  Centro de Custo De
+cCcAte	    := mv_par04									//  Centro de Custo Ate
+cMatDe	    := mv_par05									//  Matricula De
+cMatAte	    := mv_par06									//  Matricula Ate
+cNomeDe	    := mv_par07									//  Nome De
+cNomeAte     := mv_par08									//  Nome Ate
+cSituacao    := mv_par09									//  Situacao Funcionario
+cCategoria   := mv_par10									//  Categoria Funcionario
+dDataDe      := mv_par11
+dDataAte		 := mv_par12
+
+Titulo := STR0011			//"RELACAO DE CARGOS E SALARIOS "
+
+If nOrdem == 1
+	dbSetOrder(2)
+	dbSeek(cFilDe + cCcDe + cMatDe,.T.)
+	cInicio := "SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT"
+	cFim    := cFilAte + cCcAte + cMatAte
+ElseIf nOrdem == 2
+	dbSetOrder(8)
+	dbSeek(cFilDe + cCcDe + cNomeDe,.T.)
+	cInicio := "SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_NOME"
+	cFim    := cFilAte + cCcAte + cNomeAte
+Endif
+// Sempre na ordem de Centro de Custo + Matricula para totalizar
+dbSelectArea( "SRA" )
+dbSetOrder(2)					
+dbGoTop()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega Regua Processamento											  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SetRegua(RecCount())
+
+cFilialAnt := "!!" 
+cFANT 	  := "  "
+cCANT 	  := Space(20)
+cFuncaoAnt := "    "
+
+TPAGINA	 := TEMPRESA := TFILIAL := TCCTO := FL1 := 0
+TEMPRESAF := TFILIALF := TCCTOF	:= 0
+
+While !EOF() .And. &cInicio <= cFim 
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Movimenta Regua Processamento										  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IncRegua()
+
+	If lEnd
+		@Prow()+1,0 PSAY cCancel
+		Exit
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica Quebra de Filial 											  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SRA->RA_FILIAL # cFilialAnt
+		If !Fp_CodFol(@aCodFol,SRA->RA_FILIAL) 			 .Or.;
+			!fInfo(@aInfo,SRA->RA_FILIAL)
+			dbSelectArea("SRA")
+			dbSkip()
+			If Eof()
+				Exit
+			Endif	
+			Loop
+		Endif
+		dbSelectArea( "SRA" )
+		cFilialAnt := SRA->RA_FILIAL
+	EndIf
+
+	If ( SRA->RA_FILIAL < cFilDe )	.Or. ( SRA->RA_FILIAL > cFilAte )	.Or.;
+	   ( SRA->RA_NOME < cNomeDe )	.Or. ( SRA->RA_NOME > cNomeAte )	.Or.;
+		( SRA->RA_MAT < cMatDe )	.Or. ( SRA->RA_MAT > cMatAte )		.Or.;
+		(SRA->RA_CC < cCcDe) 		.Or. (SRA->RA_CC > cCcAte)		
+		dbSkip()
+		Loop			
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Testa Situacao do Funcionario na Folha						 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !( SRA->RA_SITFOLH $ cSituacao ) .Or. !( SRA->RA_CATFUNC $ cCategoria )
+		dbSkip()
+		Loop
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste controle de acessos e filiais validas               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !(SRA->RA_FILIAL $ fValidFil()) .Or. !Eval(cAcessaSRA)
+		dbSkip()
+		Loop
+	EndIf
+   
+ 	If SRA->RA_ADMISSA < dDataDe .or. SRA->RA_ADMISSA > dDataAte
+ 		dbSkip()
+ 		Loop
+ 	Endif
+	nSalario   := 0
+	nSalMes	  := 0
+	nSalDia	  := 0
+	nSalHora   := 0
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Calcula Salario Incorporado Mes , Dia , Hora do Funcionario  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	fSalInc(@nSalario,@nSalMes,@nSalHora,@nSalDia,.T.)
+	dbSelectArea( "SRA" )   
+	IF substr(SRA->RA_CC+space(20),1,20) # cCANT .Or. SRA->RA_FILIAL # cFANT
+		If !Empty(nTOTCC) 			
+			IMPR(Repli("-",132),"C")
+			DET := STR0015+StrZero(nTotFunc,3)+Space(60)+Transform(nTotCC,cPict2)
+			IMPR(DET,"C")
+			IMPR(Repli("-",132),"C")   
+			nTotCC := 0
+			nTotFunc := 0
+	   Endif 
+	Endif 
+	IF substr(SRA->RA_CC+space(20),1,20) # cCANT .Or. SRA->RA_FILIAL # cFANT
+		cCAnt:= substr(SRA->RA_CC+space(20),1,20) 
+		cFAnt:= SRA->RA_FILIAL
+		DET := DescCc(cCAnt,cFAnt)
+		IMPR(DET,"C")
+ 	Endif      
+ 	If Li >=54
+		IMPR("","C")
+		IMPR("","C")
+ 		Det:= SPACE(15)+Repli("_",25)+SPACE(20)+Repli("_",25)
+		IMPR(DET,"C")
+		Det:= SPACE(20)+STR0017+SPACE(30)+STR0018
+		IMPR(DET,"C")
+		IMPR("","C")
+ 	Endif
+   DET := StrZero(Val(SRA->RA_MAT),6) + "   "+ SubStr(SRA->RA_NOME,1,30)+" "
+   DET += DESCFUN(SRA->RA_CODFUNC,SRA->RA_FILIAL)+ "   "
+   Det += PadR(DTOC(SRA->RA_ADMISSA),10)+"   "+Padr(DTOC(SRA->RA_DTENTRA),10)+"   "
+	DET += Transform( SRA->RA_SALARIO,cPict2)+"   "+Repli("_",10)
+	nTotcc += SRA->RA_SALARIO
+	nTotFunc++
+	nTotSalGer += SRA->RA_SALARIO
+	nTotFunGer++
+	IMPR(DET,"C")
+	dbSelectArea( "SRA" )
+	dbSkip()
+EndDo
+
+If !Empty(nTOTCC) 			
+	IMPR(Repli("-",132),"C")
+	DET := STR0015+StrZero(nTotFunc,3)+Space(60)+Transform(nTotCC,cPict2)
+	IMPR(DET,"C")
+	IMPR(Repli("-",132),"C")   
+Endif 
+
+If !Empty(nTotSalGer) 			
+	DET := STR0016+StrZero(nTotFunGer,3)+Space(60)+Transform(nTotSalGer,cPict2)
+	IMPR(DET,"C")
+	IMPR(Repli("-",132),"C")   
+Endif	
+
+If Li < 54
+   Li := 54
+Endif   
+IMPR("","C")
+IMPR("","C")
+Det:= SPACE(15)+Repli("_",25)+SPACE(20)+Repli("_",25)
+IMPR(DET,"C")
+Det:= SPACE(20)+STR0017+SPACE(30)+STR0018
+IMPR(DET,"C")
+IMPR("","C")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Termino do relatorio													  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SRA")
+dbSetOrder(1)
+Set Filter To
+
+If aReturn[5] = 1
+	Set Printer To
+	Commit
+	ourspool(wnrel)
+Endif
+
+MS_FLUSH()
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ AjustaSX1   ³ Autor ³ Silvia Taguti      ³ Data ³ 18.12.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Ajustar as perguntas no SX1.					              	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ AjustaSX1		                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ RGPR01, Localizacoes...                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function AjustaSx1()
+LOCAL aRegs 	:= {}
+LOCAL cPerg 	:= "RGPR07"
+LOCAL aAreaOld 	:= GetArea()
+Local nX        := 0
+
+AADD(aRegs,{"¨De Sucursal       ?","Filial De          ?","From Branch        ?","mv_ch1","C", 2,0,0,"G","NaoVazio"  ,"mv_par01",""		     ,""		   ,""			  ,"00"  						   ,"",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,"SM0",""})
+AADD(aRegs,{"¨A  Sucursal       ?","Filial At‚         ?","To Branch          ?","mv_ch2","C", 2,0,0,"G","NaoVazio"  ,"mv_par02",""		     ,""		   ,""            ,"00"  						   ,"",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,"SM0",""})
+AADD(aRegs,{"¨De Centro de Costo?","Centro de Custo De ?","From Cost Center   ?","mv_ch3","C", 9,0,0,"G","NaoVazio"  ,"mv_par03",""		     ,""		   ,""            ,"000"						   ,"",""				  ,""				,""			   ,"","",""  	   ,""	   ,""	  ,"SI3",""})
+AADD(aRegs,{"¨A  Centro de Costo?","Centro de Custo At‚?","To   Cost Center   ?","mv_ch4","C", 9,0,0,"G","NaoVazio"  ,"mv_par04",""		     ,""		   ,""            ,"002"					       ,"",""				  ,""			    ,""			   ,"","",""	   ,""	   ,""	  ,"SI3",""})
+AADD(aRegs,{"¨De Matricula      ?","Matricula De       ?","From Registration  ?","mv_ch5","C", 6,0,0,"G","NaoVazio"  ,"mv_par05",""		     ,""		   ,""            ,""						       ,"",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,"SRA",""})
+AADD(aRegs,{"¨A  Matricula      ?","Matricula At‚      ?","To Registration    ?","mv_ch6","C", 6,0,0,"G","NaoVazio"  ,"mv_par06",""		     ,""		   ,""            ,""							   ,"",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,"SRA",""})
+AADD(aRegs,{"¨De Nombre         ?","Nome De            ?","From Name          ?","mv_ch7","C",30,0,0,"G",""          ,"mv_par07",""		     ,""		   ,""            ,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,""   ,""})
+AADD(aRegs,{"¨A  Nombre         ?","Nome At‚           ?","To Name            ?","mv_ch8","C",30,0,0,"G",""          ,"mv_par08",""		     ,""		   ,""            ,"ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ","",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,""   ,""})
+AADD(aRegs,{"¨Situaciones       ?","Situa‡”es          ?","Situations         ?","mv_ch9","C", 5,0,0,"G","fSituacao" ,"mv_par09",""		     ,""		   ,""            ,"ADFT"       			        ,"",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,""   ,""})
+AADD(aRegs,{"¨Categorias        ?","Categorias         ?","Categories         ?","mv_cha","C",10,0,0,"G","fCategoria","mv_par10",""		     ,""		   ,""            ,"*CD**HM*ST" 				    ,"",""				  ,""				,""			   ,"","",""	   ,"" 	   ,""	  ,""   ,""})
+AADD(aRegs,{"¨De Data           ?","Data De            ?","From Date          ?","mv_chb","D", 8,0,0,"G","        "  ,"mv_par11",""		     ,""		   ,""            ,""           				    ,"",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,""   ,""})
+AADD(aRegs,{"¨A Data            ?","Data Ate           ?","To Date            ?","mv_chc","D", 8,0,0,"G","        "  ,"mv_par12",""		     ,""		   ,""            ,""           				    ,"",""				  ,""				,""			   ,"","",""	   ,""	   ,""	  ,""   ,""})
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+For nX:=1 to Len(aRegs)
+	If !(dbSeek(cPerg+StrZero(nx,2)))
+		RecLock("SX1",.T.)
+		Replace X1_GRUPO    with cPerg
+		Replace X1_ORDEM   	with StrZero(nx,2)
+		Replace x1_pergunte	with aRegs[nx][01]
+		Replace x1_perspa   with aRegs[nx][02]
+		Replace x1_pereng   with aRegs[nx][03]
+		Replace x1_variavl	with aRegs[nx][04]
+		Replace x1_tipo		with aRegs[nx][05]
+		Replace x1_tamanho	with aRegs[nx][06]
+		Replace x1_decimal	with aRegs[nx][07]
+		Replace x1_presel   with aRegs[nx][08]
+		Replace x1_gsc      with aRegs[nx][09]
+		Replace x1_valid    with aRegs[nx][10]
+		Replace x1_var01    with aRegs[nx][11]
+		Replace x1_def01    with aRegs[nx][12]
+		Replace x1_defspa1	with aRegs[nx][13]
+		Replace x1_defeng1	with aRegs[nx][14]
+		Replace x1_cnt01    with aRegs[nx][15]
+		Replace x1_var02    with aRegs[nx][16]
+		Replace x1_def02    with aRegs[nx][17]
+		Replace x1_defspa2	with aRegs[nx][18]
+		Replace x1_defeng2	with aRegs[nx][19]
+		Replace x1_cnt02    with aRegs[nx][20]
+		Replace x1_var03    with aRegs[nx][21]
+		Replace x1_def03    with aRegs[nx][22]
+		Replace x1_defspa3	with aRegs[nx][23]
+		Replace x1_defeng3	with aRegs[nx][24]
+		Replace x1_f3     	with aRegs[nx][25]
+		Replace x1_grpsxg 	with aRegs[nx][26]
+		MsUnlock()
+	Endif
+Next
+
+RestArea( aAreaOld )
+Return

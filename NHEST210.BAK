@@ -1,0 +1,202 @@
+	                  /*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³EST210  ºAutor:José Henrique M Felipetto Data ³  09/28/12   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Etiqueta VOLKS pequena                                     º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ EST                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "RWMAKE.CH"
+
+User Function XNHEST211()
+
+	If !Alltrim(Upper(cUsername)) $ "JOSEMF/JOAOFR/MARCOSRR/ALEXANDRERB/DOUGLASSD/GUILHERMEDC/ANNACS"
+		alert("Usuário sem permissão para acessar a rotina! Verifique. ")
+		Return .F.
+	EndIf
+
+	If !Pergunte("EST210",.T.)
+		Return .F.
+	EndIf
+
+	Processa( {|| imprimeEtiq() } , "Imprimindo etiqueta...")
+Return
+
+Static Function imprimeEtiq()
+Private nAlt  := 80
+Private nLar  := 80
+Private nCont := 0
+Private nAltBar := 2.3
+
+	SB1->(dbsetorder(1)) // FILIAL + COD
+	SB1->(dbseek(xFilial("SB1") + mv_par01))
+
+ 	oFnt01  := TFont():New("Arial",,6,,.F.,,,,,.F.)
+ 	oFnt02  := TFont():New("Arial",,15,,.T.,,,,,.F.)
+ 	oFnt03  := TFont():New("Arial",,09,,.T.,,,,,.F.)
+	oFnt04  := TFont():New("Arial",,14,,.F.,,,,,.F.)
+
+   	oPr := tAvPrinter():New("Protheus")
+   	oPr:StartPage()
+
+	For i := 0 to mv_par02 Step 2
+		If nCont > 2
+			oPr:EndPage()
+			nAlt 	:= 80
+			nAltBar := 2.3
+			nCont 	:= 0
+			oPr:StartPage()
+		EndIf
+		If (mv_par02 - i) == 1
+			desenhaEtiq(80,1.9)
+		elseif (mv_par02 - i) == 0
+			exit
+		else
+			desenhaEtiq(80,1.9)
+			desenhaEtiq(1250,11.5)
+		EndIf
+		nAlt += 950
+		nAltBar += 7.8
+		nCont++
+	Next
+
+	oPr:Preview()
+	oPr:End()
+Return
+
+Static Function desenhaEtiq(nLar,nLarBar)
+oPr:Line(nAlt,nLar,nAlt,nLar + 1130) 			 	    // Linha Horizontal de cima CX1
+oPr:Line(nAlt,nLar,nAlt + 845,nLar) 		 	        // Vertical linha esquerda CX1
+oPr:Line(nAlt,nLar + 1130,nAlt + 845, nLar + 1130) 	    // Vertical linha direita CX1
+oPr:Line(nAlt + 845,nLar,nAlt + 845,nLar + 1130) 	    // Linha Horizontal de baixo CX1 
+		
+oPr:Say(nAlt + 30,nLar + 40,OemtoAnsi("WHB"), oFnt02)
+oPr:Say(nAlt + 75,nLar + 40,OemtoAnsi("Fundição"), oFnt02)
+oPr:Line(nAlt,nLar + 300, nAlt + 160, nLar + 300)       // 1ª linha vertical primeira faixa
+oPr:Say(nAlt + 15,nLar + 310,OemtoAnsi("VOLKSWAGEN DO BRASIL"), oFnt03)
+oPr:Line(nAlt + 83,nLar + 300,nAlt + 83,nLar + 750)    // Linha Horizontal que divide o segundo campo da primeira faixa CX01
+oPr:Say(nAlt + 93,nLar + 310,"Cod.Cliente:", oFnt01)
+oPr:Say(nAlt + 110,nLar + 390,"030105401AD", oFnt04)
+oPr:Line(nAlt,nLar + 750, nAlt + 160, nLar + 750)       // 2ª linha vertical primeira faixa
+oPr:Say(nAlt + 10,nLar + 760,"Cod.Fornecedor:", oFnt01)
+oPr:Say(nAlt + 35,nLar + 840,"P479", oFnt04)
+oPr:Line(nAlt + 83,nLar + 750,nAlt + 83,nLar + 1130)    // Linha Horizontal que divide o ultimo campo da primeira faixa CX01
+oPr:Say(nAlt + 93,nLar + 760,"Data:", oFnt01)
+oPr:Say(nAlt + 110,nLar + 800,"", oFnt04)
+/* ----------------- */
+
+oPr:Line(nAlt + 160,nLar,nAlt + 160,nLar + 1130) 	    // 2ª Linha Horizontal CX1
+oPr:Say(nAlt + 170,nLar + 10,"Desenho:", oFnt01)
+MSBAR("CODE128",nAltBar,nLarBar,"032105401AH32P479",oPr,.F., ,.T.  ,0.0270,1.3,NIL,NIL,NIL,.F.,,,.F.)
+oPr:Line(nAlt + 400,nLar,nAlt + 400,nLar + 1130) 	    // 3ª Linha Horizontal CX1
+
+oPr:Line(nAlt + 400,nLar + 850, nAlt + 540, nLar + 850) // 1ª linha vertical terceira faixa
+oPr:Say(nAlt  + 410,nLar + 10,"Denominação", oFnt01)
+oPr:Say(nAlt  + 445,nLar + 150,"BIELA 1.6 L - VW", oFnt04)
+oPr:Say(nAlt  + 410,nLar + 860,"Qtde da Embalagem", oFnt01)
+oPr:Say(nAlt  + 445,nLar + 940,"32", oFnt04)
+oPr:Line(nAlt + 540,nLar,nAlt + 540,nLar + 1130) 	    // 4ª Linha Horizontal CX1
+desQuad(nLar)
+Return
+
+Static Function desQuad(nLar)
+/* Números ODETE */
+/* 1º Quadrado */
+oPr:Line(nAlt + 570,nLar + 20,nAlt + 570,nLar + 100) // 1ª linha Horizontal
+oPr:Line(nAlt + 570,nLar + 20,nAlt + 650,nLar + 20) 			// 1ª linha Vertical
+oPr:Line(nAlt + 570,nLar + 100,nAlt + 650,nLar + 100) // 2ª linha Vertical
+oPr:Line(nAlt + 650,nLar + 20,nAlt + 650,nLar + 100) // 2ª linha Horizontal
+oPr:Say(nAlt + 580,nLar + 30,"63", oFnt04)
+/* --------------- */
+
+/* 2º Quadrado */
+oPr:Line(nAlt + 570,nLar + 120,nAlt + 570,nLar + 200) // 1ª linha Horizontal
+oPr:Line(nAlt + 570,nLar + 120,nAlt + 650,nLar + 120) 			// 1ª linha Vertical
+oPr:Line(nAlt + 570,nLar + 200,nAlt + 650,nLar + 200) // 2ª linha Vertical
+oPr:Line(nAlt + 650,nLar + 120,nAlt + 650,nLar + 200) // 2ª linha Horizontal
+oPr:Say(nAlt + 580,nLar + 130,"64", oFnt04)
+/* --------------- */
+
+/* 3º Quadrado */
+oPr:Line(nAlt + 570,nLar + 220,nAlt + 570,nLar + 300) // 1ª linha Horizontal
+oPr:Line(nAlt + 570,nLar + 220,nAlt + 650,nLar + 220) // 1ª linha Vertical
+oPr:Line(nAlt + 570,nLar + 300,nAlt + 650,nLar + 300) // 2ª linha Vertical
+oPr:Line(nAlt + 650,nLar + 220,nAlt + 650,nLar + 300) // 2ª linha Horizontal
+oPr:Say(nAlt  + 580,nLar + 230,"65", oFnt04)
+/* --------------- */
+
+/* 4º Quadrado */
+oPr:Line(nAlt + 570,nLar + 320,nAlt + 570,nLar + 400) // 1ª linha Horizontal
+oPr:Line(nAlt + 570,nLar + 320,nAlt + 650,nLar + 320) // 1ª linha Vertical
+oPr:Line(nAlt + 570,nLar + 400,nAlt + 650,nLar + 400) // 2ª linha Vertical
+oPr:Line(nAlt + 650,nLar + 320,nAlt + 650,nLar + 400) // 2ª linha Horizontal
+oPr:Say(nAlt  + 580,nLar + 330,"66", oFnt04)
+/* --------------- */
+
+/* 5º Quadrado */
+oPr:Line(nAlt + 570,nLar + 420,nAlt + 570,nLar + 500) // 1ª linha Horizontal
+oPr:Line(nAlt + 570,nLar + 420,nAlt + 650,nLar + 420) // 1ª linha Vertical
+oPr:Line(nAlt + 570,nLar + 500,nAlt + 650,nLar + 500) // 2ª linha Vertical
+oPr:Line(nAlt + 650,nLar + 420,nAlt + 650,nLar + 500) // 2ª linha Horizontal
+oPr:Say(nAlt  + 580,nLar + 430,"73", oFnt04)
+/* --------------- */
+
+/* 6º Quadrado */
+oPr:Line(nAlt + 570,nLar + 520,nAlt + 570,nLar + 600) // 1ª linha Horizontal
+oPr:Line(nAlt + 570,nLar + 520,nAlt + 650,nLar + 520) // 1ª linha Vertical
+oPr:Line(nAlt + 570,nLar + 600,nAlt + 650,nLar + 600) // 2ª linha Vertical
+oPr:Line(nAlt + 650,nLar + 520,nAlt + 650,nLar + 600) // 2ª linha Horizontal
+oPr:Say(nAlt  + 580,nLar + 530,"74", oFnt04)
+/* --------------- */
+
+/* 7º Quadrado */
+oPr:Line(nAlt + 570,nLar + 620,nAlt + 570,nLar + 700) // 1ª linha Horizontal
+oPr:Line(nAlt + 570,nLar + 620,nAlt + 650,nLar + 620) // 1ª linha Vertical
+oPr:Line(nAlt + 570,nLar + 700,nAlt + 650,nLar + 700) // 2ª linha Vertical
+oPr:Line(nAlt + 650,nLar + 620,nAlt + 650,nLar + 700) // 2ª linha Horizontal
+oPr:Say(nAlt  + 580,nLar + 630,"75", oFnt04)
+/* --------------- */
+
+/* 1º Quadrado 2ª Linha */
+oPr:Line(nAlt + 690,nLar + 20,nAlt + 690,nLar + 100) // 1ª linha Horizontal
+oPr:Line(nAlt + 690,nLar + 20,nAlt + 770,nLar + 20)  // 1ª linha Vertical
+oPr:Line(nAlt + 690,nLar + 100,nAlt + 770,nLar + 100)// 2ª linha Vertical
+oPr:Line(nAlt + 770,nLar + 20,nAlt + 770,nLar + 100) // 2ª linha Horizontal
+oPr:Say(nAlt  + 700,nLar + 30,"76", oFnt04)
+/* --------------- */
+
+/* 2º Quadrado 2ª Linha*/
+oPr:Line(nAlt + 690,nLar + 120,nAlt + 690,nLar + 200) // 1ª linha Horizontal
+oPr:Line(nAlt + 690,nLar + 120,nAlt + 770,nLar + 120) 			// 1ª linha Vertical
+oPr:Line(nAlt + 690,nLar + 200,nAlt + 770,nLar + 200) // 2ª linha Vertical
+oPr:Line(nAlt + 770,nLar + 120,nAlt + 770,nLar + 200) // 2ª linha Horizontal
+oPr:Say(nAlt  + 700,nLar + 130,"84", oFnt04)
+/* --------------- */
+
+/* 3º Quadrado 2ª Linha*/
+oPr:Line(nAlt + 690,nLar + 220,nAlt + 690,nLar + 300) // 1ª linha Horizontal
+oPr:Line(nAlt + 690,nLar + 220,nAlt + 770,nLar + 220) // 1ª linha Vertical
+oPr:Line(nAlt + 690,nLar + 300,nAlt + 770,nLar + 300) // 2ª linha Vertical
+oPr:Line(nAlt + 770,nLar + 220,nAlt + 770,nLar + 300) // 2ª linha Horizontal
+oPr:Say(nAlt  + 700,nLar + 230,"85", oFnt04)
+/* --------------- */
+
+/* 4º Quadrado 2ª Linha*/
+oPr:Line(nAlt + 690,nLar + 320,nAlt + 690,nLar + 400) // 1ª linha Horizontal
+oPr:Line(nAlt + 690,nLar + 320,nAlt + 770,nLar + 320) // 1ª linha Vertical
+oPr:Line(nAlt + 690,nLar + 400,nAlt + 770,nLar + 400) // 2ª linha Vertical
+oPr:Line(nAlt + 770,nLar + 320,nAlt + 770,nLar + 400) // 2ª linha Horizontal
+oPr:Say(nAlt  + 700,nLar + 330,"86", oFnt04)
+/* --------------- */
+
+oPr:Say(nAlt  + 700,nLar + 420,"Turno: 1º -  (  ) - 2º (  )  - 3º (  ) ", oFnt04)
+oPr:Say(nAlt  + 755,nLar + 420,"Resp:___________________", oFnt04)
+Return

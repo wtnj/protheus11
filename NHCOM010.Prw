@@ -1,0 +1,51 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ NHCOM010        ³ Alexandre R. Bento    ³ Data ³ 23/05/05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Gatilho para permitir incluir Solicitação do MM02         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+
+#include "rwmake.ch"   
+
+User Function NHCOM010()
+
+Local _cCod   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_PRODUTO"})  
+Local _cDescri:= aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C1_DESCRI"})  
+Local _cCodRet:= Acols[n][_cCod] //Pega o codigo do produto
+Local _lOK    := .F.
+                         
+If Subs(Acols[n][_cCod],1,4) == "MM02"                     
+   SX5->(DbSetOrder(1))
+   SX5->(DbSeek(xFilial("SX5")+"ZU")) // Tabela de validação de Usuarios, Grupos e Local Padrão                  
+   While !SX5->(Eof()) .And. SX5->X5_TABELA == "ZU"
+      If Alltrim(Substr(SX5->X5_DESCRI,1,15)) == Upper(Alltrim(cUserName)) //Verifica se o Usuario é o mesmo da tabela ZU no SX5
+	     If Upper(AllTrim(Subs(SX5->X5_DESCRI,16,4))) == SB1->B1_GRUPO //Verifica se o Usuario pode cadastrar este grupo 
+	        _lOK := .T. //Flag de Controle          
+	        Exit //achou força a saida
+	     Endif   
+      Endif
+      SX5->(DbSkip())
+   Enddo
+
+   If !_lOK  // Usuario sem permissão para cadastrar o Grupo
+      MsgBox("Atencao o Grupo MM02 Esta Restrito ao Depto de Manutenção","Atencao Grupo Bloqueado","ALERT")
+      _cCodRet := Space(15)   
+   Endif                        
+
+Endif
+//If !Acols[n][len(aHeader)+1]  //nao pega quando a linha esta deletada
+    //If Subs(Acols[n][_cCod],1,4) == "MM02" .And. !Alltrim(cUserName)$"ACIRR/LAUROB/JEFERSONAV/ADMINISTRADOR" 
+//	   MsgBox("Atencao o Grupo MM02 Esta Restrito ao Depto de Manutenção","Atencao Grupo Bloqueado","ALERT")
+	 //  _cCodRet           := Space(15)
+	 //  Acols[n][_cDescri] := Space(30)  //Pega o codigo do produto
+   // Endif
+//Endif                                                     
+   
+Return(_cCodRet)

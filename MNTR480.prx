@@ -1,0 +1,441 @@
+#INCLUDE "MNTR480.CH"
+#INCLUDE "PROTHEUS.CH"
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MNTR480  ³ Autor ³ Inacio Luiz Kolling   ³ Data ³27/02/2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Comsumo de Produto Por Tipo de  Equipamento                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+FUNCTION MNTR480
+
+LOCAL cSTRING    := "SI3"
+LOCAL cDESC1     := STR0001 //"Relatorio de Consumo de Produto Por Tipo de Equipamento."
+LOCAL cDESC2     := STR0002 //"E permitido selecionar tipo de informacao a ser"
+LOCAL cDESC3     := STR0003 //"apresentada, atraves dos parametros do relatorio."
+LOCAL WNREL      := "MNTR480"
+
+PRIVATE aRETURN  := {STR0004,1,STR0005,2,2,1,"",1} //"Zebrado"###"Administracao"
+PRIVATE nLASTKEY := 0
+PRIVATE TITULO   := STR0006 //"Consumo de Produto Por Tipo de Equipamento"
+PRIVATE TAMANHO  := "M"
+PRIVATE NOMEPROG := "MNTR480"
+PRIVATE nTIPO  := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para qarametros!                        ³
+//³ mv_par01     // De Grupo                                     ³
+//³ mv_par02     // Ate Grupo                                    ³
+//³ mv_par03     // De Produto                                   ³
+//³ mv_par04     // Ate Produto                                  ³
+//³ mv_par05     // De Data Inicio                               ³
+//³ mv_par06     // Ate Data Fim                                 ³
+//³ mv_par07     // De Familia                                   ³
+//³ mv_par08     // Ate Familia                                  ³
+//³ mv_par09     // De Bem                                       ³
+//³ mv_par10     // Ate Bem                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private cPERG := "MNT480"
+Pergunte(cPERG,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WNREL:=SetPrint(cSTRING,WNREL,cPERG,TITULO,cDESC1,cDESC2,cDESC3,.F.,"")
+If nLASTKEY = 27
+   Set Filter To
+   Return
+EndIf
+SetDefault(aRETURN,cSTRING)
+
+If nLASTKEY = 27
+   Set Filter To
+   Return
+EndIf
+
+RptStatus({|lEND| R480IMP(@lEND,WNREL,TITULO,TAMANHO)},TITULO)
+
+Return Nil
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ R480IMP  ³ Autor ³ Inacio Luiz Kolling   ³ Data ³27/02/2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³DESCri‡„o ³ Chamada do Relat¢rio                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MNTR480                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function R480IMP(lEND,WNREL,TITULO,TAMANHO)
+
+LOCAL cRODATXT := ""
+LOCAL nCNTIMPR := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis para controle do cursor de progressao do relatorio ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL nTOTREGS := 0,nMULT := 1,nPOSANT := 4,nPOSATU := 4,nPOSCNT := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Contadores de linha e pagina                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE li := 80,m_pag := 1
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se deve comprimir ou nao                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nTIPO := IIF(aRETURN[4]==1,15,18)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta os Cabecalhos                                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE CABEC1 := STR0017 //"         Produto          Nome Do Produto                             Quantidade"
+PRIVATE CABEC2 := " "
+
+/*
+          1         2         3         4         5         6         7         8         9         0         1         2         3
+012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901
+************************************************************************************************************************************
+          Produto         Descricao                                Quantidade  Un.           Custo
+************************************************************************************************************************************
+Familia.: xxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Bem.....: xxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          xxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx          999.999,99  xxx  999.999.999,99
+          xxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx          999.999,99  xxx  999.999.999,99
+         
+          Total do Bem                                                              999.999.999,99
+         
+          Total da Familia                                                          999.999.999,99
+         
+          Total Geral                                                               999.999.999,99 
+*/
+aCAMPOS  := {}
+AAdd(aCAMPOS,{"CODFAMI" ,"C",06,0})
+AAdd(aCAMPOS,{"BEM"     ,"C",16,0})
+AAdd(aCAMPOS,{"PRODUTO" ,"C",15,0})
+AAdd(aCAMPOS,{"QUANTID" ,"N",09,2})
+AAdd(aCAMPOS,{"CUSTO"   ,"N",12,2})
+
+cTRB := CriaTrab(aCAMPOS)
+USE (cTrb) NEW Exclusive Alias TRB
+Index On CODFAMI+BEM+PRODUTO To (cTRB)
+
+Processa({|lEND| MNTR480STL()},STR0018) //"Processando Itens das O.S. Normais..."
+Processa({|lEND| MNTR480STT()},STR0019) //"Processando Itens das O.S. Historico..."
+ 
+nTotalG := 0.00
+DbSelectArea("TRB")
+DbGotop()
+SetRegua(LastRec())    
+
+Do While !Eof()
+       
+         cFami := TRB->CODFAMI
+         nCustoFam := 0.00
+         
+         If Li > 57 
+            NgSomaLi(58)
+         Else
+            NgSomaLi(58)                            
+            NgSomaLi(58)                               
+         EndIf   
+         DbSelectArea("ST6")
+         DbSetOrder(1)
+         DbSeek(xFILIAL("ST6")+cFAMI)
+         @ Li,000 Psay STR0020+cFAMI+" "+ST6->T6_NOME //"Familia.: "
+         
+         DbSelectArea("TRB")
+         While !Eof() .And. TRB->CODFAMI == cFAMI
+              
+              nCustoBem := 0.00
+              cCodBem := TRB->BEM
+              
+              DbSelectArea("ST9")
+              DbSetOrder(01)
+              DbSeek(xFilial("ST9")+TRB->BEM)
+              If Li > 57 
+                 NgSomaLi(58)
+              Else
+                 NgSomaLi(58)                            
+                 NgSomaLi(58)                               
+              EndIf 
+              @ Li,000 PSay STR0021 //"Bem.....: "
+              @ Li,010 PSay ST9->T9_CODBEM
+              @ Li,025 PSay ST9->T9_NOME
+
+              DbSelectArea("TRB")
+              While !Eof() .And. TRB->CODFAMI == cFAMI .And.;
+                    TRB->BEM == cCodBem
+                    
+                    IncRegua()
+                    DbSelectArea("SB1")
+                    DbSetOrder(1)
+                    DbSeek(xFILIAL("SB1")+TRB->PRODUTO)
+                    NgSomaLi(58)                            
+                    @ Li,010 Psay TRB->PRODUTO Picture "@!"
+                    @ Li,026 Psay SubStr(SB1->B1_DESC,1,40)
+                    @ Li,067 Psay TRB->QUANTID Picture "@E 999,999.99"
+                    @ Li,079 Psay SB1->B1_UM     
+                    @ Li,084 Psay TRB->CUSTO   Picture "@E 999,999,999.99"
+                    nCustoBem := nCustoBem + TRB->CUSTO
+                    DbSelectArea("TRB") 
+                    DbSkip()
+              End
+              If Li > 57 
+                 NgSomaLi(58)
+              Else
+                 NgSomaLi(58)                            
+                 NgSomaLi(58)                               
+              EndIf  
+              @ li,010 Psay STR0022  //"Total do Bem"
+              @ li,084 Psay nCustoBem Picture "@E 999,999,999.99"
+              nCustoFam := nCustoFam + nCustoBem    
+         End
+         If Li > 57 
+            NgSomaLi(58)
+         Else
+            NgSomaLi(58)                            
+            NgSomaLi(58)                               
+         EndIf 
+         @ li,010 Psay STR0023  //"Total da Familia"
+         @ li,084 Psay nCustoFam  Picture "@E 999,999,999.99"
+         nTotalG := nTotalG + nCustoFam
+END         
+If nTotalG > 0  
+    If Li > 57 
+       NgSomaLi(58)
+    Else
+       NgSomaLi(58)                            
+       NgSomaLi(58)                               
+    EndIf 
+    @ li,010 Psay STR0024 //"Total Geral"
+    @ Li,084 Psay  nTotalG  PICTURE "@E 999,999,999.99"
+EndIf
+
+Roda(nCNTIMPR,cRODATXT,TAMANHO)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Apaga arquivo de Trabalho                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DbSelectArea( "TRB" )
+Use
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Devolve a condicao original do arquivo principam             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RetIndex("ST9")
+Set Filter To
+Set Device To Screen
+If aRETURN[5] = 1
+   Set Printer To
+   DbCommitAll()
+   OurSpool(WNREL)
+EndIf
+MS_FLUSH()
+Return Nil
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³MNTR480STL³ Autor ³ Inacio Luiz Kolling   ³ Data ³27/02/2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Processa os itens das O.S. normais                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MNTR480                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function MNTR480STL()
+
+DbSelectArea("STL")
+DbSetOrder(6)
+DbSeek(xFILIAL("STL")+DTOS(MV_PAR05),.T.)
+ProcRegua(LastRec())
+
+Do While !Eof()                            .AND.;
+         STL->TL_FILIAL == xFILIAL("STL") .AND.;
+         STL->TL_DTINICI <= MV_PAR06
+
+         IncProc()
+         If STL->TL_SEQUENC == 0
+            DbSelectArea("STL")
+            DbSkip()
+            Loop
+         EndIf
+         If STL->TL_TIPOREG <> 'P'
+            DbSelectArea("STL")
+            DbSkip()
+            Loop
+         EndIf
+
+         DbSelectArea("STJ")
+         DbSetOrder(1)
+         DbSeek(xFILIAL("STJ")+STL->TL_ORDEM+STL->TL_PLANO)
+         If STJ->TJ_SITUACA <> "L" .Or. stj->tj_tipoos <> "B"
+            DbSelectArea("STL")
+            DbSkip()
+            Loop
+         EndIf
+         
+         DbSelectArea("SB1")
+         DbSetOrder(1)
+         DbSeek(xFILIAL("SB1")+STL->TL_CODIGO)
+         If SB1->B1_GRUPO < MV_PAR01 .OR. SB1->B1_GRUPO > MV_PAR02
+            DbSelectArea("STL")
+            DbSkip()
+            Loop
+         EndIf
+        
+         If STL->TL_CODIGO < MV_PAR03 .OR. STL->TL_CODIGO > MV_PAR04
+            DbSelectArea("STL")
+            DbSkip()
+            Loop
+         EndIf
+         
+         DbSelectArea("ST9")
+         DbSetOrder(1)
+         DbSeek(xFILIAL("ST9")+STJ->TJ_CODBEM)
+         If ST9->T9_CODFAMI < MV_PAR07 .OR. ST9->T9_CODFAMI > MV_PAR08
+            DbSelectArea("STL")
+            DbSkip()
+            Loop
+         EndIf   
+         
+         If STJ->TJ_CODBEM < MV_PAR09 .OR. STJ->TJ_CODBEM > MV_PAR10
+            DbSelectArea("STL")
+            DbSkip()
+            Loop
+         EndIf
+         
+         R480GRTRAB(ST9->T9_CODFAMI,STJ->TJ_CODBEM,STL->TL_CODIGO,STL->TL_QUANTID,STL->TL_CUSTO,STJ->TJ_TERMINO)
+         
+         DbSelectArea("STL")
+         DbSkip()
+End
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³MNTR480STT³ Autor ³ Inacio Luiz Kolling   ³ Data ³27/02/2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Processa os itens das O.S. Historicos                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MNTR480                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function MNTR480STT()
+
+DbSelectArea("STT")
+DbSetOrder(5)
+DbSeek(xFILIAL("STT")+DTOS(MV_PAR05),.T.)
+ProcRegua(LastRec())
+
+Do While !Eof()                            .AND.;
+         STT->TT_FILIAL == xFILIAL("STT") .AND.;
+         STT->TT_DTINICI <= MV_PAR06
+
+         IncProc()
+         If STT->TT_SEQUENC == 0
+            DbSelectArea("STT")
+            DbSkip()
+            Loop
+         EndIf
+         If STT->TT_TIPOREG <> 'P'
+            DbSelectArea("STT")
+            DbSkip()
+            Loop
+         EndIf
+
+         DbSelectArea("STS")
+         DbSetOrder(1)
+         DbSeek(xFILIAL("STS")+STT->TT_ORDEM+STT->TT_PLANO)
+         If STS->TS_SITUACA <> "L" .Or. sts->ts_tipoos <> "B"
+            DbSelectArea("STT")
+            DbSkip()
+            Loop
+         EndIf
+         
+         DbSelectArea("SB1")
+         DbSetOrder(1)
+         DbSeek(xFILIAL("SB1")+STT->TT_CODIGO)
+         If SB1->B1_GRUPO < MV_PAR01 .OR. SB1->B1_GRUPO > MV_PAR02
+            DbSelectArea("STT")
+            DbSkip()
+            Loop
+         EndIf
+          
+         If STT->TT_CODIGO < MV_PAR03 .OR. STT->TT_CODIGO > MV_PAR04
+            DbSelectArea("STT")
+            DbSkip()
+            Loop
+         EndIf
+         
+         DbSelectArea("ST9")
+         DbSetOrder(1)
+         DbSeek(xFILIAL("ST9")+STS->TS_CODBEM)
+         If ST9->T9_CODFAMI < MV_PAR07 .OR. ST9->T9_CODFAMI > MV_PAR08
+            DbSelectArea("STT")
+            DbSkip()
+            Loop
+         EndIf
+
+         If STS->TS_CODBEM < MV_PAR09 .OR. STS->TS_CODBEM > MV_PAR10
+            DbSelectArea("STT")
+            DbSkip()
+            Loop
+         EndIf
+         
+         R480GRTRAB(ST9->T9_CODFAMI,STS->TS_CODBEM,STT->TT_CODIGO,STT->TT_QUANTID,STT->TT_CUSTO,STS->TS_TERMINO)
+         
+         DbSelectArea("STT")
+         DbSkip()
+End
+Return
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Fun‡…o   ³R480GRATRB³ Autor ³ Inacio Luiz Kolling   ³ Data ³21/02/2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Descri‡…o³Grava no arquivo temporario                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MNTR480        !                                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+Static Function R480GRTRAB(cCODFAMI,cBEM,cPROD,nQUANT,nCUSTO,cTERMINO)
+
+DbSelectArea("TRB")
+If !DbSeek(cCODFAMI+cBEM+cPROD)
+   DbAppend()
+   TRB->CODFAMI := cCODFAMI
+   TRB->BEM     := cBEM
+   TRB->PRODUTO := cPROD
+EndIf                                                            
+TRB->QUANTID := TRB->QUANTID+nQUANT                            
+
+If cTERMINO = "S"
+   TRB->CUSTO := TRB->CUSTO + nCUSTO
+Else
+	DbSelectArea("SB1")
+	DbSetOrder(1)
+	If DbSeek(xFilial("SB1")+cPROD)
+	   nCustoProd := nQUANT * SB1->B1_CUSTD
+	   TRB->CUSTO := TRB->CUSTO + nCustoProd
+	EndIf
+EndIf	   
+	
+Return .T.                               

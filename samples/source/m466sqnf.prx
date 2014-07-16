@@ -1,0 +1,132 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 03/05/00
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o	 ³ M466SQNF ³ Autor ³ Jose Lucas		    ³ Data ³ 04.02.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Dialogo para Mostrar a Sequencia da n£mera‡„o de Facturas  ³±±
+±±³          ³ a serem geradas. ( Dados informativos...)                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso		 ³ MATA466													  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function m466sqnf()        // incluido pelo assistente de conversao do AP5 IDE em 03/05/00
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("LRET,_CCTRLCLI,_AARRAYSX5,_CSUCCLIE,_CNFCLIE,_CSERIE")
+SetPrvt("_ATIPO,_CNUMNF,_NNUMNF,_NPOSTIPO,_CDESCRTIPO,_ACAB")
+SetPrvt("_CCADASTRO,NOPCA,OLBX,")
+
+
+lRet := .T.
+
+_cCtrlCli  := Space(06)
+_aArraySX5 := {}
+_cSucClie   := SPACE(4)
+_cNFClie    := SPACE(8)
+_cSerie     := SPACE(3)
+
+_aTipo := {{ "D=Exportaci¢n           "},;
+			  { "I=Resp. Inscripto       "},;
+           { "N=Resp. No Inscripto    "},;
+			  { "P=Servicos Publicos     "},;
+           { "X=Exento                "},;
+           { "E=Deudores del Exterior "},;
+           { "F=Consumidor Final      "},;
+           { "M=Monotributista        "},;
+           { "O=Exento Objetivo       "},;
+           { "S=No Sujeito            "},;
+           { "Z=Sujeto No Categorizado"}}
+
+_cSerie := ExecBlock("M466SER",.F.,.F.)
+
+dbSelectArea("SX5")
+dbSeek(xFilial("SX5")+"01"+_cSerie)
+If ! Found()
+	Help("",1,"NOSERIE")
+	lRet := .F.
+EndIf
+
+If lRet
+
+	_cNumNF := Alltrim(X5_DESCRI)
+	_nNumNF := Val(_cNumNF)
+
+	If cPaisLoc=="MEX"
+  	   _cSucClie:=""
+  	   If mv_par02==1 //formulario proprio
+	      _cNFClie :=Strzero(_nNumNF,TamSX3("F1_DOC")[1])
+	   Else
+	       _cNFClie:=""
+	   Endif   
+	Else   
+	    _cSucClie := Subs(_cNumNF,1,4)
+	    _cNFClie := Subs(_cNumNF,5,8)
+
+	    _nPosTipo := Ascan(_aTipo,{|x| Subs(x[1],1,1) == Subs(SA1->A1_TIPO,1,1)})
+	    If _nPosTipo > 0
+		   _cDescrTipo := _aTipo[_nPosTipo][1]
+	    Else
+		    _cDescrTipo := " "
+	    EndIf
+
+        AADD(_aArraySX5,{ _cSerie, Trans(_cNumNF,"@R 9999-99999999"),SA2->A2_NOME, _cDescrTipo })
+
+	    If Len( _aArraySX5 ) > 0
+
+		   _aCab := { OemToAnsi("Serie"),;
+				 	  OemToAnsi("N£mero"),;
+                      OemToAnsi("Proveedor"),;
+					  OemToAnsi("Tipo") }
+
+		   _cCadastro := "Secuencia de Numeraci¢n de las Facturas"
+
+		   #IFDEF WINDOWS
+
+			    nOpca := 0
+
+			    @ 0,0 TO 160,400 DIALOG oDlg TITLE _cCadastro
+
+				oLbx := RDListBox(0.3, .4, 157, 52, _aArraySX5, _aCab)
+
+				@ 03  ,168 BMPBUTTON TYPE 1 ACTION oOk()// Substituido pelo assistente de conversao do AP5 IDE em 03/05/00 ==> 				@ 03  ,168 BMPBUTTON TYPE 1 ACTION Execute(oOk)
+				@ 17.5,168 BMPBUTTON TYPE 2 ACTION oCancel()// Substituido pelo assistente de conversao do AP5 IDE em 03/05/00 ==> 				@ 17.5,168 BMPBUTTON TYPE 2 ACTION Execute(oCancel)
+
+			    ACTIVATE DIALOG oDlg CENTERED
+
+		   #ENDIF
+ 	    Else
+		    lRet := .F.
+	    EndIf
+    EndIf
+Endif
+
+If nOpcA == 2
+	lRet := .F.
+EndIf
+
+// Substituido pelo assistente de conversao do AP5 IDE em 03/05/00 ==> __Return( {_cSucClie, _cNFClie, _cSerie} )
+Return( {_cSucClie, _cNFClie, _cSerie} )        // incluido pelo assistente de conversao do AP5 IDE em 03/05/00
+
+// Substituido pelo assistente de conversao do AP5 IDE em 03/05/00 ==> Function oOk
+Static Function oOk()
+	nOpcA := 1
+	Close(oDlg)
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 03/05/00 ==> Function oCANCEL
+Static Function oCANCEL()
+	nOpcA := 2
+	Close(oDlg)
+Return

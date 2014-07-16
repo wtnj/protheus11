@@ -1,0 +1,2027 @@
+#INCLUDE "Fivewin.ch"
+#define STR0001  "Confirma"
+#define STR0002  "Redigita"
+#define STR0003  "Abandona"
+#define STR0004  "Redigita"
+#define STR0005  "Abandona"
+#define STR0006  "Confirma"
+#define STR0007  "Abandona"
+#define STR0008  "F‚rias Coletivas / Programadas"
+#define STR0009  "F‚rias Coletivas / Programadas"
+#define STR0010  "Coletivas / Programadas "
+#define STR0011  "Pesquisar"
+#define STR0012  "Calculo"
+#define STR0013  "Impress„o"
+#define STR0014  "Excluir"
+#define STR0015  "Visualizar"
+#define STR0016  "F‚rias Coletivas / Programadas"
+#define STR0017  "Calculo de f‚rias usando como referencia a programa‡„o de f‚rias Informada no"
+#define STR0018  "cad. de provis”es ou f‚rias coletivas informando n§ dias e data de inicio.   "
+#define STR0019  "F‚rias Coletivas / Programadas  "
+#define STR0020  "Calculo de f‚rias usando a programa‡„o de f‚rias Informada no cadastro "
+#define STR0021  "de provis”es ou f‚rias coletivas informando n§ dias e data de inicio.  "
+#define STR0022  "Filial    : "
+#define STR0023  "Matricula : "
+#define STR0024  "Nome      : "
+#define STR0025  "Cancelamento do calculo de f‚rias coletivas ou programadas."
+#define STR0026  "- Log de ocorrencias do Calculo Ferias -"
+#define STR0027  "- Funcionario : "
+#define STR0028  "Inicio Periodo Aquisitivo Superior a Data de Inicio "
+#define STR0029  " em Ferias, Retorno superior a Data inicio das coletivas"
+#define STR0030  " Afastado Periodo : "
+#define STR0031  "SIGA - Folha Pagamento"
+#define STR0032  "Versao "
+#define STR0033  "PARAMETROS SELECIONADOS PELO USUARIO"
+#define STR0034  "<< Final do Log de ocorrencias gerado em "
+#define STR0035  ", as "
+#define STR0036  "Dias Antecipados "
+#define STR0037  "Dias Informados "
+#define STR0038  "Dias Calculados "
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ FERVIAM  ³ Autor ³ R.H.                  ³ Data ³ 04/06/02 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ F‚rias Coletivas / Programadas                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ FERVIAM(void)                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Mensal                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³R.H.        ³10/03/05³999999³Ajuste na apuracao dos dias de ferias do  ³±±
+±±³            ³        ³      ³do proximo periodo quando os dias de direi³±±
+±±³            ³        ³      ³to forem iguais aos dias de gozo de ferias³±±
+±±³            ³        ³      ³do 1o recibo e os dias de ferias coletivas³±±
+±±³            ³        ³      ³forem maiores que os dias de gozo do 1o   ³±±
+±±³            ³        ³      ³periodo.                                  ³±±
+±±³R.H.        ³13/06/05³081645³Ajuste na definicao dos dias de ferias do ³±±
+±±³            ³        ³      ³proximo periodo quando os dias de direito ³±±
+±±³            ³        ³      ³forem menores que os dias de gozo.        ³±±
+±±³R.H.        ³13/06/05³081645³Incluida mensagem quando houver calculado ³±±
+±±³            ³        ³      ³ferias em dois periodos e solicitar o 3o. ³±±
+±±³            ³        ³      ³periodo de ferias antes de fazer um fecha-³±±
+±±³            ³        ³      ³mento mensal.                             ³±±
+±±³R.H.        ³16/06/05³081964³Incluido tratamento p/lancar as faltas no ³±±
+±±³            ³        ³      ³proximo periodo de gozo de ferias.        ³±±
+±±³R.H.        ³27/06/05³------³Compatibilizacao com a versao 8.11        ³±±
+±±³R.H.        ³09/03/06³089698³Ajuste em fApuraD p/tratar os dias de fal-³±±
+±±³            ³        ³      ³tas no periodo ao determinar a quantidade ³±±
+±±³            ³        ³      ³de dias de ferias para o proximo periodo. ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function FERVIAM()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define variaveis para Filtro do Browse                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cFiltraRH
+Local aIndexSRA		:= {}
+
+Private bFiltraBrw	:= { || NIL }
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private nVez       := 1
+Private c__Roteiro := "FER"
+Private lExistGerPFer := ( SR8->(FieldPos( "R8_GERPFER" )) # 0 )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Salva a Integridade dos dados de Entrada                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aPos1 := { 15, 01, 95, 315 }
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define o cabecalho da tela de atualizacoes                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCadastro := OemToAnsi(STR0008) //"F‚rias Coletivas / Programadas"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Array contendo as Rotinas a executar do programa      ³
+//³ ----------- Elementos contidos por dimensao ------------     ³
+//³ 1. Nome a aparecer no cabecalho                              ³
+//³ 2. Nome da Rotina associada                                  ³
+//³ 3. Usado pela rotina                                         ³
+//³ 4. Tipo de Transa‡„o a ser efetuada                          ³
+//³    1 - Pesquisa e Posiciona em um Banco de Dados             ³
+//³    2 - Simplesmente Mostra os Campos                         ³
+//³    3 - Inclui registros no Bancos de Dados                   ³
+//³    4 - Altera o registro corrente                            ³
+//³    5 - Remove o registro corrente do Banco de Dados          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aRotina	:=	{	{ STR0011 ,"PESQBRW"   , 0 , 1},;	//"Pesquisar"
+						{ STR0012 ,"U_GPCALCF" , 0 , 4},; //"Calculo"
+						{ STR0013 ,"GPER130"   , 0 , 4},; //"Impress„o"
+						{ STR0014 ,"U_GPEXCLF" , 0 , 2},; //"Excluir"
+						{ STR0015 ,"M030FER"   , 0 , 2}}  //"Visualizar"
+
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Endereca a funcao de BROWSE                                  ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+dbSelectArea( "SRA" )
+dbGoTop()
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Carregando Filtro de BROWSE                                  ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+cFiltraRH	:= ChkRh( "FERVIAM" , "SRA" , "1" )
+bFiltraBrw	:= { || FilBrowse( "SRA" , @aIndexSRA , @cFiltraRH ) }
+Eval( bFiltraBrw )
+
+//--Seta e Carrega os Mnemonicos.
+SetMnemonicos(NIL,NIL,.T.)
+
+mBrowse( 6, 1,22,75,"SRA",,,,,,fCriaCor())
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Retirando Filtro do Browse                                   ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+EndFilBrw( "SRA" , aIndexSRA )
+
+Return( NIL )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ GPCALCF  ³ Autor ³ R.H.                  ³ Data ³          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Programa Para informacoes dos dados de ferias a serem      ³±±
+±±³          ³ Calculados                                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ GPCALCF()                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function GPCALCF()
+Local aSays			:= {}
+Local aButtons		:= {}
+Local aRegs         := {}
+Local nRecno		:= SRA->( Recno() )
+Local nIndexOrd		:= SRA->( IndexOrd() )
+
+Private lAbortPrint := .F.
+Private cCadastro	:= OemToAnsi(STR0016) //"F‚rias Coletivas / Programadas"
+Private nSavRec
+
+nOpca := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inclusao das perguntas do calculo de ferias			  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+// Grupo/Ordem/Pergunta/Perspa/Pereng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05/XF3
+aAdd(aRegs,{"FERVMC","01","Calcular F‚rias    ?","¨Calcul.Vacaciones ?","Calculate Vacations?","mv_ch1","N",01,0,1,"C",""				,"mv_par01","Coletivas"		,"Colectivas","General","","","Programadas","Programadas","Programmed","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","02","Calcular em Ordem  ?","¨Orden de Calculo  ?","Calculate sorted by?","mv_ch2","N",01,0,1,"C",""				,"mv_par02","Matricula"		,"Matricula","Registration","","","Centro Custo","Centro de Costo","Cost Center","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","03","Filial De          ?","¨De Sucursal       ?","From Branch        ?","mv_ch3","C",02,0,0,"G","Naovazio"		,"mv_par03",""				,"","","01","","","","","","","","","","","","","","","","","","","","","SM0","" })
+aAdd(aRegs,{"FERVMC","04","Filial At‚         ?","¨A  Sucursal       ?","To Branch          ?","mv_ch4","C",02,0,0,"G","Naovazio"		,"mv_par04",""				,"","","99","","","","","","","","","","","","","","","","","","","","","SM0","" })
+aAdd(aRegs,{"FERVMC","05","Centro de Custo De ?","¨De Centro de Costo?","From Cost Center   ?","mv_ch5","C",09,0,0,"G","Naovazio"		,"mv_par05",""				,"","","000000000","","","","","","","","","","","","","","","","","","","","","SI3","" })
+aAdd(aRegs,{"FERVMC","06","Centro de Custo At‚?","¨A  Centro de Costo?","To   Cost Center   ?","mv_ch6","C",09,0,0,"G","Naovazio"		,"mv_par06",""				,"","","999999999","","","","","","","","","","","","","","","","","","","","","SI3","" })
+aAdd(aRegs,{"FERVMC","07","Matricula De       ?","¨De Matricula      ?","From Registration  ?","mv_ch7","C",06,0,0,"G","Naovazio"		,"mv_par07",""				,"","","000000","","","","","","","","","","","","","","","","","","","","","SRA","" })
+aAdd(aRegs,{"FERVMC","08","Matricula At‚      ?","¨A  Matricula      ?","To Registration    ?","mv_ch8","C",06,0,0,"G","Naovazio"		,"mv_par08",""				,"","","999999","","","","","","","","","","","","","","","","","","","","","SRA","" })
+aAdd(aRegs,{"FERVMC","09","Categorias         ?","¨Categorias        ?","Categories         ?","mv_ch9","C",10,0,0,"G","fCategoria"	,"mv_par09",""				,"","","*CD**HM*ST","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","10","Dias Ferias Colet. ?","¨Dias Vac. Colect. ?","Days Collect       ?","mv_cha","N",02,0,0,"G",""				,"mv_par10",""				,"","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","11","Dias Abono Colet.  ?","¨Dias Abono Colect.?","Days Collect Bonus ?","mv_chb","N",02,0,0,"G",""				,"mv_par11",""				,"","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","12","Func. Menos Um Ano ?","¨Empl. Menos Un A¤o?","Less than Year Empl?","mv_chc","N",01,0,1,"C",""				,"mv_par12","Dias Coletiva","Dias Colectiva","Collective Days","","","Dias de Direito","Dias de Derecho","Days by Rights","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","13","Ini. Fer. Coletivas?","¨Ini. Vacac. Colec.?","Col. Vacancy Start ?","mv_chd","D",08,0,0,"G",""				,"mv_par13",""				,"","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","14","Data Aviso.Fer.Col.?","¨Fch Avis.Vacac.Col?","Col.Vacancy Note Dt?","mv_che","D",08,0,0,"G",""				,"mv_par14",""				,"","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","15","Data Pagto.Fer.Col.?","¨Fch Pago Vacac.Col?","Colect.Vac.Paym.Dt.?","mv_chf","D",08,0,0,"G",""				,"mv_par15",""				,"","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","16","Dt Inicio Prog. De ?","¨De Fch.Inicio Prog?","From Prog.Beg.Date ?","mv_chg","D",08,0,0,"G",""				,"mv_par16",""				,"","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","17","Dt Inicio Prog. At‚?","¨A  Fch.Inicio Prog?","To Progr.End. Date ?","mv_chh","D",08,0,0,"G",""				,"mv_par17",""				,"","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","18","M‚dia do Mˆs Atual ?","¨Promed. Mes Actual?","Current Month Aver.?","mv_chi","N",01,0,2,"C",""				,"mv_par18","Sim"			,"Si"		,"Yes"		,"","","Nao"		,"No"			,"No"		,"","",""		,""		,""		,"","","","","","","","","","","","","" })
+aAdd(aRegs,{"FERVMC","19","Calcular p/ periodo?","¨Calcula p/ periodo?","Calc. to the period?","mv_chj","N",01,0,3,"C",""				,"mv_par19","Vencido"		,"Vencido"	,"Overdue"	,"","","A Vencer"	,"Por Vencer"	,"Not Ovd."	,"","","Ambos"	,"Ambos","Both"	,"","","","","","","","","","","","","" })
+ValidPerg(aRegs,"FERVMC",.F.) // Incluir perguntas
+
+Pergunte("FERVMC",.F.)
+
+AADD(aSays,OemToAnsi(STR0017) )  //"Calculo de f‚rias usando como referencia a programa‡„o de f‚rias Informada no"
+AADD(aSays,OemToAnsi(STR0018) )  //"cad. de provis”es ou f‚rias coletivas informando n§ dias e data de inicio.   "
+
+AADD(aButtons, { 5,.T.,{|| Pergunte("FERVMC",.T. ) } } )
+AADD(aButtons, { 1,.T.,{|o| nOpca := 1,IF(gpconfOK(),FechaBatch(),nOpca:=0) }} )
+AADD(aButtons, { 2,.T.,{|o| FechaBatch() }} )
+	
+FormBatch( cCadastro, aSays, aButtons )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nOpca == 1
+	ProcGpe({|lEnd| FERVMCProc()},,,.T.)  // Chamada do Processamento
+Endif
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Reposiciona ponteiro nos Bancos de Dados                     ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+dbSelectArea("SRA")
+dbSetOrder( nIndexOrd )
+dbGoto( nRecno )
+
+Return( NIL )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³FERVMCProc³ Autor ³ R.H.                  ³ Data ³          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Processa o calculo de ferias coletiva ou programadas       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ FERVMCProc()                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function FERVMCProc()
+Local lContinua := .T.
+Local cArqDbf,cArqNtx
+Local cFilAux				  // Utilizada para preservar conteudo de cFilAnt
+Local dDtIniAf,dDtRetAf       // Inicio e Retorno do Afastamento
+Local dDtBusFer  := CTOD("")  // Data de busca das ferias quando aberto novo periodo
+Local dDtGravFer := CTOD("")  // Data de gravacao no RR_DATA
+Local nFeProxPer := 0         // Dias de ferias do proximo periodo aquisitivo
+Local nAbProxPer := 0         // Dias de Abono  do proximo periodo aquisitivo
+Local nRecSRH    := 0         // Recno da feria que servira para calculo da proxima feria
+Local lExistDtItem            // Indica se existe o campo "RH_DTITENS"
+Local nx		 := 0
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Variaveis de Acesso do Usuario                               ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+Local cAcessaSRA := &( " { || " + IF( Empty( cAcessaSRA := ChkRH( "FERVIAM" , "SRA" , "1" ) ) , ".T." , cAcessaSRA ) + " } " )
+
+Private aRotFer
+Private aRoteiro   := {}
+Private aTabFer    := {}    			// Tabela para calculo dos dias de ferias
+Private c__Roteiro := "FER"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Privadas do Programa                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private  aTabIr[5,3] // Tabela de Ir
+Private  aTInss[3,3] // Tabela de Inss
+Private  nValArred   := 0.00
+Private  nMediaOut   := nMediaHrs := nMedia13s := nAntec13o := 0.00
+Private  nBaseCalc   := 0
+Private  aConvencao  := {}
+Private  nPerc       := 100.00
+
+Private cPerFeAc    := GetMv( "MV_FERPAC",,"N" ) //-- Ferias Por Ano Civil
+Private cInssFM		:= GetMv( "MV_DINSSFM" )  // Desc.Inss Ferias MS
+Private cTAfaFer    := GetMv( "MV_TAFAFER" )  // Trata Perda de Periodo Para Afastados
+Private cDia2501    := Getmv( "MV_DIA2501" )  // Dias de licenca remunerada
+
+Private cTabela, cTabAnt, nCasasPrcVen, nCasasPrcTab
+Private cTurnoAnt  := "   "
+Private aCodFol    := {}                                       // Matriz com Codigo da Folha
+Private aPD        := {}                                       // Matriz com as Verbas de Cada Funcionario
+Private aPdv       := {}                                       // Matriz com as Incidencias das Verbas Usadas no Calculo
+Private Val_SalMin := 0.00                                     // Valor Salario Minimo
+Private nFaltas    := nDescFal := 0
+Private nLimSF1    := nVal_SF1 := nLimSF2 := nVal_SF2 := 0.00  // Tab. Sal. Familia
+Private nDlicRem   := nDlicNaoRem := nDiasVen := 0
+
+Private Sind_ant   := "  "
+Private Mediasem   := 12
+Private nULT_DIA   := F_ULTDIA(dDataBase)
+Private nDAntPer   := 0
+Private lNovoPer   := .T.
+Private lGera2Rec  := .F.
+Private nDferven   := 0
+Private nDferave   := 0			
+Private nDDobro    := 0
+Private dDataIni
+Private dDataFim
+Private dDtBasFe
+Private lTDiasFer
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis De Retorno Da fValoriza                            ³  
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private nAdtServ := nPeric := nInsal := 0.00      // Valores dos Adicionais
+Private cCodAdt  := cCodIns := Space(3)           // Codigos que Foram Gerados
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis do Salario                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private Salario := SalHora := SalDia := SalMes := nSalPg := 0.00
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a entrada de dados do arquivo                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private nValDesc := nValProv := 0.00
+
+Private Normal   := SvNormal   := 0
+Private Descanso := SvDescanso := 0
+Private aLogFile := {}
+Private aLogTitle := { UPPER(STR0026) } //'- Log de ocorrencias do Calculo Ferias -'
+
+Private cDescTipAfa
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica a existencia dos campos de programacao ferias no SRF³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private lTemCpoProg := fTCpoProg()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa variaveis de memoria                     		 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SX3")
+dbSeek( "SRH")
+While ! Eof() .and. (X3_ARQUIVO == "SRH")
+	If X3_CONTEXT # "V"
+		cCampo   := "M->"+X3_CAMPO
+		cX3Campo := "SRH->"+X3_CAMPO
+		If ValType(&cX3Campo) = "C"
+			&cCampo := ""
+		ElseIf ValType(&cX3Campo) = "N"
+			&cCampo := 0
+		ElseIf ValType(&cX3Campo) = "D"
+			&cCampo := CtoD("")
+		ElseIf ValType(&cX3Campo) = "L"
+			&cCampo := .F.
+		EndIf
+	EndIf
+	dbSkip()
+Enddo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ mv_par01  - Calcular Ferias Coletivas Programadas            ³
+//³ mv_par02  - Calcular por 1-Matricula  2-C.Custo              ³
+//³ mv_par03  - Filial De                                        ³
+//³ mv_par04  - Filial Ate                                       ³
+//³ mv_par05  - Centro de Custo De                               ³
+//³ mv_par06  - Centro de Custo Ate                              ³  
+//³ mv_par07  - Matricula De                                     ³
+//³ mv_par08  - Matricula Ate                                    ³
+//³ mv_par09  - Categoria do Funcionario                         ³
+//³ mv_par10  - Dias Ferias Coletivas                 			 ³
+//³ mv_par11  - Dias de Abono de Coletivas						 ³
+//³ mv_par12  - Func. Menos Um Ano?  1-Dias Coletiva 2-Dias de Direito
+//³ mv_par13  - Inicio Ferias Coletivas                          ³
+//³ mv_par14  - Data Inicio De                                   ³ 
+//³ mv_par15  - Data Inicio Ate                                  ³ 
+//³ mv_par16  - Data Pagamento Ferias Coletivas                  ³ 
+//³ mv_par17  - Data Aviso das Ferias Coletivas                  ³
+//³ mv_par18  - Media do Mes Atual                               ³
+//³ mv_par19  - Calcular periodos  1-Vencido 2-A vencer 3-Ambos  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carregando as Perguntas                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nColPro     :=  mv_par01
+nOrdem      :=  mv_par02
+cFilDe      :=  mv_par03
+cFilAte     :=  mv_par04
+cCcDe       :=  mv_par05
+cCcAte      :=  mv_par06
+cMatDe      :=  mv_par07
+cMatAte     :=  mv_par08
+cCategoria  :=  mv_par09
+nDiasCol    :=  mv_par10
+nDAboCol    :=  mv_par11
+nColeDire   :=  mv_par12
+dDtInCol    :=  mv_par13
+dDtAviso    :=  mv_par14
+dDtRecibo   :=  mv_par15
+dDataDe     :=  mv_par16
+dDataAte    :=  mv_par17
+lMesAtu     :=  If(mv_par18 == 1, .T.,.F.)
+nVenAveAmb  :=  mv_par19
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verificar Quando Coletivas se o Dias N„o Estao Zerado        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nColPro == 1 .And. nDiasCol+nDAboCol == 0
+	Help(' ',1,"DIASZERO")
+	Return
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verificar Quando Coletivas se a Data N„o Esta Vazia          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nColPro == 1
+	If Empty( dDtInCol )
+		Help(' ',1,"DATABRAN")
+		Return
+	Endif
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verificar Quando Programadas se a Datas N„o Estao Vazias     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nColPro == 2
+	If Empty( dDataDe ) .Or. Empty( dDataAte )
+		Help(' ',1,"DATABRAN1")
+		Return
+	Endif
+Endif
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³	PROCEDIMENTOS PARA CALCULO DAS FERIAS - DEFINICAO DO PARAMETRO "MV_CALCNPA"       ³
+³ ATRAVES DESTE PARAMETRO O SISTEMA INICIARA UM NOVO PERIODO AQUISITIVO CASO O PERIODO³
+³ ATUAL NAO TENHA SALDO SUFICIENTE PARA CONCESSAO DOS DIAS DE GOZO DESEJADO-ORCAMENTO ³
+ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+| O conceito de anterior + atual + seguinte tem como referencia a data base (atual)   ³
+³ 1  - Calcula periodo aquisitivo anterior (truncando)                	  			  ³
+³ 1A - Calcula periodo aquisitivo anterior (avancando)               	  			  ³
+³ 2  - Calcula periodo aquisitivo anterior (avacando)  + atual (truncando)            ³
+³ 2A - Calcula periodo aquisitivo anterior (avancando) + atual (avancando)            ³
+³ 3  - Calcula periodo aquisitivo anterior (avancando) + atual (avancando) + seguinte ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+cCalcNovPer  := " "
+lCAboNovPer  := .F.
+lGLicNaoRem  := .F.
+lTrataNPA    := .F.
+lExistDtItem := ( SRH->(FieldPos( "RH_DTITENS" )) # 0 )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Temporario para Calculo de Medias                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Cria_Trp(@cArqDbf,@cArqNtx)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Procura primeiro funcionario                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SRA" )
+nSavRec  := Recno()
+dbGotop()
+If nOrdem == 1
+	dbSetOrder( 1 )
+	dbSeek( cFilDe + cMatDe , .T. )
+Elseif nOrdem == 2
+	dbSetOrder( 2 )
+	dbSeek( cFilDe + cCcDe + cMatDe , .T. )
+Endif
+cFilAnte := "!!"
+cFunAnte := "!!!!!!"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega Regua Processamento	                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+GpProcRegua(SRA->(RecCount()))
+
+While !Eof()
+
+	IF lAbortPrint
+		Break
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste o De / Ate  nOrdem = 1-Matricula / 2-Centro Custo   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IF nOrdem == 1
+		If Eof() .Or. ( SRA->RA_FILIAL + SRA->RA_MAT > cFilAte + cMatAte )
+			Exit
+		Endif
+	ElseIf nOrdem == 2
+		If Eof() .Or. ( SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT > cFilAte + cCcAte + cMatAte )
+			Exit
+		Endif
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Testa Categoria do Funcionario                               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !(SRA->RA_CATFUNC $ cCategoria)
+		dbSelectArea("SRA")
+		dbSkip()
+		Loop
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Verifica Se Funcionario Esta Demitido ou Afastado            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	If SRA->RA_SITFOLH$ "D*E"
+		dbSelectArea("SRA")
+		dbSkip()
+		Loop
+	Endif
+	
+	/*
+	ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	³Consiste Filiais e Acessos                                             ³
+	ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+	IF !( SRA->RA_FILIAL $ fValidFil() ) .or. !Eval( cAcessaSRA )
+		dbSelectArea("SRA")
+      	dbSkip()
+       	Loop
+	EndIF
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Movimenta cursor para movimentacao da barra                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	GpIncProc(SRA->RA_FILIAL + " - " + SRA->RA_MAT + " - " + SRA->RA_NOME)
+
+	If SRA->RA_FILIAL # cFilAnte
+		aPdv     := {}
+		cFilAnte := SRA->RA_FILIAL
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Arredondamento                                               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		nValArred := Getmv("MV_ARREDFE")
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carregando Roteiro de Calculo                                ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aRoteiro := {}
+		If !fCarRoteiro( cFilAnte,aRoteiro,c__Roteiro )
+			Exit
+		Endif
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+		//³ Convencao Coletiva                                           ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		Conv_Cole(@aConvencao,SRA->RA_FILIAL)
+			
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carregando Tabela de I.R.                                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !CargaIr(@aTabIr,MesAno(If(nColPro==1,dDtInCol,dDataDe)))
+			Exit
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carregando a  Tabela do INSS                                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Car_inss(@aTInss,MesAno(dDataBase))
+			Exit
+		EndIf
+			
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carregando a Tabela do Salario Minimo                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Sal_Min(@Val_SalMin,MesAno(dDataBase))
+			Exit
+		EndIf
+			
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carregando a Tabela do Salario Familia                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Sal_Fami(@nLimSF1,@nVal_SF1,@nLimSF2,@nVal_SF2,MesAno(dDataBase))
+			Exit
+		EndIf
+			
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carrega Variaveis Codigos da Folha                           ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Fp_CodFol(@aCodFol,SRA->RA_FILIAL)
+			Exit
+		Endif
+			
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Parametro Composicao do Mes                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+        If !CompMes(@Normal,@Descanso,MesAno(dDataBase))
+            Exit
+        Endif
+        SvNormal    := Normal
+        SvDescanso  := Descanso
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carrega Adicional por Tempo de Servico                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		Carr_Adts(aCodfol)
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carrega parametros de "Novo Periodo" a cada filial	         ³
+		//³ MV_CALCNPA - Procedimentos para o calculo                    ³
+		//³ MV_CABONPA - Calcula abono para o novo periodo               ³
+		//³ MV_GLINREM - Gerar registro de licenca nao remunerada (SR8)  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If cPerFeAc == "S" .And. lExistDtItem
+			cFilAux     := cFilAnt
+			cFilAnt     := cFilAnte
+			cCalcNovPer :=   GetMv("MV_CALCNPA",, " ")
+			lCAboNovPer := ( GetMv("MV_CABONPA",, "1") == "1" )
+			lGLicNaoRem := ( GetMv("MV_GLINREM",, "2") == "1" )
+			cFilAnt     := cFilAux
+			lTrataNPA   := ( !Empty(cCalcNovPer) )
+		EndIf
+
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//| Carrega tabela para apuracao dos dias de ferias - aTabFer    |
+	//| 1-Meses Periodo    2-Nro Periodos   3-Dias do Mes    4-Fator |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	fTab_Fer(@aTabFer)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Busca Composicao do Mes do Parametro Turno de Trabalho       ³
+	//³ Se Estiver Zerado, Considera Parametro Normal                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cTurnoAnt # SRA->RA_TNOTRAB
+        dbSelectArea( "SR6" )
+        If dbSeek( If(cFilial == "  ","  ",SRA->RA_FILIAL ) + SRA->RA_TNOTRAB )
+            Normal   := If (SR6->R6_HRNORMA > 0 , SR6->R6_HRNORMA,SvNormal)
+            Descanso := If (SR6->R6_HRDESC  > 0 , SR6->R6_HRDESC ,SvDescanso)
+        Else
+            Normal   := SvNormal
+            Descanso := SvDescanso
+        Endif
+        Turnoant := SRA->RA_TNOTRAB
+    Endif
+    If Normal = 0 .Or. Descanso = 0
+        Help(' ',1,"GPMSHNODE")
+        Exit
+    Endif
+
+   	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se novo funcionario, zerar dias do proximo periodo aquisitivo³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cFunAnte # SRA->RA_MAT
+		cFunAnte   := SRA->RA_MAT
+		nFeProxPer := 0
+		nAbProxPer := 0
+		nRecSRH    := 0
+	EndIf
+
+    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Variaveis de Medias                                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nMediaOut := nMediaHrs := nMedia13s := nAntec13o := 0.00
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Calculando D.S.R. Sobre Medias                               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Dsr_hrex := Dsr_hhex := nBaseCalc := 0.00
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Soma as Verbas de Provento Para 1/3                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nValProv := 0.00
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Soma as Verbas de Provento Total                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nValProvT := 0.00
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Soma as Verbas de Desconto                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nValDesc := 0.00
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Indica novo periodo de ferias                                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lNovoPer := .T.
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Indica que devera gerar 2 recibos de ferias					 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lGera2Rec  := .F.
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿			
+	//| Observacao do tipo de afastamento que ocasionou a perda ou   |
+	//| alteracao do periodo aquisitivo.							 |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cDescTipAfa := ""
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Data de pagamento do recibo quando abrir novo per. aquisitivo³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dDtBusFer := CTOD("")
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Variavel que define se existem dias de ferias    			 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lTDiasFer := .T.
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Executa a rotina de calculo de coletivas ou programadas      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nColPro == 1
+		If !fCColet(@nFeProxPer,@nAbProxPer,@dDtBusFer,nRecSRH)
+			Loop
+		EndIf
+	Else
+		If !fCProgr(@nFeProxPer,@nAbProxPer,@dDtBusFer,nRecSRH)
+			Loop
+		EndIf
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se calcula periodo vencido ou a vencer		         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nVenAveAmb # 3
+		If !((nVenAveAmb == 1 .And. M->RH_DBASEAT <= dDataBase) .Or.;
+		     (nVenAveAmb == 2 .And. M->RH_DBASEAT > dDataBase))
+			dbSelectArea("SRA")
+    	  	dbSkip()
+       		Loop
+		EndIf
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se funcionario tem afastamento no inicio das ferias ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dDtIniAf := Ctod("")
+	dDtretAf := Ctod("")
+	fChkAfas(SRA->RA_FILIAL,SRA->RA_MAT,M->RH_DATAINI,@dDtIniAf,@dDtRetAf)
+	If !Empty(dDtIniAf) .And. (Empty(dDtRetAf) .Or. dDtRetAf >= M->RH_DATAINI)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Adiciona no Array de Processamento os funcionarios afastados ³
+		//³ que nao foram calculadas as ferias							 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aAdd(aLogFile, STR0027  + SRA->RA_MAT+"-"+SRA->RA_NOME + STR0030 + DTOC(ddtIniAf) + "  " + DTOC(dDtRetAf)) // '- Funcionario : '###' Afastado Periodo : '
+		dbSelectArea( "SRA" )
+		dbSkip()
+		Loop
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Carrega as Variaveis do Salario Incorporado                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Salario := SalHora := SalDia := SalMes := 0.00
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Salvar Roteiro Para Rodar o Incorpora com Roteiro da Folha	 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aRotFer  := aClone(aRoteiro)
+	aRoteiro := {}
+	fSalInc(@Salario,@SalMes,@SalHora,@Saldia)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Voltar o Roteiro de Ferias Apos o Incorpora					 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	c__Roteiro := "FER"
+	aRoteiro   := aClone(aRotFer)
+	aPd  	   := {}
+	aPdv 	   := {}
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Iguala Variaveis Como campo de Memoria                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	M->RH_SALMES  := Salmes
+	M->RH_SALHRS  := SalHora
+	M->RH_SALDIA  := SalDia
+	M->RH_MEDATU  := If( lMesAtu, "S", "N" )
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Limpa Arquivo par Calcular Medias							 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea( "TRP" )
+	Zap
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Retorna area aberta para o SRA   							 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea( "SRA" )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Executa as Formulas Roteiro                                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !ExecRote(SRA->RA_FILIAL,aRoteiro,@lContinua,.F.)
+		If !lContinua
+			Break
+		Endif
+		dbSelectArea( "SRA" )
+		dbSkip()
+		Loop
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Grava Ferias                                                 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Begin Transaction
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Somente grava SRA se dias de ferias > 0, mas registra no SRH ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If M->RH_DFERIAS + M->RH_DABONPE > 0
+			dbSelectArea( "SRA" )
+			RecLock("SRA",.F.,.T.)
+			SRA->RA_SITFOLH := "F"
+
+			If lTDiasFer
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Grava os afastamentos de ferias e licenca remunerada no SR8  ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				fGFerSR8(dDataIni, dDataFim, nDLicRem, nDlicNaoRem)
+			EndIf
+		EndIf
+
+		dbSelectArea( "SRH" )
+		If !dbSeek( SRA->RA_FILIAL + SRA->RA_MAT + DtoS( M->RH_DATABAS ) ) .Or. !lNovoPer
+			RecLock("SRH",.T.,.T.)
+		Else
+			RecLock("SRH",.F.,.T.)
+		Endif
+		SRH->RH_FILIAL  := SRA->RA_FILIAL
+		SRH->RH_MAT     := SRA->RA_MAT
+		SRH->RH_SALMES  := SalMes
+		SRH->RH_SALDIA  := SalDia
+		SRH->RH_SALHRS  := SalHora
+		SRH->RH_DATABAS := M->RH_DATABAS
+		SRH->RH_DBASEAT := M->RH_DBASEAT
+		SRH->RH_DIALREM := M->RH_DIALREM
+		SRH->RH_DIALRE1 := M->RH_DIALRE1		
+		SRH->RH_DFERVEN := M->RH_DFERVEN
+		SRH->RH_DFERIAS := M->RH_DFERIAS
+		SRH->RH_DABONPE := M->RH_DABONPE
+		SRH->RH_PERC13S := M->RH_PERC13S
+		SRH->RH_DATAINI := dDataIni
+		SRH->RH_DATAFIM := dDataFim
+		SRH->RH_DFALTAS := nFaltas
+		SRH->RH_DTAVISO := dDtAviso
+		SRH->RH_DTRECIB := dDtRecibo
+		SRH->RH_SALMIN  := Val_SalMin
+		SRH->RH_TIPCAL  := If( nColPro == 1 , "C" , "N" )
+		SRH->RH_MEDATU  := M->RH_MEDATU
+		SRH->RH_OBSERVA := cDescTipAfa // Descricao do afastamento que ocasionou a perda (se houver)
+		If lTrataNPA
+			SRH->RH_DTITENS := dDtBusFer
+		EndIf
+
+		dbSelectArea( "SRR" )
+		dDtGravFer := If(Empty(dDtBusFer), dDtRecibo, dDtBusFer)
+		For nx = 1 To Len(aPd)
+			If aPd[nx,1] # "   " .And. aPd[nx,9] # "D"
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Se ja tiver gravado Id. deducao dependente, ler proxima verba³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			    If aPd[nx,1] == aCodFol[060,1] .And. dbSeek(SRA->RA_FILIAL + SRA->RA_MAT + "F" + DtoS(dDtRecibo) + aPd[nx,1] )
+					Loop
+			    EndIf
+
+				If dbSeek(SRA->RA_FILIAL + SRA->RA_MAT + "F" + DtoS(dDtGravFer) + aPd[nx,1] )
+					RecLock("SRR",.F.,.T.)
+				Else
+					RecLock("SRR",.T.,.T.)
+				Endif
+				SRR->RR_FILIAL := SRA->RA_FILIAL
+				SRR->RR_MAT    := SRA->RA_MAT
+				SRR->RR_DATA   := dDtGravFer
+				SRR->RR_PD     := aPd[nx,1]
+				SRR->RR_TIPO1  := aPd[nx,6]
+				SRR->RR_TIPO2  := aPd[nx,7]
+				SRR->RR_HORAS  := aPd[nx,4]
+				SRR->RR_VALOR  := aPd[nx,5]
+				SRR->RR_TIPO3  := "F"
+			Endif
+		Next
+	End Transaction
+	dbSelectArea( "SRA" )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Ponto de Entrada p/ Alterar valores de Ferias (nos arquivos) |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ExistBlock("GP030FER")
+		EXECBLOCK("GP030FER",.F.,.F.)
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se houver dias p/ proximo periodo, guarda recno para calculo ³
+	//³ da nova ferias, caso contrario calcula o proximo funcionario ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nFeProxPer + nAbProxPer > 0
+		nRecSRH := SRH->(RECNO())
+	Else
+		dbSkip()
+	EndIf
+Enddo
+TRP->(dbCloseArea())
+fErase(cArqNtx + OrdBagExt())
+fErase(cArqDbf + ".DBF")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Recupera a Integridade dos dados                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SRA" )
+dbSetOrder( 1 )
+dbGoTo(nSavRec)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Apresenta Tela com Log de erros								 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+fMakeLog( {aLogFile}, aLogTitle, "FERVMC", .T.)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ fCColet  ºAutor  ³ R.H.               º Data ³  26/09/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Trata os calculos de ferias coletivas                      º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³                                                            º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fCColet(nFeProxPer,nAbProxPer,dDtBusFer,nRecSRH)
+Local nDMes12 := nDMes01 := 0
+Local nIdade,lIdade
+Local nDiasMes,nDiasMse
+Local lNaoTemUmAno
+Local nFalColet
+Local nUltDia
+Local dDtBasFim
+Local nDiasAbCol := nDAboCol
+Local dDtICole   := dDtInCol
+Local lTruncaDFe := .F.
+
+If nFeProxPer + nAbProxPer > 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Monta variaveis para o recibo do novo periodo aquisitivo	 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	fCalNovPer(@dDtICole,@nFeProxPer,@nAbProxPer,@dDtBusFer,@lTruncaDFe,nRecSRH)
+Else
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se nao existir inclui registro no arquivo SRF 				 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea( "SRF" )
+	If !dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+		RecLock("SRF",.T.)
+		SRF->RF_FILIAL := SRA->RA_FILIAL
+		SRF->RF_MAT    := SRA->RA_MAT
+		SRF->RF_DATABAS:= SRA->RA_ADMISSA
+		MsUnlock()
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Inicializa variavel com a data base do periodo aquis. atual  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dDtBasFe  := SRF->RF_DATABAS
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Verifica se no Arquivo SRF Existe Periodo de Ferias          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+		If SRF->RF_FERCOLE == "N" //.Or. dDtBasFe > dDtICole
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Adiciona no Array de Processamento os funcionarios afastados ³
+			//³ que não foram calculadas as ferias 							 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			aAdd(aLogFile, STR0027  + SRA->RA_MAT+"-"+SRA->RA_NOME + STR0028) //###'- Funcionario : '###' Inicio Periodo Aquisitivo Superior a Data de Inicio '
+			dbSelectArea( "SRA" )
+			dbSkip()
+			Return .F.
+		Endif	
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Verifica Se Ferias Ja Foi Calculada                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbselectArea( "SRH" )
+	dbSeek( SRA->RA_FILIAL + SRA->RA_MAT + DtoS( dDtBasFe ) )
+	If !Eof() .And. SRH->RH_FILIAL+SRH->RH_MAT+Dtos(SRH->RH_DATABAS) =  SRA->RA_FILIAL+SRA->RA_MAT+Dtos(dDtBasFe)
+		If dDtICole > SRH->RH_DATAFIM
+			nFalColet := SRH->RH_Dfaltas
+			TabFaltas(@nFalColet)
+			If SRH->RH_DFERIAS+SRH->RH_DABONPEC+nFalColet+If(MesAno(SRH->RH_DATAINI)=MesAno(dDtICole), SRF->RF_DFERANT,0) >= aTabFer[3]
+				dDtBasFe := fCalcFimAq(dDtBasFe)+1 // Inicio do proximo periodo
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Verifica se deve trocar o periodo por afastamento. 0-Acidente ³
+				//|P-Doenca  R-Servico Militar  X-Licenca sem Vencimentos        |
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				Calc_Fer(@dDtBasFe,fDtBasFim(dDtBasFe),,,,,,.F.,cTAfaFer)
+				If dbSeek(Sra->Ra_filial+Sra->Ra_mat+Dtos(dDtBasFe))
+					Help(" ",1,"GPM30PXCAL")
+					nDAntPer := 0  // Zerar Antecipadas para novo periodo
+					Return .F.
+				Endif
+			Else
+				lNovoPer := .F.
+				If MesAno(SRH->RH_DATAINI) = MesAno(dDtICole)
+					nDAntPer := Srh->Rh_dFerias+Srh->RH_Dabonpec+nFalColet+SRF->RF_DFERANT
+				Else
+					nDAntPer := SRF->RF_DFERANT + nFalColet
+				Endif
+			Endif
+		Else
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Adiciona no Array de Processamento os funcionarios afastados ³
+			//³ que nao foram calculadas as ferias 							 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			aAdd(aLogFile, STR0027 + SRA->RA_MAT+"-"+SRA->RA_NOME + STR0029) //###'- Funcionario : '###' em Ferias, Retorno superior a Data inicio das coletivas'
+			dbSelectArea("SRA")
+			dbSkip()
+			Return .F.
+		EndIf
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Calcula a Idade do Funcionario								 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nIdade := Int((dDataBase - SRA->RA_NASC) / 365)
+	lIdade := If (nIdade < 18 .Or. nIdade > 50,.T.,.F.)
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Calcula Dias de Ferias Coletivas                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbselectArea( "SRF" )	
+	dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+	nDferven := nDferave := 0
+	Calc_Fer(dDtBasFe,fDtBasFim(dDtBasFe),@nDferven,@nDferave)
+	nDiasVen     := nDferven
+	lNaoTemUmAno := .F.
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   	//³ Busca os dias de afastamento servico militar - "R"			 |
+   	//³ Para a VIAMARTE, Servico Miltiar tem o mesmo tratamento dos  |
+   	//³ afastamentos por Auxilio Doenca e Acidente de Trabalho.      |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nAvosAf := nDiasAf := 0
+	fRetAfas(dDtBasFe,fDtBasFim(dDtBasFe),"R",@nAvosAf,@nDiasAf)
+	If nAvosAf > 0
+		If nDiasAf > 180
+			nDiasVen := 0
+			nDferven := 0
+		Else
+//			nDiasVen += ( nAvosAf * aTabFer[4] )
+//			nDferven := ( nAvosAf * aTabFer[4] )
+		EndIf
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Calcula Dias de Ferias Para o Parametro MV_CALCNPA           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lTrataNPA
+		If (nDferven - SRF->RF_DFERANT) <= 0   // Se nao houver dias no periodo abre novo
+			dDtBasFe := fCalcFimAq(dDtBasFe)+1 // Inicio do proximo periodo
+			nDferven := aTabFer[3]			    // Total de dias do periodo
+			nDferave := 0
+		EndIf
+		nDiasVen := If(nDferven > 0, nDferven, nDferave)
+		nDferven := nDiasCol
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+		//³ Calcula Dias de Ferias Normais - Caso nao exista o parametro ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If nDferven > 0
+			nDferven := If(lIdade , aTabFer[3] , nDiasCol)
+		Else
+			If SRA->RA_ADMISSA+365 > dDtICole
+				If lIdade  // Menor de 18 e Maior que 50 Ferias Totais
+					nDFerVen := nDFerAve
+				Else
+					nDferven := If( nDiasCol > nDferave , nDferave , nDiasCol )
+				Endif
+				If nColeDire == 2 .And. nDiasAbCol > 0 //Verifica se tem saldo para abono
+					nDiasAbCol := If(nDiasCol > nDferave, 0, Min(nDferave-nDiasCol, nDiasAbCol))
+				EndIf
+				nDiasVen     := nDFerave
+				lNaoTemUmAno := .T.
+			Else
+				nDferven := If(lIdade,nDferAve,nDiasCol)
+				nDiasVen := If(lIdade,nDFerAve,nDiasCol)
+			Endif	
+			nDferAve := 0
+		Endif
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Calcula os dias de licenca remunerada						 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nDferven >= nDiasCol
+		nDlicRem  := ( nDferven - nDiasCol )
+	Else
+		nDlicRem  := ( nDiasCol - nDferven )
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se dias de direito e tem menos de um ano, zera licenca       |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lNaoTemUmAno .And. nColeDire == 2
+		nDlicRem  := 0
+	EndIf
+
+	nDferven  := If( nDferven > aTabFer[3] , aTabFer[3] , nDferven )
+	nDiasVen  := If( nDiasVen == 0 , nDferven , nDiasVen )
+	nDiasVen  := If( nDiasVen > aTabFer[3] , aTabFer[3] , nDiasVen )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿			
+	//³ Verifica As Faltas e Calcula as Medias do Periodo            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	fVerMed(@nFaltas,dDtBasFe)
+	nDescFal := nFaltas
+	TabFaltas(@nDescFal)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Apura dias de ferias do periodo e do proximo se houver       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !fApuraD(@nFeProxPer,@nAbProxPer,@nDferven,@nDiasAbCol,If(cPerFeAc=="S", nDiasVen,aTabFer[3]),nDiasCol,nDAboCol,dDtICole)
+		dbSelectArea( "SRA" )
+		dbSkip()
+		Return .F.
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se dias ferias igual a Zero, forcar dias p/ calculo do abono ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nDferven := If(nDferven > 0, nDferven, nDiasVen)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Quando houver menos dias de ferias devera proporcionalizar	 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nDiasVen < aTabFer[3]
+		nDescFal := ((nDescFal / 30) * nDiasVen)
+		nDescFal := If(nDiasVen - SRF->RF_DFERANT >= nDferven + nDescFal, 0, nDescFal)
+	Else
+		If !(SRF->RF_DFERANT  > 0 .And. nDferven == (nDiasVen-SRF->RF_DFERANT)) .And.;
+		   !(SRF->RF_DFERANT == 0 .And. nDferven == nDiasVen)
+			nDescFal := 0
+		EndIf
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Trata as faltas ocorridas no periodo quando tiver periodo    ³
+	//³ estendido e os dias de coletiva forem iguais ao direito de   ³
+	//³ ferias.                                                      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lTrataNPA
+		If ( (cCalcNovPer == "3") .Or.;
+		   (cCalcNovPer == "2" .And. Year(dDtBasFe) < Year(dDataBase)) ) .And.;
+			nFeProxPer == 0 .And. nDescFal > 0 .And. (nDferven  == nDiasCol) .And. !lGera2Rec
+			lGera2Rec	:= .T.
+		Endif
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se gera 2 recibos paga as faltas no segundo recibo			 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (nFeProxPer > 0 .Or. lGera2Rec) .And. nDescFal > 0
+		nFeProxPer += nDescFal
+		nFeProxPer := Min(nFeProxPer, nDiasCol)
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//|Busca o fim do periodo aquisitivo. No caso de afastamento para|
+	//|o servico militar, o final do periodo pode se estender muito  |
+	//|alem da data de retorno ao trabalho.							 |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Calc_Fer(dDtBasFe,fDtBasFim(dDtBasFe),,,,@cDescTipAfa,@dDtBasFim,.F.,cTAfaFer)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Monta Variaveis Igual ao Campo de Memoria do SRH para Roteiro³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	M->RH_DFERVEN := nDiasVen
+	M->RH_DFERIAS := Max(nDferven - nDescFal, 0)
+	M->RH_DABONPE := If( nDferven - nDescFal < 0, 0, nDiasAbCol)
+	M->RH_PERC13S := 0
+	If !Empty(dDtBasFim)
+		M->RH_DBASEAT := dDtBasFim
+	Else
+		M->RH_DBASEAT := fCalcFimAq(dDtBasFe)  //Calculo Fim Periodo Aquisitivo
+	EndIf
+	M->RH_DATABAS := dDtBasFe
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Calcula Data Inicio/Final, Data de Aviso e Data do Recibo    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dDataIni 		:= dDtICole
+M->RH_DATAINI 	:= dDtICole
+dDataFim 		:= fDtGozFim(dDataIni,M->RH_DFERIAS,lTruncaDFe)
+M->RH_DATAFIM   := dDataFim
+If Alltrim(Upper(CdoW(dDtRecibo))) = "SUNDAY"
+	dDtRecibo := dDtRecibo - 2
+Elseif Alltrim(Upper(CdoW(dDtRecibo))) = "SATURDAY"
+	dDtRecibo := dDtRecibo - 2
+Endif
+M->RH_DTRECIB := dDtRecibo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se Deve Considerar dias 24/12, 25/12, 31/12 e 01/01 ³
+//| como licenca remunerada.                                     |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+fChkLicRem(dDataini,dDataFim,@nDMes12,@nDMes01,cDia2501)
+	
+If ( M->RH_DFERIAS - nDLicRem ) > (nDMes12 + nDMes01 )
+	M->RH_DFERIAS -= ( nDMes12 + nDMes01 )
+	nDLicRem	  += ( nDMes12 + nDMes01 )
+EndIf
+If nDlicRem > 0 .And. !lTrataNPA //Nao gerar dias de licenca quando "Trata novo periodo"
+   	nDiasMes := nDiasMse := 0
+	If MesAno(dDataIni + M->RH_DFERVEN) == MesAno(dDataIni)
+		nUltDia  := If(MesAno(dDataFim+nDlicRem) == MesAno(dDataIni),Day(dDataFim+nDlicRem),nUlt_dia)
+		nDiasMes := nUltDia - ( ( Day(dDataIni) + M->RH_DFERVEN ) - 1 )
+	Endif
+	If MesAno(dDataFim + nDlicRem) > MesAno(dDataIni)
+		nDiasMse := nDlicRem - nDiasMes
+	Endif
+	M->RH_DIALREM := nDiasMes + nDMes12
+	M->RH_DIALRE1 := If(nDiasMse > 0 , nDiasMse - nDMes12 , nDiasMse )
+Else
+	M->RH_DIALREM := 0
+	M->RH_DIALRE1 := 0
+EndIf
+
+Return .T.
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ fCProgr  ºAutor  ³ R.H.               º Data ³  26/09/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Trata os calculos de ferias programadas                    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³                                                            º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fCProgr(nFeProxPer,nAbProxPer,dDtBusFer,nRecSRH)
+Local nDiasFePro := nDiasAbono := 0
+Local nDMes12    := nDMes01    := 0
+Local lTruncaDFe := .F.
+Local dDtBasFim
+Local dDtIniProg
+
+dDtRecibo := CTOD("")
+dDtAviso  := CTOD("")
+If nFeProxPer + nAbProxPer > 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Monta variaveis para o recibo do novo periodo aquisitivo	 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	fCalNovPer(@dDtIniProg,@nFeProxPer,@nAbProxPer,@dDtBusFer,@lTruncaDFe,nRecSRH)
+Else
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Se nao existir registro no SRF calcula proximo funcionario   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbselectArea( "SRF" )
+	If !dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+		dbSelectArea( "SRA" )
+		dbSkip()
+		Return .F.
+	Else
+		dDtIniProg := CTOD("")
+		If SRF->RF_DATAINI >= dDataDe .And. SRF->RF_DATAINI <= dDataAte
+			dDtIniProg := SRF->RF_DATAINI
+			nDiasFePro := If(lTemCpoProg, SRF->RF_DFEPRO1, 0)
+			nDiasAbono := If(lTemCpoProg, SRF->RF_DABPRO1, 0)
+		ElseIf lTemCpoProg
+			If SRF->RF_DATINI2 >= dDataDe .And. SRF->RF_DATINI2 <= dDataAte
+				dDtIniProg := SRF->RF_DATINI2
+				nDiasFePro := SRF->RF_DFEPRO2
+				nDiasAbono := SRF->RF_DABPRO2
+			ElseIf SRF->RF_DATINI3 >= dDataDe .And. SRF->RF_DATINI3 <= dDataAte
+				dDtIniProg := SRF->RF_DATINI3
+				nDiasFePro := SRF->RF_DFEPRO3
+				nDiasAbono := SRF->RF_DABPRO3
+			EndIf
+		EndIf
+		If Empty(dDtIniProg) .Or. (lTemCpoProg .And. nDiasFePro+nDiasAbono == 0)
+			dbSelectArea( "SRA" )
+			dbSkip()
+			Return .F.
+		Endif
+	Endif
+
+	dDtBasFe  := SRF->RF_DATABAS
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Verifica Se Ferias Ja Foi Calculada                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbselectArea( "SRH" )
+	If dbSeek( SRA->RA_FILIAL + SRA->RA_MAT + DtoS( dDtBasFe ) )
+		If dDtIniProg > SRH->RH_DATAFIM
+			lNovoPer   := .F.
+		Else
+			dbSelectArea("SRA")
+			dbSkip()
+			Return .F.
+		Endif
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Calcula Dias de Ferias Programadas                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbselectArea( "SRF" )
+	dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+	If SRF->RF_DVENPEN > 0
+		nDFerAve := SRF->RF_DFERAAT
+		nDferven := SRF->RF_DVENPEN
+	ElseIf SRF->RF_DFERVAT > 0.0
+		nDFerAve := SRF->RF_DFERAAT
+		nDferven := SRF->RF_DFERVAT
+	Else
+		nDferven := nDferave := 0
+		Calc_Fer(dDtBasFe,fDtBasFim(dDtBasFe),@nDferven,@nDferave)
+		nDferven := If( nDferven <= 0 , nDferave , nDferven )
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Calcula Dias de Ferias Para o Parametro MV_CALCNPA           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lTrataNPA
+		If (nDferven - SRF->RF_DFERANT) <= 0   // Se nao houver dias no periodo abre novo
+			dDtBasFe := fCalcFimAq(dDtBasFe)+1 // Inicio do proximo periodo
+			nDferven := aTabFer[3]			    // Total de dias do periodo
+			nDFerAve := 0
+		EndIf
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se dias foram programados ou calculados pelo sistema³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nDferven   := If( nDferven > aTabFer[3] , aTabFer[3] , nDferven )
+	nDiasFePro := If(lTemCpoProg, nDiasFePro, nDFerVen)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Apura dias de ferias do periodo e do proximo se houver       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !fApuraD(@nFeProxPer,@nAbProxPer,@nDiasFePro,@nDiasAbono,If(cPerFeAc=="S", nDferven,aTabFer[3]),nDiasFePro,nDiasAbono,dDtIniProg)
+		dbSelectArea( "SRA" )
+		dbSkip()
+		Return .F.
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se dias ferias igual a Zero, forcar dias p/ calculo do abono ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nDiasFePro := If(nDiasFePro > 0, nDiasFePro, nDFerVen)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica As Faltas e Calcula as Medias do Periodo            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	fVerMed(@nFaltas, dDtBasFe)
+	nDescFal := nFaltas
+	TabFaltas(@nDescFal)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Quando houver menos dias de ferias devera proporcionalizar	 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nDferVen < aTabFer[3]
+		nDescFal := ((nDescFal / 30) * nDferVen)
+		nDescFal := If(nDferVen - SRF->RF_DFERANT >= nDiasFePro + nDescFal, 0, nDescFal)
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se gera 2 recibos paga as faltas no segundo recibo			 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (nFeProxPer > 0 .Or. lGera2Rec) .And. nDescFal > 0
+		nFeProxPer += nDescFal
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se Tem Abono Pecuniario                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lTemCpoProg
+		M->RH_DABONPE := nDiasAbono
+	Else
+		If SRF->RF_TEMABPE == "S"
+			M->RH_DABONPE := ( nDiasFePro - nDescFal ) / 3
+		Else
+			M->RH_DABONPE := 0
+		Endif
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Monta Variaveis Igual ao Campo de Memoria do SRH para Roteiro³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SRF->RF_DVENPEN > 0
+		M->RH_DFERVEN := nDferven
+		M->RH_DFERIAS := nDferven
+		M->RH_PERC13S := SRF->RF_PERC13S
+		M->RH_DBASEAT := SRF->RF_FVENPEN
+		M->RH_DATABAS := SRF->RF_IVENPEN
+		M->RH_DIALREM := 0
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//|Busca o fim do periodo aquisitivo. No caso de afastamento para|
+		//|o servico militar, o final do periodo pode se estender muito  |
+		//|alem da data de retorno ao trabalho.							 |
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		Calc_Fer(@dDtBasFe,fDtBasFim(dDtBasFe),,,,@cDescTipAfa,@dDtBasFim,.F.,cTAfaFer)
+
+		M->RH_DFERVEN := nDferven
+		M->RH_DFERIAS := Max(nDiasFePro - nDescFal - If(lTemCpoProg,0, M->RH_DABONPE),0)
+		M->RH_PERC13S := SRF->RF_PERC13S
+
+		If !Empty(dDtBasFim)
+			M->RH_DBASEAT := dDtBasFim
+		Else
+			M->RH_DBASEAT := fCalcFimAq(dDtBasFe)  //Calculo Fim Periodo Aquisitivo
+		EndIf
+
+		M->RH_DATABAS := dDtBasFe
+		M->RH_DIALREM := 0
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿			
+//³ Calcula Data Inicio/Final, Data de Aviso e Data do Recibo    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dDataIni  		:= dDtIniProg
+M->RH_DATAINI 	:= dDtIniProg
+dDataFim  		:= fDtGozFim(dDataIni,M->RH_DFERIAS,lTruncaDFe)
+M->RH_DATAFIM   := dDataFim
+dDtAviso  		:= If( Empty(dDtAviso), dDataIni - aTabFer[3], dDtAviso )
+If Empty(dDtRecibo)
+	dDtRecibo 		:= dDataIni - 2
+	If Alltrim(Upper(CdoW(dDtRecibo))) = "SUNDAY"
+		dDtRecibo 	:= dDtRecibo - 2
+	Elseif Alltrim(Upper(CdoW(dDtRecibo))) = "SATURDAY"
+		dDtRecibo 	:= dDtRecibo - 2
+	Endif
+EndIf
+M->RH_DTRECIB := dDtRecibo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se Deve Considerar dias 24/12, 25/12, 31/12 e 01/01 ³
+//| como licenca remunerada.                                     |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+fChkLicRem(dDataini,dDataFim,@nDMes12,@nDMes01,cDia2501)
+M->RH_DIALREM := nDMes12
+M->RH_DIALRE1 := nDMes01
+nDLicRem	  := ( nDMes12 + nDMes01 )
+
+Return .T.
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ GPEXCLF  ºAutor  ³R.H.				 º Data ³  30/11/99   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Cancelamento das ferias Coletivas/Programadas               º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Local                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function GPEXCLF
+Local aRegs     := {}
+Local aSays		:= {}
+Local aButtons	:= {} 
+Local nRecno	:= SRA->( Recno() )
+Local nIndexOrd	:= SRA->( IndexOrd() )
+
+Private lAbortPrint := .F.
+Private cCadastro   := OemToAnsi(STR0016) //"F‚rias Coletivas / Programadas"
+Private nSavRec
+
+nOpca := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inclusao das perguntas de exclusao das ferias		  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+// Grupo/Ordem/Pergunta/Perspa/Pereng/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05/XF3
+aAdd(aRegs,{"FERVME","01","Processar F‚rias   ?","¨Procesa Vacaciones?","Process Vacation   ?","mv_ch1","N",1,0,1,"C","","mv_par01","Coletivas","Colectivas","General","","","Programadas","Programadas","Programmed","","","","","","","","","","","","","","","","","",""})
+aAdd(aRegs,{"FERVME","02","Processar em Ordem ?","¨Orden de Procesam.?","Process Order      ?","mv_ch2","N",1,0,1,"C","","mv_par02","Matricula","Matricula","Registration","","","Centro Custo","Centro de Costo","Cost Center","","","","","","","","","","","","","","","","","",""})
+aAdd(aRegs,{"FERVME","03","Filial De          ?","¨De Sucursal       ?","Branch From        ?","mv_ch3","C",2,0,0,"G","Naovazio","mv_par03","","","","01","","","","","","","","","","","","","","","","","","","","","SM0",""})
+aAdd(aRegs,{"FERVME","04","Filial At‚         ?","¨A  Sucursal       ?","Branch To          ?","mv_ch4","C",2,0,0,"G","Naovazio","mv_par04","","","","99","","","","","","","","","","","","","","","","","","","","","SM0",""})
+aAdd(aRegs,{"FERVME","05","Centro de Custo De ?","¨De Centro de Costo?","From Cost Center   ?","mv_ch5","C",9,0,0,"G","Naovazio","mv_par05","","","","000000000","","","","","","","","","","","","","","","","","","","","","SI3",""})
+aAdd(aRegs,{"FERVME","06","Centro de Custo At‚?","¨A  Centro de Costo?","To   Cost Center   ?","mv_ch6","C",9,0,0,"G","Naovazio","mv_par06","","","","999999999","","","","","","","","","","","","","","","","","","","","","SI3",""})
+aAdd(aRegs,{"FERVME","07","Matricula De       ?","¨De Matricula      ?","Registration From  ?","mv_ch7","C",6,0,0,"G","Naovazio","mv_par07","","","","000000","","","","","","","","","","","","","","","","","","","","","SRA",""})
+aAdd(aRegs,{"FERVME","08","Matricula At‚      ?","¨A  Matricula      ?","Registration To    ?","mv_ch8","C",6,0,0,"G","Naovazio","mv_par08","","","","999999","","","","","","","","","","","","","","","","","","","","","SRA",""})
+aAdd(aRegs,{"FERVME","09","Categorias         ?","¨Categorias        ?","Categories         ?","mv_ch9","C",10,0,0,"G","fCategoria","mv_par09","","","","*****HM***","","","","","","","","","","","","","","","","","","","","","",""})
+aAdd(aRegs,{"FERVME","10","Data Inicio De     ?","¨De Fecha de Inicio?","From Beggining Date?","mv_cha","D",8,0,0,"G","Naovazio","mv_par10","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+aAdd(aRegs,{"FERVME","11","Data Inicio At‚    ?","¨A  Fecha de Inicio?","To   Beggining Date?","mv_chb","D",8,0,0,"G","Naovazio","mv_par11","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+Aadd(aRegs,{"FERVME","12","Data de Pagto De   ?","¨De Fecha de Pago  ?","From Payment Date  ?","mv_chc","D",08,0,0,"G" ,"NaoVazio","mv_par12","","","","",""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,"","","",""})
+Aadd(aRegs,{"FERVME","13","Data de Pagto Ate  ?","¨A  Fecha de Pago  ?","To   Payment Date  ?","mv_chd","D",08,0,0,"G" ,"NaoVazio","mv_par13","","","","",""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,""	,"","","",""})
+ValidPerg(aRegs,"FERVME",.F.) // Incluir perguntas
+
+Pergunte("FERVME",.F.)
+
+AADD(aSays,OemToAnsi(STR0025) )  //"Cancelamento do calculo de ferias coletivas ou programadas."
+
+AADD(aButtons, { 5,.T.,{|| Pergunte("FERVME",.T. ) } } )
+AADD(aButtons, { 1,.T.,{|o| nOpca := 1,IF(gpconfOK(),FechaBatch(),nOpca:=0) }} )
+AADD(aButtons, { 2,.T.,{|o| FechaBatch() }} )
+	
+FormBatch( cCadastro, aSays, aButtons )
+	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nOpca == 1
+	ProcGpe({|lEnd| FERVMEProc()},,,.T.)  // Chamada do Processamento
+Endif
+
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Reposiciona ponteiro nos Bancos de Dados                     ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+dbSelectArea("SRA") ; dbSetOrder( nIndexOrd ) ; dbGoto( nRecno )
+
+Return( NIL )
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³FERVMEProcºAutor  ³MICROSIGA           º Data ³  01/12/99   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Inicia o cancelamento a partir dos parametros               º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Local                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Function FERVMEProc
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis de Acesso do Usuario                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cAcessaSRA	:= &( " { || " + IF( Empty( cAcessaSRA := ChkRH( "FERVIAM" , "SRA" , "1" ) ) , ".T." , cAcessaSRA ) + " } " )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ mv_par01  - Processar Ferias Coletivas  Programadas          |
+//³ mv_par02  - Processar por 1-Matricula  2-C.Custo             ³
+//³ mv_par03  - Filial De                                        ³
+//³ mv_par04  - Filial Ate                                       ³
+//³ mv_par05  - Centro de Custo De                               ³
+//³ mv_par06  - Centro de Custo Ate                              ³  
+//³ mv_par07  - Matricula De                                     ³
+//³ mv_par08  - Matricula Ate                                    ³
+//³ mv_par09  - Categoria do Funcionario                         ³
+//³ mv_par10  - Data Inicio De                                   ³ 
+//³ mv_par11  - Data Inicio Ate                                  ³ 
+//³ mv_par12  - Data Pagamento De                                ³ 
+//³ mv_par13  - Data Pagamento Ate                               ³ 
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carregando as Perguntas                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nColPro     :=  mv_par01
+nOrdem      :=  mv_par02
+cFilDe      :=  mv_par03
+cFilAte     :=  mv_par04
+cCcDe       :=  mv_par05
+cCcAte      :=  mv_par06
+cMatDe      :=  mv_par07
+cMatAte     :=  mv_par08
+cCategoria  :=  mv_par09
+dDataDe     :=  mv_par10
+dDataAte    :=  mv_par11
+dDtPgDe     :=  mv_par12
+dDtPgAte    :=  mv_par13
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se datas "inicio de" e "inicio ate" estao prenchidas³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Empty( dDataDe ) .Or. Empty( dDataAte )
+	If nColPro == 1
+		Help(' ',1,"DATABRAN")
+	Else
+		Help(' ',1,"DATABRAN1")
+	Endif
+	Return
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Procura primeiro funcionario                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SRA" )
+nSavRec  := Recno()
+dbGotop()
+If nOrdem == 1
+	dbSetOrder( 1 )
+	dbSeek( cFilDe + cMatDe , .T. )
+Elseif nOrdem == 2
+	dbSetOrder( 2 )
+	dbSeek( cFilDe + cCcDe + cMatDe , .T. )
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega Regua Processamento	                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+GpProcRegua(SRA->(RecCount()))
+
+While !Eof()
+
+	IF lAbortPrint
+		Break
+	EndIF
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste o De / Ate  nOrdem = 1-Matricula / 2-Centro Custo   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IF nOrdem == 1
+		If Eof() .Or. ( SRA->RA_FILIAL + SRA->RA_MAT > cFilAte + cMatAte )
+			Exit
+		Endif
+	ElseIf nOrdem == 2
+		If Eof() .Or. ( SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT > cFilAte + cCcAte + cMatAte )
+			Exit
+		Endif
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Testa Categoria do Funcionario                               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !(SRA->RA_CATFUNC $ cCategoria)
+		dbSkip()
+		Loop
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿	
+	//³ Verifica Se Funcionario Esta Demitido ou Afastado            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	If SRA->RA_SITFOLH$ "D*A*E"
+		dbSkip()
+		Loop
+	Endif
+	
+	/*
+	ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	³Consiste Filiais e Acessos                                             ³
+	ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+	IF !( SRA->RA_FILIAL $ fValidFil() ) .or. !Eval( cAcessaSRA )
+		dbSelectArea("SRA")
+      	dbSkip()
+       	Loop
+	EndIF
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Movimenta cursor para movimentacao da barra                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	GpIncProc(SRA->RA_FILIAL + " - " + SRA->RA_MAT + " - " + SRA->RA_NOME)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿		
+	//³ Verifica no Arquivo SRH se Existe Periodo de Ferias          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbselectArea( "SRH" )
+	If dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+		While !EOF() .And. SRH->RH_FILIAL + SRH->RH_MAT == SRA->RA_FILIAL + SRA->RA_MAT
+			If (SRH->RH_DATAINI >= dDataDe .And. SRH->RH_DATAINI <= dDataAte) .And.;
+			   (SRH->RH_DTRECIB >= dDtPgDe .And. SRH->RH_DTRECIB <= dDtPgAte)
+				If (nColPro == 1 .And. SRH->RH_TIPCAL == "C") .Or.; 
+				   (nColPro == 2 .And. SRH->RH_TIPCAL == "N")
+					m030Can() // Cancela ferias do funcionario
+				EndIf					
+			EndIf
+			dbSkip()
+		EndDo
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Exclui registro de Licenca gerados pelo calculo de ferias    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lExistGerPFer
+		dbSelectArea( "SR8" )
+		If dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+			While !EOF() .And. SR8->R8_FILIAL + SR8->R8_MAT == SRA->RA_FILIAL + SRA->RA_MAT
+				If SR8->R8_DATAINI >= dDataDe .And. SR8->R8_DATAINI <= dDataAte .And.;
+				   SR8->R8_TIPO == "X" .And. SR8->R8_GERPFER == "S"
+					RecLock("SR8",.F.,.T.)
+					dbDelete()
+					MsUnLock()
+				EndIf
+				dbSkip()
+			EndDo
+		EndIf
+	EndIf
+
+	dbSelectArea( "SRA" )
+	dbSkip()
+Enddo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Recupera a Integridade dos dados                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SRA" )
+dbSetOrder( 1 )
+dbGoTo(nSavRec)
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fVerMed   ºAutor  ³ R.H.               º Data ³  08/03/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Carrega as Medias                                           º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fVerMed(nFaltas,dDtBasBus)
+Local cAlias := Alias()
+
+dbSelectArea("TRP")
+Zap
+
+GPEXMED(dDtBasBus,CtoD(" "),fDtBasFim(dDtBasBus),CtoD(""),fDtBasFim(dDtBasBus),SalHora,Val_Salmin,aCodfol)
+
+nFaltas := 0
+dbSelectArea( "TRP" )
+If dbSeek( SRA->RA_FILIAL + SRA->RA_MAT + "1" + "998" + "9698" )
+	nFaltas := TRP->RP_HORAS
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de entrada para alterar valores de faltas				 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistBlock("GP060FAL")
+	ExecBlock("GP060FAL",.F.,.F.)
+Endif
+
+dbSelectArea(cAlias)
+Return(.T.)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³  fApuraD ³ Autor ³ R.H.                  ³ Data ³ 26/10/01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Calcula dos dias de ferias para o proximo periodo          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fApuraD(nFeProxPer,nAbProxPer,nDiasGozo,nDAboPec,nMaxDPer,nDFerInf,nDAboInf,dDtFerIni)
+Local nTDProxPer := nDAboAux := 0
+Local lPeriodoOk := .T.
+Local lFerColMaior:= .F.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Apura dias de ferias para o proximo periodo aquisitivo  	 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nDlicNaoRem := 0
+nFeProxPer  := nAbProxPer := 0
+nMaxDPer    := Max(nMaxDPer-SRF->RF_DFERANT-nDescFal,0)  //Saldo de dias do periodo atual
+lFerColMaior:=	(nDiasGozo + nDAboPec == nMaxDPer) .And. ;		// Dias de direito igual aos dias de ferias a gozar
+				(nDFerInf + nDAboInf > nDiasGozo + nDAboPec)	// e dias de coletivas maiores que dias de direito
+If	nDiasGozo + nDAboPec > nMaxDPer .Or. lFerColMaior
+	nTDProxPer := If( lFerColMaior , (nDFerInf+nDAboInf)-(nDiasGozo+nDAboPec) , (nDiasGozo+nDAboPec-nMaxDPer) )
+	nTDProxPer := Max(nTDProxPer,0)
+	If nTDProxPer > 0
+		If nDAboPec > 0
+			nDAboAux := (nDAboPec - nTDProxPer)
+			If nDAboAux > 0
+				nAbProxPer := nTDProxPer	   // Abono do proximo periodo
+				nDAboPec   := nDAboAux		   // Abono do periodo atual
+			Else
+				nAbProxPer := nDAboPec		   // Abono do proximo periodo
+				nDAboPec   := 0       		   // Abono do periodo atual
+				nFeProxPer := (nDAboAux*-1)	   // Ferias do proximo periodo
+				nDiasGozo  -= (nDAboAux*-1)   // Ferias do periodo atual
+			EndIf
+			nFeProxPer := Min( nFeProxPer, aTabFer[3] )
+			nAbProxPer := Max( Min(aTabFer[3]-nFeProxPer, nAbProxPer), 0)
+		Else
+			nFeProxPer := Min( nTDProxPer, aTabFer[3] )
+			nDiasGozo  := If( lFerColMaior , nDFerInf , nDiasGozo ) - nTDProxPer
+			nDiasGozo  := Max( nDiasGozo , 0)
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se o total de dias informados podem ser pagos dentro³
+		//³ do proximo periodo, se puder, quitar o proximo periodo.      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If (nFeProxPer > 0) .And. (nDFerInf - nMaxDPer > nFeProxPer)
+			nFeProxPer := Min( nDFerInf - nMaxDPer, aTabFer[3] )
+			If (nAbProxPer > 0) .And. (nDAboInf > nAbProxPer)
+				nAbProxPer := nDAboInf
+				nAbProxPer := Max( Min(aTabFer[3]-nFeProxPer, nAbProxPer), 0)
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Se nao tem parametro MV_CALCNPA zera dias proximo periodo  e ³
+		//³ Adiciona no Array de Processamento os funcionarios com dias  ³
+		//³ de ferias programadas excedentes aos dias de direito e zera  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !lTrataNPA
+			aAdd(aLogFile, STR0027+SRA->RA_MAT+"-"+SRA->RA_NOME+" / "+STR0036 +; //"Dias Antecipados "
+				 Transform(SRF->RF_DFERANT,"99.9") + " - " + STR0037 +;		  //"Dias Informados "
+				 Transform(nDFerInf+nDAboInf,"99.9")+" - " + STR0038 +; 		  //"Dias Calculados "
+				 Transform(nDiasGozo+nDAboPec,"99.9"))
+			nFeProxPer  := 0
+			nAbProxPer  := 0
+			nDlicNaoRem := 0
+		EndIf
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Se tratamento especial para Novo Periodo, checa parametro    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lTrataNPA
+	If !((Substr(cCalcNovPer,1,1) == "1" .And. Year(dDtBasFe) < Year(dDataBase)) .Or.;
+	     (Substr(cCalcNovPer,1,1) == "2" .And. Year(dDtBasFe) <= Year(dDataBase)) .Or.;
+    	 (Substr(cCalcNovPer,1,1) == "3"))
+		nDiasGozo  := nDAboPec   := 0
+		nFeProxPer := nAbProxPer := 0
+		lPeriodoOk := .F.
+	ElseIf (nFeProxPer + nAbProxPer > 0)
+		If (cCalcNovPer == "1") .Or.;
+		   (cCalcNovPer == "2" .And. Year(dDtBasFe) >= Year(dDataBase))
+			nFeProxPer := 0
+			nAbProxPer := 0
+		Else
+			lGera2Rec := .T.
+		EndIf
+	EndIf
+	If lPeriodoOk
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Se lCAboNovPer = .T. sempre calcular o abono                 ³
+		//³ Se lCAboNovPer = .F. sempre zerar abono do proximo periodo e ³
+		//³ do periodo atual caso o Aquisitivo seja atual ou seginte.  	 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lCAboNovPer
+			If nDAboPec == 0 .And. nAbProxPer == 0 .And. (nDiasGozo + nDAboInf <= nMaxDPer)
+				nDAboPec  := nDAboInf
+			EndIf
+		Else
+			If Year(dDtBasFe) >= Year(dDataBase)
+				nDAboPec := 0
+			EndIf
+			nAbProxPer := 0
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se deve gerar os dias de licenca nao remunerada     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lGLicNaoRem .And. nFeProxPer == 0
+			nDlicNaoRem := nDFerInf - nDiasGozo
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Se dias de gozo == 0 nao havera calculo de ferias, por isso  ³
+			//³ sera necessario forcar a inclusao da licenca no SR8.         ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If nDiasGozo == 0
+				dbSelectArea( "SR8" )
+				If dbSeek(SRA->RA_FILIAL+SRA->RA_MAT+Dtos(dDtFerIni)+"X")
+					RecLock("SR8",.F.,.T.)
+				Else
+					RecLock("SR8",.T.,.T.)
+					SR8->R8_FILIAL   := SRA->RA_FILIAL
+					SR8->R8_MAT      := SRA->RA_MAT
+					SR8->R8_DATA     := dDataBase
+				Endif
+				SR8->R8_TIPO     := "X"
+				SR8->R8_DATAINI  := dDtFerIni
+				SR8->R8_DATAFIM  := (dDtFerIni + nDlicNaoRem)-1
+				If lExistGerPFer
+					SR8->R8_GERPFER := "S"
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variavel que identifica se deve calcular dias de ferias		 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+lTDiasFer := (nDiasGozo > 0)
+
+Return (nDiasGozo + nDAboPec > 0)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fCalNovPerºAutor  ³ R.H.               º Data ³  11/04/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Monta variaveis para o recibo do novo periodo aquistivo    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³                                                            º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fCalNovPer(dDtIniFer,nFeProxPer,nAbProxPer,dDtBusFer,lTruncaDFe,nRecSRH)
+Local dNDtBsIni,dDtBsAux
+
+dbSelectArea( "SRH" )
+dbGoTo(nRecSRH)
+If SRH->RH_DFERIAS + SRH->RH_DABONPE == 0
+	dDtIniFer := SRH->RH_DATAFIM         // Inicio de Gozo do novo recibo
+Else
+	dDtIniFer := SRH->RH_DATAFIM + 1     // Inicio de Gozo do novo recibo
+EndIf
+dNDtBsIni := SRH->RH_DBASEAT + 1     // Inicio do Periodo Aquisitivo
+dDtRecibo := SRH->RH_DTRECIB         // Data do recibo anterior
+dDtAviso  := SRH->RH_DTAVISO         // Data do aviso anterior
+dDtBusFer := dDtIniFer - 2           // Data da busca para o novo recibo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Calcula os dias do novo periodo aquisitivo                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nDferven := nDferave := 0
+dDtBsAux := dNDtBsIni
+Calc_Fer(@dNDtBsIni,fDtBasFim(dNDtBsIni),@nDferven,@nDferave)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿			
+//³ Se trocou periodo em Calc_Fer,calcula os dias do novo periodo³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nDferven + nDferave == 0 .And. dDtBsAux # dNDtBsIni
+	Calc_Fer(dNDtBsIni,fDtBasFim(dNDtBsIni),@nDferven,@nDferave)
+	nFeProxPer := Min( nDferven, nFeProxPer )
+EndIf
+nDferven := If(nDferven <= 0,nDferave,nDferven)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿			
+//³ Verifica As Faltas e Calcula as Medias do Periodo            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+fVerMed(@nFaltas,dNDtBsIni)
+nDescFal := nFaltas
+TabFaltas(@nDescFal)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variavel que identifica se deve calcular dias de ferias		 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+lTDiasFer := (nFeProxPer > 0)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ajusta a quantidade de dias de ferias do proximo periodo de  ³
+//³ acordo com a quantidade de dias de ferias vencidas.          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If (nFeProxPer+nAbProxPer) > nDferven
+	If nFeProxPer > 0
+		nFeProxPer	:= (nDferven - nAbProxPer)
+	Endif
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Se dias ferias igual a Zero, forcar dias p/ calculo do abono ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nFeProxPer := If(nFeProxPer > 0, nFeProxPer, If(nDferven > 0, nDferven, nAbProxPer))
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Se houver 0.5 dia no primeiro recibo e 0.5 no segundo recibo ³
+//³ deve truncar o segundo pois o primeiro ja foi arredondado.   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If NoRound(SRH->RH_DFERIAS,0) # SRH->RH_DFERIAS .And. NoRound(nFeProxPer,0) # nFeProxPer
+	lTruncaDFe := .T.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Somente zerar faltas se nao estiver quitando o periodo.      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !(nFeProxPer+nAbProxPer == nDferven)
+	nDescFal := 0
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta Variaveis Igual ao Campo de Memoria do SRH para Roteiro³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+M->RH_DFERVEN := nDferven
+M->RH_DFERIAS := nFeProxPer - nDescFal
+M->RH_DATABAS := dNDtBsIni
+M->RH_DBASEAT := fCalcFimAq(dNDtBsIni)  //Calculo Fim Periodo Aquisitivo
+M->RH_DABONPE := nAbProxPer
+M->RH_PERC13S := 0
+M->RH_DIALREM := 0
+nFeProxPer    := 0
+nAbProxPer	  := 0
+nDlicRem      := 0
+nDlicNaoRem   := 0
+
+If SRH->RH_DFERIAS + SRH->RH_DABONPE == 0
+	RecLock("SRH",.F.,.T.)
+	dbDelete()
+	MsUnLock()
+EndIf
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fDtBasFim ºAutor  ³ R.H.               º Data ³  16/04/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Retorna o fim do periodo aquisitivo ou a data base         º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³                                                            º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fDtBasFim(dDtCalLim)
+
+Return If(lTrataNPA, CTOD("31/12/" + StrZero(Year(dDtCalLim), 4),"DDMMYY"), dDataBase)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fDtGozFim ºAutor  ³ R.H.               º Data ³  11/04/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Arredonda ou trunca dias de ferias                         º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³                                                            º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fDtGozFim(dDtIFerias,nDiasFer,lTruncaDFe)
+Local nDiasArr := If(lTruncaDFe, NoRound(nDiasFer,0), Round(nDiasFer,0))
+
+Return If(lTDiasFer .And. nDiasFer > 0, (dDtIFerias + nDiasArr)-1, dDtIFerias)

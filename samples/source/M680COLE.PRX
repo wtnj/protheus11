@@ -1,0 +1,233 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ M680Cole ³ Autor ³ Alex Sandro Valario   ³ Data ³ 20/03/99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Rotina de Inclusao da producao atraves do TXT              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Coletor                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+O arquivo do tipo TXT, a cada linha do arquivo refere-se a um registro,
+na linha tera os campos conf. a ordem do array aMata680.
+Sendo que dados do tipo:
+ "C" alinhados a esqueda com brancos a direita
+ "D" no formato DTOS
+ "N" alinhado a direita com zeros a esquerda sem o ponto decimal
+     ex.  o campo 'H6_QTDPROD,N,11' com o conteudo 156,75 ficara no 
+	       TXT --->  00000015675
+*/
+
+aMata680      :={{'H6_OP'      ,'C',11,0},;
+                 {'H6_OPERAC'  ,'C',02,0},;
+                 {'H6_RECURSO' ,'C',06,0},;
+                 {'H6_FERRAM'  ,'C',06,0},;
+                 {'H6_DATAINI' ,'D',08,0},;
+                 {'H6_DATAFIN' ,'D',08,0},;
+                 {'H6_TEMPO'   ,'C',06,0},;
+                 {'H6_PERDANT' ,'N',11,2},;
+                 {'H6_QTDPROD' ,'N',11,2},;
+                 {'H6_QTDPERD' ,'N',11,2},;
+                 {'H6_PT'      ,'C',01,0},;
+                 {'H6_HORAINI' ,'C',05,0},;
+                 {'H6_HORAFIN' ,'C',05,0}}
+
+AbreArquivo()
+If ( lSaida )
+   Return
+EndIf
+aHeader := {}
+aCols   :={}
+
+CreateaHeader()
+FT_FGotop()
+While ! FT_FEof() 
+   cline:=FT_FReadLN()			
+	_aVetor := aMata680
+   aFillModelo()
+   AddAcols()
+   FT_FSkip()
+End
+MontaBrowse()
+FT_FUse()
+If nOpcA == 2
+	Return
+EndIf
+/*
+sNewFile := Left(sFile,Len(sFile)-3)+"_OK"
+FRename(sPath+sFile,sPath+sNewFile)
+*/
+Return
+
+
+Function AbreArquivo
+sPath :="D:\Coletor\"
+sFile :="Producao.COL"
+sArqT := Padr(sPath+sFile,45)
+lSaida := .f.
+#IFNDEF WINDOWS
+   cSavCor1  := SetColor()
+   cSavTela := SaveScreen()
+   DrawAdvWindow("Nome do Arquivo TXT com informa‡”es do Coletor",12,3,16,75)
+   @ 14,4 get sArqT
+   Read
+   RestScreen(0,0,24,79,cSavTela)
+   SetColor(cSavCor1)
+   If  LastKey() == 27 
+      lSaida := .t.
+   EndIf
+#ELSE
+   @ 200,1 TO 320,540 DIALOG oDlg2 TITLE "Inclus„o de Dados do Coletor"
+   @ 10,10 Say "Caminho do arquivo tipo TXT"
+   @ 20,10 GET sArqt PICTURE "@!" VALID .t. 
+	@ 40,170 BUTTON "_OK" SIZE 40,15 ACTION Execute(Abre)
+   @ 40,218 BUTTON "_Sair"  SIZE 40,15 ACTION Execute(Fecha)
+   ACTIVATE DIALOG oDlg2 CENTERED
+#ENDIF
+
+If (! lSaida) .and. (nH := FT_FUse(AllTrim(sArqT)) ) == -1
+   help(" ",1,"NOFILEIMPOR")
+   lSaida := .t.
+   Return
+EndIf   
+Return
+/*
+Function CreateaHeader
+aHeader := {}
+nUsado := 0
+cAlias1 := "SH6"
+sx2->(dbSeek(cAlias1))
+sx3->(dbSeek(cAlias1))
+While ! sx3->(Eof()) .And. (sx3->x3_arquivo == cAlias1)
+   IF aScan(aMata680,{|x| AllTrim(x[1]) == Alltrim(sx3->x3_campo)})# 0 
+      nUsado := nUsado + 1
+      Aadd(aHeader,{ TRIM(sx3->x3_titulo), sx3->x3_campo  , sx3->x3_picture,;
+         sx3->x3_tamanho, sx3->x3_decimal,"AllwaysTrue()" , sx3->x3_usado  ,;
+         sx3->x3_tipo   , sx3->x3_arquivo, sx3->x3_context } )
+   Endif
+   sx3->(dbSkip())
+End
+Return
+*/
+
+Function CreateaHeader
+_nOrdSX3 := sx3->(IndexOrd())
+aHeader := {}
+nUsado := 0
+cAlias1 := "SH6"
+sx3->(DbSetOrder(2))
+For _nB := 1 to len(aMata680)
+	If sx3->(DbSeek(aMata680[_nB,1]))
+	   nUsado := nUsado + 1
+      Aadd(aHeader,{ TRIM(sx3->x3_titulo), sx3->x3_campo  , sx3->x3_picture,;
+         sx3->x3_tamanho, sx3->x3_decimal,"AllwaysTrue()" , sx3->x3_usado  ,;
+         sx3->x3_tipo   , sx3->x3_arquivo, sx3->x3_context } )
+	EndIf
+Next
+sx3->(DbSetOrder(_nOrdSx3))
+Return
+
+
+Function AddAcols
+M->H6_OP     := aModelo[01,2]
+M->H6_OPERAC := aModelo[02,2]
+M->H6_RECURSO:= aModelo[03,2]
+M->H6_FERRAM := aModelo[04,2]
+M->H6_DATAINI:= aModelo[05,2]  			
+M->H6_HORAINI:= aModelo[06,2]  			
+M->H6_TEMPO  := aModelo[07,2]  			
+M->H6_PERDANT:= aModelo[08,2]  			
+M->H6_QTDPROD:= aModelo[09,2]  			
+M->H6_QTDPERD:= aModelo[10,2]  			
+M->H6_PT     := aModelo[11,2]  			
+M->H6_DATAFIN:= aModelo[12,2]  			
+M->H6_HORAFIN:= aModelo[13,2]  
+			
+aadd(aCols,{M->H6_OP     ,M->H6_OPERAC ,M->H6_RECURSO,M->H6_FERRAM ,;
+			   M->H6_DATAINI,M->H6_HORAINI,M->H6_TEMPO  ,M->H6_PERDANT,;
+				M->H6_QTDPROD,M->H6_QTDPERD,M->H6_PT     ,M->H6_DATAFIN,;
+				M->H6_HORAFIN,.f.})
+
+Return
+
+Function aFillModelo
+aModelo:= {}
+nPos := 1
+For nX2 := 1 to Len(_aVetor)
+   If ! Empty(Subs(cLine,nPos,_aVetor[nX2,3]))
+      uConteudo:= Subs(cLine,nPos,_aVetor[nX2,3])
+      If    (_aVetor[nX2,2] == 'N' )
+         uConteudo := val(uConteudo)
+         If (_aVetor[nX2,4] # 0)
+            uConteudo := uConteudo / (10**_aVetor[nX2,4])
+         EndIf
+      Elseif (_aVetor[nX2,2] == 'D' )
+         uConteudo := CtoD(Right(uConteudo,2)+"/"+Subs(uConteudo,5,2)+"/"+subs(uConteudo,3,2))
+      EndIf
+      aadd(aModelo,{_aVetor[nX2,1],uConteudo,NIL})    
+   EndIf
+   nPos := nPos + _aVetor[nX2,3]
+Next
+Return
+
+
+Function MontaBrowse
+lTab   := .T.
+Curlen    := 70-nUsado
+aRotina   := { { "naosei","AllwaysTrue",0,1},;
+               { "naosei","AllwaysTrue",0,2},;
+					{ "naosei","AllwaysTrue",0,3} }
+
+aCA:=  {"Confirma","Abandona"}
+cCa := "CA"
+nPosAtu:=0
+nPosAnt:=9999
+nColAnt:=9999
+#IFNDEF WINDOWS
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³ Variaveis utilizadas pelo programa                           ³
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   cAlias:="SH6"
+   dbSelectArea(cAlias)
+	lRetMod2:=Modelo2("Inclus„o de Dados do Coletor",{},{},{09,3,19,75},6,,)
+	If ( lRetMod2)
+		nOpcA :=1
+		GravaDB()
+	EndIf
+#ELSE
+   nOpcA := 1 
+   @ 200,1 TO 400,540 DIALOG oDlg3 TITLE "Inclus„o de Dados do Coletor"
+   @ 6,5 TO 93,225 MULTILINE 
+	@ 50,228 BUTTON "_Grava" SIZE 40,15 ACTION Execute(GravaDB)
+   @ 70,228 BUTTON "_Sair"  SIZE 40,15 ACTION Close(oDlg3)
+   ACTIVATE DIALOG oDlg3 CENTERED
+	
+#ENDIF
+Return
+
+Function GravaDB
+For nX1 := 1 to Len(aCols)
+   aModelo :={}
+   For nX2 := 1 To Len(aHeader)
+      aadd(aModelo,{aHeader[nX2,2],aCols[nX1,nX2],NIL})
+   Next
+   Mata680(aModelo)
+Next
+#IFDEF WINDOWS
+   Close(oDlg3)
+#ENDIF
+Return
+
+Function Abre
+Close(oDlg2)
+lSaida := .f.
+Return
+
+Function Fecha
+Close(oDlg2)
+lSaida := .t.
+Return
+
+

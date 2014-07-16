@@ -1,0 +1,247 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 20/10/99
+
+User Function IncAuto()        // incluido pelo assistente de conversao do AP5 IDE em 20/10/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_CRDMAKE,_CLISTMOD1,_CLISTMOD2,_ATXT,_CARQUIVO,_NHA")
+SetPrvt("_NPTXT,_CLINE,_CPROG,_AMODELO,_NPOS,_NX2")
+SetPrvt("_UCONTEUDO,_NOPCAO,_AVETOR,_ACAB,_AITENS,_CTIPO")
+
+//Alterado por Fernando Alves Bernardes - 9/21/1999
+_cRdmake := "INCVETOR"
+
+_cListMod1 := "MATA010|MATA020|MATA030|MATA040|MATA050|MATA080|MATA150|MATA240|MATA250|MATA270|MATA680|MATA681|FINA040|FINA050|ALTSB1|QIEA030|MATA520|MATA650"
+_cListMod2 := "MATA120|MATA140|MATA241|MATA410|MATA415|MATA416|CONA050|CFGX016|MATA110|MATA265|MATA115"
+_aTxt      := {}
+_cArquivo  := ParamIxb
+_nHa       := 0
+_nPTxt     :=  1
+_cLine     := ""
+
+//-----------------------------------------------------------------------------
+CarregaTxt()
+LeLinha()
+_cProg:=AllTrim(Left(_cLine,8) )
+If     ( _cProg $ _cListMod1 )
+   Mod1()
+Elseif ( _cProg $ _cListMod2 )
+   Mod2()
+EndIf
+
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 20/10/99 ==> Function aFillModelo
+Static Function aFillModelo()
+_aModelo:= {}
+_nPos := 3
+//Alterado por Fernando Alves Bernardes - 1/20/2000
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Caso passe um numero de indice  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+_nIndex := -1
+If ( Upper(AllTrim(_aVetor[Len(_aVetor),1])) == "INDEX" )
+	_nIndex := _aVetor[Len(_aVetor),2]
+	aDel(_aVetor,Len(_aVetor))
+	aSize(_aVetor,Len(_aVetor)-1)
+EndIf
+For _nX2 := 1 to Len(_aVetor)
+   If ! Empty(Subs(_cLine,_nPos,_aVetor[_nX2,3]))
+      _uConteudo:= Subs(_cLine,_nPos,_aVetor[_nX2,3])
+      If    ( _aVetor[_nX2,2] == 'N' )
+         _uConteudo := val(_uConteudo)
+         If (_aVetor[_nX2,4] #0)
+            _uConteudo := _uConteudo / (10**_aVetor[_nX2,4])
+         EndIf
+      Elseif ( _aVetor[_nX2,2] == 'D' ) // ESTÁ VINDO 19981105
+         _uConteudo := CtoD(Right(_uConteudo,2)+"/"+Subs(_uConteudo,5,2)+"/"+subs(_uConteudo,3,2))
+      EndIf
+		If ( Len(_aVetor[_nX2]) < 5)
+		aadd(_aModelo,{_aVetor[_nX2,1],_uConteudo,NIL})
+		Else
+			aadd(_aModelo,{_aVetor[_nX2,1],_uConteudo,_aVetor[_nX2,5]})    		
+		EndIf
+   EndIf
+   _nPos := _nPos + _aVetor	[_nX2,3]
+Next                                  
+
+If ( _nIndex > 0 )
+	aadd(_aModelo,{"INDEX",_nIndex})
+	_nIndex := -1
+EndIf
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 20/10/99 ==> Function Mod1
+Static Function Mod1()
+ProximaL()
+LeLinha()
+While ! Left(_cLine,3) == 'FIM'
+   If Empty(_cLine)
+	   Return
+   EndIf
+   If ( AllTrim(Left(_cLine,8))  $ _cListMod1 )
+	  _cProg:=AllTrim(Left(_cLine,8) )
+	  Mod1()
+	  Exit
+	Elseif ( AllTrim(Left(_cLine,8)) $ _cListMod2 )
+	   _cProg:=AllTrim(Left(_cLine,8) )
+		Mod2()
+		Exit
+	EndIf
+	_nOpcao := Val(SubS(_cLine,2,1))
+//Alterado por Fernando Alves Bernardes - 28/12/1999
+	If ( _nOpcao == 5 )
+		_cRdmake := "DELVETOR"
+	Elseif ( _nOpcao == 4 )
+		_cRdmake := "ALTVETOR"
+	Elseif ( _nOpcao == 3 )
+		_cRdmake := "INCVETOR"
+	EndIf
+	_aVetor:=ExecBlock(_cRdmake,.F.,.F.,"_a"+_cProg)
+
+	aFillModelo()
+
+	If     (_cProg == "MATA240")
+      Mata240(_aModelo)
+   ElseIf (_cProg == "MATA150")
+      Mata150(_aModelo)
+   ElseIf (_cProg == "MATA250")
+      Mata250(_aModelo)
+   ElseIf (_cProg == "MATA680")
+      Mata680(_aModelo)
+   ElseIf (_cProg == "MATA681")
+      Mata681(_aModelo)
+   ElseIf (_cProg == "MATA270")
+      Mata270(_aModelo)
+   ElseIf (_cProg == "FINA040")
+      Fina040(_aModelo,_nOpcao)
+   ElseIf (_cProg == "FINA050")
+      Fina050(_aModelo)
+   ElseIf (_cProg == "MATA010")
+      MATA010(_aModelo,_nOpcao)
+	ElseIf (_cProg == "MATA020")
+      MATA020(_aModelo,_nOpcao)
+   ElseIf (_cProg == "MATA030")
+      MATA030(_aModelo,_nOpcao)
+	ElseIf (_cProg == "MATA040")
+      MATA040(_aModelo,_nOpcao)
+	ElseIf (_cProg == "MATA050")
+      MATA050(_aModelo)
+	ElseIf (_cProg == "MATA080")
+      MATA080(_aModelo)
+	ElseIf (_cProg == "QIEA030")
+      QIEA030(_aModelo)
+	ElseIf (_cProg == "MATA520")
+      MATA520(_aModelo) 
+	ElseIf (_cProg == "MATA650")
+      MATA650(_aModelo,_nOpcao)
+   EndIf
+	ProximaL()
+	LeLinha()
+End
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 20/10/99 ==> Function Mod2
+Static Function Mod2()
+_aCab     := {}
+_aItens   := {}
+_cTipo    :=""
+
+ProximaL()
+LeLinha()
+While ! Left(_cLine,3) == 'FIM'
+   _cTipo:= Left(_cLine,1)
+   If Empty(_cLine)
+	   Return
+   EndIf
+//Alterado por Fernando Alves Bernardes - 13/01/2000
+	_nOpcao := Val(SubS(_cLine,2,1))
+	If ( _nOpcao == 5 )
+		_cRdmake := "DELVETOR"
+	Elseif ( _nOpcao == 4 )
+		_cRdmake := "ALTVETOR"
+	Elseif ( _nOpcao == 3 )
+		_cRdmake := "INCVETOR"
+	EndIf
+   If (_cTipo  == "H")
+		_aVetor:=ExecBlock(_cRdmake,.F.,.F.,"_a"+_cProg+"Cab")
+      aFillModelo()
+      _aCab := aClone(_aModelo)
+   Elseif  ( _cTipo == "D")
+		_aVetor:=ExecBlock(_cRdmake,.F.,.F.,"_a"+_cProg+"Itens")
+      aFillModelo()
+      aadd(_aItens,aClone(_aModelo))
+   EndIf
+
+	ProximaL()
+	LeLinha()
+
+	If (( _cTipo == "D" .and. Left(_cLine,1) != "D")) .or. Left(_cLine,3) == 'FIM'
+      If     (_cProg == "MATA140")
+	      Mata140(_aCab,_aItens,_nOpcao)	
+      Elseif (_cProg == "MATA241")
+	      Mata241(_aCab,_aItens)
+      Elseif (_cProg == "MATA410")
+	      Mata410(_aCab,_aItens,_nOpcao)	
+      Elseif (_cProg == "MATA415")
+	      Mata415(_aCab,_aItens)
+      Elseif (_cProg == "MATA416")
+	      Mata416(_aCab,_aItens)
+      Elseif (_cProg == "CONA050")
+	      Cona050(,_aCab,_aItens)
+		Elseif (_cProg == "MATA110")
+		   Mata110(_aCab,_aItens)	
+		Elseif (_cProg == "MATA120")
+		   Mata120(1,_aCab,_aItens,_nOpcao)	
+		ElseIf (_cProg == "CFGX016")
+			CFGX016(_aCab,_aItens)
+		ElseIf (_cProg == "MATA265")
+			MATA265(_aCab,_aItens,_nOpcao)	
+		ElseIf (_cProg == "MATA115")
+			MATA115(_aCab,_aItens)
+		EndIf
+		_aCab   := {}
+      _aItens := {}
+   EndIf
+	If ( AllTrim(Left(_cLine,8))  $ _cListMod1 )
+	  _cProg:=AllTrim(Left(_cLine,8) )
+	  Mod1()
+	  Exit
+	Elseif ( AllTrim(Left(_cLine,8)) $ _cListMod2 )
+	   _cProg:=AllTrim(Left(_cLine,8) )
+		Mod2()
+		Exit
+	EndIf
+
+End
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 20/10/99 ==> Function CarregaTXT
+Static Function CarregaTXT()
+If (_nHa := FT_FUse(AllTrim(_cArquivo)))== -1
+   help(" ",1,"NOFILEIMPOR")
+	Return
+EndIf
+FT_FGOTOP()
+While !FT_FEOF()
+   AADD(_atxt,FT_FREADLN())
+   FT_FSKIP()
+End
+FT_FUSE()
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 20/10/99 ==> Function ProximaL
+Static Function ProximaL()
+	_nPTxt := _nPTxt + 1
+	_nPTxt := If(_nPtxt > Len(_aTxt),Len(_aTxt),_nPTxt)
+Return
+// Substituido pelo assistente de conversao do AP5 IDE em 20/10/99 ==> Function LeLinha
+Static Function LeLinha()
+	_cLine:= _aTxt[_nPTxt]
+Return
+

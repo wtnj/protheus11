@@ -1,0 +1,2909 @@
+#include "rwmake.ch"
+#INCLUDE "TOPCONN.CH"
+#include "colors.ch"
+#include "font.ch"
+#INCLUDE "protheus.ch"
+                                                             
+/*
+8‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±…ÕÕÕÕÕÕÕÕÕÕ—ÕÕÕÕÕÕÕÕÕÕÀÕÕÕÕÕÕÕ—ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÀÕÕÕÕÕÕ—ÕÕÕÕÕÕÕÕÕÕÕÕÕª±±
+±±∫Programa  ≥ NHMNT062 ∫Autor ≥Douglas de S. Dourado∫ Data ≥ XX/XX/XXXX∫  ±±
+±±ÃÕÕÕÕÕÕÕÕÕÕÿÕÕÕÕÕÕÕÕÕÕ ÕÕÕÕÕÕÕœÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ ÕÕÕÕÕÕœÕÕÕÕÕÕÕÕÕÕÕÕÕπ±±                            
+±±∫Desc.     ≥ PROCESSO DO BLOCO FORJARIA		                          ∫±±
+±±ÃÕÕÕÕÕÕÕÕÕÕÿÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕπ±±
+±±∫Uso       ≥ AP11 - MANUTENCAO DE ATIVOS                                ∫±±
+±±∫	         ≥ TABELAS: ZG5FN0										      ∫±±
+±±»ÕÕÕÕÕÕÕÕÕÕœÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂ
+*/                   
+
+/*********************************************************/
+/************************* BROWSE ************************/
+/*********************************************************/
+
+User Function NHMNT062
+Private oDlg
+Private aRotina, cCadastro // Variaveis do Mbrowse
+
+cCadastro := "Acompanhamento Processo Forjaria"
+aRotina   := {}
+aAdd(aRotina,{ "Movimentar"		,"U_MNT062(4)"   , 0 , 4})
+aAdd(aRotina,{ "Incluir"		,"U_MNT062(2)" 	 , 0 , 3})
+aAdd(aRotina,{ "Visualizar"	    ,"U_MNT062(1)"   , 0 , 2})
+aAdd(aRotina,{ "Legenda"        ,"U_MNT062Leg()" , 0 , 1}) 
+//aAdd(aRotina,{ "Alterar" 		,"U_MNT062(3)"   , 0 , 4})
+aAdd(aRotina,{ "Excluir" 		,"U_MNT062(5)"   , 0 , 5})
+aAdd(aRotina,{ "Imprimir Eti."  ,"U_NHMNT065()"   , 0 , 6})
+                                                                                                             
+mBrowse(6,1,22,75,"ZG5",,,,,,fCriaCor())                   
+
+Return
+
+/*********************************************************/
+/****************** FunÁ„o Principal *********************/
+/*********************************************************/
+
+User Function MNT062(nParam)       
+Private bOk1        := {||Confirmar()}
+Private bCanc       := {||Cancelar()}
+Private nPar 	    := nParam
+Private cTitle    
+Private aHeader   := {}
+Private aColUsi   := {}, aColNit := {} , aColGrav := {}
+Private aHead1    := {}
+Private aHead2    := {}
+Private aHead3    := {}
+Private aHead4    := {}
+Private cItem  
+Private nOpc     
+Private oDlg
+Private cCod      := space(06)
+Private cRegrav
+Private nRev 
+Private dData     := CtoD('  /  /  ') , dData2 := CtoD('  /  /  ') , dDataRec := CtoD('  /  /  '), dDataEnv := CtoD('  /  /  ')
+Private dDtPrev   := CtoD('  /  /  ') , dData3 := CtoD('  /  /  ') , dData4 := CtoD('  /  /  ')
+Private dDtEnv3   := CtoD('  /  /  ') , dDtRec3 := CtoD('  /  /  '), dPrev3   := CtoD('  /  /  '), dDtEnv4 := CtoD('  /  /  '), dDtPrev4 := CtoD('  /  /  ')
+Private dDtRec4   := CtoD('  /  /  ') , dDatIni4 := CtoD('  /  /  '), cHorIni4 := space(05) , dDatFim4 := CtoD('  /  /  ') , cHorFim4 := space(05), cMaq4 := space(15)
+Private cMatri    := space(06) , cMatri2 := space(06) , cMatrRc4 := space(06)
+Private cMatri3   := space(06), cMatrRc2 := space(06) , cMatri4 := space(06)
+Private cMate     := space(100), DescMaq1, DescMaq4
+Private nDimenX   := 0 , nDimenX2 := 0 , nDimenX4 := 0
+Private nDimenY   := 0 , nDimenY2 := 0 , nDimenY4 := 0
+Private nDimenZ   := 0 , nDimenZ2 := 0 , nDimenZ4 := 0
+Private aSize     := MsAdvSize()
+Private cCombo    := '' , cServico := ''
+Private cForn     := space(06) , cForn2 := space(06), cForn4 := space(06)
+Private cLoja     := space(02) , cLoja2 := space(02), cLoja4 := space(02)
+Private cForn3    := space(06) , cLoja3 := space(02)
+Private nCorpoP   := 0 , cOper , nCertif := 0 , cNumBlc
+Private cRegQl    := space(30)                           
+Private cCodMate  := space(06)
+Private DescMat1, DescMat2, descMat3, dcMatRc2, descmat4
+Private cDesFor,  cDesFor2, cDesFor3 , cDesOper , cDesFrn4
+Private aObjects  := {{ 100, 100, .T., .T. },{ 300, 300, .T., .T. }}
+Private aInfo     := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 5, 5 , 5, 5}
+Private aPosObj   := MsObjSize( aInfo, aObjects, .T.) 
+Private aCombo    :={"1=MatÈria Prima ","2=Iniciar PrÈ-FormataÁ„o",;
+					 "2.1=PrÈ-FormataÁ„o em Andamento","2.2=PrÈ-FormataÁao Feita",;
+					 "3=Enviar p/ Tratamento TÈrmico","3.1=Tratamento TÈrmico em Andamento","3.2=Tratamento TÈrmico Pronto",;
+					 "4=Iniciar FormataÁ„o Final","4.1=Aguardando Recebimento Form. Final","4.2=FormataÁ„o Final Concluida",;
+					 "5=Iniciar Usinagem de gravura","5.1=Usinagem de gravura em Andamento","5.2=Usinagem de gravura Concluida",;
+					 "6=NitretaÁ„o","6.1=NitretaÁ„o em Andamento","6.2=NitretaÁ„o ConcluÌda",;
+					 "7=GravaÁ„o de corrida","7.1=GravaÁ„o de corrida em Andamento","7.2=GravaÁ„o de corrida ConcluÌda",;
+					 "8=UtilizaÁ„o em Forjamento","9=Sucata"}               
+Private aServico  :={"1=Interno","2=Externo"}, cServ4 := {"1=Interno","2=Externo"} , aTipos := {"1=Retangular","2=Redondo"}, cTipoMat
+Private oFont16n  :=TFont():New("TIMES",9,15,.T.,.F.,5,.T.,5,.T.,.F.)
+Private oFont14n  :=TFont():New("ARIAL",9,14,.T.,.F.,5,.T.,5,.T.,.F.)
+Private oObjeto      
+Private dDatIni := CtoD("  /  /  ")
+Private cHorIni := Space(5)
+Private dDatFim := CtoD("  /  /  ")
+Private cHorFim := Space(5)
+Private cDesc   := "" , cDesc4 := "" , cDesRc4 := ""
+Private cMaq1 := space(15)    
+Private oGetD1 , cNF := space(09), cSerie := space(03) 
+Private StatUsi , StatNit , StatGrav, aColUti, lBloqUsi := .F., lBloqNit := .F. , lBloqGra := .F. , lRecUsi := .F., lRecNit := .F. , lRecGra := .F.
+    
+/************************************************************************/
+/************* Identifica a operaÁ„o que ser· realizada *****************/
+/************************************************************************/
+  
+If nPar==1      // visualizar
+
+    cTitle   := 'Visualizar'
+    nOpc     := 4
+    fCarrega()  	 
+   
+ElseIf nPar==2  // incluir
+
+    cTitle   := 'Incluir Material'
+	cCod  	 := GetSxeNum("ZG5","ZG5_COD")
+	cCombo   := '1' // Insere o status atual como "MATERIA PRIMA"
+	dData    := Ddatabase
+	nRev     := 1 // Revisao Inicial = 1	
+	
+ElseIf nPar==3  // Alterar 
+
+    cTitle := 'Alterar'
+    nOpc   := 3  
+    fCarrega()
+    
+ElseIf nPar==4  // Movimentar        
+
+	cTitle := 'Movimentar' 
+    nOpc   := 3  
+    fCarrega()
+        
+    If cCombo <> '2.1' .AND. cCombo <> '3.1' .AND. cCombo <> '4.1' .AND. cCombo <> '5.1' .AND. cCombo <> '6.1' .AND. cCombo <> '7.1' .AND. cCombo <> '8' .AND. cCombo <> '9'
+	   cCombo := AllTrim(STR(Int(Val(cCombo)) + 1))
+	EndIf
+	
+	cCombo := AllTrim(cCombo)
+	
+	IF cCombo == '9'  
+	   MsgBox("Este registro j· foi sucateado, somente a visualizacao ser· possivel!","Atencao","INFO")	
+	ENDIF
+
+ElseIf nPar==5   // Excluir	 
+    
+    IF MsgYesNo("Deseja realmente excluir","Excluir","INFO")
+    
+       cNumBlc := AllTrim(ZG5->ZG5_COD)
+       
+       // Deleta os dados da usinagem de gravura relacionados com este cÛdigo
+       
+       ZG8->(DBSETORDER(2)) 	  
+        
+ 	   IF ZG8->(DBSEEK(cNumBlc))   	   	 	   
+	   	  WHILE ZG8->ZG8_COD == cNumBlc
+	   	  
+	          RecLock("ZG8",.F.)
+	 	   	      ZG8->(DbDelete())
+		   	  MsUnLock("ZG8")	 	   	  		
+		   	  
+		   	  ZG8->(DBSKIP())
+		   	  
+	   	  ENDDO		   
+ 	   ENDIF                            
+ 	   
+ 	   // ------------------------------------------------------------------- 	   
+ 	   // Deleta os dados da nitretacao relacionados com este cÛdigo
+ 	   
+ 	   ZG9->(DBSETORDER(1))
+
+	   IF ZG9->(DBSEEK(cNumBlc))  
+		  WHILE ZG9->ZG9_COD == cNumBlc
+	   	  
+	          RecLock("ZG9",.F.)
+	 	   	      ZG9->(DbDelete())
+		   	  MsUnLock("ZG9")	 	   	  		
+		   	  
+		   	  ZG9->(DBSKIP())		   	  
+		   	  
+		  ENDDO		   	   	  
+ 	   ENDIF                           
+ 	   // --------------------------------------------------------------------
+ 	   
+ 	   // ------------------------------------------------------------------- 	   
+ 	   // Deleta os dados da gravaÁ„o de corrida relacionados com este cÛdigo
+ 	   
+ 	   ZH0->(DBSETORDER(1))
+
+	   IF ZH0->(DBSEEK(cNumBlc))  
+		  WHILE ZH0->ZH0_COD == cNumBlc
+	   	  
+	          RecLock("ZH0",.F.)
+	 	   	      ZH0->(DbDelete())
+		   	  MsUnLock("ZH0")	 	   	  		
+		   	  
+		   	  ZH0->(DBSKIP())		   	  
+		   	  
+		  ENDDO		   	   	  
+ 	   ENDIF                           
+ 	   // --------------------------------------------------------------------
+ 	   
+ 	   // ------------------------------------------------------------------- 	   
+ 	   // Deleta os dados da gravaÁ„o de corrida relacionados com este cÛdigo
+ 	   
+ 	   ZH1->(DBSETORDER(1))
+
+	   IF ZH1->(DBSEEK(cNumBlc))  
+		  WHILE ZH1->ZH1_COD == cNumBlc
+	   	  
+	          RecLock("ZH1",.F.)
+	 	   	      ZH1->(DbDelete())
+		   	  MsUnLock("ZH1")	 	   	  		
+		   	  
+		   	  ZH1->(DBSKIP())		   	  
+		   	  
+		  ENDDO		   	   	  
+ 	   ENDIF                           
+ 	   // --------------------------------------------------------------------
+ 	   
+ 	   // Deleta o Bloco em si	
+       RecLock("ZG5",.F.)
+ 	   	 ZG5->(DbDelete())
+	   MsUnLock("ZG5")    
+	   
+	   Return
+	   
+    ENDIF
+    
+EndIf 	
+
+/*****************************************************************************/
+/********************** InicializaÁ„o dos Say's e Get's **********************/ 
+/*****************************************************************************/
+
+Define MsDialog oDlg Title (cTitle) From aSize[7],00 To aSize[6],aSize[5] Pixel
+   
+	/***************************************************************/
+	/*************************** Campos ****************************/
+	/***************************************************************/
+    
+	@ 08,10  Say "CÛdigo:" PIXEL OF oDlg    	      
+	@ 18,10  Get cCod SIZE 30,10 WHEN (.F.) PIXEL OF oDlg
+	
+	@ 08,60 Say "Revis„o: " PIXEL OF oDlg
+	@ 18,60 Get nRev WHEN (.F.) SIZE 15,10 PIXEL OF oDlg
+		
+	@ 08,97 Say "Status Atual: " COLOR CLR_HBLUE Object oObjeto
+	@ 18,97 Combobox cCombo ITEMS aCombo SIZE 100,10 WHEN (.F.) PIXEL OF oDlg				
+	oObjeto:oFont := oFont16n	
+	
+	@ 08,205 Say "Data: " PIXEL OF oDlg
+	@ 18,205 Get dData WHEN (.F.) SIZE 50,10 PIXEL OF oDlg	
+    
+	// Folder
+	@ 036,000 FOLDER oFolder PROMPTS OemToAnsi("Recebimento MatÈria Prima"),;								
+									 OemToAnsi("PrÈ-FormataÁ„o do Bloco"),;
+									 OemToAnsi("Tratamento TÈrmico"),;
+									 OemToAnsi("FormataÁ„o Final"),;
+ 									 OemToAnsi("Usinagem de Gravura"),;
+ 									 OemToAnsi("NitretaÁ„o"),;
+ 									 OemToAnsi("GravaÁ„o de Corrida"),;
+ 									 OemToAnsi("UtilizaÁ„o em Forjamento") SIZE (aSize[5]/2)+3,(aSize[6]/2) OF oDlg PIXEL
+	
+	// Campos do Folder1 - Recebimento MatÈria Prima 									 	
+	
+	@ 08,10  Say "Matricula:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 18,10  MsGet oMatri VAR cMatri  SIZE 25,10 WHEN (nPar==2 .OR. nPar==3) F3 "QAA"  VALID fValMatri(cMatri,1) PIXEL OF oFolder:aDialogs[1]
+	@ 18,45  Get DescMat1 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[1]
+	
+	@ 36,10  Say "Material:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 44,10  MsGet oCodMate VAR cCodMate SIZE 30,10 WHEN (nPar==2 .OR. nPar==3) F3 "ZG6" VALID fValMate() PIXEL OF oFolder:aDialogs[1]									 
+	@ 44,45  Get cMate SIZE 200,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[1]	  
+	
+	@ 36,260  Say "Tipo do material:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 44,260  Combobox cTipoMat ITEMS aTipos SIZE 70,10 WHEN (nPar==2 .OR. nPar==3)PIXEL OF oFolder:aDialogs[1]					
+	
+	@ 62,10  Say "Dimens„o ÿ / X:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 70,10  Get nDimenX SIZE 45,10 PICTURE "@E 999,999.99" WHEN (nPar==2 .OR. nPar==3) PIXEL OF oFolder:aDialogs[1]									 
+	@ 73,56  Say "MM" PIXEL OF oFolder:aDialogs[1]    	      
+	
+	@ 62,72  Say "Dimens„o Y:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 70,72  Get nDimenY SIZE 45,10 PICTURE "@E 999,999.99" WHEN ((nPar==2 .AND. cTipoMat == '1') .OR. nPar==3 ) PIXEL OF oFolder:aDialogs[1]									 
+	@ 73,118  Say "MM" PIXEL OF oFolder:aDialogs[1]    	      
+	                                                                                                                       
+	@ 62,132 Say "Dimens„o Z:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 70,132 Get nDimenZ SIZE 45,10 PICTURE "@E 999,999.99" WHEN (nPar==2 .OR. nPar==3) PIXEL OF oFolder:aDialogs[1]
+	@ 73,178 Say "MM" PIXEL OF oFolder:aDialogs[1]
+	
+	@ 88,10  Say "Fornecedor:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 96,10  MsGet oForn VAR cForn SIZE 30,10 WHEN (nPar==2 .OR. nPar==3) F3 "SA2" VALID fValForn(cForn,1) PIXEL OF oFolder:aDialogs[1]									 
+	@ 96,80  Get cDesFor SIZE 145,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[1]									 
+	
+	@ 88,50  Say "Loja:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 96,50  Get cLoja SIZE 05,10 WHEN (nPar==2 .OR. nPar==3) VALID fValLoja(cForn,cLoja,1)  PIXEL OF oFolder:aDialogs[1]									 
+	
+	@ 114,10 Say "N∞ Registro de Qualidade:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 122,10 Get cRegQl SIZE 60,10 WHEN (nPar==2 .OR. nPar==3) PIXEL OF oFolder:aDialogs[1]									 
+		
+	@ 140,10  Say "Nota Fiscal:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 148,10  Get cNF SIZE 30,10 WHEN (nPar==2 .OR. nPar==3) PIXEL OF oFolder:aDialogs[1]									 
+	
+	@ 140,50  Say "Serie:" PIXEL OF oFolder:aDialogs[1]    	      
+	@ 148,50  Get cSerie SIZE 05,10 WHEN (nPar==2 .OR. nPar==3) PIXEL OF oFolder:aDialogs[1]									 
+	
+	
+	// Campos do Folder 2 - PrÈ-FormataÁ„o do Bloco
+	    
+	If cCombo == '2'
+	   dData2 := dDataBase
+	EndIF		
+	
+	@ 08,10  Say "Matricula:" PIXEL OF oFolder:aDialogs[2]    	      
+	@ 18,10  MsGet oMatri2 VAR cMatri2  SIZE 25,10 WHEN (nPar==4 .AND. cCombo == '2' .OR. nPar==3) F3 "QAA"  VALID fValMatri(cMatri2,2) PIXEL OF oFolder:aDialogs[2]
+	@ 18,45  Get DescMat2 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[2]
+	
+	@ 08,235 Say "Data: " PIXEL OF oFolder:aDialogs[2]
+	@ 18,235 Get dData2 WHEN (.F.) SIZE 50,10 PIXEL OF oFolder:aDialogs[2]
+	
+	@ 36,10  Say "ServiÁo:" PIXEL OF oFolder:aDialogs[2]    	      
+	@ 44,10  Combobox cServico ITEMS aServico SIZE 70,10 WHEN (nPar==4 .AND. cCombo == '2' .OR. nPar==3) VALID fValServ(1) PIXEL OF oFolder:aDialogs[2]				
+	
+	@ 36,100 Say "Dimens„o ÿ / X:" PIXEL OF oFolder:aDialogs[2]    	      
+	@ 44,100 Get nDimenX2 SIZE 45,10 PICTURE "@E 999,999.99" WHEN (nPar==4 .AND. cCombo == '2' .OR. nPar==3) PIXEL OF oFolder:aDialogs[2]									 
+	@ 47,146 Say "MM" PIXEL OF oFolder:aDialogs[2]    	      
+	
+	@ 36,166 Say "Dimens„o Y:" PIXEL OF oFolder:aDialogs[2]    	      
+	@ 44,166 Get nDimenY2 SIZE 45,10 PICTURE "@E 999,999.99" WHEN ((nPar==4 .AND. AllTrim(cTipoMat) == '1' .AND. cCombo == '2') .OR. nPar==3) PIXEL OF oFolder:aDialogs[2]									 
+	@ 47,212 Say "MM" PIXEL OF oFolder:aDialogs[2]    	      
+	                                                                                                                       
+	@ 36,232 Say "Dimens„o Z:" PIXEL OF oFolder:aDialogs[2]    	      
+	@ 44,232 Get nDimenZ2 SIZE 45,10 PICTURE "@E 999,999.99" WHEN (nPar==4 .AND. cCombo == '2' .OR. nPar==3) PIXEL OF oFolder:aDialogs[2]
+	@ 47,278 Say "MM" PIXEL OF oFolder:aDialogs[2]	
+	
+	// Se Externo
+	
+	@ 75,10  Say "Externo" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[2]      	    	
+	
+	@ 88,10  Say "Fornecedor:" PIXEL OF oFolder:aDialogs[2]    	      
+	@ 96,10  MsGet oForn2 VAR cForn2 SIZE 30,10 WHEN (nPar==4 .and. cServico == '2' .AND. cCombo == '2' .OR. nPar==3) F3 "SA2" VALID fValForn(cForn2,2) PIXEL OF oFolder:aDialogs[2]									 
+	@ 96,70  Get cDesFor2 SIZE 145,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[2]									 
+	
+	@ 88,50  Say "Loja:" PIXEL OF oFolder:aDialogs[2]    	      
+	@ 96,50  Get cLoja2 SIZE 05,10 WHEN (nPar==4 .and. cServico == '2' .AND. cCombo == '2' .OR. nPar==3) VALID fValLoja(cForn2,cLoja2,2)  PIXEL OF oFolder:aDialogs[2]									 
+	
+	@ 88,235 Say "Data de Envio: " PIXEL OF oFolder:aDialogs[2]
+	@ 96,235 Get dDataEnv WHEN (nPar==4 .and. cServico == '2' .AND. cCombo == '2' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[2]
+	
+	@ 88,295 Say "Previs„o de Entrega: " PIXEL OF oFolder:aDialogs[2]
+	@ 96,295 Get dDtPrev WHEN (nPar==4 .and. cServico == '2' .AND. cCombo == '2' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[2]
+	
+	// Dados Recebimento
+	
+	@ 125,010  Say "Dados do Recebimento" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[2]      	    	
+	
+	@ 138,010  Say "Matricula:" PIXEL OF oFolder:aDialogs[2]    	      
+	@ 146,010  MsGet oMatriRc2 VAR cMatrRc2  SIZE 25,10 WHEN (nPar==3 .OR. (Npar==4 .AND. cCombo=='2.1')) F3 "QAA"  VALID fValMatri(cMatrRc2,2.1) PIXEL OF oFolder:aDialogs[2]
+	@ 146,045  Get dcMatRc2 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[2]
+		
+	@ 164,010 Say "Data de Recebimento: " PIXEL OF oFolder:aDialogs[2]
+	@ 173,010 Get dDataRec WHEN (nPar==3 .OR. (Npar==4 .AND. cCombo=='2.1')) SIZE 50,10 PIXEL OF oFolder:aDialogs[2]
+	
+	// Se Interno	
+	
+	@ 75,360  Say "Interno" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[2]      	    	
+	
+	@ 88,360 Say "Data Inicial: " PIXEL OF oFolder:aDialogs[2]
+	@ 96,360 Get dDatIni WHEN (nPar==4 .and. cServico == '1' .AND. cCombo == '2' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[2]
+	
+	@ 88,415 Say "Horario Inicial: " PIXEL OF oFolder:aDialogs[2]     
+	@ 96,415 Get cHorIni WHEN (nPar==4 .and. cServico == '1' .AND. cCombo == '2' .OR. nPar==3) SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder:aDialogs[2]
+	
+	@ 113,360 Say "Data Final: " PIXEL OF oFolder:aDialogs[2]
+	@ 121,360 Get dDatFim WHEN (nPar==4 .and. cServico == '1' .AND. cCombo == '2' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[2]
+	
+	@ 113,415 Say "Horario Final: " PIXEL OF oFolder:aDialogs[2]
+	@ 121,415 Get cHorFim WHEN (nPar==4 .and. cServico == '1' .AND. cCombo == '2' .OR. nPar==3) SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder:aDialogs[2]
+	
+	@ 139,360 Say "Maquina: " PIXEL OF oFolder:aDialogs[2]
+	@ 147,360 MsGet oMaquina VAR cMaq1 SIZE 50,10 WHEN (nPar==4 .and. cServico == '1' .AND. cCombo == '2' .OR. nPar==3) F3 "ST9" VALID fValMaq(cMaq1,'1') PIXEL OF oFolder:aDialogs[2]
+	@ 147,415 Get DescMaq1 SIZE 160,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[2]
+	
+	
+	@ 190,010 Say "DescriÁ„o Geral" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[2]      	    	
+	@ 198,010 Get cDesc WHEN (nPar==4 .AND. cCombo == '2' .OR. nPar==3) MEMO SIZE 200,20 PIXEL OF oFolder:aDialogs[2]		
+
+	// Campos do Folder 3 - Tratamento Termico do Bloco
+    
+	If cCombo == '3'
+	   dData3 := dDataBase
+	EndIF    
+	
+	@ 08,10  Say "Matricula:" PIXEL OF oFolder:aDialogs[3]    	      
+	@ 18,10  MsGet oMatri3 VAR cMatri3  SIZE 25,10 WHEN (nPar==4 .AND. cCombo == '3' .OR. nPar==3) F3 "QAA"  VALID fValMatri(cMatri3,3) PIXEL OF oFolder:aDialogs[3]
+	@ 18,45  Get descMat3 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[3]
+	
+	@ 08,235 Say "Data: " PIXEL OF oFolder:aDialogs[3]
+	@ 18,235 Get dData3 WHEN (.F.) SIZE 50,10 PIXEL OF oFolder:aDialogs[3]
+	
+	@ 36,10  Say "Fornecedor:" PIXEL OF oFolder:aDialogs[3]    	      
+	@ 44,10  MsGet oForn3 VAR cForn3 SIZE 30,10 WHEN (nPar==4 .AND. cCombo == '3' .OR. nPar==3) F3 "SA2" VALID fValForn(cForn3,3) PIXEL OF oFolder:aDialogs[3]									 
+	@ 44,70  Get cDesFor3 SIZE 145,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[3]									 
+	
+	@ 36,50  Say "Loja:" PIXEL OF oFolder:aDialogs[3]    	      
+	@ 44,50  Get cLoja3 SIZE 05,10 WHEN (nPar==4 .and. cCombo == '3' .OR. nPar==3) VALID fValLoja(cForn3,cLoja3,3)  PIXEL OF oFolder:aDialogs[3]									 
+	
+	@ 36,235 Say "Data de Envio: " PIXEL OF oFolder:aDialogs[3]
+	@ 44,235 Get dDtEnv3 WHEN (nPar==4 .and. cCombo == '3' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[3]
+	
+	@ 36,295 Say "Previs„o de Entrega: " PIXEL OF oFolder:aDialogs[3]
+	@ 44,295 Get dPrev3 WHEN (nPar==4 .and. cCombo == '3' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[3]
+	
+	@ 62,10  Say "N∫ Corpo de Prova:" PIXEL OF oFolder:aDialogs[3]    	      
+	@ 70,10  Get nCorpoP SIZE 50,10 PICTURE "@E 99999999999999" WHEN (nPar==4 .AND. cCombo == '3' .OR. nPar==3) PIXEL OF oFolder:aDialogs[3]
+	
+	@ 92,10  Say "Dados do Recebimento:" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[3]      	    
+	
+	@ 106,10  Say "Matricula:" PIXEL OF oFolder:aDialogs[3]    	      
+	@ 114,10  MsGet oOper VAR cOper SIZE 25,10 WHEN (nPar==4 .AND. cCombo == '3.1' .OR. nPar==3) F3 "QAA"  VALID fValMatri(cOper,3.1) PIXEL OF oFolder:aDialogs[3]
+	@ 114,45  Get cDesOper SIZE 180,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[3]
+	
+	@ 106,235 Say "Data de Recebimento: " PIXEL OF oFolder:aDialogs[3]
+	@ 114,235 Get dDtRec3 WHEN (nPar==3 .OR. (Npar==4 .AND. cCombo=='3.1')) SIZE 50,10 PIXEL OF oFolder:aDialogs[3]
+	
+	@ 132,10  Say "N∫ Certificado Digital:" PIXEL OF oFolder:aDialogs[3]    	      
+	@ 140,10  Get nCertif SIZE 50,10 PICTURE "@E 99999999999999" WHEN (nPar==4 .AND. cCombo == '3.1' .OR. nPar==3) PIXEL OF oFolder:aDialogs[3]                 
+	
+	// Campos do Folder 4 - FormataÁ„o Final
+    
+	If cCombo == '4'
+	   dData4 := dDataBase
+	EndIF		
+	
+	@ 08,10  Say "Matricula:" PIXEL OF oFolder:aDialogs[4]    	      
+	@ 18,10  MsGet oMatri4 VAR cMatri4  SIZE 25,10 WHEN (nPar==4 .AND. cCombo == '4' .OR. nPar==3) F3 "QAA"  VALID fValMatri(cMatri4,4) PIXEL OF oFolder:aDialogs[4]
+	@ 18,45  Get DescMat4 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[4]
+	
+	@ 08,235 Say "Data: " PIXEL OF oFolder:aDialogs[4]
+	@ 18,235 Get dData4 WHEN (.F.) SIZE 50,10 PIXEL OF oFolder:aDialogs[4]
+	
+	@ 36,10  Say "ServiÁo:" PIXEL OF oFolder:aDialogs[4]    	      
+	@ 44,10  Combobox cServ4 ITEMS aServico SIZE 70,10 WHEN (nPar==4 .AND. cCombo == '4' .OR. nPar==3) VALID fValServ(4) PIXEL OF oFolder:aDialogs[4]				
+	
+	@ 36,100  Say "Dimens„o ÿ / X:" PIXEL OF oFolder:aDialogs[4]    	      
+	@ 44,100  Get nDimenX4 SIZE 45,10 PICTURE "@E 999,999.99" WHEN (nPar==4 .AND. cCombo == '4' .OR. nPar==3) PIXEL OF oFolder:aDialogs[4]									 
+	@ 47,146  Say "MM" PIXEL OF oFolder:aDialogs[4]    	      
+	
+	@ 36,166  Say "Dimens„o Y:" PIXEL OF oFolder:aDialogs[4]    	      
+	@ 44,166  Get nDimenY4 SIZE 45,10 PICTURE "@E 999,999.99" WHEN ((nPar==4 .AND. AllTrim(cTipoMat) == '1' .AND. cCombo == '4') .OR. nPar==3) PIXEL OF oFolder:aDialogs[4]									 
+	@ 47,212 Say "MM" PIXEL OF oFolder:aDialogs[4]    	      
+	                                                                                                                       
+	@ 36,232 Say "Dimens„o Z:" PIXEL OF oFolder:aDialogs[4]    	      
+	@ 44,232 Get nDimenZ4 SIZE 45,10 PICTURE "@E 999,999.99" WHEN (nPar==4 .AND. cCombo == '4' .OR. nPar==3) PIXEL OF oFolder:aDialogs[4]
+	@ 47,278 Say "MM" PIXEL OF oFolder:aDialogs[4]	
+	
+	// Se Externo
+	
+	@ 75,10  Say "Externo" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[4]      	    	
+	
+	@ 88,10  Say "Fornecedor:" PIXEL OF oFolder:aDialogs[4]    	      
+	@ 96,10  MsGet oForn4 VAR cForn4 SIZE 30,10 WHEN (nPar==4 .and. cServ4 == '2' .AND. cCombo == '4' .OR. nPar==3) F3 "SA2" VALID fValForn(cForn4,4) PIXEL OF oFolder:aDialogs[4]									 
+	@ 96,70  Get cDesFrn4 SIZE 145,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[4]									 
+	
+	@ 88,50  Say "Loja:" PIXEL OF oFolder:aDialogs[4]    	      
+	@ 96,50  Get cLoja4 SIZE 05,10 WHEN (nPar==4 .and. cServ4 == '2' .AND. cCombo == '4' .OR. nPar==3) VALID fValLoja(cForn4,cLoja4,4)  PIXEL OF oFolder:aDialogs[4]									 
+	
+	@ 88,235 Say "Data de Envio: " PIXEL OF oFolder:aDialogs[4]
+	@ 96,235 Get dDtEnv4 WHEN (nPar==4 .and. cServ4 == '2' .AND. cCombo == '4' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[4]
+	
+	@ 88,295 Say "Previs„o de Entrega: " PIXEL OF oFolder:aDialogs[4]
+	@ 96,295 Get dDtPrev4 WHEN (nPar==4 .and. cServ4 == '2' .AND. cCombo == '4' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[4]
+	
+	// Dados Recebimento       
+	@ 125,010  Say "Dados do Recebimento" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[4] 
+		
+	@ 138,010  Say "Matricula:" PIXEL OF oFolder:aDialogs[4]    	      
+	@ 146,010  MsGet oMatriRc4 VAR cMatrRc4  SIZE 25,10 WHEN (nPar==3 .OR. (Npar==4 .AND. cCombo=='4.1')) F3 "QAA"  VALID fValMatri(cMatrRc4,4.1) PIXEL OF oFolder:aDialogs[4]
+	@ 146,045  Get cDesRc4 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[4]
+		
+	@ 164,010 Say "Data de Recebimento: " PIXEL OF oFolder:aDialogs[4]
+	@ 173,010 Get dDtRec4 WHEN (nPar==3 .OR. (Npar==4 .AND. cCombo=='4.1')) SIZE 50,10 PIXEL OF oFolder:aDialogs[4]
+	
+	// Se Interno	
+	
+	@ 75,360  Say "Interno" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[4]      	    	
+	
+	@ 88,360 Say "Data Inicial: " PIXEL OF oFolder:aDialogs[4]
+	@ 96,360 Get dDatIni4 WHEN (nPar==4 .and. cServ4 == '1' .AND. cCombo == '4' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[4]
+	
+	@ 88,415 Say "Horario Inicial: " PIXEL OF oFolder:aDialogs[4]     
+	@ 96,415 Get cHorIni4 WHEN (nPar==4 .and. cServ4 == '1' .AND. cCombo == '4' .OR. nPar==3) SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder:aDialogs[4]
+	
+	@ 113,360 Say "Data Final: " PIXEL OF oFolder:aDialogs[4]
+	@ 121,360 Get dDatFim4 WHEN (nPar==4 .and. cServ4 == '1' .AND. cCombo == '4' .OR. nPar==3) SIZE 50,10 PIXEL OF oFolder:aDialogs[4]
+	
+	@ 113,415 Say "Horario Final: " PIXEL OF oFolder:aDialogs[4]
+	@ 121,415 Get cHorFim4 WHEN (nPar==4 .and. cServ4 == '1' .AND. cCombo == '4' .OR. nPar==3) SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder:aDialogs[4]
+	
+	@ 139,360 Say "Maquina: " PIXEL OF oFolder:aDialogs[4]                                                                                                                            	
+	@ 147,360 MsGet oMaq4 VAR cMaq4 SIZE 50,10 WHEN (nPar==4 .and. cServ4 == '1' .AND. cCombo == '4' .OR. nPar==3) F3 "ST9" VALID fValMaq(cMaq4,'4') PIXEL OF oFolder:aDialogs[4]   
+	@ 147,415 Get DescMaq4 SIZE 160,10 WHEN (.F.) PIXEL OF oFolder:aDialogs[4]
+	                  
+	@ 190,010 Say "DescriÁ„o Geral" COLOR CLR_HBLUE PIXEL OF oFolder:aDialogs[4]      	    	
+	@ 198,010 Get cDesc4 WHEN (nPar==4 .AND. cCombo == '4' .OR. nPar==3) MEMO SIZE 200,20 PIXEL OF oFolder:aDialogs[4]	
+	
+	// Usinagem de Gravura - Folder 5	
+		
+   	@ 05,10 BUTTON "ADICIONAR"    Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '5' .OR. cCombo == '5.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[5] action fAdd('1',cCombo)		 
+   	@ 25,10 BUTTON "RECEBER"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '5' .OR. cCombo == '5.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[5] action fAdd('2',cCombo)		 
+   	@ 45,10 BUTTON "ALTERAR"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '5' .OR. cCombo == '5.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[5] action fAdd('3',cCombo)		 
+   	@ 65,10 BUTTON "VISUALIZAR"   Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '5' .OR. cCombo == '5.1')).OR. nPar==3 .OR. nPar==1)   PIXEL OF oFolder:aDialogs[5] action fAdd('4',cCombo)
+  	@ 85,10 BUTTON "EXCLUIR"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '5' .OR. cCombo == '5.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[5] action fAdd('5',cCombo)		 
+
+	// Botoes Nitretacao - Folder 6
+		
+   	@ 05,10 BUTTON "ADICIONAR"    Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '6' .OR. cCombo == '6.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[6] action fAdd('1',cCombo)		 
+   	@ 25,10 BUTTON "RECEBER"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '6' .OR. cCombo == '6.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[6] action fAdd('2',cCombo)		 
+   	@ 45,10 BUTTON "ALTERAR"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '6' .OR. cCombo == '6.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[6] action fAdd('3',cCombo)		 
+   	@ 65,10 BUTTON "VISUALIZAR"   Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '6' .OR. cCombo == '6.1')).OR. nPar==3 .OR. nPar==1)   PIXEL OF oFolder:aDialogs[6] action fAdd('4',cCombo)
+  	@ 85,10 BUTTON "EXCLUIR"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '6' .OR. cCombo == '6.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[6] action fAdd('5',cCombo)		 
+  	
+  	// Botoes GravaÁ„o de Corrida - Folder 7	
+		
+   	@ 05,10 BUTTON "ADICIONAR"    Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '7' .OR. cCombo == '7.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[7] action fAdd('1',cCombo)		 
+   	@ 25,10 BUTTON "RECEBER"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '7' .OR. cCombo == '7.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[7] action fAdd('2',cCombo)		 
+   	@ 45,10 BUTTON "ALTERAR"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '7' .OR. cCombo == '7.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[7] action fAdd('3',cCombo)		 
+   	@ 65,10 BUTTON "VISUALIZAR"   Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '7' .OR. cCombo == '7.1')).OR. nPar==3 .OR. nPar==1)   PIXEL OF oFolder:aDialogs[7] action fAdd('4',cCombo)
+  	@ 85,10 BUTTON "EXCLUIR"      Size 50,15 WHEN ((nPar==4 .AND. (cCombo == '7' .OR. cCombo == '7.1')).OR. nPar==3)   PIXEL OF oFolder:aDialogs[7] action fAdd('5',cCombo)		 
+ 	
+  	// Botoes Utilizacao em Producao - Folder 8 	
+		
+   	@ 05,10 BUTTON "PRODUCAO"     Size 50,15 WHEN (nPar == 4 .AND. cCombo == '8') PIXEL OF oFolder:aDialogs[8] action fAdd('6',cCombo)		 
+   	@ 25,10 BUTTON "SUCATEAR"     Size 50,15 WHEN (nPar==4 .AND. cCombo == '8') PIXEL OF oFolder:aDialogs[8] action fAdd('7',cCombo)
+   	@ 45,10 BUTTON "REGRAVAR"     Size 50,15 WHEN (nPar==4 .AND. cCombo == '8') PIXEL OF oFolder:aDialogs[8] action fRegrav()		 		 
+   	@ 65,10 BUTTON "VISUALIZAR"   Size 50,15 WHEN ((nPar==4 .AND. cCombo == '8') .OR. nPar==1) PIXEL OF oFolder:aDialogs[8] action fAdd('9',cCombo)
+  	@ 85,10 BUTTON "EXCLUIR"      Size 50,15 WHEN (nPar==4 .AND. cCombo == '8') PIXEL OF oFolder:aDialogs[8] action fAdd('10',cCombo)		 
+   	                                        
+	//ITENS DO LISTBOX - USINAGEM DE GRAVURA                                 
+	// Codigo
+	aAdd(aHead1,{'Codigo Bloco'     ,"ZG8_COD"     , PesqPict("ZG8","ZG8_COD")    ,06,0,'.F.','','C','ZG8'})
+	aAdd(aHead1,{'Item'    			,"ZG8_ITEM"    , PesqPict("ZG8","ZG8_ITEM")   ,02,0,'.F.','','C','ZG8'})
+	aAdd(aHead1,{'Tipo ServiÁo'     ,"ZG8_SERV5"   , PesqPict("ZG8","ZG8_SERV5")  ,10,0,'.F.','','C','ZG8'})   
+	aAdd(aHead1,{'Status'           ,"ZG8_USIDES"  , '@!' 						  ,30,0,'.F.','','C','ZG8'})   	
+	aAdd(aHead1,{'Data'      	    ,"ZG8_DATA5"   , PesqPict("ZG8","ZG8_DATA5")  ,10,0,'.F.','','C','ZG8'})
+	aAdd(aHead1,{'Matricula Resp.'  ,"ZG8_MATRI5"  , PesqPict("ZG8","ZG8_MATRI5") ,06,0,'.F.','','C','ZG8'})   	
+	
+	//ITENS DO LISTBOX - NITRETACAO                                 	
+	aAdd(aHead2,{'Codigo Bloco'     ,"ZG9_COD"     , PesqPict("ZG9","ZG9_COD")    ,06,0,'.F.','','C','ZG9'})
+	aAdd(aHead2,{'Item'    			,"ZG9_ITEM"    , PesqPict("ZG9","ZG9_ITEM")   ,02,0,'.F.','','C','ZG9'})
+	aAdd(aHead2,{'Data'      	    ,"ZG9_DATA6"   , PesqPict("ZG9","ZG9_DATA6")  ,10,0,'.F.','','C','ZG9'})
+	aAdd(aHead2,{'Status'           ,"ZG9_NITDES"  , PesqPict("ZG9","ZG9_NITDES") ,30,0,'.F.','','C','ZG9'})   	
+	aAdd(aHead2,{'Matricula Resp.'  ,"ZG9_MATRI6"  , PesqPict("ZG9","ZG9_MATRI6") ,06,0,'.F.','','C','ZG9'}) 
+	
+	//ITENS DO LISTBOX - GRAVA«√O DE CORRIDA                                 	
+	aAdd(aHead3,{'Codigo Bloco'     ,"ZH0_COD"     , PesqPict("ZH0","ZH0_COD")    ,06,0,'.F.','','C','ZH0'})
+	aAdd(aHead3,{'Item'    			,"ZH0_ITEM"    , PesqPict("ZH0","ZH0_ITEM")   ,02,0,'.F.','','C','ZH0'})
+	aAdd(aHead3,{'Tipo ServiÁo'     ,"ZH0_SERV7"   , PesqPict("ZH0","ZH0_SERV7")  ,10,0,'.F.','','C','ZH0'})   
+	aAdd(aHead3,{'Status'           ,"ZH0_GRADES"  , PesqPict("ZH0","ZH0_GRADES") ,30,0,'.F.','','C','ZH0'})   	
+	aAdd(aHead3,{'Data'      	    ,"ZH0_DATA7"   , PesqPict("ZH0","ZH0_DATA7")  ,10,0,'.F.','','C','ZH0'})	
+	aAdd(aHead3,{'Matricula Resp.'  ,"ZH0_MATRI7"  , PesqPict("ZH0","ZH0_MATRI7") ,06,0,'.F.','','C','ZH0'})  	
+	
+	//ITENS DO LISTBOX - UTILIZACAO EM FORJAMENTO
+	// Codigo
+	aAdd(aHead4,{'Codigo Bloco'     ,"ZH1_COD"     , PesqPict("ZH1","ZH1_COD")    ,06,0,'.F.','','C','ZH1'})
+	aAdd(aHead4,{'Referencia'		,"ZH1_ITEM"    , PesqPict("ZH1","ZH1_ITEM")   ,02,0,'.F.','','C','ZH1'})
+	aAdd(aHead4,{'Sequencial'       ,"ZH1_SEQ"     , PesqPict("ZH1","ZH1_SEQ")    ,02,0,'.F.','','C','ZH1'})   
+	aAdd(aHead4,{'DescriÁ„o'		,"ZH1_TIPO"    , PesqPict("ZH1","ZH1_TIPO")   ,10,0,'.F.','','C','ZH1'})
+	aAdd(aHead4,{'Quantidade' 	    ,"ZH1_QUANT"   , '@e 9999999999' 			  ,10,0,'.F.','','C','ZH1'})	
+	aAdd(aHead4,{'Data'             ,"ZH1_DATA"    , PesqPict("ZH1","ZH1_DATA")   ,10,0,'.F.','','C','ZH1'})   	
+	aAdd(aHead4,{'Hora'      	    ,"ZH1_HORA"    , PesqPict("ZH1","ZH1_HORA")   ,05,0,'.F.','','C','ZH1'})	
+	aAdd(aHead4,{'Matricula Resp.'  ,"ZH1_MATRI"   , PesqPict("ZH1","ZH1_MATRI")  ,06,0,'.F.','','C','ZH1'}) 
+
+	// Usinagem de Gravura	
+	oGetD1 := MsNewGetDados():New(05,; 
+								  70,;     
+								  aSize[6]/2.6,;     
+								  aSize[5]/2.05,;
+								  3,;//nOpc,;                     
+								  "AllwaysTrue()",;
+								  "AllwaysTrue()",;
+								  '+ZG8_ITEM',,;
+								  0,;
+								  99,;
+								  "AllwaysTrue()",;
+								  '',;
+								  "AllwaysTrGue()",;
+								  oFolder:aDialogs[5],;
+								  aHead1,;
+								  aColUsi)
+
+	// Nitretacao								  
+	oGetD2 := MsNewGetDados():New(05 ,; 
+								  70,;     
+								  aSize[6]/2.6,;     
+								  aSize[5]/2.05,;
+								  3,;//nOpc,;                     
+								  "AllwaysTrue()",;
+								  "AllwaysTrue()",;
+								  '+ZG9_ITEM',,;
+								  0,;
+								  99,;
+								  "AllwaysTrue()",;
+								  '',;
+								  "AllwaysTrGue()",;
+								  oFolder:aDialogs[6],;
+								  aHead2,;
+								  aColNit)			
+					  
+
+	// GravaÁ„o Corrida								  
+	oGetD3 := MsNewGetDados():New(05 ,; 
+								  70,;     
+								  aSize[6]/2.6,;     
+								  aSize[5]/2.05,;
+								  3,;//nOpc,;                     
+								  "AllwaysTrue()",;
+								  "AllwaysTrue()",;
+								  '+ZH0_ITEM',,;
+								  0,;
+								  99,;
+								  "AllwaysTrue()",;
+								  '',;
+								  "AllwaysTrGue()",;
+								  oFolder:aDialogs[7],;
+								  aHead3,;
+								  aColGrav)			
+
+								  
+	// Utilizacao Forjamento
+	oGetD4 := MsNewGetDados():New(05 ,; 
+								  70,;     
+								  aSize[6]/2.6,;     
+								  aSize[5]/2.05,;
+								  3,;//nOpc,;                     
+								  "AllwaysTrue()",;
+								  "AllwaysTrue()",;
+								  '+ZH1_ITEM',,;
+								  0,;
+								  99,;
+								  "AllwaysTrue()",;
+								  '',;
+								  "AllwaysTrGue()",;
+								  oFolder:aDialogs[8],;
+								  aHead4,;
+								  aColUti)											  
+	
+	OGetD1:LDELETE := .T.     
+	OGetD2:LDELETE := .T.     
+	OGetD3:LDELETE := .T.
+	OGetD4:LDELETE := .T.
+	
+	if 	VAL(SUBSTR(AllTrim(cCombo),1,1)) >= 5  .OR. cRegrav == 'S'
+		Load('5') // Carrega os dados do GetDados da Usinagem de Gravura	   
+	endif
+	
+	if VAL(SUBSTR(AllTrim(cCombo),1,1)) >= 6 .OR. cRegrav == 'S'
+		Load('6') // Carrega os dados do GetDados da Nitretacao		
+	endif
+	
+	if VAL(SUBSTR(AllTrim(cCombo),1,1)) >= 7 .OR. cRegrav == 'S'
+		Load('7') // Carrega os dados do GetDados da GravaÁ„o de Corrida
+	endif
+	
+	if VAL(SUBSTR(AllTrim(cCombo),1,1)) >= 8 .OR. VAL(SUBSTR(AllTrim(cCombo),1,1)) >= 9 .OR. cRegrav == 'S'
+		Load('8') // Carrega os dados do GetDados do Apont. Prod. e Sucata
+	endif	
+	
+	// Posiciona o folder na aba correspondente ao status (ExceÁ„o para "Sucata")
+	if AllTrim(cCombo) == '9' // Sucata	
+	   oFolder:nOption := 8			
+	else
+	   oFolder:nOption := Val(SUBSTR(AllTrim(cCombo),1,1)) 	
+	endif
+		
+	Activate MsDialog oDlg ON INIT EnchoiceBar(oDlg,bOk1,bCanc)      
+
+Return
+
+Static Function fRegrav()
+
+ If MsgBox("Tem certeza de que deseja regravar ?","Atencao - Ser· mudado o status para Usinagem de Gravura!","YESNO")
+    RecLock("ZG5",.F.)
+    	ZG5->ZG5_STATUS := '5.1'	
+    	ZG5->ZG5_REGRAV := 'S'	    	
+	MsUnLock("ZG5")
+ EndIf    
+			 
+ Cancelar()
+ 
+Return     
+
+/*********************************************************************************/
+/******************************* Carrega o GetDados  *****************************/
+/*********************************************************************************/
+Static Function Load(etap)   
+Local cQuery         
+	
+	// Usinagem de Gravura
+	if etap == '5'
+        
+		// ZG8 = TABELA DE USINAGEM DE GRAVURA
+		cQuery := " SELECT ZG8_COD, ZG8_ITEM, ZG8_SERV5, ZG8_DATA5, ZG8_MATRI5, ZG8_USIDES " 	 
+		cQuery += " FROM "+RetSqlName("ZG8")+" ZG8 " 
+		cQuery += " WHERE ZG8_COD = '"+cCod+"' "		
+		cQuery += " AND ZG8.D_E_L_E_T_ = ' '"			
+		cQuery += " ORDER BY ZG8_ITEM ASC"		
+		
+		TcQuery cQuery NEW ALIAS "ITENS" 	
+			
+		ITENS->(dbGoTop()) 
+		
+		oGetD1:aCols := {} 
+		
+		// ITENS DO ACOLS DE EMAIL
+		While !ITENS->(Eof())   	    	    
+
+	    	    aAdd(oGetD1:aCols,{ (ITENS->ZG8_COD),; // CODIGO 	
+			     			  		ITENS->ZG8_ITEM,;  // ITEM
+			     					IIF(ITENS->ZG8_SERV5 == '1', 'INTERNO', 'EXTERNO'),;  // TIPO DE SERVICO (EXT OU INT) 
+									ITENS->ZG8_USIDES,;    // STATUS
+				     				STOD(ITENS->ZG8_DATA5),;  // DATA CRIACAO DO REGISTRO
+									ITENS->ZG8_MATRI5,;    // MATRICULA DO CRIADOR DO REGISTRO			    
+									.F.}) 								
+			 
+			 	ITENS->(DbSkip())					    						
+    	EndDo   
+    	
+    	ITENS->(DbCloseArea()) 
+    
+    // Nitretacao	
+    elseif etap == '6'	                                                                         
+    	
+		// ZG9 = TABELA DE NITRETACAO
+	   	cQuery := " SELECT ZG9_COD, ZG9_ITEM, ZG9_DATA6, ZG9_MATRI6, ZG9_NITDES " 	 
+		cQuery += " FROM "+RetSqlName("ZG9")+" ZG9 " 
+		cQuery += " WHERE ZG9_COD = '"+cCod+"' "		
+		cQuery += " AND ZG9.D_E_L_E_T_ = ' '"			
+		cQuery += " ORDER BY ZG9_ITEM ASC"		
+		
+		TcQuery cQuery NEW ALIAS "ITENS" 	
+			
+		ITENS->(dbGoTop()) 
+		
+		oGetD2:aCols := {} 
+
+		While !ITENS->(Eof())   	    	    
+
+	    	    aAdd(oGetD2:aCols,{ (ITENS->ZG9_COD),;        // CODIGO 	
+			     			  		ITENS->ZG9_ITEM,;  		  // ITEM
+			     			  		STOD(ITENS->ZG9_DATA6),;  // DATA CRIACAO DO REGISTRO
+									ITENS->ZG9_NITDES,;       // STATUS				     				
+									ITENS->ZG9_MATRI6,;       // MATRICULA DO CRIADOR DO REGISTRO			    
+									.F.}) 								
+			 
+			 	ITENS->(DbSkip())					    						
+    	EndDo   
+    	
+    	ITENS->(DbCloseArea())   
+    	
+   // GravaÁ„o de Corrida 	
+	elseif etap == '7'
+                                     
+		// ZH0 = TABELA DE GRAVA«√O DE CORRIDA
+		cQuery := " SELECT ZH0_COD, ZH0_ITEM, ZH0_SERV7, ZH0_DATA7, ZH0_MATRI7, ZH0_GRADES " 	 
+		cQuery += " FROM "+RetSqlName("ZH0")+" ZH0 " 
+		cQuery += " WHERE ZH0_COD = '"+cCod+"' "		
+		cQuery += " AND ZH0.D_E_L_E_T_ = ' '"			
+		cQuery += " ORDER BY ZH0_ITEM ASC"		
+		
+		TcQuery cQuery NEW ALIAS "ITENS" 	
+			
+		ITENS->(dbGoTop()) 
+		
+		oGetD3:aCols := {} 
+
+		While !ITENS->(Eof())   	    	    
+
+	    	    aAdd(oGetD3:aCols,{ (ITENS->ZH0_COD),; // CODIGO 	
+			     			  		ITENS->ZH0_ITEM,;  // ITEM
+			     					IIF(ITENS->ZH0_SERV7 == '1', 'INTERNO', 'EXTERNO'),;  // TIPO DE SERVICO (EXT OU INT) 
+									ITENS->ZH0_GRADES,;    // STATUS
+				     				STOD(ITENS->ZH0_DATA7),;  // DATA CRIACAO DO REGISTRO
+									ITENS->ZH0_MATRI7,;    // MATRICULA DO CRIADOR DO REGISTRO			    
+									.F.}) 								
+			 
+			 	ITENS->(DbSkip())					    						
+    	EndDo   
+    	
+    	ITENS->(DbCloseArea())     	
+    	             
+	// UtilizaÁo em Forjamento    	
+	elseif etap == '8'
+                                     
+		// ZH0 = TABELA DE GRAVA«√O DE CORRIDA
+		cQuery := " SELECT ZH1_COD, ZH1_ITEM, ZH1_SEQ, ZH1_TIPO, ZH1_QUANT, ZH1_DATA, ZH1_HORA, ZH1_MATRI " 	 
+		cQuery += " FROM "+RetSqlName("ZH1")+" ZH1 " 
+		cQuery += " WHERE ZH1_COD = '"+cCod+"' "		
+		cQuery += " AND ZH1.D_E_L_E_T_ = ' '"			
+		cQuery += " ORDER BY ZH1_ITEM ASC"		
+		
+		TcQuery cQuery NEW ALIAS "ITENS" 	
+			
+		ITENS->(dbGoTop()) 
+		
+		oGetD4:aCols := {} 
+
+		While !ITENS->(Eof())   	    	    
+
+	    	    aAdd(oGetD4:aCols,{ (ITENS->ZH1_COD),; // CODIGO 	
+			     			  		ITENS->ZH1_ITEM,;  // ITEM
+			     			  		ITENS->ZH1_SEQ,;  // SEQUENCIAL
+			     					IIF(ITENS->ZH1_TIPO == 'P', 'APONTAMENTO PRODUCAO', 'SUCATA'),;  // TIPO 
+									ITENS->ZH1_QUANT,;    // QUANT
+				     				STOD(ITENS->ZH1_DATA),;  // DATA CRIACAO DO REGISTRO
+									ITENS->ZH1_HORA,;    // HORARIO DA CRIA«√O DO REGISTRO			    
+									ITENS->ZH1_MATRI,;    // MATRICULA DO CRIADOR DO REGISTRO			    
+									.F.}) 								
+			 
+			 	ITENS->(DbSkip())					    						
+    	EndDo   
+    	
+    	ITENS->(DbCloseArea())     	    	
+    	
+    endif    	
+
+Return
+	
+	
+/*******************************************************************************************/
+/*********************************** ADICIONAR PROCESSO ************************************/  
+/*******************************************************************************************/
+
+Static Function fAdd(tipo,op) 
+
+// -----  Variaveis Utilizadas e respectivos valores ---------
+
+/* 	tipo (OperaÁ„o que ser· feita) :     
+    
+	// Para Usinagem Gravura, Nitretacao, Grav. Corrida
+	1 = Adicionar
+	2 = Receber
+	3 = Alterar 
+	4 = Visualizar
+	5 = Excluir   
+	
+	6 = Adicionar Apontamento Producao
+	7 = Adicionar Sucata
+	
+	op (Qual ETAPA est· sendo usada):
+	
+	5 = Usinagem de Gravura
+	6 = GravaÁ„o de Corrida
+	7 = NitretaÁ„o
+	8 = Utilizacao em Forjamento
+*/
+// -----------------------------------------------------------
+
+Local bOk2        := {||Conf(tipo,op)}
+Local bCanc2      := {||oDlgAdd:end()}
+Private dData5    := CtoD('  /  /  ') , dData6 := CtoD('  /  /  '), dData7 := CtoD('  /  /  ')  , dData8 := CtoD('  /  /  ')
+Private dDtEnv7   := CtoD('  /  /  ') , dDtPrev7 := CtoD('  /  /  ')
+Private dDtEnv5   := CtoD('  /  /  ') , dDtPrev5 := CtoD('  /  /  '), dDtRec7 := CtoD('  /  /  ')
+Private dDtEnv6   := CtoD('  /  /  ') , dPrev6 := CtoD('  /  /  ')
+Private dDtRec5   := CtoD('  /  /  ') , dDatIni5 := CtoD('  /  /  '), cHorIni5 := space(05) , dDatFim5 := CtoD('  /  /  ') , cHorFim5 := space(05), cMaq5 := space(15)
+Private dDatIni7  := CtoD('  /  /  ') , cHorIni7 := space(05) , dDatFim7 := CtoD('  /  /  ') , cHorFim7 := space(05), cMaq5 := space(15)
+Private dDtRec6   := CtoD('  /  /  ')
+Private cMatri5 := space(06) , cMatRc5 := space(06), cMatri6 := space(06) , cMatRc6 := space(06) , cMatri8 := space(06), cHora8 := space(05), cMot
+Private cMatri7   := space(06) , cMatRc7 := space(06)
+Private descMat6, DescMat8 , nQuant := 0
+Private nDimenZ   := 0 , nDimenZ2 := 0 , nDimenZ4 := 0
+Private cForn5 := space(06), cForn6 := space(06), cForn7 := space(06)
+Private cLoja5 := space(02), cLoja6 := space(02), cLoja7 := space(02)
+Private nCorpoP := 0 , cOper , nCertif := 0
+Private nCorpP6 := 0 , cCert6 := space(15)
+Private descmat4, descmat5, cMatRc5, cDesRc6, cMatRc7, cDesRc7, DescMat7
+Private cDesFrn5, cDesFrn6, cDesc6, cDesc7, cDesFrn7, cCorrid := space(04) , lChk6 := .F. , lChk7 := .F.
+Private cDesc5 := "" , cDesRc5 := "" , cCodDes := space(15), cRevDes := space(02), cDescDes , DescMaq5, DescMaq7
+Private cMaq7 := space(15), cServ5 := {"1=Interno","2=Externo"} , cServ7 := {"1=Interno","2=Externo"}               
+ 
+op := SUBSTR(op,1,1) 
+
+// Bloqueio para usuario n„o adicionar mais de uma usinagem de gravura no mesmo ciclo(revisao)
+if tipo == '1' .AND. op == '5' .AND. lBloqUsi
+   MsgBox("N„o È permitido adicionar outra usinagem de gravura !","Atencao","INFO")	
+   Return
+endif
+
+// Bloqueio para usuario n„o adicionar mais de uma nitretacao no mesmo ciclo(revisao)
+if tipo == '1' .AND. op == '6' .AND. lBloqNit
+   MsgBox("N„o È permitido adicionar outra nitretacao !","Atencao","INFO")	
+   Return
+endif
+
+// Bloqueio para usuario n„o adicionar mais de uma gravacao gravura no mesmo ciclo(revisao)
+if tipo == '1' .AND. op == '7' .AND. lBloqGra
+   MsgBox("N„o È permitido adicionar outra gravaÁ„o corrida !","Atencao","INFO")	
+   Return
+endif    
+
+
+// Bloqueio para usuario n„o receber logo apÛs adicionar uma usinagem de gravura
+if tipo == '2' .AND. op == '5' .AND. lRecUsi
+   MsgBox("N„o È permitido receber logo apÛs inserir a usinagem ! Confirme primeiro !","Atencao","INFO")	
+   Return
+endif    
+
+// Bloqueio para usuario n„o receber logo apÛs adicionar uma nitretacao
+if tipo == '2' .AND. op == '6' .AND. lRecNit
+   MsgBox("N„o È permitido receber logo apÛs inserir a nitretacao ! Confirme primeiro !","Atencao","INFO")	
+   Return
+endif                                                                  
+
+// Bloqueio para usuario n„o receber logo apÛs adicionar uma gravacao corrida
+if tipo == '2' .AND. op == '7' .AND. lRecGra
+   MsgBox("N„o È permitido receber logo apÛs inserir a gravaÁ„o de corrida ! Confirme primeiro !","Atencao","INFO")	
+   Return
+endif 
+
+// Caso seja alterar ou excluir, verifica permissao
+IF (op$'5/6/7' .AND. tipo$'3/5') .OR. (op == '8' .AND. tipo == '10')
+	IF !cUserName$'MAICONMT'
+		    MSgBox("USUARIO SEM PERMISS√O PARA UTILIZAR ESTA FUN«√O !","USUARIO SEM PERMISSAO","ALERT")	
+		    Return
+	ENDIF         
+ENDIF
+
+// Sen„o for inclus„o de um novo, carrega o dialog com os dados do registro selecionado
+if tipo <> '1' .AND. op == '5'  
+    LoadItem(STRZERO(oGetD1:oBrowse:nat,2),op,'')         
+elseif tipo <> '1' .AND. op == '6'                     
+    LoadItem(STRZERO(oGetD2:oBrowse:nat,2),op,'')         
+elseif tipo <> '1' .AND. op == '7'                     
+    LoadItem(STRZERO(oGetD3:oBrowse:nat,2),op,'') 
+elseif (tipo <> '6' .AND. tipo <> '7') .AND. op == '8'
+	if len(oGetD1:Acols) <> 0	                     
+    	LoadItem(oGetD4:Acols[oGetD4:oBrowse:nat][2],op,oGetD4:Acols[oGetD4:oBrowse:nat][3])        	
+    else
+    	alert('N„o existe nenhum registro !')	
+    endif
+endif	   
+ 
+ // Caso o usuario clique no botao receber, mesmo sendo que o registro foi feito internamente
+ IF tipo == '2' .and. op == '5' .and. cServ5 == '1' 	   	  
+	MsgBox("Usinagem de Gravura feita internamente ! N„o È necess·rio utilizar o bot„o 'RECEBER' ","Usinagem Interna","INFO")  		 
+	Return	  	   
+ ENDIF
+ 
+ // Caso o usuario clique no botao receber, mesmo sendo que o registro foi feito internamente
+ IF tipo == '2' .and. op == '7' .and. cServ7 == '1' 	   	  
+	MsgBox("GravaÁ„o de Corrida feita internamente ! N„o È necess·rio utilizar o bot„o 'RECEBER' ","GravaÁ„o Interna","INFO")  		 
+	Return	  	   
+ ENDIF  
+
+ // Caso usuario tente receber um registro aonde j· teve o recebimento (Usinagem Gravura)
+ IF tipo == '2' .and. op == '5' .and. cServ5 == '2' 
+ 	if !Empty(cMatRc5) .and. !Empty(dDtRec5) 
+	   	MsgBox("Recebimento j· foi feito ! ","Recebimento j· feito","INFO")  		 
+	    Return
+	endif 	
+ EndIf 
+ 
+  // Caso usuario tente receber um registro aonde j· teve o recebimento (Nitretacao)
+ IF tipo == '2' .and. op == '6'
+ 	if !Empty(cMatRc6) .and. !Empty(cCert6) 
+	   	MsgBox("Recebimento j· foi feito ! ","Recebimento j· feito","INFO")  		 
+	    Return
+	endif 	
+ EndIf
+ 
+ // Caso usuario tente receber um registro aonde j· teve o recebimento (GravaÁ„o Corrida)
+ IF tipo == '2' .and. op == '7' .and. cServ7 == '2' 
+ 	if !Empty(cMatRc7) .and. !Empty(dDtRec7) 
+	   	MsgBox("Recebimento j· foi feito ! ","Recebimento j· feito","INFO")  		 
+	    Return
+	endif 	
+ EndIf
+
+oDlgAdd := MsDialog():New(0,0,500,800,'',,,,,,,,,.T.)               
+
+// Caso Usinagem, Nitretacao ou Grav. Corrida
+if op$'5/6/7'
+
+	@ 005,000 FOLDER oFolder2 PROMPTS OemToAnsi("Dados Gerais "),;
+								      OemToAnsi("Dados de Recebimento (Externo)") SIZE 405,400 OF oDlgAdd PIXEL
+// Caso seja apontamento producao ou sucata								      
+elseif op == '8'
+	
+	if tipo == '6' 
+		@ 005,000 FOLDER oFolder2 PROMPTS OemToAnsi("Apontamento de Producao") SIZE 405,400 OF oDlgAdd PIXEL
+	elseif tipo == '7' 	
+		@ 005,000 FOLDER oFolder2 PROMPTS OemToAnsi("Sucata") SIZE 405,400 OF oDlgAdd PIXEL
+	else
+		@ 005,000 FOLDER oFolder2 PROMPTS OemToAnsi("Visualizar") SIZE 405,400 OF oDlgAdd PIXEL
+	endif
+	
+endif
+	
+// Usinag. Gravura 	
+if op == '5'
+	
+	// Se for Novo Registro coloca a data 
+	if tipo == '1'	
+	   dData5 := dDataBase	
+	endif
+	
+	@ 08,10  Say "Matricula:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 18,10  MsGet oMatri5 VAR cMatri5  SIZE 25,10 WHEN (tipo == '1' .OR. tipo == '3') F3 "QAA"  VALID fValMatri(cMatri5,5) PIXEL OF oFolder2:aDialogs[1]
+	@ 18,45  Get DescMat5 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 08,235 Say "Data: " PIXEL OF oFolder2:aDialogs[1]
+	@ 18,235 Get dData5 WHEN (.F.) SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 36,10  Say "ServiÁo:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 44,10  Combobox cServ5 ITEMS aServico SIZE 70,10 WHEN (tipo == '1' .OR. tipo == '3') VALID fValServ(5) PIXEL OF oFolder2:aDialogs[1]				
+	
+	@ 36,100  Say "Codigo Desenho:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 44,100  MsGet oCodDes VAR CCodDes SIZE 57,10 WHEN (tipo == '1'.OR. tipo == '3') F3 "SB1" VALID fValDes(cCodDes) PIXEL OF oFolder2:aDialogs[1]									 
+	@ 44,163  Get cDescDes SIZE 100,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]									 
+	
+	@ 36,270  Say "Revis„o:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 44,270  Get cRevDes SIZE 15,10 WHEN (tipo == '1' .OR. tipo == '3') PIXEL OF oFolder2:aDialogs[1]									 
+	
+	// Se Externo
+	
+	@ 65,10  Say "Externo" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+	
+	@ 78,10  Say "Fornecedor:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 86,10  MsGet oForn5 VAR cForn5 SIZE 30,10 WHEN (tipo == '1' .AND. cServ5 == '2' .OR. tipo == '3') F3 "SA2" VALID fValForn(cForn5,5) PIXEL OF oFolder2:aDialogs[1]									 
+	@ 86,70  Get cDesFrn5 SIZE 145,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]									 
+	
+	@ 78,50  Say "Loja:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 86,50  Get cLoja5 SIZE 05,10 WHEN (tipo == '1' .AND. cServ5 == '2' .OR. tipo == '3') VALID fValLoja(cForn5,cLoja5,5)  PIXEL OF oFolder2:aDialogs[1]									 
+	
+	@ 78,235 Say "Data de Envio: " PIXEL OF oFolder2:aDialogs[1]
+	@ 86,235 Get dDtEnv5 WHEN (tipo == '1' .AND. cServ5 == '2' .OR. tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 78,295 Say "Previs„o de Entrega: " PIXEL OF oFolder2:aDialogs[1]
+	@ 86,295 Get dDtPrev5 WHEN (tipo == '1' .AND. cServ5 == '2' .OR. tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	// Dados Recebimento
+	
+	@ 05,10  Say "Dados do Recebimento" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[2]      	    	
+	
+	@ 18,10  Say "Matricula:" PIXEL OF oFolder2:aDialogs[2]    	      
+	@ 26,10  MsGet oMatRc5 VAR cMatRc5  SIZE 25,10 WHEN (tipo == '2' .OR. tipo == '3') F3 "QAA"  VALID fValMatri(cMatRc5,5.1) PIXEL OF oFolder2:aDialogs[2]
+	@ 26,45  Get cDesRc5 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[2]
+		
+	@ 44,10 Say "Data de Recebimento: " PIXEL OF oFolder2:aDialogs[2]
+	@ 52,10 Get dDtRec5 WHEN (tipo == '2' .OR.tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[2]
+	
+	// Se Interno	
+	
+	@ 117,10  Say "Interno" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+	
+	@ 131,10 Say "Data Inicial: " PIXEL OF oFolder2:aDialogs[1]
+	@ 139,10 Get dDatIni5 WHEN (tipo == '1' .AND. cServ5 == '1' .OR. tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 131,70 Say "Horario Inicial: " PIXEL OF oFolder2:aDialogs[1]     
+	@ 139,70 Get cHorIni5 WHEN (tipo == '1' .AND. cServ5 == '1' .OR. tipo == '3') SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 131,235 Say "DescriÁ„o Geral" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+	@ 139,235 Get cDesc5 WHEN (tipo == '1' .OR. tipo == '3') MEMO SIZE 150,40 PIXEL OF oFolder2:aDialogs[1]		
+	
+	@ 157,10 Say "Data Final: " PIXEL OF oFolder2:aDialogs[1]
+	@ 165,10 Get dDatFim5 WHEN (tipo == '1' .AND. cServ5 == '1' .OR. tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 157,70 Say "Horario Final: " PIXEL OF oFolder2:aDialogs[1]
+	@ 165,70 Get cHorFim5 WHEN (tipo == '1' .AND. cServ5 == '1' .OR. tipo == '3') SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 183,10 Say "Maquina: " PIXEL OF oFolder2:aDialogs[1]
+	@ 191,10 MsGet oMaq5 VAR cMaq5 SIZE 50,10 WHEN (tipo == '1' .AND. cServ5 == '1' .OR. tipo == '3') F3 "ST9" VALID fValMaq(cMaq5,'5') PIXEL OF oFolder2:aDialogs[1]
+	@ 191,65 Get DescMaq5 SIZE 160,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]
+
+// NitretaÁ„o ------------------------------------------------------------------------------------------------------------------------------------	
+elseif op == '6'
+
+    // Se for Novo Registro coloca a data 
+	if tipo == '1'	
+	   dData6 := dDataBase	
+	endif
+	
+	@ 08,10  Say "Matricula:" PIXEL OF oFolder2:aDialogs[1]	      
+	@ 18,10  MsGet oMatri6 VAR cMatri6  SIZE 25,10 WHEN (tipo == '1' .OR. tipo == '3') F3 "QAA"  VALID fValMatri(cMatri6,6) PIXEL OF oFolder2:aDialogs[1]
+	@ 18,45  Get descMat6 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 08,235 Say "Data: " PIXEL OF oFolder2:aDialogs[1]
+	@ 18,235 Get dData6 WHEN (.F.) SIZE 50,10 PIXEL OF oFolder2:aDialogs[1] 
+	
+	// Check-Box                                       
+    @ 19,300 CHECKBOX oChk6 VAR lChk6 PROMPT "NitretaÁ„o N„o Realizada" WHEN (tipo == '1' .OR. tipo == '3') VALID fCheck(6) SIZE 100,008 PIXEL OF oFolder2:aDialogs[1]    
+   
+	@ 36,10  Say "Fornecedor:" PIXEL OF oFolder2:aDialogs[1] 	      
+	@ 44,10  MsGet oForn6 VAR cForn6 SIZE 30,10 WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk6) F3 "SA2" VALID fValForn(cForn6,6) PIXEL OF oFolder2:aDialogs[1]									 
+	@ 44,70  Get cDesFrn6 SIZE 145,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]									 
+	
+	@ 36,50  Say "Loja:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 44,50  Get cLoja6 SIZE 05,10 WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk6) VALID fValLoja(cForn6,cLoja6,6)  PIXEL OF oFolder2:aDialogs[1]									 
+	
+	@ 36,235 Say "Data de Envio: " PIXEL OF oFolder2:aDialogs[1]
+	@ 44,235 Get dDtEnv6 WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk6) SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 36,295 Say "Previs„o de Entrega: " PIXEL OF oFolder2:aDialogs[1]
+	@ 44,295 Get dPrev6 WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk6) SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 62,10  Say "N∫ Corpo de Prova:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 70,10  Get nCorpP6 SIZE 50,10 PICTURE "@E 99999999999999" WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk6) PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 08,520 Say "DescriÁ„o Geral" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+	@ 18,520 Get cDesc6 WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk6) MEMO SIZE 180,40 PIXEL OF oFolder2:aDialogs[1]			
+	
+	// Aba 2 - Recebimento
+	
+	@ 05,10  Say "Dados do Recebimento:" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[2]      	    
+	
+	@ 18,10  Say "Matricula:" PIXEL OF oFolder2:aDialogs[2]    	      
+	@ 26,10  MsGet oMatRc6 VAR cMatRc6 SIZE 25,10 WHEN (tipo == '2' .OR.tipo == '3') F3 "QAA"  VALID fValMatri(cMatRc6,6.1) PIXEL OF oFolder2:aDialogs[2]
+	@ 26,45  Get cDesRc6 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[2]
+	
+	@ 44,10 Say "Data de Recebimento: " PIXEL OF oFolder2:aDialogs[2]
+	@ 52,10 Get dDtRec6 WHEN (tipo == '2' .OR.tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[2]
+	
+	@ 70,10  Say "N∫ Certificado Digital:" PIXEL OF oFolder2:aDialogs[2]    	      
+	@ 78,10  Get cCert6 SIZE 50,10 PICTURE "@E 99999999999999" WHEN (tipo == '2' .OR.tipo == '3') PIXEL OF oFolder2:aDialogs[2]  
+
+// Gravacao da Corrida ----------------------------------------------------------------------------------------------------------------------------------		      
+elseif op == '7' 
+
+    // Se for Novo Registro coloca a data 
+	if tipo == '1'	
+	   dData7 := dDataBase	
+	endif
+	
+	@ 08,10  Say "Matricula:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 18,10  MsGet oMatri7 VAR cMatri7  SIZE 25,10 WHEN (tipo == '1' .OR. tipo == '3') F3 "QAA"  VALID fValMatri(cMatri7,7) PIXEL OF oFolder2:aDialogs[1]
+	@ 18,45  Get DescMat7 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 08,235 Say "Data: " PIXEL OF oFolder2:aDialogs[1]
+	@ 18,235 Get dData7 WHEN (.F.) SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]    
+	
+	// Check-Box                                       
+    @ 19,300 CHECKBOX oChk7 VAR lChk7 PROMPT "GravaÁ„o de Corrida N„o Realizada" WHEN (tipo == '1' .OR. tipo == '3') VALID fCheck(7) SIZE 150,008 PIXEL OF oFolder2:aDialogs[1] 
+	
+	@ 36,10  Say "ServiÁo:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 44,10  Combobox cServ7 ITEMS aServico SIZE 70,10 WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk7 ) VALID fValServ(7) PIXEL OF oFolder2:aDialogs[1]	        
+	
+	@ 36,95 Say "Corrida: " PIXEL OF oFolder2:aDialogs[1]     
+	@ 44,95 Get cCorrid WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk7) SIZE 18,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 131,235 Say "DescriÁ„o Geral" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+	@ 139,235 Get cDesc7 WHEN ((tipo == '1' .OR. tipo == '3') .AND. !lChk7) MEMO SIZE 150,40 PIXEL OF oFolder2:aDialogs[1]		
+	
+	// Se Externo	
+	@ 65,10  Say "Externo" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+	
+	@ 78,10  Say "Fornecedor:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 86,10  MsGet oForn7 VAR cForn7 SIZE 30,10 WHEN ((tipo == '1' .and. cServ7 == '2' .AND. !lChk7) .OR. tipo == '3') F3 "SA2" VALID fValForn(cForn7,7) PIXEL OF oFolder2:aDialogs[1]									 
+	@ 86,70  Get cDesFrn7 SIZE 145,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]									 
+
+	@ 78,50  Say "Loja:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 86,50  Get cLoja7 SIZE 05,10 WHEN ((tipo == '1' .and. cServ7 == '2' .AND. !lChk7) .OR. tipo == '3') VALID fValLoja(cForn7,cLoja7,7)  PIXEL OF oFolder2:aDialogs[1]									 
+	
+	@ 78,235 Say "Data de Envio: " PIXEL OF oFolder2:aDialogs[1]
+	@ 86,235 Get dDtEnv7 WHEN ((tipo == '1' .and. cServ7 == '2' .AND. !lChk7) .OR. tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 78,295 Say "Previs„o de Entrega: " PIXEL OF oFolder2:aDialogs[1]
+	@ 86,295 Get dDtPrev7 WHEN ((tipo == '1' .and. cServ7 == '2' .AND. !lChk7) .OR. tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	// Dados Recebimento	
+	@ 05,10  Say "Dados do Recebimento" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[2]      	    	
+	
+	@ 18,10  Say "Matricula:" PIXEL OF oFolder2:aDialogs[2]    	      
+	@ 26,10  MsGet oMatRc7 VAR cMatRc7  SIZE 25,10 WHEN (tipo == '2' .OR.tipo == '3') F3 "QAA"  VALID fValMatri(cMatRc7,7.1) PIXEL OF oFolder2:aDialogs[2]
+	@ 26,45  Get cDesRc7 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[2]
+		
+	@ 44,10 Say "Data de Recebimento: " PIXEL OF oFolder2:aDialogs[2]
+	@ 52,10 Get dDtRec7 WHEN (tipo == '2' .OR.tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[2]
+	
+	// Se Interno		
+	@ 117,10  Say "Interno" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+	
+	@ 131,10 Say "Data Inicial: " PIXEL OF oFolder2:aDialogs[1]
+	@ 139,10 Get dDatIni7 WHEN ((tipo == '1' .and. cServ7 == '1' .AND. !lChk7) .OR. tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 131,70 Say "Horario Inicial: " PIXEL OF oFolder2:aDialogs[1]     
+	@ 139,70 Get cHorIni7 WHEN ((tipo == '1' .and. cServ7 == '1' .AND. !lChk7) .OR. tipo == '3') SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 157,10 Say "Data Final: " PIXEL OF oFolder2:aDialogs[1]
+	@ 165,10 Get dDatFim7 WHEN ((tipo == '1' .and. cServ7 == '1' .AND. !lChk7) .OR. tipo == '3') SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 157,70 Say "Horario Final: " PIXEL OF oFolder2:aDialogs[1]
+	@ 165,70 Get cHorFim7 WHEN ((tipo == '1' .and. cServ7 == '1' .AND. !lChk7) .OR. tipo == '3') SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 183,10 Say "Maquina: " PIXEL OF oFolder2:aDialogs[1]                            
+	@ 191,10 MsGet oMaq7 VAR cMaq7 SIZE 50,10 WHEN ((tipo == '1' .and. cServ7 == '1' .AND. !lChk7) .OR. tipo == '3') F3 "ST9" VALID fValMaq(cMaq7,'7')  PIXEL OF oFolder2:aDialogs[1]    
+	@ 191,65 Get DescMaq7 SIZE 160,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]
+	
+// Apontamento Producao / Sucata ----------------------------------------------------------------------------------------------------------------------------------		      
+elseif op == '8' 
+
+    // Se for Novo Registro coloca a data 
+	if tipo$'6/7'	
+	   dData8 := dDataBase	  
+	   cHora8 := Substr(Time(),1,5)
+	endif
+	
+	@ 08,10  Say "Matricula:" PIXEL OF oFolder2:aDialogs[1]    	      
+	@ 18,10  MsGet oMatri8 VAR cMatri8  SIZE 25,10 WHEN (tipo$'6/7' .OR. tipo == '3') F3 "QAA"  VALID fValMatri(cMatri8,8) PIXEL OF oFolder2:aDialogs[1]
+	@ 18,45  Get DescMat8 SIZE 180,10 WHEN (.F.) PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 08,235 Say "Data: " PIXEL OF oFolder2:aDialogs[1]
+	@ 18,235 Get dData8 WHEN (.F.) SIZE 50,10 PIXEL OF oFolder2:aDialogs[1]
+	
+	@ 08,305 Say "Horario: " PIXEL OF oFolder2:aDialogs[1]     
+	@ 18,305 Get cHora8 WHEN (.F.) SIZE 25,10 PICTURE "99:99" PIXEL OF oFolder2:aDialogs[1]
+	
+	// Apontamento Producao	
+	if tipo == '6'	        
+		@ 36,10  Say "Quantidade de PeÁas Produzidas:" PIXEL OF oFolder2:aDialogs[1]    	      
+		@ 44,10  Get nQuant  SIZE 40,10 PICTURE "@E 99999999" WHEN (tipo == '6' .OR. tipo == '3') PIXEL OF oFolder2:aDialogs[1]	
+	endif    
+	
+	// Sucata
+	if tipo == '7'	
+		@ 36,10 Say "Motivo" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+		@ 44,10 Get cMot WHEN (tipo == '7' .OR.tipo == '3') MEMO SIZE 150,40 PIXEL OF oFolder2:aDialogs[1]			
+	endif
+	             
+	// Visualizar
+	if tipo$'9/10'	
+		@ 36,10 Say "Motivo (Sucata)" COLOR CLR_HBLUE PIXEL OF oFolder2:aDialogs[1]      	    	
+		@ 44,10 Get cMot WHEN (tipo == '7' .OR.tipo == '3') MEMO SIZE 150,40 PIXEL OF oFolder2:aDialogs[1]			
+		@ 36,180  Say "Quantidade de PeÁas Produzidas:" PIXEL OF oFolder2:aDialogs[1]    	      
+		@ 44,180  Get nQuant  SIZE 40,10 PICTURE "@E 99999999" WHEN (tipo == '6' .OR. tipo == '3') PIXEL OF oFolder2:aDialogs[1]					
+	endif
+	
+EndIf         
+     
+    // Se for Recebimento, j· posiciona na Aba 2 do Dialog
+	if op$'5/6/7' .AND. tipo == '2'
+		oFolder2:nOption := 2      
+	endif
+
+Activate MsDialog oDlgAdd ON INIT EnchoiceBar(oDlgAdd,bOk2,bCanc2)              
+
+Return
+
+// ---------------------------------------------------//
+// 		 	Limpa os campos quando                    //
+// ---------------------------------------------------//
+
+Static Function fCheck(nrcheck)  
+	    
+IF nrcheck == 6
+    /*
+	IF !cUserName$'MAICONMT/ALEXANDREF/SIDNEIBM'
+	    MSgBox("USUARIO SEM PERMISS√O PARA UTILIZAR ESTA FUN«√O !","USUARIO SEM PERMISSAO","ALERT")	
+	    lChk6 := .F.
+	ENDIF
+	*/
+	IF lChk6 
+		cForn6   := space(06) 
+		cDesFrn6 := ''
+		cLoja6   := space(02)
+		dDtEnv6  := CtoD('  /  /  ') 
+		dPrev6   := CtoD('  /  /  ')
+		nCorpP6  := 0  	
+	ENDIF      
+ELSE         
+	IF lChk7  
+ /*
+		IF !cUserName$'MAICONMT/ALEXANDREF/SIDNEIBM'
+		    MSgBox("USUARIO SEM PERMISS√O PARA UTILIZAR ESTA FUN«√O !","USUARIO SEM PERMISSAO","ALERT")	
+		    lChk7 := .F.
+		ENDIF
+   */		
+		cServ7 	 := ''
+   		cForn7   := space(06) 
+		cDesFrn7 := ''
+		cLoja7   := space(02)
+		dDtEnv7  := CtoD('  /  /  ') 
+		dDtPrev7 := CtoD('  /  /  ')
+		cCorrid  := space(04) 
+	ENDIF    
+ENDIF
+
+Return
+
+// ---------------------------------------------------
+// 		 Carrega o item do GetDados em um Dialog            
+// ---------------------------------------------------     
+
+Static Function LoadItem(item,etapa,seq)  
+
+		// Carrega dados de um item selecionado na Usinagem de Gravura
+		if etapa == '5'      
+			
+			// ZG8 = USINAGEM DE GRAVURA		
+			ZG8->(DBSETORDER(2))
+
+			IF ZG8->(DBSEEK(cCod + item ))  	
+
+				// Usinagem de Gravura
+				dData5     := ZG8->ZG8_DATA5
+				cMatri5    := ZG8->ZG8_MATRI5
+				cCodDes    := ZG8->ZG8_CODDES	
+				cRevDes    := ZG8->ZG8_REVDES 
+				cServ5 	   := ZG8->ZG8_SERV5	
+				cForn5     := ZG8->ZG8_FORN5
+				cLoja5     := ZG8->ZG8_LOJA5
+				dDtEnv5    := ZG8->ZG8_DTENV5
+				dDtPrev5   := ZG8->ZG8_DTPRE5
+				cDesc5     := ZG8->ZG8_DESC5  
+				cMatRc5    := ZG8->ZG8_MTREC5
+				dDtRec5    := ZG8->ZG8_DTREC5
+				dDatIni5   := ZG8->ZG8_DTINI5
+				cHorIni5   := ZG8->ZG8_HRINI5
+				dDatFim5   := ZG8->ZG8_DTFIM5
+				cHorFim5   := ZG8->ZG8_HRFIM5
+				cMaq5      := ZG8->ZG8_MAQ5 
+	
+				//  Folder 5 - Usinagem de Gravura ------------       		 	
+				//  Carrega a descriÁ„o do Fornecedor5
+			 	SA2->(DBSETORDER(1))
+				SA2->(DBSEEK(xFilial("SA2") + CForn5))                                   
+				cDesFrn5 := SA2->A2_NOME	        		
+	
+			ELSE 
+			 	Alert("Selecione um registro v·lido !")				
+			 	Return
+			ENDIF
+			
+			//  Carrega o nome do solicitante5
+		 	If  !Empty(AllTrim(cMatri5))	
+				QAA->(DBSETORDER(1))
+				QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatri5)))
+				DescMat5 := AllTrim(QAA->QAA_NOME) 		
+			EndIf	
+	
+			//  Carrega o nome do solicitante5
+		 	If  !Empty(AllTrim(cMatRc5))	
+				QAA->(DBSETORDER(1))
+				QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatRc5)))
+				cDesRc5 := AllTrim(QAA->QAA_NOME) 		
+			EndIf    
+			
+			If  !Empty(AllTrim(cMaq5))
+				ST9->(DBSETORDER(1))
+				ST9->(DBSEEK(xFilial("ST9") + AllTrim(cMaq5)))
+				DescMaq5 := AllTrim(ST9->T9_NOME)
+			ENDIF
+
+
+		elseif etapa == '6'
+		             
+			// ZG9 = NITRETACAO
+			
+			ZG9->(DBSETORDER(1))
+
+			IF ZG9->(DBSEEK(cCod + item ))  	
+
+			// Nitretacao		
+			cMatri6 	 := ZG9->ZG9_MATRI6
+		 	dData6		 := ZG9->ZG9_DATA6
+		  	cForn6 		 := ZG9->ZG9_FORN6
+			cLoja6 		 := ZG9->ZG9_LOJA6
+			dDtRec6      := ZG9->ZG9_DTREC6
+			dDtEnv6 	 := ZG9->ZG9_DTENV6	
+			dPrev6       := ZG9->ZG9_DTPRE6
+			cMatRc6 	 := ZG9->ZG9_MTREC6
+			cCert6		 := ZG9->ZG9_CERT6
+		 	cDesc6		 := ZG9->ZG9_DESC6
+		 	nCorpP6		 := ZG9->ZG9_CORP6
+		 	lChk6		 := IIF( ZG9->ZG9_REALIZ == 'N' , .T. , .F. )
+		 	
+	 		ELSE 
+			 	Alert("Selecione um registro v·lido !")				
+			 	Return
+			ENDIF
+			
+			//  Carrega a descriÁ„o do Fornecedor
+		 	SA2->(DBSETORDER(1))
+			SA2->(DBSEEK(xFilial("SA2") + CForn6))
+			cDesFrn6 := SA2->A2_NOME	        		
+				
+			//  Carrega o nome do solicitante
+		 	If  !Empty(AllTrim(cMatri6))	
+				QAA->(DBSETORDER(1))
+				QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatri6)))
+				DescMat6 := AllTrim(QAA->QAA_NOME) 		
+			EndIf	
+				//  Carrega o nome do recebedor
+		 	If  !Empty(AllTrim(cMatRc6))	
+				QAA->(DBSETORDER(1))
+				QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatRc6)))
+				cDesRc6 := AllTrim(QAA->QAA_NOME) 		
+			EndIf
+			
+		elseif etapa == '7'                     
+		
+			ZH0->(DBSETORDER(1))
+
+			IF ZH0->(DBSEEK(cCod + item ))  	
+			
+			//  Folder 7 - GravaÁ„o de Corrida ------  
+			dData7     := ZH0->ZH0_DATA7
+			cMatri7    := ZH0->ZH0_MATRI7
+			cServ7 	   := ZH0->ZH0_SERV7	
+			cForn7     := ZH0->ZH0_FORN7
+			cLoja7     := ZH0->ZH0_LOJA7
+			dDtEnv7    := ZH0->ZH0_DTENV7
+			dDtPrev7   := ZH0->ZH0_DTPRE7
+			cDesc7     := ZH0->ZH0_DESC7  
+			cMatRc7    := ZH0->ZH0_MTREC7
+			dDtRec7    := ZH0->ZH0_DTREC7
+			dDatIni7   := ZH0->ZH0_DTINI7
+			cHorIni7   := ZH0->ZH0_HRINI7
+			dDatFim7   := ZH0->ZH0_DTFIM7
+			cHorFim7   := ZH0->ZH0_HRFIM7
+			cMaq7      := ZH0->ZH0_MAQ7 
+			cCorrid	   := ZH0->ZH0_CORRID
+			lChk7	   := IIF( ZH0->ZH0_REALIZ == 'N' , .T. , .F. )	    		 			
+			
+	 		ELSE 
+			 	Alert("Selecione um registro v·lido !")				
+			 	Return
+			ENDIF
+					
+			//  Carrega a descriÁ„o do Fornecedor
+			SA2->(DBSETORDER(1))
+			SA2->(DBSEEK(xFilial("SA2") + CForn7))
+			cDesFrn7 := SA2->A2_NOME	        		
+				
+			//  Carrega o nome do solicitante
+		 	If  !Empty(AllTrim(cMatri7))	
+				QAA->(DBSETORDER(1))
+				QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatri7)))
+				DescMat7 := AllTrim(QAA->QAA_NOME) 		
+			EndIf	
+				//  Carrega o nome do recebedor
+		 	If  !Empty(AllTrim(cMatRc7))	
+				QAA->(DBSETORDER(1))
+				QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatRc7)))
+				cDesRc7 := AllTrim(QAA->QAA_NOME) 		
+			EndIf   
+			
+			If  !Empty(AllTrim(cMaq7))
+				ST9->(DBSETORDER(1))
+				ST9->(DBSEEK(xFilial("ST9") + AllTrim(cMaq7)))
+				DescMaq7 := AllTrim(ST9->T9_NOME)
+			ENDIF
+		
+		// Apontamento Prod. / Sucata			
+		elseif etapa == '8'                     
+		
+			ZH1->(DBSETORDER(1))
+
+			IF ZH1->(DBSEEK(cCod + item + seq))  	
+			
+			//  Folder 7 - GravaÁ„o de Corrida ------  
+			cMatri8    := ZH1->ZH1_MATRI
+			dData8     := ZH1->ZH1_DATA
+			cHora8     := ZH1->ZH1_HORA
+			nQuant 	   := ZH1->ZH1_QUANT
+			cMot	   := ZH1->ZH1_MOTIVO
+			
+	 		ELSE 
+			 	Alert("Selecione um registro v·lido !")				
+			 	Return
+			ENDIF
+							
+			//  Carrega o nome do solicitante
+		 	If  !Empty(AllTrim(cMatri8))	
+				QAA->(DBSETORDER(1))
+				QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatri8)))
+				DescMat8 := AllTrim(QAA->QAA_NOME) 		
+			EndIf	
+						
+		endif  
+Return   
+
+// Faz a Inclusao ou a AlteraÁ„o em um Item do GetDados
+Static Function Conf(_tipo,operac) // tipo = Incluir, Alterar ou Deletar  
+								   // operac: 5 = Usinagem Gravura
+Local NrItem
+                
+// Usinagem de Gravura
+IF operac == '5' 
+	
+	IF _tipo == '1'	// Adicionar	
+
+			If Empty(cMatri5)
+				Alert("Informe a matricula!")
+				Return .F.
+			EndIf  
+			
+			If Empty(cCodDes)
+				Alert("Informe o cÛdigo do desenho!")
+				Return .F.
+			EndIf       
+			
+			If Empty(cRevDes)
+				Alert("Informe a revis„o do desenho!")
+				Return .F.
+			EndIf       
+			  
+			If cServ5 == '1'  
+				If Empty(dDatIni5)
+					Alert("Informe a data inicial !")
+					Return .F.
+				EndIf   
+				If Empty(dDatFim5)
+					Alert("Informe a data Final !")
+					Return .F.
+				EndIf   
+				If Empty(cHorIni5)
+					Alert("Informe o horario inicial !")
+					Return .F.
+				EndIf   
+				If Empty(cHorFim5)
+					Alert("Informe o horario final !")
+					Return .F.
+				EndIf   
+				If Empty(cMaq5)
+					Alert("Informe a maquina !")
+					Return .F.
+				EndIf   
+			EndIF     
+			 
+			 IF len(oGetD1:Acols) == 0
+			 	 NrItem  := '01'
+			 ELSE			  
+				 NrItem  :=  STRZERO(Val(oGetD1:Acols[len(oGetD1:Acols)][2])+1,2)	
+			 ENDIF
+			
+			 Begin Transaction
+				RecLock("ZG8",.T.) 	
+					ZG8->ZG8_COD 	:=  cCod	
+					ZG8->ZG8_ITEM	:=  NrItem
+					ZG8->ZG8_MATRI5 :=  cMatri5
+					ZG8->ZG8_DATA5  :=  dData5
+					ZG8->ZG8_CODDES	:=  cCodDes    
+					ZG8->ZG8_REVDES :=  cRevDes
+					ZG8->ZG8_SERV5	:=  cServ5
+					ZG8->ZG8_FORN5  :=  cForn5
+					ZG8->ZG8_LOJA5  :=  cLoja5
+					ZG8->ZG8_DTENV5 :=  dDtEnv5 
+					ZG8->ZG8_DTPRE5 :=  dDtPrev5  
+					ZG8->ZG8_DESC5  :=  cDesc5
+					ZG8->ZG8_MTREC5 :=  cMatRc5
+					ZG8->ZG8_DTREC5 :=  dDtRec5
+					ZG8->ZG8_DTINI5 :=  dDatIni5
+					ZG8->ZG8_HRINI5 :=  cHorIni5
+					ZG8->ZG8_DTFIM5 :=  dDatFim5
+					ZG8->ZG8_HRFIM5 :=  cHorFim5
+					ZG8->ZG8_MAQ5	:=  cMaq5  
+					ZG8->ZG8_USI    :=  IIF(cServ5 == '1' , 'S' , 'N')
+					ZG8->ZG8_USIDES :=  IIF(cServ5 == '1' , 'USINAGEM DE GRAVURA CONCLUIDA (INTERNO)' , 'AGUARDANDO ENTREGA DO FORNECEDOR')					
+				MsUnlock("ZG8")
+			 End Transaction
+			 
+			 lBloqUsi := .T.  
+			 
+			 StatUsi := IIF(cServ5 == '1' , 'USINADO' , 'PENDENTE')
+			 lRecUsi := IIF(cServ5 == '1' , .F. , .T.)
+			 
+			 Begin Transaction
+				RecLock("ZG5",.F.) 	
+			   		ZG5->ZG5_STATUS :=  IIF(cServ5 == '1' , '5.2' , '5.1')
+				    ZG5->ZG5_USIGR  :=  StatUsi  
+ 				MsUnlock("ZG5")
+			 End Transaction
+			 
+			 Load(operac)       
+			 
+			 //oGetD1:ForceRefresh()    
+			 
+			 oDlgAdd:end()
+			 Return
+			 
+	ELSEIF  _tipo == '2'  // Receber
+	
+			Begin Transaction
+				RecLock("ZG8",.F.) 		
+					ZG8->ZG8_MTREC5 :=  cMatRc5
+					ZG8->ZG8_DTREC5 :=  dDtRec5
+					ZG8->ZG8_USI    :=  'S'
+					ZG8->ZG8_USIDES :=  'USINAGEM DE GRAVURA CONCLUIDA (EXTERNO)'
+				MsUnlock("ZG8")
+			 End Transaction   
+			 
+			 StatUsi := 'USINADO'  
+			 
+			 Begin Transaction
+				RecLock("ZG5",.F.) 	
+			   		ZG5->ZG5_STATUS :=  '5.2'
+				    ZG5->ZG5_USIGR  :=  StatUsi  
+ 				MsUnlock("ZG5")
+			 End Transaction
+			 
+		   	 Load(operac)  // Limpa o GetDados e Faz novamente a consulta para atualizar      
+			 
+			 oGetD1:ForceRefresh()  
+			 
+			 oDlgAdd:end() 
+			  
+			 Return 
+			 
+	ELSEIF  _tipo == '5'  // Deletar
+	
+			If MsgBox("Tem certeza de que deseja excluir ?","Atencao","YESNO")
+ 			   RecLock("ZG8",.F.)
+				 ZG8->(DbDelete())
+			   MsUnLock("ZG8")
+			EndIf   
+			
+			Load(operac) // Limpa o GetDados e Faz novamente a consulta para atualizar      			 
+			
+		    oGetD1:ForceRefresh()  
+		    
+        	oDlgAdd:end()  
+        	
+			Return 
+	
+	ENDIF
+	
+// Nitretacao
+ELSEIF operac == '6' 
+	
+	IF _tipo == '1'	// Adicionar	
+
+			 If Empty(cMatri6)
+				Alert("Informe a matricula!")
+				Return .F.
+			 EndIf    		
+			 
+			 IF len(oGetD2:Acols) == 0
+			 	 NrItem  := '01'
+			 ELSE			  
+				 NrItem  :=  STRZERO(Val(oGetD2:Acols[len(oGetD2:Acols)][2])+1,2)	
+			 ENDIF 
+			 
+			 Begin Transaction
+				RecLock("ZG9",.T.) 	
+					ZG9->ZG9_COD 	:= cCod	
+					ZG9->ZG9_ITEM	:= NrItem
+					ZG9->ZG9_MATRI6 := cMatri6
+				 	ZG9->ZG9_DATA6  := dData6
+				  	ZG9->ZG9_FORN6  := cForn6
+					ZG9->ZG9_LOJA6  := cLoja6					
+					ZG9->ZG9_DTENV6	:= dDtEnv6
+					ZG9->ZG9_DTPRE6 := dPrev6
+				 	ZG9->ZG9_DESC6  := cDesc6
+				 	ZG9->ZG9_CORP6  := nCorpP6	 
+					ZG9->ZG9_NITDES := IIF(lChk6,'NAO REALIZADO' , 'AGUARDANDO ENTREGA')	
+					ZG9->ZG9_REALIZ := IIF(lChk6,'N','S')
+				MsUnlock("ZG9")
+			 End Transaction   
+			 
+			 lBloqNit := .T.
+			 
+ 			 StatNit := IIF(lChk6,'CONCLUIDA','PENDENTE')
+			 
+			 Begin Transaction
+				RecLock("ZG5",.F.) 	
+					 ZG5->ZG5_STATUS  := IIF(lChk6,'6.2','6.1')
+				     ZG5->ZG5_NITRE   := StatNit			                                             
+ 				MsUnlock("ZG5")
+			 End Transaction   			 
+			 
+ 			 lRecNit :=  .T. // N„o deixa receber logo apÛs gravar a nitretacao
+			 
+			 Load(operac)       			
+			 
+			 oDlgAdd:end()
+			 Return
+			 
+	ELSEIF  _tipo == '2'  // Receber
+	
+			Begin Transaction
+				RecLock("ZG9",.F.) 		
+					ZG9->ZG9_MTREC6 :=  cMatRc6
+					ZG9->ZG9_DTREC6 :=  dDtRec6 
+			   		ZG9->ZG9_CERT6  := 	cCert6
+					ZG9->ZG9_NITDES :=  'NITRETACAO CONCLUIDA'
+				MsUnlock("ZG9")
+			 End Transaction   
+			 
+			 StatNit := 'CONCLUIDA'  
+			 
+			 Begin Transaction
+				RecLock("ZG5",.F.) 	
+					 ZG5->ZG5_STATUS  := '6.2'
+				     ZG5->ZG5_NITRE   := StatNit			                                             
+ 				MsUnlock("ZG5")
+			 End Transaction
+			 
+			 Load(operac)  // Limpa o GetDados e Faz novamente a consulta para atualizar      
+			 
+			 oDlgAdd:end() 			  
+			 Return 
+			 
+	ELSEIF  _tipo == '5'  // Deletar
+	
+			If MsgBox("Tem certeza de que deseja excluir ?","Atencao","YESNO")
+ 			   RecLock("ZG9",.F.)
+				 ZG9->(DbDelete())
+			   MsUnLock("ZG9")
+			EndIf   
+			
+			Load(operac) // Limpa o GetDados e Faz novamente a consulta para atualizar      			 
+			
+		    //oGetD1:ForceRefresh()  
+		    
+        	oDlgAdd:end()  
+        	
+			Return 
+	
+	ENDIF 
+	
+// GravaÁ„o de Corrida
+ELSEIF operac == '7' 
+	
+	IF _tipo == '1'	// Adicionar	
+
+		     If Empty(cMatri7)
+				Alert("Informe a matricula!")
+				Return .F.
+			 EndIf    		
+			 
+			 IF len(oGetD3:Acols) == 0
+			 	 NrItem  := '01'
+			 ELSE			  
+				 NrItem  :=  STRZERO(Val(oGetD3:Acols[len(oGetD3:Acols)][2])+1,2)	
+			 ENDIF
+			
+			 Begin Transaction
+				RecLock("ZH0",.T.) 			 
+					ZH0->ZH0_COD 	:=  cCod	
+					ZH0->ZH0_ITEM	:=  NrItem	   		
+				   	ZH0->ZH0_DATA7  :=  dData7
+					ZH0->ZH0_MATRI7 :=  cMatri7
+					ZH0->ZH0_SERV7	:=  cServ7
+					ZH0->ZH0_FORN7  :=  cForn7
+					ZH0->ZH0_LOJA7  :=  cLoja7
+					ZH0->ZH0_DTENV7 :=  dDtEnv7 
+					ZH0->ZH0_DTPRE7 :=  dDtPrev7  
+					ZH0->ZH0_DESC7  :=  cDesc7
+					ZH0->ZH0_DTINI7 :=  dDatIni7
+					ZH0->ZH0_HRINI7 :=  cHorIni7
+					ZH0->ZH0_DTFIM7 :=  dDatFim7
+					ZH0->ZH0_HRFIM7 :=  cHorFim7
+					ZH0->ZH0_MAQ7	:=  cMaq7  
+					ZH0->ZH0_CORRID :=  cCorrid
+                    
+					// Verificar o checkbox - Nao Realizado
+					IF lChk7
+					    ZH0->ZH0_GRADES := 'N√O REALIZADO'
+					    ZH0->ZH0_STAT	:= 'OK'
+					    ZH0->ZH0_REALIZ := 'N'
+					ELSE					 
+						ZH0->ZH0_GRADES :=  IIF(cServ7 == '1' , 'GRAVA«√O DE CORRIDA CONCLUIDA (INTERNO)' , 'AGUARDANDO ENTREGA DO FORNECEDOR')
+						ZH0->ZH0_STAT	:=  IIF(cServ7 == '1' , 'OK' , 'NOK')
+					    ZH0->ZH0_REALIZ := 'S'
+					ENDIF
+					
+				MsUnlock("ZH0")
+			 End Transaction    
+			 
+			 lBloqGra := .T.
+			 
+		 	 IF lChk7
+			    StatGrav := 'CONCLUIDA'			    
+		  	 ELSE					 
+			    StatGrav := IIF(cServ7 == '1' ,'CONCLUIDA','PENDENTE')            
+			 ENDIF
+ 			 
+ 			 Begin Transaction
+				RecLock("ZG5",.F.) 
+				
+				 IF lChk7
+				    ZG5->ZG5_STATUS  :=  '7.2'
+				    ZG5->ZG5_GRAVU	 :=  StatGrav
+			  	 ELSE					 
+		 			ZG5->ZG5_STATUS  :=  IIF(cServ7 == '1' ,'7.2','7.1')            
+					ZG5->ZG5_GRAVU	 :=  StatGrav
+				 ENDIF
+			 
+ 				MsUnlock("ZG5")
+			 End Transaction   
+			 
+	 	    lRecGra  := IIF(cServ7 == '1' , .F. , .T.) 
+			 
+			 Load(operac)       			
+			 
+			 oDlgAdd:end()
+			 Return
+			 
+	ELSEIF  _tipo == '2'  // Receber
+	
+			Begin Transaction
+				RecLock("ZH0",.F.) 		
+					ZH0->ZH0_MTREC7 :=  cMatRc7
+					ZH0->ZH0_DTREC7 :=  dDtRec7 
+					ZH0->ZH0_STAT 	:=  'OK'
+					ZH0->ZH0_GRADES :=  'GRAVACAO CONCLUIDA (EXTERNO)'
+				MsUnlock("ZH0")
+			 End Transaction   
+			 
+			 StatGrav := 'CONCLUIDA'  
+			 
+			 Begin Transaction
+				RecLock("ZG5",.F.) 			 
+		 			 ZG5->ZG5_STATUS :=  '7.2'          
+					 ZG5->ZG5_GRAVU	 :=  StatGrav
+ 				MsUnlock("ZG5")
+			 End Transaction 
+			 
+			 Load(operac)  // Limpa o GetDados e Faz novamente a consulta para atualizar      
+			 
+			 oDlgAdd:end() 			  
+			 Return 
+			 
+	ELSEIF  _tipo == '5'  // Deletar
+	
+			If MsgBox("Tem certeza de que deseja excluir ?","Atencao","YESNO")
+ 			   RecLock("ZH0",.F.)
+				 ZH0->(DbDelete())
+			   MsUnLock("ZH0")
+			EndIf   
+			
+			Load(operac) // Limpa o GetDados e Faz novamente a consulta para atualizar      			 
+			
+		    //oGetD1:ForceRefresh()  
+		    
+        	oDlgAdd:end()  
+        	
+			Return 
+	
+	ENDIF	 	 
+	
+ELSEIF operac == '8' 
+	
+	IF _tipo$'6/7'	// Adicionar Apontamento ou Sucata	
+
+		     If Empty(cMatri8)
+				Alert("Informe a matricula!")
+				Return .F.
+			 EndIf    		
+			        
+			 If _tipo == '6' .and. nQuant == 0
+				Alert("Informe a quantidade de producao!")
+				Return .F.
+			 EndIf
+			 
+ 			 If _tipo == '7' .and. Empty(cMot)
+				Alert("Informe o Motivo da  sucata!")
+				Return .F.
+			 EndIf
+			 
+			 IF len(oGetD4:Acols) == 0
+			 	cSeq := '01'
+			 ELSE			  
+				cSeq := STRZERO(Val(oGetD4:Acols[len(oGetD4:Acols)][3])+1,2)
+			 ENDIF
+			 
+		 	 NrItem := oGetD1:Acols[len(oGetD1:Acols)][2]		 	
+			
+			 Begin Transaction
+				RecLock("ZH1",.T.) 			 
+					ZH1->ZH1_COD 	:=  cCod	
+					ZH1->ZH1_ITEM	:=  NrItem	   		
+					ZH1->ZH1_SEQ	:=  cSeq
+				   	ZH1->ZH1_DATA   :=  dData8				   	
+					ZH1->ZH1_MATRI  :=  cMatri8
+					ZH1->ZH1_HORA   :=  cHora8
+					ZH1->ZH1_QUANT  :=  nQuant
+					ZH1->ZH1_MOTIVO :=  cMot
+					ZH1->ZH1_TIPO   :=  iif(_tipo == '6', 'P' , 'S')
+				MsUnlock("ZH1")
+			 End Transaction  
+			 
+			 if _tipo == '6'
+			 	RecLock("ZG5",.F.)		   
+			 		ZG5->ZG5_STATUS := '8'			 		
+				MsUnlock("ZG5")
+			 endif  
+			 
+			 if _tipo == '7'
+			 	RecLock("ZG5",.F.)		   
+			 		ZG5->ZG5_STATUS := '9'			 		
+				MsUnlock("ZG5")
+			 endif  
+
+			 Load(operac)       			
+			 
+			 oDlgAdd:end()
+			
+			IF _tipo == '7'	 
+			   Cancelar()
+			ENDIF
+			 
+  		    Return
+			 
+	ELSEIF  _tipo == '10'  // Deletar
+	
+			If MsgBox("Tem certeza de que deseja excluir ?","Atencao","YESNO")
+ 			   RecLock("ZH1",.F.)
+				 ZH1->(DbDelete())
+			   MsUnLock("ZH1")
+			EndIf   
+			
+			Load(operac) // Limpa o GetDados e Faz novamente a consulta para atualizar      			 
+			
+		    //oGetD1:ForceRefresh()  
+		    
+        	oDlgAdd:end()  
+        	
+			Return 
+	
+	ENDIF	 	 	
+
+ENDIF
+
+Return 	 
+
+
+/******************************************************************************************************************************/
+/*										 ValidaÁ„o no input da maquina 														  */	
+/******************************************************************************************************************************/
+
+Static Function fValMaq(Maquina,etp)  
+
+	IF Empty(Maquina) 
+		MsgBox("Codigo Maquina em branco ! Favor preencher ! "," Campo em branco ","Alert")
+	    Return .F.		
+	ENDIF
+
+	ST9->(DBSETORDER(1))
+
+	IF  !ST9->(DBSEEK(xFilial("ST9") + AllTrim(Maquina)))
+	    MsgBox("CÛdigo de Maquina n„o encontrado, verifique !","CÛdigo n„o encontrado na tabela de produtos (SB1)","Alert")
+	    ST9->(dbgotop())
+	    Return .F.	
+	ENDIF
+	
+	if etp == '5'	    
+		DescMaq5 := AllTrim(ST9->T9_NOME) 
+	elseif etp == '7'                     
+		DescMaq7 := AllTrim(ST9->T9_NOME) 
+	elseif etp == '1'                     
+		DescMaq1 := AllTrim(ST9->T9_NOME) 
+	elseif etp == '4'                     
+		DescMaq4 := AllTrim(ST9->T9_NOME) 
+	endif
+	
+Return .T.
+
+
+/******************************************************************************************************************************/
+/*										 ValidaÁ„o no input do codigo do desenho (mesmo do produto)							  */	
+/******************************************************************************************************************************/
+
+Static Function fValDes(Desenho)          
+
+	IF Empty(Desenho) 
+		MsgBox("Codigo desenho em branco ! Favor preencher ! "," Campo em branco ","Alert")
+	    Return .F.		
+	ENDIF
+
+	SB1->(DBSETORDER(1))
+
+	IF  !SB1->(DBSEEK(xFilial("SB1") + AllTrim(Desenho)))
+	    MsgBox("CÛdigo de desenho n„o encontrado, verifique !","CÛdigo n„o encontrado na tabela de produtos (SB1)","Alert")
+	    SB1->(dbgotop())
+	    Return .F.	
+	ENDIF
+    
+	cDescDes := AllTrim(SB1->B1_DESC)
+	
+Return .T.
+
+/******************************************************************************************************************************/
+/*										 ValidaÁ„o no input da matricula													  */	
+/******************************************************************************************************************************/
+
+Static Function fValMatri(Matri,Desc)
+
+	IF Empty(Matri) 
+		MsgBox("Matricula em branco ! Favor preencher ! "," Campo em branco ","Alert")
+	    Return .F.		
+	ENDIF
+
+	QAA->(DBSETORDER(1))
+
+	IF  !QAA->(DBSEEK(xFilial("QAA") + AllTrim(Matri)))
+	    MsgBox("Matricula n„o existe ou n„o est· cadastrado na tabela de usuarios (QAA), favor verificar.","Matricula n„o encontrada","Alert")
+	    QAA->(dbgotop())
+	    Return .F.	
+	ENDIF
+    
+	// Preenche a descriÁ„o com o nome
+	If Desc == 1	
+		DescMat1 := AllTrim(QAA->QAA_NOME)
+	ElseIf Desc == 2
+		DescMat2 := AllTrim(QAA->QAA_NOME)		
+	ElseIf Desc == 2.1
+		dcMatRc2 := AllTrim(QAA->QAA_NOME)		
+	ElseIf Desc == 3
+		descMat3 := AllTrim(QAA->QAA_NOME)
+	ElseIf Desc == 3.1
+		cDesOper := AllTrim(QAA->QAA_NOME)
+	ElseIf Desc == 4
+		DescMat4 := AllTrim(QAA->QAA_NOME)		
+	ElseIf Desc == 4.1
+		cDesRc4 := AllTrim(QAA->QAA_NOME)				
+	ElseIf Desc == 5
+		DescMat5 := AllTrim(QAA->QAA_NOME)				
+	ElseIf Desc == 5.1
+		cDesRc5  := AllTrim(QAA->QAA_NOME)				
+	ElseIf Desc == 6
+		DescMat6  := AllTrim(QAA->QAA_NOME)				
+	ElseIf Desc == 6.1
+		cDesRc6  := AllTrim(QAA->QAA_NOME)						
+	ElseIf Desc == 7
+		DescMat7  := AllTrim(QAA->QAA_NOME)				
+	ElseIf Desc == 7.1
+		cDesRc7  := AllTrim(QAA->QAA_NOME)								
+	ElseIf Desc == 8
+		DescMat8  := AllTrim(QAA->QAA_NOME)								
+	EndIf       
+	
+Return .T.   
+
+/******************************************************************************************************************************/
+/*										 ValidaÁ„o no input do fornecedor													  */	
+/******************************************************************************************************************************/
+
+Static Function fValForn(Forn,DescFor)
+
+	SA2->(DBSETORDER(1))
+
+	If Empty(Forn)
+	   MsgBox("Insira o fornecedor !.","Valida Fornecedor","ALERT")  	
+       Return .F.		
+	EndIf
+
+	If !SA2->(DBSEEK(xFilial("SA2") + Forn))
+	   MsgBox("Este fornecedor n„o existe ! Verifique.","Valida Fornecedor","ALERT")
+	   Return .F.
+	EndIf	
+
+	If DescFor == 1	
+	   cDesFor := SA2->A2_NOME
+	ElseIf DescFor == 2         
+	   cDesFor2 := SA2->A2_NOME
+    ElseIf DescFor == 3         
+       cDesFor3 := SA2->A2_NOME   	   
+    ElseIf DescFor == 4         
+       cDesFrn4 := SA2->A2_NOME   	                 
+    ElseIf DescFor == 5         
+       cDesFrn5 := SA2->A2_NOME   	                 
+    ElseIf DescFor == 6         
+       cDesFrn6 := SA2->A2_NOME   	                        
+    ElseIf DescFor == 7         
+       cDesFrn7 := SA2->A2_NOME 
+	EndIf
+	   	
+
+Return .T.
+
+/******************************************************************************************************************************/
+/*										 ValidaÁ„o no input da loja															  */	
+/******************************************************************************************************************************/
+
+Static Function fValLoja(Forn,Loja,Desc)
+
+	SA2->(DBSETORDER(1))
+	
+	If Empty(Loja)
+	   MsgBox("Insira a loja do fornecedor !.","Valida Loja","ALERT")  	
+       Return .F.		
+	EndIf
+
+	If !SA2->(DBSEEK( xFilial("SA2") + AllTrim(Forn) + Loja ))
+	   MsgBox("Loja n„o existe para este fornecedor ! Verifique.","Valida Loja","ALERT")
+	   Return .F.                 
+	EndIf	
+	
+	If Desc == 1	
+	   cDesFor  := SA2->A2_NOME
+	ElseIf Desc == 2         
+	   cDesFor2 := SA2->A2_NOME
+	ElseIf Desc == 3         
+	   cDesFor3 := SA2->A2_NOME   
+	ElseIf Desc == 4         
+	   cDesFrn4 := SA2->A2_NOME   	   
+	
+	ElseIf Desc == 5         
+	   cDesFrn5 := SA2->A2_NOME   	   	   
+  	ElseIf Desc == 6         
+	   cDesFrn6 := SA2->A2_NOME   	   	  
+   	ElseIf Desc == 7         
+	   cDesFrn7 := SA2->A2_NOME   	   	  
+	
+	
+	EndIf
+
+Return .T.
+
+/********************************************************************************************/
+/*										 Valida o Material								    */	
+/********************************************************************************************/
+
+Static Function fValMate()
+
+	ZG6->(DBSETORDER(1))
+	
+	If Empty(cCodMate)
+	   MsgBox("Insira o cÛdigo do material !.","Valida Material","ALERT")  	
+       Return .F.		
+	EndIf
+	
+	If !ZG6->(DBSEEK( xFilial("ZG6") + AllTrim(cCodMate) ))
+	   MsgBox("Este material n„o existe ! Verifique.","Valida Material","ALERT")
+	   Return .F.                 
+	EndIf	
+	
+	cMate := ZG6->ZG6_DESC
+
+Return .T.                                                                    
+
+/********************************************************************************************/
+/*					 Valida o tipo de serviÁo ( Interno ou Externo )					    */	
+/********************************************************************************************/
+
+Static Function fValServ(tipo)
+  	
+  	// Limpa os campos caso o serviÁo seja mudado
+	
+	// PrÈ-Formatacao  	
+	if  tipo == 1
+		cForn2 := space(06)   
+		cLoja2 := space(02)
+		cDesFor2 := ''
+		dDataRec := CtoD('  /  /  ')	
+		dDatIni := CtoD("  /  /  ")
+		cHorIni := Space(5)
+		dDatFim := CtoD("  /  /  ")
+		cHorFim := Space(5)
+		cDesc   := ""
+		cMaq1 := space(15)
+	EndIf
+	
+	// Formatacao Final	
+	if  tipo == 4
+		cForn4 := space(06)   
+		cLoja4 := space(02)
+		cDesFrn4 := ''
+		dDtRec4 := CtoD('  /  /  ')	
+		dDatIni4 := CtoD("  /  /  ")
+		cHorIni4 := Space(5)
+		dDatFim4 := CtoD("  /  /  ")
+		cHorFim4 := Space(5)
+		cDesc4   := ""
+		cMaq4    := space(15)	
+	EndIf                 
+	
+	// Gravacao de Corrida
+	if  tipo == 5
+		cForn5   := space(06)   
+		cLoja5   := space(02)
+		cDesFrn5 := ''
+		dDtRec5  := CtoD('  /  /  ')	
+		dDatIni5 := CtoD("  /  /  ")
+		cHorIni5 := Space(5)
+		dDatFim5 := CtoD("  /  /  ")
+		cHorFim5 := Space(5)
+		cDesc5   := ""
+		cMaq5    := space(15)	
+	EndIf
+	
+	// Gravacao de Corrida
+	if  tipo == 7
+		cForn7   := space(06)   
+		cLoja7   := space(02)
+		cDesFrn7 := ''
+		dDtRec7  := CtoD('  /  /  ')	
+		dDatIni7 := CtoD("  /  /  ")
+		cHorIni7 := Space(5)
+		dDatFim7 := CtoD("  /  /  ")
+		cHorFim7 := Space(5)
+		cDesc7   := ""
+		cMaq7    := space(15)	
+	EndIf
+	
+Return
+
+/*******************************************************************************************/
+/***************************** Carrega os campos do dialog *********************************/  
+/*******************************************************************************************/
+Static Function fCarrega()  	
+
+
+	DescMat2 := ''
+	cDesFor2 := ''
+	cDesFor3 := ''
+	DescMat3 := ''
+	DescMat4 := ''
+	/*
+	DescMat5 := ''
+	DescMat6 := ''
+	DescMat7 := ''
+    */
+    
+	// Dados da inserÁ„o da Materia Prima
+	cCod	     := ZG5->ZG5_COD 
+	nRev		 := ZG5->ZG5_REV
+	cCombo  	 := ZG5->ZG5_STATUS
+	dData        := ZG5->ZG5_DATA
+	cMatri		 := ZG5->ZG5_MATRI
+	cCodMate     := ZG5->ZG5_CODMAT
+	cMate		 := ZG5->ZG5_MATE	
+	nDimenX		 := ZG5->ZG5_DIMENX
+	nDimenY		 := ZG5->ZG5_DIMENY
+	nDimenZ		 := ZG5->ZG5_DIMENZ	
+	cForn		 := ZG5->ZG5_FORN
+	cLoja		 := ZG5->ZG5_LOJA
+	cRegQl	 	 := ZG5->ZG5_REGQL	         	
+	cNF		     := ZG5->ZG5_NF
+	cRegrav		 :=	ZG5->ZG5_REGRAV 
+	cSerie	 	 := ZG5->ZG5_SERIE	         	
+	StatUsi		 := ZG5->ZG5_USIGR // Status da Usinagem de Gravura 
+	StatNit      := ZG5->ZG5_NITRE // Status da Nitretacao
+	cTipoMat	 := ZG5->ZG5_TIPO
+	
+	// Pre-formatacao do bloco		
+	cMatri2 	 := ZG5->ZG5_MATRI2
+ 	dData2		 := ZG5->ZG5_DATA2
+  	cServico 	 := ZG5->ZG5_SERV
+  	cForn2 		 := ZG5->ZG5_FORN2
+	cLoja2 		 := ZG5->ZG5_LOJA2
+	nDimenX2 	 := ZG5->ZG5_DIMEX2
+	nDimenY2 	 := ZG5->ZG5_DIMEY2
+	nDimenZ2	 := ZG5->ZG5_DIMEZ2
+	dDataRec     := ZG5->ZG5_RECEB
+	dDataEnv 	 := ZG5->ZG5_ENVIO
+	dDtPrev      := ZG5->ZG5_PREV
+	cMatrRc2 	 := ZG5->ZG5_RECEB2	
+	
+	// Tratamento termico	
+	cMatri3      := ZG5->ZG5_MATRI3
+	dDtEnv3      := ZG5->ZG5_DTENV3	
+	cForn3		 := ZG5->ZG5_FORN3
+ 	cLoja3		 := ZG5->ZG5_LOJA3
+ 	nCorpoP      := ZG5->ZG5_CORPOP
+ 	cOper 		 := ZG5->ZG5_OPER
+ 	dDtRec3      := ZG5->ZG5_DTREC3
+ 	nCertif	     := ZG5->ZG5_CERTIF
+ 	dData3		 := ZG5->ZG5_DATA3 
+ 	dPrev3		 := ZG5->ZG5_PREV3
+    dDatIni 	 := ZG5->ZG5_DTINI
+	cHorIni 	 := ZG5->ZG5_HRINI
+	dDatFim 	 := ZG5->ZG5_DTFIM
+	cHorFim 	 := ZG5->ZG5_HRFIM
+	cDesc   	 := ZG5->ZG5_DESC 
+	cMaq1        := ZG5->ZG5_MAQ                    
+	
+	// Formatacao Final
+	dData4     := ZG5->ZG5_DATA4
+	cMatri4    := ZG5->ZG5_MATRI4
+	cServ4 	   := ZG5->ZG5_SERV4	
+	nDimenX4   := ZG5->ZG5_DIMEX4
+	nDimenY4   := ZG5->ZG5_DIMEY4
+	nDimenZ4   := ZG5->ZG5_DIMEZ4
+	cForn4     := ZG5->ZG5_FORN4
+	cLoja4     := ZG5->ZG5_LOJA4
+	dDtEnv4    := ZG5->ZG5_DTENV4
+	dDtPrev4   := ZG5->ZG5_DTPRE4
+	cDesc4     := ZG5->ZG5_DESC4  
+	cMatrRc4   := ZG5->ZG5_MTREC4
+	dDtRec4    := ZG5->ZG5_DTREC4
+	dDatIni4   := ZG5->ZG5_DTINI4
+	cHorIni4   := ZG5->ZG5_HRINI4
+	dDatFim4   := ZG5->ZG5_DTFIM4
+	cHorFim4   := ZG5->ZG5_HRFIM4
+	cMaq4      := ZG5->ZG5_MAQ4
+  	
+	// Folder 1 - Materia Prima --------
+    // Carrega a descriÁ„o do Fornecedor1
+ 	SA2->(DBSETORDER(1))
+	SA2->(DBSEEK(xFilial("SA2") + CForn))
+	cDesFor := SA2->A2_NOME	        	
+ 
+	// Carrega o nome do solicitante1                    
+	QAA->(DBSETORDER(1))
+	QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatri)))
+	DescMat1 := AllTrim(QAA->QAA_NOME) 
+	
+	//  Folder 2 - Pre-Formatacao --------------       		 
+	// Carrega a descriÁ„o do Fornecedor2	 	
+	 	SA2->(DBSETORDER(1))
+		SA2->(DBSEEK(xFilial("SA2") + CForn2))
+		cDesFor2 := SA2->A2_NOME	        		
+	// Carrega o nome do solicitante2		
+ 	If  !Empty(AllTrim(cMatri2))	
+		QAA->(DBSETORDER(1))
+		QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatri2)))
+		DescMat2 := AllTrim(QAA->QAA_NOME) 		
+	EndIf
+		// Carrega o nome do recebedor
+ 	If  !Empty(AllTrim(cMatrRc2))	
+		QAA->(DBSETORDER(1))
+		QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatrRc2)))
+		dcMatRc2 := AllTrim(QAA->QAA_NOME) 		
+	EndIf                                  
+	
+	If  !Empty(AllTrim(cMaq1))	
+		ST9->(DBSETORDER(1))
+		ST9->(DBSEEK(xFilial("ST9") + AllTrim(cMaq1)))	   
+		DescMaq1 := AllTrim(ST9->T9_NOME)
+	ENDIF
+	
+	//  Folder 3 - Tratamento Termico  ---------
+	//  Carrega a descriÁ„o do Fornecedor3
+	 	SA2->(DBSETORDER(1))
+		SA2->(DBSEEK(xFilial("SA2") + CForn3))
+		cDesFor3 := SA2->A2_NOME	        		
+		
+	//  Carrega o nome do solicitante3
+ 	If  !Empty(AllTrim(cMatri3))	
+		QAA->(DBSETORDER(1))
+		QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatri3)))
+		descMat3 := AllTrim(QAA->QAA_NOME) 		
+	EndIf
+	
+	// Carrega o nome do operador
+ 	If  !Empty(AllTrim(cOper))	
+		QAA->(DBSETORDER(1))
+		QAA->(DBSEEK(xFilial("QAA") + AllTrim(cOper)))
+		cDesOper := AllTrim(QAA->QAA_NOME) 		
+	EndIf
+	
+	//  Folder 4 - FormataÁ„o Final  --------------       		 
+	//  Carrega a descriÁ„o do Fornecedor4
+	 	SA2->(DBSETORDER(1))
+		SA2->(DBSEEK(xFilial("SA2") + CForn4))
+		cDesFrn4 := SA2->A2_NOME	        		
+		
+	//  Carrega o nome do solicitante4
+ 	If  !Empty(AllTrim(cMatri4))	
+		QAA->(DBSETORDER(1))
+		QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatri4)))
+		DescMat4 := AllTrim(QAA->QAA_NOME) 		
+	EndIf	
+		//  Carrega o nome do solicitante4
+ 	If  !Empty(AllTrim(cMatrRc4))	
+		QAA->(DBSETORDER(1))
+		QAA->(DBSEEK(xFilial("QAA") + AllTrim(cMatrRc4)))
+		cDesRc4 := AllTrim(QAA->QAA_NOME) 		
+	EndIf                   
+	
+	If  !Empty(AllTrim(cMaq4))	
+		ST9->(DBSETORDER(1))
+		ST9->(DBSEEK(xFilial("ST9") + AllTrim(cMaq4)))	   
+		DescMaq4 := AllTrim(ST9->T9_NOME)
+	ENDIF
+
+Return
+
+/*******************************************************************************************/
+/***************************** Inclui, Altera, ou Desativa *********************************/  
+/*******************************************************************************************/
+
+Static Function Confirmar() 
+ 
+ DO CASE // Verifica a operaÁ„o que ser· feita
+  
+	CASE nPar == 2    // Inclui um novo registro 	    
+	    
+		IF !Validar()
+			Return  
+   		EndIf      
+		     
+			DbSelectArea("ZG5")		    
+
+		    Begin Transaction
+
+						RecLock("ZG5",.T.) 
+							ZG5->ZG5_FILIAL := xFilial("ZG5")		
+							ZG5->ZG5_COD 	:= AllTrim(cCod)			
+							ZG5->ZG5_REV 	:= nRev
+							ZG5->ZG5_STATUS := cCombo
+							ZG5->ZG5_DATA   := dData			
+							ZG5->ZG5_MATRI  := cMatri
+							ZG5->ZG5_CODMAT := cCodMate
+							ZG5->ZG5_MATE   := cMate				
+							ZG5->ZG5_DIMENX := nDimenX
+							ZG5->ZG5_DIMENY := nDimenY
+							ZG5->ZG5_DIMENZ := nDimenZ				
+							ZG5->ZG5_FORN   := cForn
+							ZG5->ZG5_LOJA   := cLoja
+							ZG5->ZG5_REGQL  := cRegQl				
+							ZG5->ZG5_NF     := cNF
+							ZG5->ZG5_SERIE  := cSerie
+							ZG5->ZG5_TIPO   := cTipoMat
+							ZG5->ZG5_REGRAV := 'N'
+						MsUnlock("ZG5")
+				
+		    End Transaction
+					
+			ConfirmSX8()       
+			
+			If MsgYesNo("Deseja imprimir a etiqueta ?")
+			   U_nhmnt065(AllTrim(cCod))	
+			EndIf
+
+	   		oDlg:End()   	   					 	    
+    			
+    CASE nPar == 3 // Alterar
+   
+    		DbSelectArea("ZG5")
+    		
+    		Begin Transaction
+    		
+	    		RecLock("ZG5",.F.) 
+					ZG5->ZG5_MATRI  := cMatri
+					ZG5->ZG5_MATE   := cMate  
+					ZG5->ZG5_CODMAT := cCodMate				
+					ZG5->ZG5_DIMENX := nDimenX
+					ZG5->ZG5_DIMENY := nDimenY
+					ZG5->ZG5_DIMENZ := nDimenZ				
+					ZG5->ZG5_FORN   := cForn
+					ZG5->ZG5_LOJA   := cLoja
+					ZG5->ZG5_REGQL  := cRegQl								
+					ZG5->ZG5_NF     := cNF
+					ZG5->ZG5_SERIE  := cSerie								
+					
+					If Val(AllTrim(cCombo)) >= 2											
+				   	   ZG5->ZG5_MATRI2 := cMatri2
+					   ZG5->ZG5_DATA2  := dData2	
+		   			   ZG5->ZG5_SERV   := cServico
+		   			   ZG5->ZG5_FORN2  := cForn2
+		   			   ZG5->ZG5_LOJA2  := cLoja2
+		   			   ZG5->ZG5_DIMEX2 := nDimenX2
+		   			   ZG5->ZG5_DIMEY2 := nDimenY2
+		   			   ZG5->ZG5_DIMEZ2 := nDimenZ2
+		   			   ZG5->ZG5_RECEB  := dDataRec
+  					   ZG5->ZG5_RECEB2 := cMatrRc2		   					   
+		   			   ZG5->ZG5_ENVIO  := dDataEnv
+					   ZG5->ZG5_PREV   := dDtPrev
+		   			   
+		   			   ZG5->ZG5_DTINI := dDatIni
+					   ZG5->ZG5_HRINI := cHorIni
+					   ZG5->ZG5_DTFIM := dDatFim
+ 					   ZG5->ZG5_HRFIM := cHorFim
+					   ZG5->ZG5_DESC   := cDesc
+ 					   ZG5->ZG5_MAQ    := cMaq1
+		   			EndIf 
+	
+					If 	Val(AllTrim(cCombo)) >= 3											   			
+	   					ZG5->ZG5_MATRI3  := cMatri3
+						ZG5->ZG5_DTENV3	 := dDtEnv3
+						ZG5->ZG5_FORN3   := cForn3
+					 	ZG5->ZG5_LOJA3   := cLoja3
+					 	ZG5->ZG5_CORPOP  := nCorpoP
+					 	ZG5->ZG5_OPER    := cOper
+					 	ZG5->ZG5_DTREC3  := dDtRec3
+					 	ZG5->ZG5_CERTIF  := nCertif
+					 	ZG5->ZG5_DATA3   := dData3
+					 	ZG5->ZG5_PREV3   := dPrev3
+					EndIf							   			
+					
+					If 	Val(AllTrim(cCombo)) >= 4											   										
+						ZG5->ZG5_DATA4  :=  dData4
+						ZG5->ZG5_MATRI4 :=  cMatri4
+						ZG5->ZG5_SERV4	:=  cServ4
+						ZG5->ZG5_DIMEX4 :=  nDimenX4
+						ZG5->ZG5_DIMEY4 :=  nDimenY4 
+						ZG5->ZG5_DIMEZ4 :=  nDimenZ4
+						ZG5->ZG5_FORN4  :=  cForn4
+						ZG5->ZG5_LOJA4  :=  cLoja4
+						ZG5->ZG5_DTENV4 :=  dDtEnv4 
+						ZG5->ZG5_DTPRE4 :=  dDtPrev4  
+						ZG5->ZG5_DESC4  :=  cDesc4
+						ZG5->ZG5_MTREC4 :=  cMatrRc4
+						ZG5->ZG5_DTREC4 :=  dDtRec4
+						ZG5->ZG5_DTINI4 :=  dDatIni4
+						ZG5->ZG5_HRINI4 :=  cHorIni4
+						ZG5->ZG5_DTFIM4 :=  dDatFim4
+						ZG5->ZG5_HRFIM4 :=  cHorFim4
+						ZG5->ZG5_MAQ4	:=  cMaq4
+					EndIf							   			
+					
+				MsUnlock("ZG5")
+			
+			End Transaction
+			
+			MsgBox('AlteraÁ„o feita com sucesso.', 'AlteraÁ„o', 'INFO')	  
+	
+			oDlg:End() 
+	
+    CASE nPar == 4 // Movimentar
+    
+    	IF !Validar()
+			Return  
+   		EndIf
+   		
+   		// PRE-FORMATACAO EM ANDAMENTO
+   		IF cCombo == '2' .AND. cServico == '2' .AND. Empty(dDataRec)
+   		   cCombo := '2.1'	
+   		ELSEIF  cCombo == '2.1' .AND. cServico == '2' .AND. !Empty(dDataRec) 		
+  		// PRE-FORMATACAO CONCLUIDA   		   
+   		   cCombo := '2.2'   	
+   		ELSEIF  cCombo == '2' .AND. cServico == '1' 
+  		// PRE-FORMATACAO CONCLUIDA   		   
+   		   cCombo := '2.2'   	   		   
+   		ENDIF
+   		
+   		// TRATAMENTO TERMICO EM ANDAMENTO
+   		IF cCombo== '3' .AND. Empty(dDtRec3)
+   		   cCombo := '3.1'
+   		EndIf   		
+   		// TRATAMENTO TERMICO CONCLUIDO
+   		IF cCombo == '3.1' .AND. !Empty(dDtRec3)
+   		   cCombo := '3.2'
+   		EndIF   		        
+   		
+   		// FORMATACAO FINAL EM ANDAMENTO
+   		IF cCombo == '4' .AND. cServ4 == '2' .AND. Empty(dDtRec4)
+   		   cCombo := '4.1'	
+   		ELSEIF  cCombo == '4.1' .AND. cServ4 == '2' .AND. !Empty(dDtRec4) 		
+  		// FORMATACAO FINAL CONCLUIDA   		   
+   		   cCombo := '4.2'   	                                 
+   		ELSEIF cCombo == '4' .AND. cServ4 == '1'
+   		   cCombo := '4.2'	   		   
+   		ENDIF   
+
+   		/*
+   		// USINAGEM DE GRAVURA EM ANDAMENTO
+   		IF cCombo == '5' .AND. StatUsi == 'PENDENTE' 
+   		   cCombo := '5.1'	                               
+		ELSEIF  cCombo == '5' .AND. StatUsi == 'USINADO'    		   
+		   cCombo := '5.2'	                               
+   		ELSEIF  cCombo == '5.1' .AND. StatUsi == 'USINADO' 		  		
+   		   cCombo := '5.2'   	
+   		ENDIF                   
+   		*/
+   		
+   		/*
+   		// NITRETACAO
+   		IF cCombo == '6' .AND. StatNit == 'PENDENTE' 
+   		   cCombo := '6.1'	
+   		ELSEIF  ((cCombo == '6' .OR. cCombo == '6.1') .AND. StatNit == 'CONCLUIDA') 		  		
+   		   cCombo := '6.2'   	
+   		ENDIF 
+   		*/
+   		/*
+   		// GRAVACAO DE CORRIDA EM ANDAMENTO
+   		IF cCombo == '7' .AND. StatGrav == 'PENDENTE' 
+   		   cCombo := '7.1'	                               
+		ELSEIF  cCombo == '7' .AND. StatGrav == 'CONCLUIDA'    		   
+		   cCombo := '7.2'	                               
+   		ELSEIF  cCombo == '7.1' .AND. StatGrav == 'CONCLUIDA' 		  		
+   		   cCombo := '7.2'   	
+   		ENDIF
+   		*/
+   		
+	     DbSelectArea("ZG5")   
+	     
+		    Begin Transaction				
+				   RecLock("ZG5",.F.) 		
+					    
+						// Grava dados da Pre-Formatacao
+						If cCombo == '2' .OR. cCombo == '2.1' .OR. cCombo == '2.2'																
+					   	   ZG5->ZG5_MATRI2 := cMatri2
+						   ZG5->ZG5_DATA2  := dData2	
+	   					   ZG5->ZG5_SERV   := cServico
+	   					   ZG5->ZG5_FORN2  := cForn2
+	   					   ZG5->ZG5_LOJA2  := cLoja2
+	   					   ZG5->ZG5_DIMEX2 := nDimenX2
+	   					   ZG5->ZG5_DIMEY2 := nDimenY2
+	   					   ZG5->ZG5_DIMEZ2 := nDimenZ2
+	   					   ZG5->ZG5_STATUS := cCombo
+	   					   ZG5->ZG5_RECEB  := dDataRec
+     					   ZG5->ZG5_RECEB2 := cMatrRc2		   					   
+	   					   ZG5->ZG5_ENVIO  := dDataEnv
+						   ZG5->ZG5_PREV   := dDtPrev
+	   					   ZG5->ZG5_DTINI := dDatIni
+						   ZG5->ZG5_HRINI := cHorIni
+						   ZG5->ZG5_DTFIM := dDatFim
+	 					   ZG5->ZG5_HRFIM := cHorFim
+						   ZG5->ZG5_DESC   := cDesc
+	 					   ZG5->ZG5_MAQ    := cMaq1
+	   					EndIf 
+	   					                                
+	   					// Grava dados do tratamento termico
+	   					If cCombo == '3' .OR. cCombo == '3.1' .OR. cCombo == '3.2'
+		   				   ZG5->ZG5_STATUS  := cCombo
+		   			  	   ZG5->ZG5_MATRI3  := cMatri3
+						   ZG5->ZG5_DTENV3	:= dDtEnv3
+						   ZG5->ZG5_FORN3   := cForn3
+						   ZG5->ZG5_LOJA3   := cLoja3
+						   ZG5->ZG5_CORPOP  := nCorpoP
+						   ZG5->ZG5_OPER    := cOper
+						   ZG5->ZG5_DTREC3  := dDtRec3
+						   ZG5->ZG5_CERTIF  := nCertif
+						   ZG5->ZG5_DATA3   := dData3
+						   ZG5->ZG5_PREV3   := dPrev3        
+						EndIf    
+						
+	  					// Grava dados do tratamento termico
+	   					If cCombo == '4' .OR. cCombo == '4.1' .OR. cCombo == '4.2'	  
+		   					ZG5->ZG5_STATUS  := cCombo					
+						   	ZG5->ZG5_DATA4  :=  dData4
+							ZG5->ZG5_MATRI4 :=  cMatri4
+							ZG5->ZG5_SERV4	:=  cServ4
+							ZG5->ZG5_DIMEX4 :=  nDimenX4
+							ZG5->ZG5_DIMEY4 :=  nDimenY4 
+							ZG5->ZG5_DIMEZ4 :=  nDimenZ4
+							ZG5->ZG5_FORN4  :=  cForn4
+							ZG5->ZG5_LOJA4  :=  cLoja4
+							ZG5->ZG5_DTENV4 :=  dDtEnv4 
+							ZG5->ZG5_DTPRE4 :=  dDtPrev4  
+							ZG5->ZG5_DESC4  :=  cDesc4
+							ZG5->ZG5_MTREC4 :=  cMatrRc4
+							ZG5->ZG5_DTREC4 :=  dDtRec4
+							ZG5->ZG5_DTINI4 :=  dDatIni4
+							ZG5->ZG5_HRINI4 :=  cHorIni4
+							ZG5->ZG5_DTFIM4 :=  dDatFim4
+							ZG5->ZG5_HRFIM4 :=  cHorFim4
+							ZG5->ZG5_MAQ4	:=  cMaq4
+						EndIf		
+						
+						/*
+						// Grava dados do usinagem gravura
+	   					If cCombo == '5' .OR. cCombo == '5.1' .OR. cCombo == '5.2'	  
+		   					ZG5->ZG5_STATUS :=  cCombo
+							ZG5->ZG5_USIGR  :=  StatUsi  // Status da Usinagem de Gravura
+						EndIf		
+						*/
+						
+						/*
+	   					If cCombo == '6' .OR. cCombo == '6.1' .OR. cCombo == '6.2'
+	   					    ZG5->ZG5_STATUS  := cCombo
+	   					    ZG5->ZG5_NITRE   := StatNit
+						EndIf                             
+						*/                   
+						/*
+						// GravaÁ„o de corrida
+	   					If cCombo == '7' .OR. cCombo == '7.1' .OR. cCombo == '7.2'	  
+		   					ZG5->ZG5_STATUS :=  cCombo
+							ZG5->ZG5_GRAVU	:=  StatGrav
+						EndIf								
+	   					*/
+					MsUnlock("ZG5") 
+		    End Transaction
+		
+		oDlg:end()   		
+	 	        
+    OTHERWISE  		// No caso de uma operaÁ„o de "Visualizar"     
+        
+    	oDlg:end()   
+		
+  ENDCASE  		 		  
+	
+Return     
+
+/*******************************************************************************************/
+/************************************** Legenda ********************************************/  
+/*******************************************************************************************/ 
+
+USER Function MNT062Leg()       
+
+Local aLegenda :=	{   {"BR_BRANCO"    , "MatÈria Prima"},;      
+						{"BR_MARRON"  	, "PrÈ-Formatacao"},;
+						{"BR_AMARELO"   , "Tratamento TÈrmico"},;
+						{"BR_LARANJA"   , "FormataÁ„o Final"},;
+						{"BR_VERDE"     , "Usinagem de Gravura"},;						
+						{"BR_PINK"      , "NitretaÁ„o"},;
+						{"BR_CINZA"     , "GravaÁ„o de Corrida"},;
+						{"BR_VERMELHO"  , "UtilizaÁ„o em Forjamento"},;						
+						{"BR_CANCEL"    , "Sucata"}}			  
+//						{"BR_AZUL"      , "PrÈ-FormataÁ„o"},;     	  
+
+BrwLegenda(OemToAnsi("Status"), "Legenda", aLegenda)
+
+Return           
+
+Static Function fCriaCor()       
+
+Local aLegenda :=	{   {"BR_BRANCO"    , "MatÈria Prima"},;      
+						{"BR_MARRON"  	, "PrÈ-Formatacao"},;
+						{"BR_AMARELO"   , "Tratamento TÈrmico"},;
+						{"BR_LARANJA"   , "FormataÁ„o Final"},;
+						{"BR_VERDE"     , "Usinagem de Gravura"},;						
+						{"BR_PINK"      , "NitretaÁ„o"},;
+						{"BR_CINZA"     , "GravaÁ„o de Corrida"},;
+						{"BR_VERMELHO"  , "UtilizaÁ„o em Forjamento"},;						
+						{"BR_CANCEL"    , "Sucata"}}	 	      
+//						{"BR_AZUL"      , "PrÈ-FormataÁ„o"},;     
+
+Local uRetorno := {}
+
+Aadd(uRetorno, { " ZG5_STATUS = '1' "	,aLegenda[1][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '2' "   ,aLegenda[2][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '2.1' " ,aLegenda[2][1] })
+Aadd(uRetorno, { " ZG5_STATUS = '2.2' " ,aLegenda[2][1] })
+Aadd(uRetorno, { " ZG5_STATUS = '3' "	,aLegenda[3][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '3.1' " ,aLegenda[3][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '3.2' " ,aLegenda[3][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '4' "	,aLegenda[4][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '4.1' "	,aLegenda[4][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '4.2' "	,aLegenda[4][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '5' "	,aLegenda[5][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '5.1' "	,aLegenda[5][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '5.2' "	,aLegenda[5][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '6' "	,aLegenda[6][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '6.1' "	,aLegenda[6][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '6.2' "	,aLegenda[6][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '7' "	,aLegenda[7][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '7.1' "	,aLegenda[7][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '7.2' "	,aLegenda[7][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '8' "	,aLegenda[8][1] }) 
+Aadd(uRetorno, { " ZG5_STATUS = '9' "	,aLegenda[9][1] }) 
+
+Return(uRetorno)
+
+/*******************************************************************************************/
+/************************************** ValidaÁıes *****************************************/  
+/*******************************************************************************************/
+
+Static Function Validar()
+    
+    // ValidaÁıes da aba 1 - Materia Prima
+	If cCombo == '1'
+
+		If Empty(cMate)
+			MsgBox("Insira o material !","Campo material est· em branco","Alert")
+			Return .F.
+		EndIF
+		
+		If Empty(cRegQl)
+			MsgBox("Insira o Registro de qualidade !","Campo registro de qualidade est· em branco","Alert")
+			Return .F.
+		EndIF         
+		
+		IF cTipoMat == '1'
+			If Empty(nDimenX) .OR. Empty(nDimenY) .OR. Empty(nDimenZ)
+				MsgBox("Digite as dimensıes corretamente !","Campo dimens„o est· em branco","Alert")
+				Return .F.
+			EndIF         
+		ELSE   // Caso redondo, nao tem a dimensao Y
+			If Empty(nDimenX) .OR. Empty(nDimenZ)
+				MsgBox("Digite as dimensıes corretamente !","Campo dimens„o est· em branco","Alert")
+				Return .F.
+			EndIF         
+		ENDIF
+		
+		If Empty(cNF)
+			MsgBox("Insira o numero da Nota Fiscal !","Campo da Nota Fiscal em Branco","Alert")
+			Return .F.
+		EndIF         
+		
+		If Empty(cSerie)
+			MsgBox("Insira a serie da Nota Fiscal !","Campo da Serie da NF em Branco","Alert")
+			Return .F.
+		EndIF   
+		
+	EndIF
+	              
+	// ValidaÁıes da aba 2 - Pre-Formatacao do Bloco
+	If cCombo == '2' 
+		
+		IF cTipoMat == '1'
+			If Empty(nDimenX2) .OR. Empty(nDimenY2) .OR. Empty(nDimenZ2)
+				MsgBox("Digite as dimensıes corretamente !","Campo dimens„o est· em branco","Alert")
+				Return .F.
+			EndIF         
+		ELSE   // Caso redondo, nao tem a dimensao Y
+			If Empty(nDimenX2) .OR. Empty(nDimenZ2)
+				MsgBox("Digite as dimensıes corretamente !","Campo dimens„o est· em branco","Alert")
+				Return .F.
+			EndIF         
+		ENDIF
+		
+		
+		If cServico == '1'			
+			If Empty(dDatIni)
+				Alert("Informe a data inicial do insumo!")
+				Return .F.
+			EndIf
+			
+			If Empty(dDatFim)
+				Alert("Informe a data final do insumo!")
+				Return .F.
+			EndIf
+		
+			If Empty(cHorIni)
+				Alert("Informe a hora inicial do insumo!")
+				Return .F.
+			EndIf
+		
+			If Empty(cHorFim)
+				Alert("Informe a hora final do insumo!")
+				Return .F.
+			EndIf
+		
+			If dDatFim < dDatIni
+				Alert("Data final n„o pode ser inferior a data inicial!")
+				Return .F.
+			EndIf
+			
+			If dDatFim==dDatIni .AND. cHorFim < cHorIni
+				Alert("Data e hora final n„o podem ser inferiores a data e hora inicial!")
+				Return .F.
+			EndIf
+		Else 
+			If Empty(dDataEnv)
+				Alert("Informe a data de envio!")
+				Return .F.			
+			EndIf			
+		EndIf	   	
+	EndIF    
+	
+	
+	// ValidaÁıes da aba 3 - Tratamento Termico 
+	
+	If cCombo == '3' 	
+			If Empty(cMatri3)
+				Alert("Informe a matricula!")
+				Return .F.
+			EndIf
+			
+			If Empty(dDtEnv3)
+				Alert("Informe a data de envio!")
+				Return .F.
+			EndIf
+		
+			If Empty(nCorpoP)
+				Alert("Informe o numero do corpo de prova!")
+				Return .F.
+			EndIf			
+	EndIF        
+	
+	// ValidaÁıes da aba 4 - Formatacao Final 
+	
+	If cCombo == '4' 	
+			
+			If Empty(cMatri4)
+				Alert("Informe a matricula!")
+				Return .F.
+			EndIf         
+			
+			IF cTipoMat == '1'
+				If Empty(nDimenX4) .OR. Empty(nDimenY4) .OR. Empty(nDimenZ4)
+					MsgBox("Digite as dimensıes corretamente !","Campo dimens„o est· em branco","Alert")
+					Return .F.
+				EndIF         
+			ELSE   // Caso redondo, nao tem a dimensao Y
+				If Empty(nDimenX4) .OR. Empty(nDimenZ4)
+					MsgBox("Digite as dimensıes corretamente !","Campo dimens„o est· em branco","Alert")
+					Return .F.
+				EndIF         
+			ENDIF	
+			  
+			If cServ4 == '1'  
+				If Empty(dDatIni4)
+					Alert("Informe a data inicial !")
+					Return .F.
+				EndIf   
+				If Empty(dDatFim4)
+					Alert("Informe a data Final !")
+					Return .F.
+				EndIf   
+				If Empty(cHorIni4)
+					Alert("Informe o horario inicial !")
+					Return .F.
+				EndIf   
+				If Empty(cHorFim4)
+					Alert("Informe o horario final !")
+					Return .F.
+				EndIf   
+				If Empty(cMaq4)
+					Alert("Informe a maquina !")
+					Return .F.
+				EndIf   
+			EndIF       			
+			
+	EndIF     
+    
+Return .T. 
+
+/*******************************************************************************************/
+/**************************************** Cancelar *****************************************/  
+/*******************************************************************************************/
+Static Function Cancelar() 
+   
+	if nPar == 1
+	   RollBackSx8()	
+	endif           
+	
+	oDlg:end()      	
+
+Return        
+

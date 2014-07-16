@@ -1,0 +1,1012 @@
+#INCLUDE "LibrBol.ch"
+#INCLUDE "SIGAWIN.CH"        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+#INCLUDE "RWMAKE.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³LIBRBOL   ºAutor  ³Fernando Machima    º Data ³  25/04/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Livro Fiscal de Vendas para Boletas e Faturas (Loc. Chile) º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ SigaLoja                                                   º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+
+User Function LibrBol()        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Local cPerg     := "LIBBOL"
+
+Private lFinRel	 := .F.
+Private lSeries
+Private aReturn  := {}
+Private wnrel
+Private m_pag    := 01
+Private cString  := "SF3"
+Private tamanho	 := "G"
+Private limite 	 := 220
+Private cDesc1   := ""
+Private cDesc2   := ""
+Private cDesc3   := ""
+Private Titulo
+PRIVATE nLastKey := 0
+PRIVATE lContinua:= .T.
+
+AjustaSX1()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Variaveis utilizadas para parametros      ³
+//³mv_par01             // Mes               ³
+//³mv_par02             // Ano               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+titulo	 := PADC(OemToAnsi(STR0001),74) //"Emissao do Livro de Notas Fiscais e Boletas"
+cDesc1   := PADC(OemToAnsi(STR0002),74) //"Serao solicitados o mes e ano de movimento para a emissao "
+cDesc2 	 := PADC(OemToAnsi(STR0003),74) //"do livro de IVA Vendas"
+cDesc3 	 := ""      
+aReturn  := { OemToAnsi(STR0004), 1,OemToAnsi(STR0005), 1, 2, 1,"",1 } //"Especial"###"Administracion"
+nLastKey := 0
+lContinua:= .T.
+wnrel    := "LIBRBOL"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica as perguntas selecionadas, busca o padrao da Nfiscal³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Pergunte(cPerg,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+wnrel:=SetPrint(cString,wnrel,cPerg,Titulo,cDesc1,cDesc2,cDesc3,.F.,"",,Tamanho)
+If nLastKey == 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+If nLastKey == 27
+	Return
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica Posicao do Formulario na Impressora³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+VerImp()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicio do Processamento do Relatorio. ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RptStatus({|| RptDetail()})              
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³RptDetail ºAutor  ³Fernando Machima    º Data ³  05/05/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Executa o processamento de leitura e impressao dos         º±±
+±±º          ³ registros do Livro de Vendas                               º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL		                                              º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function RptDetail()
+
+Local cBolIni   := ""  //Numero da boleta inicial. Usado para o intervalo por dia          
+Local cBolAtu   := ""  //Numero da boleta final. Usado para o intervalo por dia          
+Local cSerieF   := Space(TamSX3("F3_SERIE")[1])  //Serie para Fatura
+Local cSerieB   := Space(TamSX3("F3_SERIE")[1])  //Serie para Boleta
+Local cSerieE1  := Space(TamSX3("F3_SERIE")[1])  //Serie para Isentos(sem Boleta)
+Local cSerieE2  := Space(TamSX3("F3_SERIE")[1])  //Serie para Isentos(com Boleta)
+Local cPictZero := PesqPict("SF3","F3_VALCONT",8)
+Local cRUT      := ""  //RUT do cliente
+Local cNome     := ""  //Nome do cliente
+Local cSerieSF3 := ""  //Serie do registro SF3
+Local cArqIndxF3:= ""
+Local cChave    := ""
+Local cFiltro   := ""
+
+Local aArea     := {}
+Local aSeries   := {}   //Contem as series dos documentos gravadas na tabela SE do SX5
+Local aIsento   := {}   //Contem a serie e numero dos documentos isentos. Usado para 
+                        //identificar documentos que jah foram considerados no relatorio
+Local aImpostos := {}    //Array com os impostos(base e valor) das faturas
+Local aImpsBol  := {0,0} //Array com o total dos impostos(base e valor) das boletas
+
+Local nDiaIse1    := 0  //Total diario(F3_VALCONT) para os documentos Isentos(sem boletas)
+Local nDiaIse2    := 0  //Total diario(F3_VALCONT) para os documentos Isentos(com boletas)
+Local nDiaAfeto   := 0  //Total diario(F3_VALCONT) para os documentos afetos a IVA 
+Local nTotalDia   := 0  //Total diario, considerando afetos e isentos
+Local nPosIsento  := 0                       
+Local nIndice     := 0 
+Local nDif        := 0
+Local nSigno
+
+Local lPrim       := .T.  //Indica se trata da primeira serie de Isentos gravada no SX5
+Local lImpBoleta  := .F.  //Indica se imprimiu boleta para o dia corrente
+
+Local dDataAnt    := ctod("  /  /  ")
+Local dEntAnt     
+Local dDtIni      
+Local j := 0
+
+Private nTotalBol  := 0  //Total geral do valor das boletas 	           
+Private nTotalFat  := 0  //Total geral do valor das faturas
+Private nTotalIse1 := 0  //Total geral do valor de isentos 1      
+Private nTotalIse2 := 0  //Total geral do valor de isentos 1              
+Private nLin       := 0
+Private nValImpFat := 0  //Valor total de impostos para Faturas, NCCs e NDCs
+Private nBasImpFat := 0  //Base total de impostos para Faturas, NCCs e NDCs
+Private nTotIsento := 0  //Total de isentos para Faturas
+Private nPagina    := 0
+
+Private aNota      := {}  //Contem os dados das NCCs e NDCs a serem impressas apos as faturas
+
+Private dDtFim
+
+Private cPictVals   := PesqPict("SF3","F3_VALCONT")
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Prepara o SF3 para extracao dos dados  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+dDtIni := Ctod("01/"+StrZero(mv_par01,2)+"/"+mv_par02,"ddmmyyyy")
+dDtFim := LastDay(dDtIni)
+
+//Busca as series da fatura, da boleta e de isentos
+dbSelectArea("SX5")  
+DbSetOrder(1)
+If dbSeek(xFilial("SX5")+"SE")
+   While !Eof() .And. SX5->X5_FILIAL+SX5->X5_TABELA == xFilial("SX5")+"SE"
+	  AAdd( aSeries,{SX5->X5_CHAVE,Substr(X5Descri(),1,1)})	  
+	  If Substr(X5Descri(),1,1) == "F"
+	     cSerieF := AllTrim(X5_CHAVE)
+	  ElseIf Substr(X5Descri(),1,1) == "B"   
+	     cSerieB := AllTrim(X5_CHAVE)	  
+	  Else 
+	     If lPrim
+	        cSerieE1 := Substr(X5_CHAVE,1,Len(cSerieE1))  //Serie 1 para Isentos(sem boleta)
+	        lPrim := .F.
+	     Else
+	        cSerieE2 := Substr(X5_CHAVE,1,Len(cSerieE2))  //Serie 2 para Isentos(com boleta)
+	     EndIf   
+	  EndIf   
+	  DbSkip()
+   EndDo
+EndIf   
+
+dbSelectArea("SF3")
+cFiltro :="F3_FILIAL=='"+xFilial("SF3")+"'.AND.DTOS(F3_ENTRADA)>='"+DTOS(dDtIni)+"'.AND.DTOS(F3_ENTRADA)<='"+DTOS(dDtFim)+"'"
+cFiltro := cFiltro + ".And.F3_TIPOMOV == 'V'" 
+
+cChave:="F3_FILIAL+F3_SERIE+DTOS(F3_ENTRADA)+F3_ESPECIE"
+cArqIndxF3:=CriaTrab(NIL,.F.)
+
+IndRegua("SF3",cArqIndxF3,cChave,,cFiltro,OemToAnsi(STR0006)) //"Filtrando registros..."
+
+nIndice	:=	Retindex("SF3")	
+#IFNDEF TOP
+	dbSetIndex(cArqIndxF3+OrdBagExt())	
+#ENDIF
+DbSetOrder(nIndice+1)		
+DbGoTop()
+    
+SetRegua(LastRec())
+	                          
+dbSelectArea("SF3")
+dbGoTop()
+                   
+R020CabF()    
+
+If lAbortPrint
+   @ 00,01 PSAY OemToAnsi(STR0007) //"** CANCELADO PELO OPERADOR **"
+   lContinua := .F.
+   Return
+Endif
+    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Impressao de vendas com faturas            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+lFinRel := .T.          
+While !Eof() .And. xFilial() == F3_FILIAL .And. (AllTrim(F3_SERIE) == cSerieF .Or. AllTrim(F3_ESPECIE) $ "NCC|NDC")
+   IncRegua()                                             
+	   
+   If !(AllTrim(F3_ESPECIE) $ "NCC|NDC")
+      If Empty(dDataAnt)	      
+	     dDataAnt := F3_ENTRADA
+	  EndIf   	  
+   EndIf
+   //Se o proximo registro for do dia seguinte verifica se ha NCCs e NDCs a imprimir 
+   //do dia corrente
+   If dDataAnt < F3_ENTRADA .And. !Empty(aNota)
+      ImprimeN(dDataAnt)     //Imprime NCC's e NDC's apos as faturas
+   EndIf   
+	   
+   SA1->(DbSetOrder(1))
+   If SA1->(dbSeek(xFilial()+SF3->F3_CLIEFOR+SF3->F3_LOJA))
+      cNome := Substr(SA1->A1_NOME,1,30)
+	  cRUT  := SA1->A1_CGC
+   Else
+      cNome := cRUT := ""
+   EndIf
+	   
+   If AllTrim(F3_ESPECIE)$"NCC|NDC"  //Armazena as NCC's/NDC's no array aNota para impressao posterior 
+      aImpostos  := {0,0}
+      LibrImps(F3_TES,@aImpostos)
+      Aadd(aNota,{F3_NFISCAL,F3_ENTRADA,cNome,cRUT,F3_VALCONT,aImpostos[1],aImpostos[2],F3_EXENTAS,F3_DTCANC,F3_ESPECIE})
+      dDataAnt := F3_ENTRADA		      
+	  DbSkip()
+	  Loop
+   Else
+      nSigno	:= 1
+	  dDataAnt := F3_ENTRADA		  
+   Endif
+	   	   
+   @ nLin,2   PSAY SF3->F3_NFISCAL
+   @ nLin,13  PSAY SF3->F3_ENTRADA
+	   			
+   If Empty(F3_DTCANC)      
+      aImpostos  := {0,0}
+      LibrImps(F3_TES,@aImpostos)
+           
+      @ nLin,025 PSAY cRUT                     PICTURE "@R XX.999.999-X"
+      @ nLin,040 PSAY cNome        
+      @ nLin,074 PSAY SF3->F3_EXENTAS * nSigno PICTURE cPictVals  //"@E( 999,999,999"
+      @ nLin,096 PSAY aImpostos[1]    * nSigno PICTURE cPictVals  //"@E( 999,999,999"
+      @ nLin,112 PSAY aImpostos[2]    * nSigno PICTURE cPictVals  //"@E( 999,999,999"
+      @ nLin,128 PSAY SF3->F3_VALCONT * nSigno PICTURE cPictVals  //"@E( 999,999,999"
+                                                  
+      nTotIsento += SF3->F3_EXENTAS * nSigno
+      nBasImpFat += aImpostos[1]    * nSigno 
+      nValImpFat += aImpostos[2]    * nSigno               
+      nTotalFat  += F3_VALCONT	     * nSigno          
+   Else
+      @ nLin,025 PSAY OemToAnsi(STR0008)  //"** A N U L A D A **"
+   EndIf
+       
+   nLin := nLin + 1          
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³Dispara a funcao para impressao do Rodape. ³
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   If nLin > 55
+      R020RodF()
+   EndIf	      
+	      
+   DbSkip()
+EndDo
+    
+If !Empty(aNota)        
+   nDif := dDtFim - dDataAnt
+   For j:=1 to nDif
+      ImprimeN(dDataAnt)     //Imprime NCC's e NDC's apos as faturas para os dias em que nao houve fatura
+	  dDataAnt := dDataAnt + 1
+   Next j	   
+EndIf   
+        
+R020RdpF()    
+	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Impressao de vendas com boletas e isentas  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+R020CabB()    
+dEntAnt := F3_ENTRADA	      	        
+While !Eof() .And. xFilial() == F3_FILIAL .And. dEntAnt == F3_ENTRADA
+   nDiaIse1    := 0
+   nDiaIse2    := 0
+   nDiaAfeto   := 0
+   nTotalDia   := 0
+   lImpBoleta  := .F.
+   
+   If !Empty(F3_DTCANC)
+      DbSkip()
+	  Loop
+   EndIf
+   
+   //Se satisfizer esta condicao, nao existem boletas para o dia corrente
+   If (F3_EXENTAS > 0) .And. (AllTrim(F3_SERIE) == AllTrim(cSerieE1) .Or. AllTrim(F3_SERIE) == AllTrim(cSerieE2))
+      //Se o documento isento estiver no array aIsento jah foi considerado no relatorio
+      If nPosIsento  := Ascan(aIsento,{|x| x[1] == F3_SERIE .And. x[2] == F3_NFISCAL}) > 0      
+         DbSkip()                                                                                 
+         dEntAnt  := SF3->F3_ENTRADA
+         Loop
+      EndIf      
+   EndIf
+   cBolIni := F3_NFISCAL        
+   @ nLin,002 PSAY Substr(DTOC(F3_ENTRADA),1,2)      //Mostrar o dia
+   @ nLin,013 PSAY cBolIni        //Impressao do numero da boleta inicial para o dia corrente
+       
+   While !Eof() .And. xFilial() == F3_FILIAL .And. AllTrim(F3_SERIE) == cSerieB
+	     IncRegua()
+	     	      
+	     If !Empty(F3_DTCANC)
+	        DbSkip()
+	        Loop
+	     EndIf
+	     
+         lImpBoleta := .T.
+	     cBolAtu    := F3_NFISCAL	   	      	   
+	     nDiaAfeto  += F3_VALCONT	  //Total do valor das boletas do dia corrente
+	     nTotalBol  += F3_VALCONT    
+		 LibrImps(F3_TES,@aImpsBol)
+				
+	     dbSelectArea("SF3")
+	     dbSkip()
+	     //A impressao das boletas eh por intervalo de data
+	     If F3_ENTRADA != dEntAnt .Or. Eof() .Or. (AllTrim(F3_SERIE) == AllTrim(cSerieE1) .Or. AllTrim(F3_SERIE) == AllTrim(cSerieE2))
+	         
+	        //Busca os registros de isentos do dia selecionado para mostrar os totais na mesma linha 
+	        //das boletas
+	        aArea  := GetArea()
+	   	    If DbSeek(xFilial()+cSerieE1+DTOS(dEntAnt))
+               While !Eof() .And. xFilial() == F3_FILIAL .And. (AllTrim(F3_SERIE) == AllTrim(cSerieE1)) .And.;
+                     DTOS(dEntAnt) == DTOS(F3_ENTRADA)
+                  If Empty(F3_DTCANC)                  	  
+	                 nDiaIse1  += F3_EXENTAS   //Total do valor de isentos do dia corrente
+	                 Aadd(aIsento,{F3_SERIE,F3_NFISCAL})
+	                 cBolAtu  := IIf(F3_NFISCAL > cBolAtu,F3_NFISCAL,cBolAtu)
+	              EndIf   
+ 	              DbSkip() 	               
+               EndDo
+	   	    EndIf
+	   	    If DbSeek(xFilial()+cSerieE2+DTOS(dEntAnt))
+               While !Eof() .And. xFilial() == F3_FILIAL .And. (AllTrim(F3_SERIE) == AllTrim(cSerieE2)) .And.;
+                      DTOS(dEntAnt) == DTOS(F3_ENTRADA)                	   	  
+                  If Empty(F3_DTCANC)                  	  
+	                 nDiaIse2  += F3_EXENTAS                
+	                 Aadd(aIsento,{F3_SERIE,F3_NFISCAL})	                 
+	                 cBolAtu  := IIf(F3_NFISCAL > cBolAtu,F3_NFISCAL,cBolAtu)	                 
+	              EndIf   
+ 	              DbSkip()
+               EndDo	   	     
+	   	    EndIf          
+ 	        nTotalIse1 += nDiaIse1	               	   	     
+ 	        nTotalIse2 += nDiaIse2	               	         
+ 	        RestArea(aArea)
+                                 
+	        nTotalDia := nDiaIse1 + nDiaIse2 + nDiaAfeto			 		   	   	      	        
+            @ nLin,025 PSAY cBolAtu                          //Numero da ultima boleta emitida no dia corrente
+	        @ nLin,038 PSAY nDiaIse2		Picture cPictVals //Total de isentos com Boleta	
+	        @ nLin,056 PSAY nDiaIse1		Picture cPictVals //Total de isentos sem Boleta		         
+	        @ nLin,082 PSAY nDiaAfeto       Picture cPictVals //Total de vendas afetas a IVA	
+	        @ nLin,105 PSAY 0               Picture cPictZero
+	        @ nLin,112 PSAY nTotalDia		Picture cPictVals
+	       
+	        nLin := nLin + 1          
+	        dEntAnt := F3_ENTRADA
+	        //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	        //³Dispara a funcao para impressao do Rodape. ³
+	        //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	        If nLin > 55
+		       R020RodB()
+	        EndIf	      	         
+	        Exit
+	     EndIf   
+   EndDo 
+   //Impressao dos documentos isentos nos casos em que nao ha boletas para o dia corrente
+   If !lImpBoleta
+      cSerieSF3  := AllTrim(F3_SERIE)      
+      nDiaIse1   := 0
+      nDiaIse2   := 0      
+      While !Eof() .And. xFilial() == F3_FILIAL .And. (AllTrim(F3_SERIE) == AllTrim(cSerieE1) .Or.;      
+            AllTrim(F3_SERIE) == AllTrim(cSerieE2))
+      
+	     If !Empty(F3_DTCANC)
+	        DbSkip()
+	        Loop
+	     EndIf
+	     
+	     cBolAtu    := F3_NFISCAL	   	      	   
+	     If cSerieSF3 == AllTrim(cSerieE1)
+	        nDiaIse1   += F3_VALCONT       	               	   	     
+	        nTotalIse1 += F3_VALCONT       	               	   	     
+	     Else   
+	        nDiaIse2   += F3_VALCONT       	               	   	     	     
+	        nTotalIse2 += F3_VALCONT       	               	   	     	        
+	     EndIf   
+	     
+	     DbSkip()
+	     
+	     If F3_ENTRADA != dEntAnt .Or. Eof()
+	        nTotalDia := nDiaIse1 + nDiaIse2 
+            @ nLin,025 PSAY cBolAtu                          //Numero do ultimo documento emitido no dia corrente
+	        @ nLin,038 PSAY nDiaIse2		Picture cPictVals //Total de isentos com Boleta	
+	        @ nLin,056 PSAY nDiaIse1		Picture cPictVals //Total de isentos sem Boleta		         
+	        @ nLin,082 PSAY nDiaAfeto       Picture cPictVals //Total de vendas afetas a IVA	
+	        @ nLin,105 PSAY 0               Picture cPictZero
+	        @ nLin,112 PSAY nTotalDia		Picture cPictVals
+	       
+	        nLin := nLin + 1          
+	        dEntAnt := F3_ENTRADA	     
+
+	        If nLin > 55
+		       R020RodB()
+	        EndIf	      	         
+	        //Forca a saida do loop porque nao ha mais registros para o dia corrente
+	        Exit	        
+	     EndIf   
+      End
+   EndIf
+   If Empty(F3_SERIE)
+      DbSkip()
+   Endif	     
+EndDo   
+lFinRel := .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Dispara a funcao para impressao do Rodape.   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+R020RodB()
+
+R020RdpB(aImpsBol)
+
+Set Device To Screen
+If aReturn[5] == 1
+	Set Printer TO
+	dbcommitAll()
+	ourspool(wnrel)
+Endif
+MS_FLUSH()
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³R020CabB  ºAutor  ³Jose Lucas          º Data ³  06/07/98   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Cabecalho do Libro de Boletas de IVA ( Ventas ).           º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function R020Cab
+Static Function R020CabB()
+
+Local cRUT      := ""
+Local cEmpresa  := ""
+Local cTitulo   := ""
+Local _nMes
+Local aMeses    := {}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Variaveis utilizadas no cabecalho³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+AADD(aMeses,OemToAnsi(STR0009)) //"ENERO    "
+AADD(aMeses,OemToAnsi(STR0010)) //"FEBRERO  "
+AADD(aMeses,OemToAnsi(STR0011)) //"MARZO    "
+AADD(aMeses,OemToAnsi(STR0012)) //"ABRIL    "
+AADD(aMeses,OemToAnsi(STR0013)) //"MAYO     "
+AADD(aMeses,OemToAnsi(STR0014)) //"JUNIO    "
+AADD(aMeses,OemToAnsi(STR0015)) //"JULIO    "
+AADD(aMeses,OemToAnsi(STR0016)) //"AGOSTO   "
+AADD(aMeses,OemToAnsi(STR0017)) //"SETIEMBRE"
+AADD(aMeses,OemToAnsi(STR0018)) //"OCTUBRE  "
+AADD(aMeses,OemToAnsi(STR0019)) //"NOVIEMBRE"
+AADD(aMeses,OemToAnsi(STR0020)) //"DICIEMBRE"
+
+cEmpresa	:= SM0->M0_NOMECOM
+cRUT	    := TRANSFORM(SM0->M0_CGC,PesqPict("SA1","A1_CGC"))
+cTitulo     := OemToAnsi(STR0021) //"V E N T A S   C O N   B O L E T A S"
+
+nPagina := nPagina + 1
+@ 02,000 PSAY OemToAnsi(STR0022) //"Empresa: "
+@ 02,020 PSAY cEmpresa
+@ 02,095 PSAY OemToAnsi(STR0023) //"Pagina Nro.: "
+@ 02,110 PSAY StrZero(nPagina,6)
+
+@ 03,000 PSAY OemToAnsi(STR0024) //"RUT: "
+@ 03,007 PSAY cRUT
+
+@ 05,000 PSAY cTitulo
+
+_nMes := Month(dDtFim)
+
+If _nMes > 0 .And. _nMes < 13
+	@ 05,080 PSAY OemToAnsi(STR0025) //"Mes "
+	@ 05,085 PSAY aMeses[_nMes]
+	@ 05,095 PSAY OemToAnsi(STR0026) //"Ano"
+	@ 05,100 PSAY StrZero(Year(dDtFim),4)
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Cabecalho para o Relatorio.  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+@ 07,000 PSAY OemToAnsi(STR0034) //"   Fecha         Rango de Boletas                   Ventas Exentas                                   Ventas Afectas IVA               "
+@ 08,000 PSAY OemToAnsi(STR0035) //"                 Del n.   Al n.               Con Boletas     Sin Boletas                 Con Boletas    Sin Boletas    T O T A L     "   
+nLin := 09
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³R020RodB  ºAutor  ³Jose Lucas          º Data ³  06/07/98   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Rodape do Libro de Boletas de IVA ( Ventas ).              º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL	                                                  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function R020Rod
+Static Function R020RodB()
+
+Local nTot := nTotalIse1 + nTotalIse2 + nTotalBol
+//Local cPictZero := PesqPict("SF3","F3_VALCONT",6)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Dispara a funcao para impressao do Rodape.   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nLin := nLin + 2
+@ nLin,015 PSAY OemToAnsi(STR0039)   //"T O T A L E S : "         
+@ nLin,038 PSAY nTotalIse2		Picture cPictVals	
+@ nLin,056 PSAY nTotalIse1		Picture cPictVals		         
+@ nLin,082 PSAY nTotalBol       Picture cPictVals	
+//@ nLin,105 PSAY 0               Picture cPictZero
+@ nLin,112 PSAY nTot    		Picture cPictVals
+
+If  !(lFinRel)
+	R020CabB()
+	@ nLin,000 PSAY OemToAnsi(STR0028) //"Transporte :"
+	nLin:= nlin+1
+EndIf
+lFinRel := .F.
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³R020RdpB  ºAutor  ³Jose Lucas		     º Data ³  06/07/98   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Rodape do Libro de Boletas de IVA ( Ventas ).              º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL		                                              º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function R020RdpB
+Static Function R020RdpB(aImpsBol)
+
+Local nValLiq    := 0
+Local nTot       := nTotalFat + nTotalBol + nTotalIse1 + nTotalIse2
+Local cLinRodaS1 := ""
+Local cLinRodaS2 := ""
+Local cLinRodaS3 := ""
+Local cLinRoda1  := ""
+Local cLinRoda2  := ""
+Local cLinRoda3  := ""
+Local cLinRoda3a := ""
+
+nLin	:=	nLin + 1
+
+nDecs1     := MsDecimais(1)
+
+nValLiq    := aImpsBol[1]
+nValImpBol := aImpsBol[2]
+
+cLinRodaS1  := STR0040 + Space(10) + Trans(nValLiq,cPictVals)    //"SubTotais "
+cLinRodaS2  := STR0041 + Space(10) + Trans(nValImpBol,cPictVals) //"Menos IVA "
+cLinRodaS3  := STR0042 + Space(10) + Trans(nTotalBol,cPictVals)  //"Totais    "	   	   
+
+cLinRoda1  := OemToAnsi(STR0029) + Trans(nBasImpFat,cPictVals) + Trans(nValImpFat,cPictVals) + Trans(nTotalFat,cPictVals)  //"Facturas           :" 
+
+cLinRoda2  := OemToAnsi(STR0030) + Trans(nValLiq,cPictVals) + Trans(nValImpBol,cPictVals) + Trans(nTotalBol,cPictVals)  //"Boletas            :"
+
+cLinRoda3  := OemToAnsi(STR0031)  //"Ventas Exentas IVA :"
+cLinRoda3a := Trans(nTotalIse2 + nTotalIse1,cPictVals)
+
+If nLin > 55
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Dispara a funcao para impressao do Cabecalho.     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	R020CabB()
+EndIf
+nLin := nLin + 2
+@ nLin,062 PSAY cLinRodaS1
+nLin := nLin + 1
+@ nLin,062 PSAY cLinRodaS2
+nLin := nLin + 1
+@ nLin,062 PSAY cLinRodaS3
+
+nLin := nLin + 2
+@ nLin,040 PSAY OemToAnsi(STR0027) //"Resumen :"
+nLin := nLin + 1
+@ nLin,062 PSAY cLinRoda1
+nLin := nLin + 1
+@ nLin,062 PSAY cLinRoda2
+nLin := nLin + 1
+@ nLin,062 PSAY cLinRoda3 
+@ nLin,116 PSAY cLinRoda3a
+nLin := nLin + 2
+@ nLin,062 PSAY OemToAnsi(STR0039)   //"T O T A L E S : "         
+@ nLin,099 PSAY Trans(nValImpFat + nValImpBol,cPictVals)
+@ nLin,116 PSAY Trans(nTot,cPictVals)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³ VerImp   ºAutor  ³Marcos Simidu       º Data ³  20/12/95   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Verifica posicionamento de papel na Impressora             º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicio da Funcao   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function VerImp
+Static Function VerImp()
+
+Local aDriver  :=  ""
+Local nOpc     
+
+nLin:= 0                // Contador de Linhas
+aDriver:=ReadDriver()
+If aReturn[5]==2
+	
+	nOpc       := 1
+	While .T.
+		
+		SetPrc(0,0)
+		dbCommitAll()
+		
+		@ 00   ,000	PSAY aDriver[5]
+		@ nLin ,000 PSAY " "
+		@ nLin ,004 PSAY "*"
+		@ nLin ,022 PSAY "."
+		
+		IF MsgYesNo(OemToAnsi(STR0032)) //"¿Fomulario esta en posicion? "
+		   nOpc := 1
+		ElseIF MsgYesNo(OemToAnsi(STR0033)) //"¿Intenta Nuevamente? "
+		   nOpc := 2
+		Else
+		   nOpc := 3
+		Endif
+
+		Do Case
+		Case nOpc==1
+			lContinua := .T.
+			Exit
+		Case nOpc==2
+			Loop
+		Case nOpc==3
+			lContinua := .F.
+			Return
+		EndCase
+	End
+Endif
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³AjustaSX1  ºAutor  ³Ivan PC            º Data ³  16/11/00   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Verifica as perguntas incluíndo-as caso näo existam        º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³LIBRBOL - Livro de Ventas.                                  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function AjustaSX1()
+Local _sAlias := Alias()
+Local cPerg := PADR("LIBBOL",6)
+Local aRegs :={}
+Local nX
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Campos a serem grav. no SX1³
+//³aRegs[nx][01] - x1_pergunte³
+//³aRegs[nx][02] - x1_perspa  ³
+//³aRegs[nx][03] - x1_pereng  ³
+//³aRegs[nx][04] - x1_variavl ³
+//³aRegs[nx][05] - x1_tipo    ³
+//³aRegs[nx][06] - x1_tamanho ³
+//³aRegs[nx][07] - x1_decimal ³
+//³aRegs[nx][08] - x1_presel  ³
+//³aRegs[nx][09] - x1_gsc     ³
+//³aRegs[nx][10] - x1_valid   ³
+//³aRegs[nx][11] - x1_var01   ³
+//³aRegs[nx][12] - x1_def01   ³
+//³aRegs[nx][13] - x1_defspa1 ³
+//³aRegs[nx][14] - x1_defeng1 ³
+//³aRegs[nx][15] - x1_cnt01   ³
+//³aRegs[nx][16] - x1_var02   ³
+//³aRegs[nx][17] - x1_def02   ³
+//³aRegs[nx][18] - x1_defspa2 ³
+//³aRegs[nx][19] - x1_defeng2 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+aAdd(aRegs,{"Mes de Movimento    ?","¨Mes de Movimiento ?","Mes de Movimento    ?","mv_ch1","N",2,0,0,"G","(mv_par01>=1) .And. (mv_par01<=12)","mv_par01","","","","1","","","",""})
+aAdd(aRegs,{"Ano de Movimento    ?","¨Ano de Movimiento ?","Ano de Movimento    ?","mv_ch2","C",4,0,0,"G","","mv_par02","","","","2000","","","",""})
+dbSelectArea("SX1")
+dbSetOrder(1)
+
+For nX:=1 to Len(aRegs)
+	If !(dbSeek(cPerg+StrZero(nx,2)))
+		RecLock("SX1",.T.)
+		Replace X1_GRUPO	with cPerg
+		Replace X1_ORDEM   	with StrZero(nx,2)
+		Replace x1_pergunte	with aRegs[nx][01]
+		Replace x1_perspa	with aRegs[nx][02]
+		Replace x1_pereng	with aRegs[nx][03]
+		Replace x1_variavl	with aRegs[nx][04]
+		Replace x1_tipo		with aRegs[nx][05]
+		Replace x1_tamanho	with aRegs[nx][06]
+		Replace x1_decimal	with aRegs[nx][07]
+		Replace x1_presel	with aRegs[nx][08]
+		Replace x1_gsc		with aRegs[nx][09]
+		Replace x1_valid	with aRegs[nx][10]
+		Replace x1_var01	with aRegs[nx][11]
+		Replace x1_def01	with aRegs[nx][12]
+		Replace x1_defspa1	with aRegs[nx][13]
+		Replace x1_defeng1	with aRegs[nx][14]
+		Replace x1_cnt01	with aRegs[nx][15]
+		Replace x1_var02	with aRegs[nx][16]
+		Replace x1_def02	with aRegs[nx][17]
+		Replace x1_defspa2	with aRegs[nx][18]
+		Replace x1_defeng2	with aRegs[nx][19]
+		MsUnlock()
+	Endif
+Next nX
+dbSelectArea(_sAlias)
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³R020CabF  ºAutor  ³Jose Lucas          º Data ³  06/07/98   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Cabecalho do Libro de Faturas de IVA ( Ventas ).           º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function R020CabF
+Static Function R020CabF()
+
+Local cRUT      := ""
+Local cEmpresa  := ""
+Local cTitulo   := ""
+Local _nMes
+Local aMeses    := {}
+
+AADD(aMeses,OemToAnsi(STR0009)) //"ENERO    "
+AADD(aMeses,OemToAnsi(STR0010)) //"FEBRERO  "
+AADD(aMeses,OemToAnsi(STR0011)) //"MARZO    "
+AADD(aMeses,OemToAnsi(STR0012)) //"ABRIL    "
+AADD(aMeses,OemToAnsi(STR0013)) //"MAYO     "
+AADD(aMeses,OemToAnsi(STR0014)) //"JUNIO    "
+AADD(aMeses,OemToAnsi(STR0015)) //"JULIO    "
+AADD(aMeses,OemToAnsi(STR0016)) //"AGOSTO   "
+AADD(aMeses,OemToAnsi(STR0017)) //"SEPTIEMBRE"
+AADD(aMeses,OemToAnsi(STR0018)) //"OCTUBRE  "
+AADD(aMeses,OemToAnsi(STR0029)) //"NOVIEMBRE"
+AADD(aMeses,OemToAnsi(STR0020)) //"DICIEMBRE"
+
+cEmpresa := SM0->M0_NOMECOM
+cRUT	:= TRANSFORM(SM0->M0_CGC,PesqPict("SA1","A1_CGC"))
+cTitulo	:= OemToAnsi(STR0036) //"V E N T A S   C O N   F A C T U R A S"   
+
+nPagina := nPagina + 1
+@ 02,000 PSAY OemToAnsi(STR0022) //"Empresa: "
+@ 02,020 PSAY cEmpresa
+@ 02,178 PSAY OemToAnsi(STR0023) //"Pagina Nro.: "
+@ 02,194 PSAY StrZero(nPagina,6)
+
+@ 03,000 PSAY OemToAnsi(STR0024) //"RUT: "
+@ 03,007 PSAY cRUT
+
+@ 05,000 PSAY cTitulo
+
+_nMes := Month(dDtFim)
+
+If _nMes > 0 .And. _nMes < 13
+	@ 05,080 PSAY OemToAnsi(STR0025) //"Mes "
+	@ 05,085 PSAY aMeses[_nMes]
+	@ 05,095 PSAY OemToAnsi(STR0026) //"Ano"
+	@ 05,100 PSAY StrZero(Year(dDtFim),4)
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Cabecalho para o Relatorio.  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+@ 07,000 PSAY OemToAnsi(STR0037) //"   Factura    Fecha                  CLIENTE                    RUT              Ventas                         VENTAS AFECTAS                  "   
+@ 08,000 PSAY OemToAnsi(STR0038) //"                                                                                 Exentas            Valor Neto      IVA           Total         "   
+nLin := 10
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³R020RodF  ºAutor  ³Jose Lucas          º Data ³  06/07/98   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Rodape do Libro de Faturas de IVA ( Ventas ).              º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL	                                                  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function R020RodF
+Static Function R020RodF()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Dispara a funcao para impressao do Rodape.   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nLin := nLin + 1
+
+If  !(lFinRel)
+    R020RdpF()	
+	R020CabF()                                         
+	@ nLin,000 PSAY OemToAnsi(STR0028) //"Transporte :"
+	nLin:= nlin+1
+EndIf
+lFinRel := .F.
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³R020RdpF  ºAutor  ³Jose Lucas		     º Data ³  06/07/98   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Rodape do Libro de Faturas de IVA ( Ventas ).              º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL		                                              º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function R020RdpF
+Static Function R020RdpF()
+
+nLin := nLin + 1
+
+@ nLin,057 PSAY OemToAnsi(STR0039)  //"T O T A L E S : "         
+@ nLin,074 PSAY nTotIsento PICTURE cPictVals //"@E( 999,999,999"
+@ nLin,096 PSAY nBasImpFat PICTURE cPictVals //"@E( 999,999,999"
+@ nLin,112 PSAY nValImpFat PICTURE cPictVals //"@E( 999,999,999"
+@ nLin,128 PSAY nTotalFat  PICTURE cPictVals //"@E( 999,999,999"
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³ImprimeN  ºAutor  ³Fernando Machima    º Data ³  05/05/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Imprime NCC's/NDC's por data apos as faturas               º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL		                                              º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function ImprimeN(dData)
+
+Local nX := 0  //Contem a primeira ocorrencia da NCC ou NDC para aquela data
+Local nY 
+Local nSigno
+
+For nY := 1 to Len(aNota)
+   If aNota[nY][2] == dData
+      nX := nY
+      Exit
+   EndIf   
+Next nY
+
+If nX > 0
+   While aNota[nX][2] == dData
+      If AllTrim(aNota[nX][10]) == "NCC"
+         nSigno := -1   
+      Else
+         nSigno := 1       //NDC
+      EndIf
+   
+      @ nLin,2   PSAY aNota[nX][1]                                        //Numero doc.
+      @ nLin,13  PSAY aNota[nX][2]                                        //Data
+	   
+      If Empty(aNota[nX][9])
+         @ nLin,025 PSAY aNota[nX][3]			                              //Nome do cliente
+         @ nLin,060 PSAY aNota[nX][4]          PICTURE "@R XX.999.999-X"     //RUT do cliente
+		 @ nLin,074 PSAY aNota[nX][8] * nSigno PICTURE "@E( 999,999,999.99"  //Valor de isentos           
+         @ nLin,096 PSAY aNota[nX][6] * nSigno PICTURE "@E( 999,999,999.99"  //Base do imposto
+         @ nLin,112 PSAY aNota[nX][7] * nSigno PICTURE "@E( 999,999,999.99"  //Valor do imposto
+         @ nLin,128 PSAY aNota[nX][5] * nSigno PICTURE "@E( 999,999,999.99"  //Valor liquido
+                                                  
+         nBasImpFat += aNota[nX][6] * nSigno 
+         nValImpFat += aNota[nX][7] * nSigno               
+         nTotalFat  += aNota[nX][5] * nSigno          
+      Else
+         @ nLin,25 PSAY OemToAnsi(STR0008)  //"** A N U L A D A **"			
+      EndIf   
+      nLin := nLin + 1
+   
+      nX := nX + 1
+            
+	  If nLin > 55
+	     R020RodF()
+	  EndIf	            	  
+	  
+	  If Len(aNota) < nX
+	     Exit
+	  EndIf
+   EndDo
+EndIf   
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³LibrImps  ºAutor  ³Fernando Machima    º Data ³  28/08/03   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Busca os valores e bases dos impostos do registro do livro º±±
+±±º          ³ fiscal                                                     º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRBOL		                                              º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function LibrImps(cTES,aRet)
+
+Local aTesImpInf := {}
+Local nX
+
+aTesImpInf  := TesImpInf(cTES)
+For nX := 1 to Len(aTesImpInf)
+   aRet[1]  += SF3->(FieldGet(FieldPos("F3_BASIMP"+Substr(aTesImpInf[nX][2],10,1))))
+   aRet[2]  += SF3->(FieldGet(FieldPos("F3_VALIMP"+Substr(aTesImpInf[nX][2],10,1))))
+Next nX
+
+Return .T.

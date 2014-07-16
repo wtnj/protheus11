@@ -1,0 +1,130 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ NHESTTOK ³ Autor ³ Jose Roberto          ³ Data ³ 23/04/01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Validacao das linhas do Cadastro das EPI'S                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Execblock usado do programa NHEST023                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Arquivos ³ SZ7                                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+
+#include "rwmake.ch"       
+
+User Function nhESTtok()    
+
+
+SetPrvt("RETORNO,_LRET,I,nPos,aMatriz,dDta,dDatalIb,cEPI")
+
+
+Retorno := .t.
+_lRet   := .f.
+
+
+For i:=1 to Len(aCols)
+   If !( aCols[i][nusado+1] )
+      _lRet := .t.
+   EndIf
+Next
+
+If ( !aCols[N][nusado+1] ) .and. ( !Empty(aCols[N][1]))  .and. (!Empty(aCols[N][2]))  .And. (aCols[N][4] > 0 )
+   //  se deletado                                             
+   Retorno := .t.
+ElseIf _lRet
+   Retorno := .t.
+Else
+   MsgAlert("Existem campos obrigatorios sem preenchimento (TOK1)")
+   Retorno := .f.
+EndIf
+   
+
+aMatriz := {}
+nPos    := 0
+  
+// ALERT("MATRICULA " +_cMatr )     
+cEPI :=Alltrim(Getmv("MV_EPI")) // Veirifica o bloqueio do EPI Sim ou Nao                       
+
+SZ7->( DbSetOrder(3)) // Numero + Matricula + data
+SZ7->(DbSeek(xFilial("SZ7") + _cMatr +Dtos(_dData),.f. ))
+
+//SZ7->(DbSkip(-1))   
+ // carrega o vetor aCols com os dados do cadastro das EPI's    
+
+While !SZ7->(EOF()) .And. SZ7->Z7_Matr == _cMatr
+
+	If AllTrim(_cMatr)$"999991/999992/999993" .AND. SM0->M0_CODIGO=="NH" //terceiros da usinagem
+		exit
+	EndIf
+  
+//   If  (ASCAN(aMatriz,{|aMatriz| aMatriz[1]== SZ7->Z7_PRODUTO})) == 0
+   
+   If  ASCAN(aMatriz,SZ7->Z7_PRODUTO) == 0
+       Aadd(aMatriz,SZ7->Z7_PRODUTO)
+      
+       nPos := ASCAN(aCols,{|aCols| aCols[2]== SZ7->Z7_PRODUTO})
+  
+	   If nPos <> 0  
+	      SB1->(DbSeek(xFilial("SB1") + SZ7->Z7_PRODUTO))
+	      If SB1->B1_DURA == 0
+	         MsgBox("Produto Nao Pode ser Movimentado Como EPI Durabilidade Zero"+chr(13)+;
+	                "Avise a Seguranca do Trabalho","Atencao","Stop")
+	             Retorno := .f.    
+	             exit
+	      Endif
+          dDta     := _dData - SB1->B1_DURA                  
+	      dDataLib := SZ7->Z7_DATA + SB1->B1_DURA                  
+	      If SZ7->Z7_DATA > dDta .And. cEPI == "NAO"  .And. aCols[N][nusado+1] == .F.
+	         MsgBox("Atencao Produto " + AllTrim(SZ7->Z7_PRODUTO)+" Nao Liberado, pois ja foi Entregue para este "+chr(13)+;
+	                "Funcionario Em "+DTOC(SZ7->Z7_DATA)+"  Entre em contato com a Seguranca do Trabalho "+chr(13)+;
+	                "Para Liberacao ou Aguarde a Data "+Dtoc(dDatalib)+" Para Pegar este Produto","Atencao","Stop") 
+	                 Retorno := .f.
+	      Endif
+	   Endif
+   Endif   
+    
+   SZ7->(DbSkip(-1))   
+EndDo
+
+
+If cEPI == "SIM" //bloqueia automaticamente o parametro do EPI.
+   SX6->(DbSetOrder(1)) // Filial + Variavel
+   SX6->(DbSeek(xFilial("SX6")+"MV_EPI"))
+              
+   RecLock("SX6",.f.)
+      SX6->X6_CONTEUD := "NAO"
+   MsUnLock("SX6")
+Endif
+                                                     
+//-- OS Portal N.: 020584
+//-- desc: verifica os epis que só podem ser retirados em par
+//-- autor: João Felipe da Rosa 
+//-- data: 14/07/2011
+adupl := {}
+
+for xX:=1 to len(acols)
+	If alltrim(aCols[xX][6])$'21' .AND. alltrim(aCols[xX][2])$"MS01.000133/MS01.000247/MS01.000264/MS01.000088"
+		nPos := aScan(adupl,{|x| x[2] == acols[xX][2]})
+		If nPos == 0
+			aAdd(adupl,{acols[xX][1],acols[xX][2],1})
+		Else
+			adupl[nPos][3] += 1
+		EndIf
+	EndIf
+next
+
+For xX:=1 to len(adupl)
+	if(adupl[xX][3]%2 <> 0)
+		alert('Atenção, o epi '+alltrim(adupl[xX][2])+' só pode ser solicitado em quantidade par! favor verificar o ítem '+adupl[xX][1]+'!')
+		return .f.
+	endif
+next
+//-- fim OS N. 020584
+
+Return(Retorno)   // Direto estava dando erro. Patetico  
+

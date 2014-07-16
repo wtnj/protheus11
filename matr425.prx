@@ -1,0 +1,951 @@
+#INCLUDE 'MATR425.CH'
+#INCLUDE 'PROTHEUS.CH'
+#INCLUDE 'topconn.ch'
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MATR425  ³ Autor ³Alexandre Inacio Lemes ³ Data ³26/07/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relatorio de Estoque por Lote                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ MATR425(void)                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+User Function Matr425a()
+
+Local oReport
+
+If FindFunction("TRepInUse") .And. TRepInUse()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Interface de impressao                                                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oReport:= ReportDef()
+	oReport:PrintDialog()
+Else
+	U_MATR425R3()
+EndIf                   
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ ReportDef³Autor  ³Alexandre Inacio Lemes ³Data  ³26/07/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relatorio de Estoque por Lote                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ oExpO1: Objeto do relatorio                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function ReportDef()
+
+Local aOrdem      := {STR0004,STR0005,STR0018}	//" Por Produto"###" Por Lote/Sub-Lote"###" Por Armazem"
+Local cTitle      := STR0003 //"Posicao de Estoque por Lote/Sub-Lote"
+Local cPicSaldo   := PesqPict("SB8","B8_SALDO"  ,18)
+Local cPicEmpenho := PesqPict("SB8","B8_EMPENHO",18)
+Local oReport 
+Local oSection1
+Local oSection2
+
+#IFDEF TOP
+	Local cAliasSB8 := GetNextAlias()
+#ELSE
+	Local cAliasSB8 := "SB8"
+#ENDIF
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01        	// Do  Produto                          ³
+//³ mv_par02        	// Ate Produto                          ³
+//³ mv_par03        	// De  Lote                             ³
+//³ mv_par04        	// Ate Lote			         		    ³
+//³ mv_par05        	// De  Sub-Lote                         ³
+//³ mv_par06        	// Ate Sub-Lote			         	  	³
+//³ mv_par07        	// De  Local			        	    ³
+//³ mv_par08        	// Ate Local				            ³
+//³ mv_par09        	// Lista Saldo Zerado ? Lista/Nao Lista ³
+//³ mv_par10        	// Do Tipo  				            ³
+//³ mv_par11        	// Ate o Tipo  			                ³
+//³ mv_par12        	// Do Grupo 				            ³
+//³ mv_par13        	// Ate o Grupo		                    ³
+//³ mv_par14        	// QTDE na 2a.U.M. ?	                ³
+//| mv_par15			// Imprime descricao do Armazem ?       |
+//| mv_par16			// Da Data de Validade ?	 		    |
+//| mv_par17			// Ate a Data de Validade ? 			|
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+AjustaSX1()
+Pergunte("MR425A",.F.)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Criacao do componente de impressao                                      ³
+//³                                                                        ³
+//³TReport():New                                                           ³
+//³ExpC1 : Nome do relatorio                                               ³
+//³ExpC2 : Titulo                                                          ³
+//³ExpC3 : Pergunte                                                        ³
+//³ExpB4 : Bloco de codigo que sera executado na confirmacao da impressao  ³
+//³ExpC5 : Descricao                                                       ³
+//³                                                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oReport:= TReport():New("MTR425",cTitle,"MR425A", {|oReport| ReportPrint(oReport,aOrdem,cAliasSB8)},STR0001+" "+STR0002) //"Este programa emitira' uma relacao com a posi‡„o de estoque por Lote/Sub-Lote."
+oReport:SetLandscape() 
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Criacao da secao utilizada pelo relatorio                               ³
+//³                                                                        ³
+//³TRSection():New                                                         ³
+//³ExpO1 : Objeto TReport que a secao pertence                             ³
+//³ExpC2 : Descricao da seçao                                              ³
+//³ExpA3 : Array com as tabelas utilizadas pela secao. A primeira tabela   ³
+//³        sera considerada como principal para a seção.                   ³
+//³ExpA4 : Array com as Ordens do relatório                                ³
+//³ExpL5 : Carrega campos do SX3 como celulas                              ³
+//³        Default : False                                                 ³
+//³ExpL6 : Carrega ordens do Sindex                                        ³
+//³        Default : False                                                 ³
+//³                                                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Criacao da celulas da secao do relatorio                                ³
+//³                                                                        ³
+//³TRCell():New                                                            ³
+//³ExpO1 : Objeto TSection que a secao pertence                            ³
+//³ExpC2 : Nome da celula do relatório. O SX3 será consultado              ³
+//³ExpC3 : Nome da tabela de referencia da celula                          ³
+//³ExpC4 : Titulo da celula                                                ³
+//³        Default : X3Titulo()                                            ³
+//³ExpC5 : Picture                                                         ³
+//³        Default : X3_PICTURE                                            ³
+//³ExpC6 : Tamanho                                                         ³
+//³        Default : X3_TAMANHO                                            ³
+//³ExpL7 : Informe se o tamanho esta em pixel                              ³
+//³        Default : False                                                 ³
+//³ExpB8 : Bloco de código para impressao.                                 ³
+//³        Default : ExpC2                                                 ³
+//³                                                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oSection1:= TRSection():New(oReport,STR0028,{"SB8","SB1","SB2"},aOrdem) //"Saldos por Lote"
+oSection1:SetTotalInLine(.F.)
+oSection1:SetHeaderPage()
+ 
+TRCell():New(oSection1,"B8_NUMLOTE","SB8",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"B8_LOTECTL","SB8",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"B8_PRODUTO","SB8",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"B1_DESC"   ,"SB1",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"SUBLOTE"   ,"   ",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"LOTE"      ,"   ",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"B8_LOCAL"  ,"SB8",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"SALDO1"    ,"   ",STR0024+CRLF+STR0026,cPicSaldo  ,18,/*lPixel*/,/*{|| code-block de impressao }*/,,,"RIGHT")
+TRCell():New(oSection1,"EMPENHO1"  ,"   ",STR0025+CRLF+STR0026,cPicEmpenho,18,/*lPixel*/,/*{|| code-block de impressao }*/,,,"RIGHT")
+TRCell():New(oSection1,"SALDO2"    ,"   ",STR0024+CRLF+STR0027,cPicSaldo  ,18,/*lPixel*/,/*{|| code-block de impressao }*/,,,"RIGHT")
+TRCell():New(oSection1,"EMPENHO2"  ,"   ",STR0025+CRLF+STR0027,cPicEmpenho,18,/*lPixel*/,/*{|| code-block de impressao }*/,,,"RIGHT")
+TRCell():New(oSection1,"B8_DATA"   ,"SB8",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"B8_DTVALID","SB8",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+TRCell():New(oSection1,"B2_LOCALIZ","SB2",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+
+oSection1:Cell("SUBLOTE"):GetFieldInfo("B8_NUMLOTE")
+oSection1:Cell("LOTE"):GetFieldInfo("B8_LOTECTL")
+
+Return(oReport)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ReportPrin³ Autor ³Alexandre Inacio Lemes ³Data  ³26/07/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relatorio de Estoque por Lote                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpO1: Objeto Report do Relatório                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function ReportPrint(oReport,aOrdem,cAliasSB8)
+
+Local oSection1  := oReport:Section(1) 
+Local oSection2  := oReport:Section(1):Section(1)  
+Local nOrdem     := oReport:Section(1):GetOrder()
+Local cOrdem     := ""
+Local cIndexKey  := ""
+Local cCondicao  := ""
+Local cLoteAnt   := ""
+Local cProdAnt   := ""
+Local cDescAnt   := ""
+Local cSLotAnt   := ""
+Local cAlmoAnt   := ""
+Local cSeekSB8   := ""
+Local cCondSB8   := ""
+Local cDescArm   := ""
+Local dDataAnt   := CtoD("  /  /  ")
+Local dValiAnt   := CtoD("  /  /  ")
+Local nSaldo     := 0
+Local nEmpenho   := 0
+Local nSaldo2    := 0
+Local nEmpenho2  := 0
+Local lPrinted   := .F.
+Local lSubLote   := .F.
+Local lEmpPrev   := If(SuperGetMV("MV_QTDPREV")== "S",.T.,.F.)      
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Adiciona a ordem escolhida ao titulo do relatorio          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oReport:SetTitle(oReport:Title() + " ("+AllTrim(aOrdem[nOrdem])+") ")
+
+dbSelectArea('SB1')
+dbSetOrder(1)
+
+dbSelectArea("SB8")
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Filtragem do relatório                                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+#IFDEF TOP
+
+ 	MakeSqlExpr(oReport:uParam)
+    
+ 	oReport:Section(1):BeginQuery()	
+
+	If nOrdem == 1
+		cOrdem := "% B8_FILIAL,B8_PRODUTO,B8_LOCAL,B8_LOTECTL,B8_NUMLOTE %"
+	ElseIf nOrdem == 2
+		cOrdem := "% B8_FILIAL,B8_LOTECTL,B8_NUMLOTE,B8_PRODUTO,B8_LOCAL %"
+	ElseIf nOrdem == 3
+		cOrdem := "% B8_FILIAL,B8_LOCAL,B8_LOTECTL,B8_NUMLOTE,B8_PRODUTO %"
+	EndIf
+
+	BeginSql Alias cAliasSB8
+			
+	SELECT SB8.*,SB8.R_E_C_N_O_ AS SB8Recno
+	
+	FROM %table:SB8% SB8
+	
+	WHERE B8_FILIAL    = %xFilial:SB8% AND 
+		  B8_PRODUTO  >= %Exp:mv_par01% AND 
+	      B8_PRODUTO  <= %Exp:mv_par02% AND      
+	      B8_LOTECTL  >= %Exp:mv_par03% AND 
+	      B8_LOTECTL  <= %Exp:mv_par04% AND          
+	      B8_NUMLOTE  >= %Exp:mv_par05% AND 
+	      B8_NUMLOTE  <= %Exp:mv_par06% AND      
+	      B8_LOCAL    >= %Exp:mv_par07% AND 
+	      B8_LOCAL    <= %Exp:mv_par08% AND      
+	      B8_DTVALID  >= %Exp:Dtos(mv_par16)% AND 
+	      B8_DTVALID  <= %Exp:Dtos(mv_par17)% AND 
+	      SB8.%NotDel% 
+
+	ORDER BY %Exp:cOrdem%
+					
+	EndSql 
+
+    oReport:Section(1):EndQuery(/*Array com os parametros do tipo Range*/)
+
+#ELSE
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Transforma parametros Range em expressao Advpl                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	MakeAdvplExpr(oReport:uParam)
+
+	cCondicao := 'B8_FILIAL=="'        + xFilial('SB8') + '".And.'
+	cCondicao += 'B8_PRODUTO>="'       + mv_par01       + '".And.B8_PRODUTO<="'         + mv_par02       + '".And.'
+	cCondicao += 'B8_LOTECTL>="'       + mv_par03       + '".And.B8_LOTECTL<="'         + mv_par04       + '".And.'
+	cCondicao += 'B8_NUMLOTE>="'       + mv_par05       + '".And.B8_NUMLOTE<="'         + mv_par06       + '".And.'
+	cCondicao += 'B8_LOCAL>="'         + mv_par07       + '".And.B8_LOCAL<="'           + mv_par08       + '".And.'
+	cCondicao += 'DTOS(B8_DTVALID)>= "'+ DTOS(mv_par16) + '".And. DTOS(B8_DTVALID)<= "' + DTOS(mv_par17) + '"'
+	
+	If nOrdem == 1
+		cIndexKey := "B8_FILIAL+B8_PRODUTO+B8_LOCAL+B8_LOTECTL+B8_NUMLOTE"
+	ElseIf nOrdem == 2
+		cIndexKey := "B8_FILIAL+B8_LOTECTL+B8_NUMLOTE+B8_PRODUTO+B8_LOCAL"
+	ElseIf nOrdem == 3
+		cIndexKey := "B8_FILIAL+B8_LOCAL+B8_LOTECTL+B8_NUMLOTE+B8_PRODUTO"
+	EndIf
+	
+	oReport:Section(1):SetFilter(cCondicao,cIndexKey)
+
+#ENDIF
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Desabilita Celulas conforme Parametros e Ordens Selecionadas ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nOrdem == 1 .Or. nOrdem == 3
+	 oSection1:Cell("B8_NUMLOTE"):Disable()
+	 oSection1:Cell("B8_LOTECTL"):Disable()
+ElseIf nOrdem == 2
+	 oSection1:Cell("SUBLOTE"):Disable()
+	 oSection1:Cell("LOTE"):Disable()
+EndIf
+
+If mv_par15 == 2
+	 oSection1:Cell("B2_LOCALIZ"):Disable()
+EndIf
+
+If mv_par14 == 2
+	 oSection1:Cell("SALDO2"):Disable()
+	 oSection1:Cell("EMPENHO2"):Disable()
+Else
+	TRFunction():New(oSection1:Cell("SALDO2"  ),NIL,"SUM",/*oBreak1*/,,/*cPicture*/,/*uFormula*/,.T.,.F.,,oSection1) 
+	TRFunction():New(oSection1:Cell("EMPENHO2"),NIL,"SUM",/*oBreak1*/,,/*cPicture*/,/*uFormula*/,.T.,.F.,,oSection1) 
+EndIf
+
+TRFunction():New(oSection1:Cell("SALDO1"  ),NIL,"SUM",/*oBreak1*/,,/*cPicture*/,/*uFormula*/,.T.,.F.,,oSection1)
+TRFunction():New(oSection1:Cell("EMPENHO1"),NIL,"SUM",/*oBreak1*/,,/*cPicture*/,/*uFormula*/,.T.,.F.,,oSection1) 
+
+
+oReport:SetMeter(SB8->(LastRec()))
+dbSelectArea(cAliasSB8)
+
+While !oReport:Cancel() .And. !(cAliasSB8)->(Eof())
+
+	oReport:IncMeter()
+	If oReport:Cancel()
+		Exit
+	EndIf
+
+	lSubLote := Rastro(B8_PRODUTO,"S")
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Define a Quebra por Produto ou Lote                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nOrdem == 1
+		cSeekSB8 := B8_FILIAL+B8_PRODUTO+B8_LOCAL
+		cCondSB8 := 'B8_FILIAL+B8_PRODUTO+B8_LOCAL'
+	ElseIf nOrdem == 2
+		cSeekSB8 := B8_FILIAL+B8_LOTECTL+If(lSubLote,B8_NUMLOTE,'')+B8_PRODUTO+B8_LOCAL
+		cCondSB8 := 'B8_FILIAL+B8_LOTECTL+'+If(lSubLote,'B8_NUMLOTE+','')+'B8_PRODUTO+B8_LOCAL'
+	ElseIf nOrdem == 3
+		cSeekSB8 := B8_FILIAL+B8_LOCAL+B8_PRODUTO
+		cCondSB8 := 'B8_FILIAL+B8_LOCAL+B8_PRODUTO'
+	EndIf
+
+	nSaldo    := 0
+	nEmpenho  := 0
+	nSaldo2   := 0
+	nEmpenho2 := 0
+	
+	oSection1:Init()
+
+	While !oReport:Cancel() .And. !(cAliasSB8)->(Eof()) .And. cSeekSB8 == &(cCondSB8)
+
+		oReport:IncMeter()
+		If oReport:Cancel()
+			Exit
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³  Posiciona-se na Descricao Correta do SB1                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !(cProdAnt==B8_PRODUTO)
+			SB1->(dbSeek(xFilial("SB1") + (cAliasSB8)->B8_PRODUTO, .F.))
+		EndIf	
+		
+		If SB1->B1_TIPO < mv_par10 .Or. SB1->B1_TIPO > mv_par11 .Or. SB1->B1_GRUPO < mv_par12 .Or. SB1->B1_GRUPO > mv_par13
+			dbSkip()
+			Loop
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³  Saldo do Lote ou Lote/Sublote                               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nSaldo   += SB8SALDO(,,,,cAliasSB8,lEmpPrev,,,.T.)
+		nEmpenho += SB8SALDO(.T.,,,,cAliasSB8,lEmpPrev,,,.T.)
+		nSaldo2  += SB8SALDO(,,,.T.,cAliasSB8,lEmpPrev,,,.T.) // Quando passado .T. no 4o. Parametro a funcao retorna a 2a. UM.
+		nEmpenho2+= SB8SALDO(.T.,,,.T.,cAliasSB8,lEmpPrev,,,.T.)
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Salva Dados do Registro Atual / Passa para o Pr¢ximo Registro ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		cProdAnt := B8_PRODUTO
+		cDescAnt := SB1->B1_DESC
+		cSLotAnt := If(lSubLote,B8_NUMLOTE,Space(Len(B8_NUMLOTE)))
+		cLoteAnt := B8_LOTECTL
+		cAlmoAnt := B8_LOCAL
+		dDataAnt := B8_DATA
+		dValiAnt := B8_DTVALID
+
+		If mv_par15 == 1
+			If SB2->(MsSeek(xFilial("SB2")+cProdAnt+cAlmoAnt)) .And. !Empty(SB2->B2_LOCALIZ)
+				cDescArm := SB2->B2_LOCALIZ
+			Else
+				cDescArm := ""
+			EndIf
+		EndIf	
+
+		nRecno := (cAliasSB8)->SB8Recno
+
+		dbSkip()
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Imprime Saldo do Lote ou Lote/Sublote                         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !(cSeekSB8 == &(cCondSB8)) .Or. lSubLote .Or. !(cLoteAnt == B8_LOTECTL)
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Verifica se Lista Saldo Zerado                               ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If mv_par09 == 2 .And. QtdComp(nSaldo) == QtdComp(0)
+				Loop
+			EndIf
+
+			lPrinted := .T.
+
+			oSection1:Cell("B8_NUMLOTE"):SetValue(cSLotAnt)
+			oSection1:Cell("B8_LOTECTL"):SetValue(cLoteAnt)
+			oSection1:Cell("B8_PRODUTO"):SetValue(cProdAnt)
+			oSection1:Cell("B1_DESC"):SetValue(cDescAnt)
+			oSection1:Cell("SUBLOTE"):SetValue(cSLotAnt)
+			oSection1:Cell("LOTE"):SetValue(cLoteAnt)
+			oSection1:Cell("B8_LOCAL"):SetValue(cAlmoAnt)
+			oSection1:Cell("SALDO1"):SetValue(nSaldo)
+			oSection1:Cell("EMPENHO1"):SetValue(nEmpenho)
+			oSection1:Cell("SALDO2"):SetValue(nSaldo2)
+			oSection1:Cell("EMPENHO2"):SetValue(nEmpenho2)
+			oSection1:Cell("B8_DATA"):SetValue(dDataAnt)
+			oSection1:Cell("B8_DTVALID"):SetValue(dValiAnt)
+			oSection1:Cell("B2_LOCALIZ"):SetValue(cDescArm)
+            
+        	SB8->(dbGoTo(nRecno))
+			oSection1:CALIAS:="SB8"
+			oSection1:PrintLine()		
+			oSection1:CALIAS:=cAliasSB8
+					
+			nSaldo   := 0
+			nEmpenho := 0
+			nSaldo2  := 0
+			nEmpenho2:= 0
+
+		EndIf
+
+	EndDo
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Imprime Totalizador                                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lPrinted
+		oSection1 :SetTotalText(If(nOrdem == 1, STR0013 , If(lSubLote , STR0016 , STR0015 ))) //"Total do Produto ->"###"Total do Lote ->"###'Total do Lote/SubLote ->'
+		oSection1:Finish()
+		lPrinted := .F.
+	EndIf
+
+EndDo
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MATR425R3³ Autor ³ Rodrigo de A. Sartorio³ Data ³ 11.05.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relatorio de Estoque por Lote                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Marcelo Pim.³09/02/98³08800 ³Incluido no Cabe‡alho : Dt. e Dt. Validade³±±
+±±³Rodrigo Sar.³26/05/98³XXXXXX³Trocada pergunte p/ corrigir falha de     ³±±
+±±³            ³        ³      ³atualizacao de versao.                    ³±±
+±±³FernandoJoly³10/11/98³XXXXXX³Ajuste para o Ano 2000.                   ³±±
+±±³Patricia Sal³19/01/00³002118³Acerto na Impressao da Descricao do Prod. ³±±
+±±³Patricia Sal³19/04/00³003715³Habilitar Opcao de Formato(Comprim/Normal)³±±
+±±³Patricia Sal³26/05/00³004405³Incluir pergunte "Lista Saldo Zerado ?"   ³±±
+±±³Patricia Sal³26/05/00³004437³Incluir dbSetIndex/Apagar Ind. Temporario.³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Descri‡ao ³ PLANO DE MELHORIA CONTINUA        ³Programa: MATR425.PRX   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ITEM PMC  ³ Responsavel              ³ Data                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³      01  ³ Marcos V. Ferreira       ³ 18/01/2006                      ³±±
+±±³      02  ³ Marcos V. Ferreira       ³ 18/01/2006                      ³±±
+±±³      03  ³                          ³                                 ³±±
+±±³      04  ³                          ³                                 ³±±
+±±³      05  ³                          ³                                 ³±±
+±±³      06  ³ Marcos V. Ferreira       ³ 31/03/2006 - Bops: 00000095739  ³±±
+±±³      07  ³ Marcos V. Ferreira       ³ 31/03/2006 - Bops: 00000095739  ³±±
+±±³      08  ³                          ³                                 ³±±
+±±³      09  ³                          ³                                 ³±±
+±±³      10  ³                          ³                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function MATR425R3()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cDesc1     := OemToAnsi(STR0001) //"Este programa emitira' uma relacao com a posi‡„o de "
+Local cDesc2     := OemToAnsi(STR0002)	//"estoque por Lote/Sub-Lote."
+Local cDesc3     := ''
+Local cString    := 'SB8'
+Local Titulo	  := OemToAnsi(STR0003)	//"Posicao de Estoque por Lote/Sub-Lote"
+Local Tamanho    := 'M'
+Local wnRel      := 'MATR425'
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis tipo Private padrao de todos os relatorios         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aOrd       := {OemToAnsi(STR0004),OemToAnsi(STR0005),OemToAnsi(STR0018)}	//" Por Produto"###" Por Lote/Sub-Lote"###" Por Armazem"
+Private aReturn    := {OemToAnsi(STR0006),1,OemToAnsi(STR0007), 1, 2, 1, '',1 }	//"Zebrado"###"Administracao"
+Private cPerg      := 'MR425A'
+Private nLastKey   := 0
+Private nTipo      := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria a Pergunta Nova no Sx1                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+AjustaSX1()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte('MR425A', .F.)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01        	// Do  Produto                          ³
+//³ mv_par02        	// Ate Produto                          ³
+//³ mv_par03        	// De  Lote                             ³
+//³ mv_par04        	// Ate Lote			         		    ³
+//³ mv_par05        	// De  Sub-Lote                         ³
+//³ mv_par06        	// Ate Sub-Lote			         	  	³
+//³ mv_par07        	// De  Local			        	    ³
+//³ mv_par08        	// Ate Local				            ³
+//³ mv_par09        	// Lista Saldo Zerado ? Lista/Nao Lista ³
+//³ mv_par10        	// Do Tipo  				            ³
+//³ mv_par11        	// Ate o Tipo  			                ³
+//³ mv_par12        	// Do Grupo 				            ³
+//³ mv_par13        	// Ate o Grupo		                    ³
+//³ mv_par14        	// QTDE na 2a.U.M. ?	                ³
+//| mv_par15			// Imprime descricao do Armazem ?       |
+//| mv_par16			// Da Data de Validade ?	 		    |
+//| mv_par17			// Ate a Data de Validade ? 			|
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnRel := SetPrint(cString,wnRel,cPerg,@Titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,,Tamanho)
+nTipo := If(aReturn[4]==1,GetMv('MV_COMP'),GetMv('MV_NORM'))
+
+If mv_par14==1 .Or. mv_par15==1  //Aumentar relatorio quando for 2a. U.M. ou quando imprimir descricao do armazem
+    Tamanho :="G"
+EndIf    
+
+If nLastKey == 27
+	dbClearFilter()
+	Return Nil
+EndIf
+SetDefault(aReturn,cString)
+If nLastKey == 27
+	dbClearFilter()
+	Return Nil
+EndIf
+
+RptStatus({|lEnd| C425Imp(@lEnd,wnRel,Tamanho,Titulo)},Titulo)
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ C425IMP  ³ Autor ³ Rodrigo de A. Sartorio³ Data ³ 14.11.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Chamada do Relatorio                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATR425			                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function C425Imp(lEnd, wnRel, Tamanho, Titulo)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis especificas do Relatorio                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cIndex     := ''
+Local cCond      := ''
+Local cLoteAnt   := ''
+Local cProdAnt   := ''
+Local cDescAnt   := ''
+Local cSLotAnt   := ''
+Local cAlmoAnt   := ''
+Local cSeekSB8   := ''
+Local cCondSB8   := ''
+Local cNomArq    := ''
+Local cDescArm   := ''
+Local cPicSld    := PesqPict('SB8', 'B8_SALDO',18)
+Local cPicEmp    := PesqPict('SB8', 'B8_EMPENHO',18)
+Local dDataAnt   := CtoD('  /  /  ')
+Local dValiAnt   := CtoD('  /  /  ')
+Local nSaldo     := 0
+Local nEmpenho   := 0
+Local nSaldoT    := 0
+Local nEmpenhoT  := 0
+Local nSaldo2    := 0
+Local nEmpenho2  := 0
+Local nSaldoT2   := 0
+Local nEmpenhoT2 := 0
+Local nCntImpr   := 0
+Local nIndSB8    := 0
+Local lSubLote   := .F.
+Local lEmpPrev   := If(SuperGetMV("MV_QTDPREV")== "S",.T.,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aLinha    := {}
+Private Cabec1    := ''
+Private Cabec2    := ''
+Private cBTxt     := Space(10)
+Private cBCont    := 0
+Private Li        := 80
+Private M_PAG     := 01
+
+//-- Condi‡Æo de Filtragem da IndRegua
+cCond := 'B8_FILIAL=="'+xFilial('SB8')+'".And.'
+cCond += 'B8_PRODUTO>="'+mv_par01+'".And.B8_PRODUTO<="'+mv_par02+'".And.'
+cCond += 'B8_LOTECTL>="'+mv_par03+'".And.B8_LOTECTL<="'+mv_par04+'".And.'
+cCond += 'B8_NUMLOTE>="'+mv_par05+'".And.B8_NUMLOTE<="'+mv_par06+'".And.'
+cCond += 'B8_LOCAL>="'+mv_par07+'".And.B8_LOCAL<="'+mv_par08+'".And.'
+cCond += 'DTOS(B8_DTVALID)>= "'+DTOS(mv_par16)+'".And. DTOS(B8_DTVALID)<= "'+DTOS(mv_par17)+'"'
+
+If aReturn[8]==1
+	cIndex := 'B8_FILIAL+B8_PRODUTO+B8_LOCAL+B8_LOTECTL+B8_NUMLOTE'
+	Titulo := OemToAnsi(STR0008)	//"POSICAO DE ESTOQUE POR LOTE/SUBLOTE (POR PRODUTO)"
+    If mv_par14==1
+       Cabec1 := OemToAnsi(STR0020)	//"PRODUTO         DESCRICAO                     SUB-LOTE     LOTE    ARMZ    SALDO           EMPENHO           SALDO 2a.UM       EMPENHO 2a.UM          DATA      DATA   "		
+       Cabec2 := OemToAnsi(STR0021)	//"    VALIDADE "
+    Else
+	   Cabec1 := OemToAnsi(STR0009)	//"PRODUTO         DESCRICAO                     SUB-LOTE     LOTE    ARMZ      SALDO       EMPENHO       DATA       DATA   "
+       Cabec2 := OemToAnsi(STR0014)	//"    VALIDADE "
+    EndIf
+ElseIf aReturn[8] == 2
+	cIndex := 'B8_FILIAL+B8_LOTECTL+B8_NUMLOTE+B8_PRODUTO+B8_LOCAL'
+	Titulo := OemToAnsi(STR0010)	//"POSICAO DE ESTOQUE POR LOTE/SUB-LOTE (POR LOTE)"
+    If mv_par14 == 1
+	   Cabec1 := OemToAnsi(STR0022)	//"SUB-LOTE  LOTE    PRODUTO         DESCRICAO                      AL    SALDO       EMPENHO       DATA       DATA   "
+	   Cabec2 := OemToAnsi(STR0021)	//"                                                                                                          VALIDADE "
+    Else
+	   Cabec1 := OemToAnsi(STR0011)	//"SUB-LOTE  LOTE    PRODUTO         DESCRICAO                      AL    SALDO       EMPENHO       DATA       DATA   "
+	   Cabec2 := OemToAnsi(STR0014)	//"                                                                                                          VALIDADE "
+	Endif   
+ElseIf aReturn[8] == 3
+	cIndex := 'B8_FILIAL+B8_LOCAL+B8_LOTECTL+B8_NUMLOTE+B8_PRODUTO'
+	Titulo := OemToAnsi(STR0019)	//"POSICAO DE ESTOQUE POR LOTE/SUB-LOTE (POR ARMAZEM)"
+    If mv_par14 == 1
+       Cabec1 := OemToAnsi(STR0020)	//"PRODUTO         DESCRICAO                     SUB-LOTE     LOTE    ARMZ    SALDO           EMPENHO           SALDO 2a.UM       EMPENHO 2a.UM          DATA      DATA   "		
+       Cabec2 := OemToAnsi(STR0021)	//"    VALIDADE "
+    Else
+	   Cabec1 := OemToAnsi(STR0009)	//"PRODUTO         DESCRICAO                     SUB-LOTE     LOTE    ARMZ      SALDO       EMPENHO       DATA       DATA   "
+	   Cabec2 := OemToAnsi(STR0014)	//"                                                                                                                  VALIDADE "
+	Endif   
+EndIf
+If mv_par15 == 1
+	Cabec1 += OemToAnsi(STR0023)	//"    DESCR. ARMAZ."
+	Cabec1 += Space(34)+" FORNECEDOR"
+EndIf	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Pega o nome do arquivo de indice de trabalho             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cNomArq := CriaTrab('', .F.)
+
+//-- Seta a Ordem Correta no Arquivo SB1
+dbSelectArea('SB1')
+dbSetOrder(1)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria o indice de trabalho                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea('SB8')
+IndRegua('SB8', cNomArq, cIndex,, cCond, STR0017) //"Selecionando Registros..."
+#IFNDEF TOP
+	dbSetIndex(cNomArq+OrdBagExt())
+#ENDIF
+dbGoTop()
+SetRegua(LastRec())
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Processa o La‡o para ImpressÆo                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Do While !Eof()
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Cancela a ImpressÆo                                	         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lEnd
+		@ PRow()+1, 001 PSay OemToAnsi(STR0012)	//"CANCELADO PELO OPERADOR"
+		Exit
+	EndIf
+	lSubLote := Rastro(B8_PRODUTO,'S')
+
+	//-- Define a Quebra por Produto ou Lote
+	If aReturn[8] == 1
+		cSeekSB8 := B8_FILIAL+B8_PRODUTO+B8_LOCAL
+		cCondSB8 := 'B8_FILIAL+B8_PRODUTO+B8_LOCAL'
+	ElseIf aReturn[8] == 2
+		cSeekSB8 := B8_FILIAL+B8_LOTECTL+If(lSubLote,B8_NUMLOTE,'')+B8_PRODUTO+B8_LOCAL
+		cCondSB8 := 'B8_FILIAL+B8_LOTECTL+'+If(lSubLote,'B8_NUMLOTE+','')+'B8_PRODUTO+B8_LOCAL'
+	ElseIf aReturn[8] == 3
+		cSeekSB8 := B8_FILIAL+B8_LOCAL+B8_PRODUTO
+		cCondSB8 := 'B8_FILIAL+B8_LOCAL+B8_PRODUTO'
+	EndIf
+
+	nSaldo    := 0
+	nEmpenho  := 0
+	nSaldoT   := 0
+	nEmpenhoT := 0
+	nSaldo2   := 0
+	nEmpenho2 := 0
+	nSaldoT2  := 0
+	nEmpenhoT2:= 0
+	
+	//-- Processa o La‡o da Quebra
+	Do While !Eof() .And. cSeekSB8 == &(cCondSB8)
+		
+		//-- Atualiza a Regua de ImpressÆo
+		IncRegua()
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Cancela a ImpressÆo                                	         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lEnd
+			@ PRow()+1, 001 PSay OemToAnsi(STR0012)	//"CANCELADO PELO OPERADOR"
+			Exit
+		EndIf
+		
+		//-- Posiciona-se na Descri‡Æo Correta do SB1
+		If !(cProdAnt==B8_PRODUTO)
+			SB1->(dbSeek(xFilial('SB1')+SB8->B8_PRODUTO, .F.))
+		EndIf	
+		
+		If SB1->B1_TIPO < mv_par10 .Or. SB1->B1_TIPO > mv_par11
+			dbSkip()
+			Loop
+		EndIf
+		
+		If SB1->B1_GRUPO < mv_par12 .Or. SB1->B1_GRUPO > mv_par13
+			dbSkip()
+			Loop
+		EndIf
+
+		//-- Saldo do Lote ou Lote/Sublote
+		nSaldo   += SB8SALDO(,,,,,lEmpPrev,,,.T.)
+		nEmpenho += SB8SALDO(.T.,,,,,lEmpPrev,,,.T.)
+		nSaldo2  += SB8SALDO(,,,.T.,,lEmpPrev,,,.T.) // Quando passado .T. no 4o. Parametro a funcao retorna a 2a. UM.
+		nEmpenho2+= SB8SALDO(.T.,,,.T.,,lEmpPrev,,,.T.)
+		
+		//-- Saldo Total da Quebra
+		nSaldoT   += SB8SALDO(,,,,,lEmpPrev,,,.T.)
+		nEmpenhoT += SB8SALDO(.T.,,,,,lEmpPrev,,,.T.)
+		nSaldoT2  += SB8SALDO(,,,.T.,,lEmpPrev,,,.T.)
+		nEmpenhoT2+= SB8SALDO(.T.,,,.T.,,lEmpPrev,,,.T.)
+				
+		//-- Salva Dados do Registro Atual / Passa para o Pr¢ximo Registro
+		cProdAnt := B8_PRODUTO
+		cDescAnt := SubS(SB1->B1_DESC,1,30)
+		cSLotAnt := If(lSubLote,B8_NUMLOTE,Space(Len(B8_NUMLOTE)))
+		cLoteAnt := B8_LOTECTL
+		cAlmoAnt := B8_LOCAL
+		dDataAnt := B8_DATA
+		dValiAnt := B8_DTVALID
+
+		If mv_par15 == 1
+			If SB2->(MsSeek(xFilial("SB2")+cProdAnt+cAlmoAnt)) .And. !Empty(SB2->B2_LOCALIZ)
+				cDescArm := SB2->B2_LOCALIZ
+			Else
+				cDescArm := ""
+			EndIf
+		EndIf	
+		
+		dbSkip()
+		
+		//-- Imprime Saldo do Lote ou Lote/Sublote
+		If !(cSeekSB8==&(cCondSB8)) .Or. lSubLote .Or. !(cLoteAnt==B8_LOTECTL)
+			
+			//-- Verifica se Lista Saldo Zerado
+			If mv_par09==2 .And. QtdComp(nSaldo)==QtdComp(0)
+				Loop
+			EndIf
+			If Li > 58
+				Cabec(Titulo,Cabec1,Cabec2,wnRel,Tamanho,nTipo)
+			EndIf
+			nCntImpr ++
+			If aReturn[8] == 1 .Or. aReturn[8] == 3
+				@ Li, 000 PSay cProdAnt
+				@ Li, 016 PSay cDescAnt
+				@ Li, 049 PSay cSLotAnt
+				@ Li, 056 PSay cLoteAnt
+			ElseIf aReturn[8] == 2
+				@ Li, 000 PSay cSLotAnt
+				@ Li, 007 PSay cLoteAnt
+				@ Li, 018 PSay cProdAnt
+				@ Li, 034 PSay cDescAnt
+			EndIf
+			@ Li, 068 PSay cAlmoAnt
+			@ Li, 072 PSay nSaldo   Picture cPicSld
+			@ Li, 092 PSay nEmpenho Picture cPicEmp
+			
+			If mv_par14==1
+			   @ Li, 112 PSay nSaldo2   Picture cPicSld			   
+			   @ Li, 132 PSay nEmpenho2 Picture cPicEmp
+  			   @ Li, 152 Psay dDataAnt
+			   @ Li, 162 Psay dValiAnt
+			   If mv_par15==1
+			       @ Li, 172 Psay cDescArm
+			   EndIf
+			Else
+			   @ Li, 112 Psay dDataAnt
+			   @ Li, 122 Psay dValiAnt
+  			   If mv_par15==1
+			       @ Li, 132 Psay cDescArm
+			   EndIf    
+			EndIf
+			           
+			aArea := GetArea()
+			
+			/* JOAO FELIPE 16/10/2009 */
+
+			cQuery := "SELECT D1_FORNECE, D1_LOJA, D1_TIPO"
+			cQuery += " FROM "+RetSqlName("SD1")+" D1 "
+			cQuery += " WHERE D1_COD = '"+cProdAnt+"'
+			cQuery += " AND D1_LOTECTL = '"+cLoteAnt+"'
+			cQuery += " AND D1.D_E_L_E_T_ = '' AND D1.D1_FILIAL = '"+xFilial("SD1")+"'"
+			
+			TCQUERY cQuery NEW ALIAS "TRA1"
+			                          
+			TRA1->(dbGoTop())
+			
+			 
+			If !Empty(TRA1->D1_FORNECE)
+				cFDesc := ""
+			
+				If TRA1->D1_TIPO=="N"
+					SA2->(dbSetOrder(1)) //FILIAL + CLI + LOJA
+					SA2->(dbSeek(xFilial("SA2")+TRA1->D1_FORNECE+TRA1->D1_LOJA))
+					cFDesc := SA2->A2_NOME
+				Else
+					SA1->(dbSetOrder(1)) //FILIAL + CLI + LOJA
+					SA1->(dbSeek(xFilial("SA1")+TRA1->D1_FORNECE+TRA1->D1_LOJA))
+					cFDesc := SA1->A1_NOME
+				EndIf
+			
+				@ Li, 180 Psay TRA1->D1_FORNECE+"-"+TRA1->D1_LOJA+"  "+SUBSTR(cFDesc,1,30)
+			EndIf
+			
+			TRA1->(dbCloseArea())
+			
+			RestArea(aArea)
+			
+			Li ++
+			nSaldo   := 0
+			nEmpenho := 0
+			nSaldo2  := 0
+			nEmpenho2:= 0
+		EndIf
+	EndDo
+	
+	//-- Imprime Saldo Total da Quebra
+	If nCntImpr > 0
+		If Li > 58
+			Cabec(Titulo,Cabec1,Cabec2,wnRel,Tamanho,nTipo)
+		EndIf
+		@ Li, 000 PSay If(aReturn[8]==1,STR0013,If(lSubLote,STR0016,STR0015)) //"Total do Produto ->"###"Total do Lote ->"###'Total do Lote/SubLote ->'
+		@ Li, 072 PSay nSaldoT   Picture cPicSld
+		@ Li, 092 PSay nEmpenhoT Picture cPicEmp
+		
+		If mv_par14==1
+           @ Li, 112 PSay nSaldoT2   Picture cPicSld
+		   @ Li, 132 PSay nEmpenhoT2 Picture cPicEmp		
+		EndIf
+		
+		Li++
+		@ Li, 000 PSay __PrtThinLine()
+		Li++
+		nCntImpr  := 0
+		nSaldoT   := 0
+		nEmpenhoT := 0
+		nSaldoT2  := 0
+		nEmpenhoT2:= 0
+	EndIf
+EndDo
+
+If !(Li==80)
+	Roda(cBCont,cBTxt,Tamanho)
+EndIf
+
+//-- Restaura a Integridade do SB8
+dbSelectArea('SB8')
+RetIndex('SB8')
+dbClearFilter()
+If File(cNomArq+OrdBagExt())
+	fErase(cNomArq+OrdBagExt())
+EndIf
+
+If aReturn[5] == 1
+	Set Printer To
+	dbCommitAll()
+	OurSpool(wnRel)
+EndIf
+MS_Flush()
+        
+Return Nil
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³AjustaSX1 ³ Autor ³ Nereu Humberto Junior ³ Data ³23.11.2005³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Cria as perguntas necesarias para o programa                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function AjustaSX1()
+
+Local aHelpPor :={} 
+Local aHelpEng :={} 
+Local aHelpSpa :={} 
+
+/*-----------------------MV_PAR14--------------------------*/
+PutSx1("MR425A","14","QTDE. na 2a. U.M. ?","CTD. EN 2a. U.M. ?","QTTY. in 2a. U.M. ?", "mv_che", "N", 1, 0, 2,"C", "", "", "", "","MV_PAR14","Sim","Si","Yes", "","Nao","No","No", "", "", "", "", "", "", "", "", "", "", "", "", "")
+
+/*-----------------------MV_PAR15--------------------------*/
+Aadd( aHelpPor, "Imprime descricao do Armazem. Sim ou Nao" )
+Aadd( aHelpEng, "Print warehouse description. Yes or No  " )
+Aadd( aHelpSpa, "Imprime descripcion del almacen. Si o No" ) 
+
+PutSx1( "MR425A","15","Imprime descricao do Armazem ?","Imprime descripc. del almacen?","Print warehouse description ?","mv_chf","N",1,0,2,"C","","","","","mv_par15","Sim","Si","Yes","","Nao","No","No","","","","","","","","","",aHelpPor,aHelpEng,aHelpSpa)
+
+/*-----------------------MV_PAR16--------------------------*/
+aHelpPor := {"Data de Validade inicial a ser ",	"considerada na filtragem do cadastro","de saldos por lote (SB8)." }
+aHelpEng := {"Initial Validity date to ",	"consider in the filtering of","Balances by Lot file (SB8)." }
+aHelpSpa := {"Fecha de Validez inicial a ser ",	"considerado en filtro del archivo","de Saldos por Lote   (SB8)." }
+
+PutSx1( "MR425A","16","Da Data de Validade ?","De la Fecha de Validez ?","Of Validity date ?","mv_chg","D",8,0,0,"G","","","","","mv_par16","","","","'01/01/01'","","","","","","","","","","","","",aHelpPor,aHelpEng,aHelpSpa)
+
+/*-----------------------MV_PAR17--------------------------*/
+aHelpPor := {"Data de Validade final a ser ",	"considerada na filtragem do cadastro","de saldos por lote (SB8)." }
+aHelpEng := {"Final Validity date to ",	"consider in the filtering of","Balances by Lot file (SB8)." }
+aHelpSpa := {"Fecha de Validez final a ser ",	"considerado en filtro del archivo","de Saldos por Lote   (SB8)." }
+
+PutSx1( "MR425A","17","Ate a Data de Validade ?","A fecha de Validez ?","To Validity date ?","mv_chh","D",8,0,0,"G","","","","","mv_par17","","","","31/12/06","","","","","","","","","","","","",aHelpPor,aHelpEng,aHelpSpa)
+
+Return

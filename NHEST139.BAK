@@ -1,0 +1,2258 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±± 
+±±ºPrograma  ³NHEST139  ºAutor  ³João Felipe da Rosa º Data ³  22/01/09   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ CONTROLE TRANSFERENCIA DE PRODUTOS                         º±±
+±±º          ³ DA FUNDICAO PARA USINAGEM                                  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ ESTOQUE / CUSTOS / PCP / EXPEDIÇÃO                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#include "rwmake.ch"
+#include "protheus.ch" 
+#include "colors.ch"
+#include "AP5MAIL.CH" 
+#include "topconn.ch"
+
+User Function NHEST139()
+
+//AXCADASTRO("ZBI")
+//AXCADASTRO("ZBB")
+
+Private cAlias    := "ZBA"                                
+Private aRotina   := {}
+Private cCadastro := "Transferencia de Produtos Fundicao / Usinagem"
+Private cEmpresa  := "FUN"
+
+aAdd( aRotina, {"Pesquisar"  ,"AxPesqui"     ,0,1} )
+aAdd( aRotina, {"Visualizar" ,"U_fEST139(1)" ,0,2} )
+aAdd( aRotina, {"Incluir"    ,"U_fEST139(2)" ,0,3} )
+aAdd( aRotina, {"Alterar"    ,"U_fEST139(3)" ,0,4} )
+aAdd( aRotina, {"Excluir"    ,"U_fEST139(4)" ,0,5} )
+aAdd( aRotina, {"Imprimir"   ,"U_fEST139I()" ,0,5} )
+aAdd( aRotina, {"Transferir" ,"U_fEST139T()" ,0,5} )
+aAdd( aRotina, {"Release"    ,"U_fEst139R()" ,0,5} )
+aAdd( aRotina, {"Divergencia","U_fEst139(5)" ,0,3} )
+aAdd( aRotina, {"E-Mails"    ,"U_fEst139(6)" ,0,3} )
+aAdd( aRotina, {"Legenda"    ,"U_EST139LEG()",0,2} )
+aAdd( aRotina, {"Etiqueta"   ,"U_NHEST176()" ,0,5} )
+
+dbSelectArea(cAlias)
+dbSetOrder(1)
+
+mBrowse(,,,,cAlias,,,,,,fCriaCor())
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FUNCAO PRINCIPAL ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function fEST139(nParam)
+Local bOk         := {||fOk()}
+Local bCanc       := {||fEnd()}
+Local bEnchoice   := {||}
+Private aSize     := MsAdvSize()
+Private aObjects  := {{ 100, 100, .T., .T. },{ 300, 300, .T., .T. }}
+Private aInfo     := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 5, 5 , 5, 5}
+Private aPosObj   := MsObjSize( aInfo, aObjects, .T.)
+Private nPar      := nParam
+Private aHeader   := {}
+Private aCols     := {}
+Private cMotivo   := Space(100)
+Private aLote     := {}
+
+SetPrvt("_dData,_cNum,_cHora,_cPlCam,_cPlCar,_cMotori, _cExpedi,_cNomeExp,_cDocTransf,cMotivo")
+
+If nPar == 2//incluir
+	_cNum       := GetSxENum("ZBA","ZBA_NUM")//Traz o novo numero da transferencia fun/usi
+	_dData      := dDatabase
+	_cHora      := Time()
+	_cPlCam     := Space(8)
+	_cPlCar     := Space(8)
+	_cMotori    := Space(50)
+	_cObs       := ""
+    _cExpedi    := ""
+    _cNomeExp   := ""
+	_cDocTransf := ""	
+	IF !fExp()//traz o expedidor
+		Alert("Usuário sem permissão")
+		RollBackSx8()
+		Return .F.
+	EndIf
+    
+Else //visualizar, alterar, excluir
+	_cNum       := ZBA->ZBA_NUM
+	_dData      := ZBA->ZBA_DATA
+	_cHora      := ZBA->ZBA_HORA
+	_cPlCam     := ZBA->ZBA_PLACAM
+	_cPlCar     := ZBA->ZBA_PLACAR
+	_cMotori    := ZBA->ZBA_MOTORI
+	_cObs       := ZBA->ZBA_OBS
+	_cExpedi    := ZBA->ZBA_EXPEDI 
+	_cDocTransf := ZBA->ZBA_DOC
+	
+    DbSelectArea("QAA")
+    DbSetOrder(1)
+    If DbSeek(xFilial("QAA")+_cExpedi)
+	    _cNomeExp := QAA->QAA_NOME
+	EndIf
+	
+	//TRAZ OS ITENS DA TRANSFERENCIA
+	DbSelectArea("ZBB")
+	DbGoTop()
+	DbSetOrder(1)//filial + num + item
+	
+	If DbSeek(xFilial("ZBB")+_cNum)
+		While ZBB->(!EOF()) .AND. ZBB->ZBB_NUM == _cNum
+			SB1->(DbSetOrder(1))
+			SB1->(DbSeek(xFilial("SB1")+ZBB->ZBB_COD))
+			aAdd(aCols,{ZBB->ZBB_ITEM,;
+						ZBB->ZBB_COD,;
+						SB1->B1_DESC,;
+						ZBB->ZBB_VOLUME,;
+						ZBB->ZBB_QUANT,;
+						ZBB->ZBB_LOTE,;
+						ZBB->ZBB_LOCALI,;
+						ZBB->ZBB_CORPRD,;
+						ZBB->ZBB_CORMP,.F.})
+			
+			ZBB->(DbSkip())
+		EndDo
+	EndIf
+
+EndIf
+
+Aadd(aHeader,{"Ítem" 	    , "ZBB_ITEM"    ,"@E 9999"           ,04,0,".F.","","C","ZBB"})
+Aadd(aHeader,{"Produto"     , "ZBB_COD"     ,"@!"	             ,15,0,"U_EST139PRD()","","C","ZBB"})
+Aadd(aHeader,{"Desc"        , "B1_DESC"     ,"@!"	             ,30,0,".F.","","C","SB1"})
+Aadd(aHeader,{"Volume"      , "ZBB_VOLUME"  ,"@E 99999999999"    ,14,0,".T.","","N","ZBB"})
+Aadd(aHeader,{"Quant"       , "ZBB_QUANT"   ,"@E 99999999999"    ,14,0,"U_EST139QTD()","","N","ZBB"})
+Aadd(aHeader,{"Lote"        , "ZBB_LOTE"    ,"@!"                ,10,0,".F.","","C","ZBB"})
+Aadd(aHeader,{"Localização" , "ZBB_LOCALI"  ,"@!"                ,15,0,".F.","","C","ZBB"})
+Aadd(aHeader,{"Corr. Prod." , "ZBB_CORPRD"  ,"@!"                ,02,0,"U_E139CORR()","","C","ZBB"})
+Aadd(aHeader,{"Corr. MP"    , "ZBB_CORMP"   ,"@!"                ,09,0,"U_E139CORR()","","C","ZBB"})
+
+If nPar == 5 //Divergencia
+	aHeader[2][6] := ".F."
+EndIf
+
+If nPar == 6 // Email
+	fCadEmail()
+EndIf
+
+DEFINE FONT oFont12 NAME "Arial" SIZE 12, -12 BOLD
+
+//Define MsDialog oDlg Title OemToAnsi("Transferência de Produtos Fundição / Usinagem") From 000,000 To 400,790 Pixel
+
+bEnchoice := {||EnchoiceBar(oDlg,bOk,bCanc,,)}
+			
+oDlg  := MsDialog():New(aSize[7],0,aSize[6],aSize[5],"Transferência de Produtos Fundição / Usinagem",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+//@ 020,005 To 180,390 Title OemToAnsi(" Informações ")  
+
+@ 020,010 Say "Número: "     SIZE 040,008 Object olNum
+@ 020,045 Say _cNum          SIZE 040,008 Object oNum
+oNum:SetFont(oFont12)
+
+@ 020,100 Say "Data: "       SIZE 040,008 Object olData
+@ 018,135 Get _dData         SIZE 040,008 When .F. Object oData
+
+@ 020,190 Say "Hora: "       SIZE 030,008 Object olHora
+@ 018,210 Get _cHora         SIZE 040,008 When .F. Object oHora
+
+@ 032,010 Say "Placa Cam.: " SIZE 040,008 COLOR CLR_BLUE Object olPlCam
+@ 030,045 Get _cPlCam        SIZE 035,008 Picture "!!!-9999" When(nPar == 2 .or. nPar == 3) Object oPlCam VALID fPlCam()
+
+@ 032,100 Say "Placa Car.: " SIZE 040,008 Object olPlCar
+@ 030,135 Get _cPlCar        SIZE 035,008 Picture "!!!-9999" When(nPar == 2 .or. nPar == 3) Object oPlCar
+
+@ 032,190 Say "Doc: "        SIZE 030,008 Object olDocTransf
+@ 030,210 Get _cDocTransf    SIZE 040,008 When .F. Object oDocTransf
+
+@ 044,010 Say "Motorista: "  SIZE 040,008 COLOR CLR_BLUE Object olMotori
+@ 042,045 Get _cMotori       SIZE 180,008 When(nPar == 2 .or. nPar == 3) Object oMotori VALID (!VAZIO())
+
+@ 056,010 Say "Expedidor: "  SIZE 040,008 Object olExpedi
+@ 054,045 Get _cExpedi       SIZE 035,008 When .F. Object oExpedi 
+@ 054,083 Get _cNomeExp      SIZE 142,008 When .F. Object oNomeExp
+
+@ 068,010 Say "Observação: " SIZE 030,008 Object olObs
+@ 066,045 Get oObs VAR _cObs MEMO When(nPar == 2 .or. nPar == 3) SIZE 180,030 PIXEL OF oDlg
+
+dbselectarea("ZBB")
+	
+@ 100,aPosObj[2,2] TO aPosObj[2,3],aPosObj[2,4] MULTILINE MODIFY DELETE OBJECT oMultiline VALID fMulti()
+
+//diferente de incluir
+If nPar != 2
+	oMultiline:nMax := Len(aCols) //não deixa o usuario adicionar mais uma linha no multiline
+EndIf
+
+oDlg:Activate(,,,.F.,{||.T.},,bEnchoice)
+//Activate MsDialog oDlg Center
+
+Return 
+
+User Function E139CORR()
+Local nPosCod  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZBB_COD"})
+	
+	SB1->(dbSetOrder(1))
+	if !empty(aCols[n][nPosCod]) .and. SB1->(dbSeek(xFilial("SB1")+aCols[n][nPosCod]))
+		if SB1->B1_GRUPO$"PA04"
+			Return .t.
+		endif
+	endif
+
+Return .f.
+
+//ÚÄÄÄÄÄÄÄÄÄÄ¿
+//³ CONFIRMA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fOk()
+Local cAl1 := getnextalias()
+
+	/*********
+	* INCLUI *
+    *********/
+    If nPar == 2
+    
+	    If !fValida()
+    	    Return
+	    EndIf
+	    
+	    //-- validacao para nao gravar numero repetido
+	    While .t.
+	    
+		    beginSql Alias cAl1
+		    	SELECT * FROM %TABLE:ZBA%
+		    	WHERE ZBA_NUM = %Exp:_cNum%
+		    	AND ZBA_FILIAL = %xFilial:ZBA%
+		    	AND %NotDel%
+		    endSql
+		    
+	    	If (cAl1)->(!eof())
+	    		_cNum := getSxeNum("ZBA","ZBA_NUM")
+	    	Else
+	    		(cAl1)->(dbCloseArea())
+	    		exit
+	    	Endif
+	    	
+	    	(cAl1)->(dbCloseArea())
+	    	
+	    Enddo
+    
+	    RecLock("ZBA",.T.)
+    		ZBA->ZBA_FILIAL := xFilial("ZBA")
+    		ZBA->ZBA_NUM    := _cNum
+	    	ZBA->ZBA_DATA   := _dData
+    		ZBA->ZBA_HORA   := _cHora
+    		ZBA->ZBA_PLACAM := _cPlCam
+	    	ZBA->ZBA_PLACAR := _cPlCar
+    		ZBA->ZBA_MOTORI := _cMotori
+    		ZBA->ZBA_OBS    := _cObs
+	    	ZBA->ZBA_EXPEDI := _cExpedi
+	    	ZBA->ZBA_STATUS := "P"
+	    	ZBA->ZBA_DOC    := ""
+    	MsUnlock("ZBA")
+    
+	    SB1->(DBSETORDER(1))//FILIAL + COD
+    	For _x := 1 to Len(aCols)//percorre o acols
+			If !Acols[_x][len(aHeader)+1] //nao pega quando a linha esta deletada
+				RecLock("ZBB",.T.)
+					ZBB->ZBB_FILIAL := xFilial("ZBB")
+					ZBB->ZBB_NUM    := _cNum
+					ZBB->ZBB_ITEM   := Acols[_x][1]
+					ZBB->ZBB_COD    := Acols[_x][2]
+					ZBB->ZBB_VOLUME := Acols[_x][4]
+					ZBB->ZBB_QUANT  := Acols[_x][5]
+					ZBB->ZBB_LOTE   := Acols[_x][6]
+					ZBB->ZBB_LOCALI := Acols[_x][7]
+					ZBB->ZBB_CORPRD := Acols[_x][8]
+					ZBB->ZBB_CORMP  := Acols[_x][9]
+					SB1->(DbSeek(xFilial("SB1")+Acols[_x][2]))
+					ZBB->ZBB_UPRC   := SB1->B1_PRV1
+				MsUnlock("ZBB")
+			EndIf
+    	Next
+    	
+       	//envia email de aviso de embarque
+	   	If MsgYesNo("Enviar aviso de embarque?") 
+   			fEST139MAIL()
+	   	EndIf
+    
+    	ConfirmSx8()
+    	
+    EndIf
+    
+    /**********
+    * EXCLUIR *
+    **********/
+    If nPar == 4
+    
+   		If ZBA->ZBA_STATUS$"E"
+   			Alert("Transferência já encerrada!")
+   			Return
+   		EndIf
+   		
+   		_cUsr := ALLTRIM(UPPER(CUSERNAME))
+
+  		If !_cUsr$"MARIOCP/JOAOFR/ADMINISTRADOR/ADILSONMJ/DAIANESC/ANAP/ADILSONMJ"
+			QAA->(DbSetOrder(6)) //LOGIN
+			If QAA->(DbSeek(_cUsr))
+		   	
+		   		If QAA->QAA_MAT != ZBA->ZBA_EXPEDI
+					Alert("Usuário sem permissão para excluir!")
+					Return .F.   		
+		   		EndIf
+			Else 
+				Alert("Usuário sem permissão para excluir!")
+				Return .F.   		
+			EndIf
+		EndIf
+			
+		DbSelectArea("ZBB")
+		DbSetOrder(1)
+		For _x := 1 to Len(aCols)
+			If DbSeek(xFilial("ZBB")+ZBA->ZBA_NUM+aCols[_x][1])
+				RECLOCK("ZBB",.F.)
+					ZBB->(DbDelete())
+				MSUNLOCK("ZBB")
+			ENDIf
+		Next
+		
+		RecLock("ZBA",.F.)
+			ZBA->(DbDelete())
+		MsUnlock("ZBA")
+		
+    EndIf
+
+	/**********
+	* ALTERAR *
+	**********/    
+    If nPar == 3
+
+   		If ZBA->ZBA_STATUS$"E"
+   			Alert("Transferência já encerrada!")
+   			Return
+   		EndIf
+
+  		_cUsr := ALLTRIM(UPPER(CUSERNAME))
+  		
+  		If !_cUsr$"MARIOCP/JOAOFR/ADMINISTRADOR/ADILSONMHJ"
+  		
+			QAA->(DbSetOrder(6)) //LOGIN
+			If QAA->(DbSeek(_cUsr))
+	   	
+		   		If QAA->QAA_MAT != ZBA->ZBA_EXPEDI
+					Alert("Usuário sem permissão para alterar!")
+					Return .F.   		
+		   		EndIf
+			Else 
+				Alert("Usuário sem permissão para alterar!")
+				Return .F.   		
+			EndIf
+   		    
+		EndIf
+
+	    If !fValida()
+   		    Return
+    	EndIf
+	       
+   	    RecLock("ZBA",.F.)
+    		ZBA->ZBA_PLACAM := _cPlCam
+	    	ZBA->ZBA_PLACAR := _cPlCar
+    		ZBA->ZBA_MOTORI := _cMotori
+    		ZBA->ZBA_OBS    := _cObs
+    	MsUnlock("ZBA")
+    	
+    	DbSelectArea("ZBB")
+    	DbSetOrder(1)//filial + num + item
+    	SB1->(DbSetOrder(1))// FILIAL + COD
+    	For _x := 1 to Len(aCols)//percorre o acols
+			
+			If !Acols[_x][len(aHeader)+1] //nao pega quando a linha esta deletada
+				If DbSeek(xFilial("ZBB")+ZBA->ZBA_NUM+aCols[_x][1])
+					RecLock("ZBB",.F.)
+						ZBB->ZBB_COD    := Acols[_x][2]
+						ZBB->ZBB_VOLUME := Acols[_x][4]
+						ZBB->ZBB_QUANT  := Acols[_x][5]
+						ZBB->ZBB_LOTE   := Acols[_x][6]
+						ZBB->ZBB_LOCALI := Acols[_x][7]
+						SB1->(DBSEEK(XFILIAL("SB1")+ACOLS[_X][2]))
+						ZBB->ZBB_UPRC   := SB1->B1_PRV1
+					MsUnlock("ZBB")
+				Else
+					RecLock("ZBB",.T.)
+						ZBB->ZBB_FILIAL := xFilial("ZBB")
+						ZBB->ZBB_NUM    := _cNum
+						ZBB->ZBB_ITEM   := Acols[_x][1]
+						ZBB->ZBB_COD    := Acols[_x][2]
+						ZBB->ZBB_VOLUME := Acols[_x][4]
+						ZBB->ZBB_QUANT  := Acols[_x][5]
+						ZBB->ZBB_LOTE   := Acols[_x][6]
+						ZBB->ZBB_LOCALI := Acols[_x][7]
+						ZBB->ZBB_CORPRD := Acols[_x][8]
+						ZBB->ZBB_CORMP  := Acols[_x][9]
+						SB1->(DBSEEK(XFILIAL("SB1")+ACOLS[_X][2]))
+						ZBB->ZBB_UPRC   := SB1->B1_PRV1
+					MsUnlock("ZBB")
+				Endif 
+			Else
+				If DbSeek(xFilial("ZBB")+ZBA->ZBA_NUM+aCols[_x][1])
+					RecLock("ZBB",.F.)
+						ZBB->(DbDelete())
+					MsUnlock("ZBB")
+				EndIf
+			EndIf
+   		Next
+    
+    EndIf             
+
+	/**************
+	* DIVERGENCIA *
+	**************/
+	If nPar == 5
+	    lSai := .F.
+	    
+	    oDlg  := MsDialog():New(0,0,110,400,"Motivo da Divergência",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+	    oSay1 := tSay():New(10,10,{||"Digite o motivo da divergência"},oDlg,,,,,,.T.,,)
+    	oGet1 := tGet():New(25,10,{|u| if(Pcount()>0,cMotivo := u, cMotivo)},oDlg,;
+    		 180,8,"@!",/*valid*/,,,,,,.T.,,,{||.T.},,,,,,,"cMotivo")
+		
+		oBtn4 := tButton():New(40,155,"Cancelar",oDlg,{||lSai := .T., oDlg:End()},40,10,,,,.T.)
+		oBtn3 := tButton():New(40,110,"Ok",oDlg,{||oDlg:End()},40,10,,,,.T.)
+			
+		oDlg:Activate(,,,.T.,{||.T.},,{||})
+		
+		If lSai
+			Close(oDlg)
+			Return
+		EndIf
+		
+		cMsg := '<table style="font-family:arial" width="100%" border="1">'
+		cMsg += '<tr>'
+		cMsg += '<td colspan="6" style="background:#ccc" align="center">'
+		cMsg += 'Aviso de Divergência na Transferência WHB II / WHB III</td>'
+		cMsg += '</tr>'
+		cMsg += '<tr style="background:#aabbcc">'
+		cMsg += '<td align="center">Produto</td>'
+		cMsg += '<td align="center">Descrição</td>'
+		cMsg += '<td align="center">Vol. Enviado</td>'
+		cMsg += '<td align="center">Vol. Recebido</td>'
+		cMsg += '<td align="center">Quant. Enviada</td>'
+		cMsg += '<td align="center">Quant. Recebida</td>'
+
+   		ZBB->(DbSetOrder(1)) //FILIAL + NUM + ITEM
+
+		For _xA:=1 to Len(aCols)
+		
+			If _xA%2 == 0
+				cMsg += '<tr style="font-size:12px">'
+			Else
+				cMsg += '<tr style="background:#eeeeee;font-size:12px">'	
+			EndIf
+		
+			cMsg += '<td align="center">'+aCols[_xA][2]+'</td>'
+			cMsg += '<td>'+aCols[_xA][3]+'</td>'
+
+        	ZBB->(DbSeek(xFilial("ZBB")+ZBA->ZBA_NUM+aCols[_xA][1]))
+
+			cMsg += '<td align="center">'+Str(ZBB->ZBB_VOLUME)+'</td>'
+			cMsg += '<td align="center">'+Str(aCols[_xA][4])+'</td>'
+			cMsg += '<td align="center">'+Str(ZBB->ZBB_QUANT)+'</td>'
+			cMsg += '<td align="center">'+Str(aCols[_xA][5])+'</td>'
+			cMsg += '</tr>'
+			
+			If ZBB->(Found())
+				RecLock("ZBB",.F.)
+					ZBB->ZBB_VOLUME := aCols[_xA][4]
+					ZBB->ZBB_QUANT  := aCols[_xA][5]
+				MsUnLock("ZBB")
+			EndIf
+			
+		Next
+
+		cMsg += '<tr style="font-size:12px"><td colspan="6">Motivo: '+cMotivo+'</td></tr>'
+		cMsg += '</table>' 
+
+		cTo := 	"geandroo@whbbrasil.com.br;"+;
+				"lilianeg@whbfundicao.com.br;"+;
+				"luizfr@whbfundicao.com.br;"+;
+				"hesslerr@whbusinagem.com.br;"+;
+				"ericalp@whbusinagem.com.br;"+;
+				"emersondp@whbusinagem.com.br;"+;
+				"ivanildob@whbbrasil.com.br;"+;
+				"joaog@whbusinagem.com.br;"+;
+				"eloirh@whbusinagem.com.br;"+;
+				"adilsonmj@whbusinagem.com.br;"+;
+				"alexandresc@whbbrasil.com.br;"+;
+				"olaird@whbbrasil.com.br;"+;
+				"lupercioc@whbusinagem.com.br;"+;
+				"brunorf@whbfundicao.com.br;"+;
+				"lucianoc@whbfundicao.com.br;"+;
+				"jeffersonvl@whbusinagem.com.br;"+;
+				"fabianod@whbusinagem.com.br;"+;
+				"leandrol@whbusinagem.com.br;"
+
+		oMail          := Email():New()
+		oMail:cMsg     := cMsg
+		oMail:cAssunto := "*** AVISO DE DIVERGENCIA NA TRANSFERENCIA WHB II / WHB III ***"
+		oMail:cTo      := cTo 
+		oMail:Envia()
+		
+	EndIf
+
+	Close(oDlg)
+Return
+
+//ÚÄÄÄÄÄÄÄÄ¿
+//³CANCELA ³
+//ÀÄÄÄÄÄÄÄÄÙ
+Static Function fEnd()
+	RollBackSx8()
+	Close(oDlg)
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ O NOME DO EXPEDIDOR ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fExp()
+
+	_cUsr := ALLTRIM(UPPER(CUSERNAME))
+
+	QAA->(DbSetOrder(6)) //LOGIN
+	If QAA->(DbSeek(_cUsr))
+	   	_cExpedi  := QAA->QAA_MAT
+	   	_cNomeExp := QAA->QAA_NOME
+	Else
+	 	Msgbox(OemToAnsi("Usuário não cadastrado na lista de usuários!"),"Atencao","ALERT" )  
+	 	Return .F.
+	EndIf
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³TRAZ A DESCRICAO DO PRODUTO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function EST139PRD()
+Local _cCod  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZBB_COD"})
+Local _cDesc := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "B1_DESC"})
+//Local _cLote := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZBB_LOTE"})
+	
+	DbSelectArea("SB1")
+	DbSetOrder(1)
+	If DbSeek(xFilial("SB1")+M->ZBB_COD)
+
+		Acols[n][_cDesc] := SB1->B1_DESC
+		oMultiline:Refresh()
+
+	Else
+		Alert("Produto não encontrado!")
+		Return .F.
+	EndIf	
+
+Return .T. 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDACAO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValida()
+Local nPosProd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "ZBB_COD"})
+
+	If Empty(_cPlCam)
+		Alert("Favor digite a placa do caminhão")
+		Return .F.
+	EndIf
+	
+	If Empty(_cMotori)
+		Alert("Por favor digite o nome do motorista")
+		Return .F.
+	EndIf
+	
+	If Len(aCols) <= 1 .AND. Empty(aCols[1][nPosProd])
+		Alert("Ao menos um produto deve ser informado!")
+		Return .F.
+	EndIf
+	
+	aLote2 := aClone(aLote)
+	
+	SB1->(DbSetOrder(1)) // FILIAL + COD
+	For x:=1 to Len(aCols)
+	
+		If !acols[x][len(aHeader)+1] //nao pega quando estiver deletado
+	
+			SB1->(DbSeek(xFilial("SB1")+aCols[x][2]))
+
+			If SB1->B1_RASTRO$"L" .and. EMPTY(aCols[x][6]) //lote
+				Alert("Informe o lote para produtos controlados por lote!")
+				Return .F.
+			Else
+				//Compara o que foi digitado com o array aLote para ver se existirá saldo para a transferência
+				_n := aScan(aLote2,{|y| y[1]==aCols[x][2] .AND. y[3]==aCols[x][6] .AND. y[5]==aCols[x][7]})
+			
+				If _n<>0
+					If aCols[x][5] > aLote2[_n][4]
+						//Caso haja divergencia ele apaga as peças e apaga o array aLote
+						Alert("Inconsistência na escolha dos lotes, por favor redigite as peças!")
+						aCols := {{"0001",SPACE(15),"",0,0,SPACE(10),SPACE(15),.F.}} //limpa o acols
+						aLote := {}
+						oMultiline:Refresh()
+						Return .F.
+					Else
+						aLote2[_n][4] -= aCols[x][5]
+					EndIf
+				EndIf
+			EndIf	
+		EndIf
+	Next 
+
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ IMPRIME RELATORIO DE TRANSFERENCIA FUN / USI ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function fEST139I()
+
+Agrupo 	  := {}
+cString   := ""
+cDesc1    := OemToAnsi("Imprime os detalhes da transferência")
+cDesc2    := OemToAnsi("de produtos da Fundição para a Usinagem")
+cDesc3    := OemToAnsi("")
+tamanho   := "M"
+limite    := 220
+aReturn   := { "Zebrado", 1,"Administracao", 1, 2, 1, "",1 }
+nomeprog  := "NHEST139I" //nome do arquivo
+aLinha    := { }
+nLastKey  := 0
+titulo    := OemToAnsi("ORDEM DE LIBERAÇÃO DE MATERIAIS FUNDIÇÃO / USINAGEM") //título
+cabec1    := "Num. Controle : "+ZBA->ZBA_NUM +Space(20)+"Cliente : WHB USINAGEM" +Space(40)+ZBA->ZBA_HORA+Space(07)+Dtoc(ZBA->ZBA_DATA)
+cabec2    := ""
+cCancel   := "***** CANCELADO PELO OPERADOR *****"
+_nPag     := 1 
+M_PAG     := 1 //Variavel que acumula numero da pagina 
+wnrel     := nomeprog //"NH"
+_cPerg    := "" 
+
+Pergunte(_cPerg,.F.)
+
+SetPrint(cString,wnrel,_cPerg,titulo,cDesc1,cDesc2,cDesc3,.F.,,,tamanho)
+
+if nlastKey ==27
+    Set Filter to
+    Return
+Endif
+
+SetDefault(aReturn,cString)
+
+nTipo := IIF(aReturn[4]==1,GetMV("MV_COMP"), GetMV("MV_NORM"))
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³CHAMADAS PARA AS FUNÇÕES³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+RptStatus( {|| Imprime()   },"Imprimindo...")
+
+set filter to //remove o filtro da tabela
+
+If aReturn[5] == 1
+	Set Printer To
+	Commit
+    ourspool(wnrel) //Chamada do Spool de Impressao
+Endif                                          
+
+MS_FLUSH() //Libera fila de relatorios em spool
+
+Return
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³FUNCAO PARA IMPRESSAO DO RELATÓRIO³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Static Function Imprime()
+
+Local _nTVol //total de volumes
+
+	Cabec(Titulo, Cabec1, Cabec2, NomeProg, Tamanho, nTipo) 
+
+	If Prow() > 65 
+		_nPag  := _nPag + 1   
+		Cabec(Titulo, Cabec1, Cabec2, NomeProg, Tamanho, nTipo) 
+  	Endif
+
+		
+	@Prow()+1, 001 psay "Motorista: "+ZBA->ZBA_MOTORI
+	@Prow()+2, 001 psay "Placa Caminhão: "+ZBA->ZBA_PLACAM
+	@Prow()  , 050 psay "Placa Carreta: "+ZBA->ZBA_PLACAR
+
+	@ prow()+1,000 PSAY __PrtThinLine()        
+   
+	@Prow()+1, 001 psay "ITEM     PRODUTO           DESCRICAO                             LOTE           ENDEREÇO     VOLUME    QUANTIDADE   QUANT.RECEBIDA"
+	
+	@Prow()+1, 001 psay ""
+	
+	DbSelectArea("ZBB") //ITENS DA TRANSFERENCIA
+	DbSetOrder(1) //filial + num + item
+	If DbSeek(xFilial("ZBB")+ZBA->ZBA_NUM)
+
+		_nTVol := 0
+		
+		While ZBB->(!EOF()) .AND. ZBB->ZBB_NUM == ZBA->ZBA_NUM
+		
+			@Prow()+1, 001 psay ZBB->ZBB_ITEM
+			@Prow()  , 010 psay ZBB->ZBB_COD
+		
+			DbSelectArea("SB1")
+			DbSetOrder(1) // filial + codigo
+			If DbSeek(xFilial("SB1")+ZBB->ZBB_COD)
+				@Prow()  , 028 psay Substr(SB1->B1_DESC,1,35)
+			EndIf
+			
+			@Prow()  , 064 psay ZBB->ZBB_LOTE
+			@Prow()  , 080 psay Substr(ZBB->ZBB_LOCALI,1,11)
+			@Prow()  , 094 psay ZBB->ZBB_VOLUME picture "@e 99999"
+			@Prow()  , 107 psay ZBB->ZBB_QUANT picture "@e 99999"
+			@Prow()  , 120 psay "___________"
+			
+			_nTVol += ZBB->ZBB_VOLUME
+			
+			ZBB->(DbSkip())
+			
+		EndDo
+	EndIf
+	
+	@Prow()+2, 060 psay "Total de volumes: "
+	@Prow()  , 088 psay _nTVol picture "@e 99999"
+		 
+	@ prow()+1,000 PSAY __PrtThinLine()  
+	                            
+	QAA->(DbSetOrder(1)) //MAT
+	If QAA->(DbSeek(xFilial("QAA")+ZBA->ZBA_EXPEDI))
+		@Prow()+1 , 001 psay "Expedidor: "+QAA->QAA_NOME
+	EndIf
+
+	@Prow()+7 , 001 psay "Ass. Expedidor:   _______________________________________"
+	@Prow()+7 , 001 psay "Ass. Motorista:   _______________________________________"
+	@Prow()+7 , 001 psay "Ass. Recebimento: _______________________________________"			
+	
+	
+		
+Return 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VERIFICA SE TEM SALDO PARA ENVIAR PARA USINAGEM ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function EST139QTD()
+Local lLote    := .F.
+Local lLocaliz := .F.
+Local nSaldo   := 0
+Local nBfSaldo := 0
+Local cLocOri  
+
+	aArea := getArea() // GUARDA A AREA SELECIONADA
+	
+	cProd := Acols[n][2]
+
+	aLote := {}
+
+	SB1->(DbSetOrder(1))
+	SB1->(DbSeek(xFilial("SB1")+cProd))
+	
+	If Alltrim(SB1->B1_GRUPO)$"PA01" 
+		cEmpresa := "FUN"
+		cLocOri  := "27"
+	ElseIf Alltrim(SB1->B1_GRUPO)$"PA04" 
+		cEmpresa := "FOR"
+		cLocOri  := "47"
+	Elseif Alltrim(SB1->B1_GRUPO)$"PA06" 
+		cEmpresa := "ALU"
+		cLocOri  := "67"
+	Else
+		Alert("Saldo insuficiente!")
+		return .f.
+	EndIf
+
+	nSaldo := U_EST139SLD(cProd,cLocOri,_cNum)
+	
+	If nSaldo[1] < M->ZBB_QUANT
+		Alert("Saldo insuficiente!" +CHR(13)+CHR(10)+;
+		"(+)Saldo Atual: "+ Transform(nSaldo[1]+nSaldo[2],"@e 999999")+CHR(13)+CHR(10)+;
+		"(-)Saldo em Transf.: "+Transform(nSaldo[2],"@e 999999")+CHR(13)+CHR(10)+;
+		"(=)Saldo Disponível: "+Transform(nSaldo[1],"@e 999999"))
+		Return .F.
+	EndIf
+    
+	If SB1->B1_LOCALIZ$"S" //TEM CONTROLE POR LOCALIZACAO
+	
+		lLocaliz := .T.
+	
+	   	SBF->(DbSetOrder(2)) //BF_FILIAL+BF_PRODUTO+BF_LOCAL+BF_LOTECTL+BF_NUMLOTE+BF_PRIOR+BF_LOCALIZ+BF_NUMSERI
+	    If SBF->(DbSeek(xFilial("SBF")+cProd+cLocOri))
+	    	While SBF->(!Eof()) .And. SBF->BF_PRODUTO==cProd .AND. SBF->BF_LOCAL==cLocOri
+
+				If SBF->BF_QUANT > 0
+					_n := aScan(aLote,{|x| x[1]==SBF->BF_PRODUTO .and. x[5]==SBF->BF_LOCALIZ .AND. x[3]==SBF->BF_LOTECTL })
+	
+					If _n==0
+						aAdd(aLote,{SBF->BF_PRODUTO,CTOD('  /  /  '),SBF->BF_LOTECTL,SBF->BF_QUANT,SBF->BF_LOCALIZ})
+					Else
+					    aLote[_n][4] += SBF->BF_QUANT
+					EndIf
+				EndIf
+
+				SBF->(Dbskip())
+			Enddo	    	
+		Else
+			Alert('Produto não tem saldo por endereço! Verifique se existem saldos a Distribuir/Endereçar!')
+			Return .F.
+		Endif
+	Endif	    
+
+	If SB1->B1_RASTRO$"L" //TEM CONTROLE POR LOTE
+
+		lLote := .T.
+		
+		SB8->(DbSetOrder(1)) //B8_FILIAL+B8_PRODUTO+B8_LOCAL+DTOS(B8_DTVALID)+B8_LOTECTL+B8_NUMLOTE
+		If SB8->(DbSeek(xFilial("SB8")+cProd+cLocOri))
+
+			While SB8->(!EOF()) .AND. SB8->B8_PRODUTO==cProd .AND. SB8->B8_LOCAL==cLocOri
+				If SB8->B8_SALDO > 0
+				
+					If lLocaliz
+						
+						cAl := getNextAlias()
+						
+						//-- verifica se nao existem quantidades a endereçar
+						beginSQl Alias cAl
+							SELECT COALESCE(SUM(DA_SALDO),0) AS QUANT 
+							FROM %Table:SDA%
+							WHERE %NotDel%
+							AND DA_FILIAL = %xFilial:SDA%
+							AND DA_PRODUTO = %Exp:SB8->B8_PRODUTO%
+							AND DA_LOCAL = %Exp:SB8->B8_LOCAL%
+							AND DA_SALDO > 0
+						endSql
+						
+						If (cAl)->(!eof()) .AND. (cAl)->QUANT > 0
+							Alert('Existe um saldo de '+alltrim(str((cAl)->QUANT))+' a endereçar! Favor executar endereçamento do produto:'+SB8->B8_PRODUTO+'!')
+							(cAl)->(dbclosearea())								    								
+							Return .F.								
+						Endif							
+						(cAl)->(dbclosearea())								    								
+						
+						//-- se nao tem nada a endereçar
+						nSaldoB8 := SB8->B8_SALDO
+
+						While nSaldoB8 > 0
+		
+							//!!!!!!!!! Tratativa para iniciar o ascan a partir da posicao que parou se o lote existir em 2 ou mais endereços da tabela SBF
+							_n := aScan(aLote,{|x| x[1]==SB8->B8_PRODUTO .and. x[3]==SB8->B8_LOTECTL},Iif(_n<>0 .and. ALOTE[_N][3]==SB8->B8_LOTECTL,_n+1,1))
+							                       
+							If _n==0
+								
+								Alert('D I V E R G Ê N C I A !'+CHR(13)+CHR(10)+;
+								      'Produto possui saldo por lote (SB8) que não corresponde ao saldos por endereço (SBF).'+CHR(13)+CHR(10)+;
+									  'Produto: ' + SB8->B8_PRODUTO + CHR(13)+CHR(10)+;
+									  'Local: ' + SB8->B8_LOCAL + CHR(13)+CHR(10)+;
+									  'Lote: ' + SB8->B8_LOTECTL)
+								Return .F.								
+							Else
+								If nSaldoB8 < aLote[_n][4]
+
+									Alert('D I V E R G Ê N C I A !'+CHR(13)+CHR(10)+;
+								          'Produto possui saldo no lote '+ALLTRIM(SB8->B8_LOTECTL)+' (SB8) menor que as quantidades encontradas nos saldos por endereço (SBF)!'+CHR(13)+CHR(10)+;
+									  	  'Produto: ' + SB8->B8_PRODUTO + CHR(13)+CHR(10)+;
+									  	  'Local: ' + SB8->B8_LOCAL)
+									Return .F.
+								Else
+							    	nSaldoB8 -= aLote[_n][4]
+						    	    aLote[_n][2] := SB8->B8_DATA
+								EndIf
+							EndIf
+							
+						Enddo
+					Else
+						_n := aScan(aLote,{|x| x[1]==SB8->B8_PRODUTO .and. x[3]==SB8->B8_LOTECTL })
+							                       
+						If _n==0
+							aAdd(aLote,{SB8->B8_PRODUTO,SB8->B8_DATA,SB8->B8_LOTECTL,SB8->B8_SALDO,""})
+						Else
+							aLote[_n][4] += SB8->B8_SALDO
+						Endif
+					
+					Endif
+				Endif
+				SB8->(DBskip())
+			EndDo
+		Else
+			Alert("Produto não possui saldo em nenhum lote!")
+			Return .F.
+		EndIf
+
+	EndIf
+	
+	//-- chamado 035028
+	//-- verifica nas transferencias abertas quais lotes / endereco já estão utilizandos para não duplicar
+	
+	cAl := getnextalias()
+	
+	beginSql Alias cAl
+		SELECT ZBB_COD, ZBB_QUANT, ZBB_LOTE, ZBB_LOCALI 
+		FROM %Table:ZBB% ZBB, %Table:ZBA% ZBA
+		WHERE ZBA_NUM = ZBB_NUM
+		AND ZBA_STATUS <> 'E'
+		AND ZBB_COD = %Exp:cProd%
+		AND ZBA.%NotDel%
+		AND ZBB.%NotDel%
+	endSql
+	
+	While (cAl)->(!eof())
+		_n := aScan(aLote,{|x| x[3]==(cAl)->ZBB_LOTE .AND. x[5]==(cAl)->ZBB_LOCALI })
+			                       
+		If _n!=0
+			If (cAl)->ZBB_QUANT >= aLote[_n][4]
+				aLote[_n][5] := 'INVALIDO'
+			Else
+				aLote[_n][4] -= (cAl)->ZBB_QUANT
+			Endif
+		Endif
+	
+		(cAl)->(dbskip())
+	Enddo
+	
+	(cAl)->(dbclosearea())
+
+	RestArea(aArea) //-- RETORNA A AREA SELECIONADA
+	
+	//-- FIM CHAMADO 035028
+		
+	nSldAdd := 0 //saldo adicionado ao acols
+	x       := 1
+	lPrim   := .T.
+	nQtdDig := M->ZBB_QUANT
+
+	aSort(aLote,,,{|x,y| dtos(x[2])+x[3] < dtos(y[2])+y[3]}) //ordena por data + lote decrescente
+	
+	If lLote .or. lLocaliz
+	
+		WHILE nQtdDig > nSldAdd .AND. x <= Len(aLote)
+				
+			If aLote[x][5]!="INVALIDO"
+				If lPrim //se for a primeira  vez nao inclui linha, apenas atualiza a quantidade, lote e localizacao
+					aCols[n][6] := aLote[x][3] //lote
+					aCols[n][7] := aLote[x][5] //localizacao
+		
+					If nQtdDig >= aLote[x][4] //quantidade digitada maior ou igual ao saldo do lote
+						aCols[n][5] := aLote[x][4] //muda a quantidade digitada para o saldo do primeiro lote mais antigo
+						nSldAdd += aLote[x][4] //incrementa a quantidade que ja foi incluida no acols
+					Else
+					    nSldAdd += nQtdDig
+					EndIf
+					
+					lPrim := .F.
+				Else
+					If nQtdDig >= (aLote[x][4]+nSldAdd) //se a quantidade digitada for maior ou igual ao qtd do lote + o q ja foi adicionado no acols
+						aAdd(aCols,{STRZERO(Len(aCols)+1,4),cProd,SB1->B1_DESC,0,aLote[x][4],aLote[x][3],aLote[x][5],Space(2),space(9),.F.}) //adiciona a qtd total do lote
+						nSldAdd += aLote[x][4] //incrementa a quantidade que ja foi adicionada no acols
+					Else //senao
+						aAdd(aCols,{STRZERO(Len(aCols)+1,4),cProd,SB1->B1_DESC,0,(nQtdDig-nSldAdd),aLote[x][3],aLote[x][5],Space(2),space(9),.F.}) //adiciona somente o que faltar para atingir a quantidade digitada
+						nSldAdd += (nQtdDig-nSldAdd)  //incrementa a quantidade que falta para atingir a quantidade digitada no que ja foi adicionado no acols
+					EndIf
+				EndIf
+			EndIf
+					
+		    x++
+		ENDDO 
+	
+		If nQtdDig > nSldAdd
+			Alert("Não existe saldo suficiente por lote!")
+			Alert("Realizar Transferencia (Mod. 2)!")
+			Return .F.
+		EndIf
+	EndIf
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ O SALDO DO PRODUTO CONSIDERANDO EMPENHADOS ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function EST139SLD(cProd,cLocOri,cZBANUM)
+Local nSaldo := 0
+Local nSldTr := 0
+Local aSaldo := {}
+Default cZBANUM:=''
+
+	SB2->(DbSetOrder(1)) //B2_FILIAL+B2_COD+B2_LOCAL
+	If SB2->(Dbseek(xFilial("SB2")+cProd+cLocOri))
+		
+		//SB2->B2_QATU - SB2->B2_QEMP
+			
+		aSaldo := CalcEst(cProd,cLocOri,ddatabase+1)
+		
+		nSaldo := aSaldo[1]
+			
+		If Select("TRA1") > 0
+			TRA1->(dbCloseArea())
+		EndIf
+		
+		//TRAZ O SALDO EMPENHADO DE PEÇAS A TRANSFERIR
+		cQuery := " SELECT SUM(ZBB.ZBB_QUANT) AS QUANT "
+		cQuery += " FROM "+RetSqlName("ZBA")+" ZBA, "+RetSqlName("ZBB")+" ZBB "
+		cQuery += " WHERE ZBA.ZBA_NUM=ZBB.ZBB_NUM "
+        
+		if !EMPTY(cZBANUM)
+			cQuery += " AND ZBA.ZBA_NUM <> '"+cZBANum+"'"
+		endif
+		
+		cQuery += " AND ZBA.ZBA_STATUS = 'P'"
+		cQuery += " AND ZBB.ZBB_COD = '"+cProd+"'"
+		cQuery += " AND ZBA.ZBA_FILIAL = '"+xFilial("ZBA")+"' AND ZBA.D_E_L_E_T_ = ''"
+		cQuery += " AND ZBB.ZBB_FILIAL = '"+xFilial("ZBB")+"' AND ZBB.D_E_L_E_T_ = ''"
+			
+		TcQuery cQuery NEW ALIAS "TRA1"
+			
+		TRA1->(dbGoTop())
+			
+		nSaldo -= Iif(!Empty(TRA1->QUANT),TRA1->QUANT,0)
+		nSldTr := Iif(!Empty(TRA1->QUANT),TRA1->QUANT,0)
+
+	Else
+		Alert("Produto não encontrado no almoxarifado "+cLocOri+"!")
+		Return {0,0}
+	EndIf
+
+Return {nSaldo,nSldTr}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ ENVIA EMAIL DE AVISO DE EMBARQUE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fEST139MAIL()
+Local cMsg := ""
+Local cAssunto := ""
+Local cCodEmp := ""
+Local cAlE := getnextalias()
+cTo := ""
+
+	//cabecalho da mensagem
+	cMsg += '<html><body>'
+	cMsg += '<table style="font-family:arial" width="100%" border="1">'
+	cMsg += '<tr>'
+	
+	cMsg += '<td colspan="' + Iif(cEmpresa=='FOR','8','6') + '" align="center" style="background:#ccc">Aviso de Embarque '
+	
+	If cEmpresa=='FUN'
+		cMsg += 'Fundição'
+		cCodEmp := "2" 
+		cAssunto := "*** AVISO DE EMBARQUE FUNDICAO / USINAGEM ***"
+	ElseIf cEmpresa=='FOR'
+		cMsg += 'Forjaria'
+		cCodEmp := "4"
+		cAssunto := "*** AVISO DE EMBARQUE FORJARIA / USINAGEM ***"
+	ElseIf cEmpresa=='ALU'
+		cMsg += 'Alumínio'
+		cCodEmp := "6"
+		cAssunto := "*** AVISO DE EMBARQUE ALUMÍNIO / USINAGEM ***"
+	
+	EndIf
+	
+	// --------------------------------------------------------------
+	// Alterado por José Henrique M Felipetto - Chamado Nº: 026737
+	beginSql alias cAlE
+		SELECT * FROM %table:ZEM%
+		WHERE ZEM_PLANTA = %Exp:cCodEmp%
+		AND ZEM_FILIAL = %xFilial:ZEM%
+		AND %notDel%
+	EndSql
+	
+	While (cAlE)->(!Eof() ) .and. (cAlE)->ZEM_PLANTA == cCodEmp
+		cTo += (cAlE)->ZEM_EMAIL + ";"
+		(cAlE)->(DbSkip() )
+	EndDo
+	
+	(cAlE)->(dbclosearea())
+	// Fim chamado 026737
+	// -------------------------------------------------------------- 
+	
+	cMsg += ' / Usinagem</td>'
+	
+	cMsg += '</tr>'
+
+	cMsg += '<tr style="background:#aabbcc">'
+	cMsg += '<td colspan="'+Iif(cEmpresa=='FOR','3','2')+'" align="center">Nº Controle: '+_cNum+'</td>'
+	cMsg += '<td align="center">Placa: '+_cPlCam+'</td>'
+	cMsg += '<td align="center">Data: '+DtoC(_dData)+'</td>'
+	cMsg += '<td colspan="'+Iif(cEmpresa=='FOR','3','2')+'" align="center">Hora de Saída: '+Substr(_cHora,1,5)+'</td>'
+	cMsg += '</tr>'
+	
+	cMsg += '<tr style="background:#aabbcc">' 
+	cMsg += '<td align="center">Item</td>'
+	cMsg += '<td align="center">Produto</td>'
+	cMsg += '<td colspan="2" align="center">Descricao</td>'	
+	cMsg += '<td align="center">Volume</td>'
+	cMsg += '<td align="center">Quantidade</td>'
+
+	if cEmpresa=='FOR'
+		cMsg += '<td align="center">Corrida Produto</td>'
+		cMsg += '<td align="center">Corrida MP</td>'
+	endif
+
+	cMsg += '</tr>'			
+	
+	For _xI := 1 to len(aCols)
+		If !Acols[_xI][len(aHeader)+1] //nao pega quando a linha esta deletada	
+		
+			If _xI%2 == 0
+				cMsg += '<tr style="font-size:12px">'
+			Else
+				cMsg += '<tr style="background:#eeeeee;font-size:12px">'	
+			EndIf
+			
+			cMsg += '<td align="center">'+aCols[_xI][1]+'</td>'//item
+			cMsg += '<td align="center">'+aCols[_xI][2]+'</td>'//produto
+			cMsg += '<td colspan="2" align="center">'+aCols[_xI][3]+'</td>'//descricao
+			cMsg += '<td align="center">'+Str(aCols[_xI][4])+'</td>'//volume
+			cMsg += '<td align="center">'+Str(aCols[_xI][5])+'</td>'//quantidade
+
+			if cEmpresa=='FOR'
+				cMsg += '<td align="center">'+aCols[_xI][8]+'</td>'
+				cMsg += '<td align="center">'+aCols[_xI][9]+'</td>'
+			endif
+
+			cMsg += '</tr>'			
+		EndIf
+	Next
+	
+	cMsg += '<tr style="font-size:12px">'
+	cMsg += '<td style="background:#aabbcc">OBS:</td>'
+	cMsg += '<td colspan="'+Iif(cEmpresa=='FOR','7','5')+'">'+_cObs+'</td>'
+	cMsg += '</tr>'
+	
+	cMsg += '</table><br />' 
+	cMsg += '<table style="font-family:arial; font-size:12px" width="100%">
+	cMsg += '<tr><td>
+	cMsg += 'Mensagem Processada automaticamente. Favor nao responder este email.<br />'	 
+	cMsg += 'Para informações adicionais entrar em contato com:<br />'
+	cMsg += 'Elton Gomes Fernandes - (41) 3341-1817 - eltongf@whbbrasil.com.br <br />'
+	cMsg += 'Karina Fernanda Rodrigues  - (41) 3341-1838 - karinalr@whbbrasil.com.br<br />'
+	cMsg += 'Renato Camargo - (41)  - 3341-1871  - renatoc@whbbrasil.com.br  <br />'
+	cMsg += '</td></tr>'
+	cMsg += '</table>
+
+	oMail          := Email():New()
+	oMail:cMsg     := cMsg
+	oMail:cAssunto := cAssunto
+	oMail:cTo      := cTo 
+	oMail:Envia()
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿\\
+//³ FAZ TRANSFERENCIA AUTOMATICA DOS PRODUTOS ³\\
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ\\
+User Function fEST139T()
+
+Local aArray 		:= {} //Transf. 
+Local aVettmp       := {} //Quality
+Local _cDoc  		:= ""
+Local _lCanc        := .F.
+Local _cNum         := ZBA->ZBA_NUM
+Private _cLocOri    := "27"
+Private _cLocDes    := "32"
+Private lMsErroAuto := .F. 
+
+If ZBA_STATUS == "E"
+	Alert("Já Transferido!")
+	Return
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ CONSTROI A TELA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DEFINE MSDIALOG oDlg FROM 0,0 TO 152,205 PIXEL TITLE "Transferência"
+
+   	@ 005,005 TO 050,100 OF oDlg PIXEL
+//   	@ 015,010 Say "Do Armazém: " Size 050,8 Object olLocOr
+//   	@ 013,055 Get _cLocOri Picture "@e 99" When .F. Size 20,8 object oLocOr
+   	@ 030,010 Say "Para Armazém: " Size 050,8 object olLocDe
+   	@ 028,055 Get _cLocDes Picture "@e 99" When .F. Size 20,8 object oLocDe
+
+   	@ 055,035 BUTTON "&Ok"       Size 030,015 ACTION fValTransf() object btn1
+   	@ 055,070 BUTTON "&Cancelar" Size 030,015 ACTION {_lCanc := .T. ,oDlg:End()} object btn2
+   
+ACTIVATE MSDIALOG oDlg CENTER
+
+If _lCanc
+	Return
+EndIf
+
+_cDoc  := '' //GetSxENum("SD3","D3_DOC",1) // NextNumero("SD3",2,"D3_DOC",.T.)//pega o proximo numero do documento do d3_doc
+
+DbSelectArea("ZBB")
+DbSetOrder(1)//filial + num + item
+DbGoTop()
+
+//-- CABECALHO
+aArray := {{_cDoc,;		// 01.Numero do Documento
+			ddatabase}}	// 02.Data da Transferencia	
+
+If DbSeek(xFilial("ZBB")+ZBA->ZBA_NUM)
+
+	DbSelectArea("SB1")
+	DbSetOrder(1)
+
+	_cUsr := UPPER(CUSERNAME)
+	QAA->(DbSetOrder(6)) //LOGIN
+	QE6->(DbSetOrder(1))//filial+PRODUTO +REVINV
+	SA5->(DBSETORDER(1))//A5_FILIAL+A5_FORNECE+A5_LOJA+A5_PRODUTO	
+	While ZBB->(!EOF()) .AND. ZBB->ZBB_NUM == _cNum
+		If SB1->(DbSeek(xFilial("SB1")+ZBB->ZBB_COD))
+			
+			If Alltrim(SB1->B1_GRUPO)$"PA01" 
+				_cLocOri := "27"
+			ElseIf Alltrim(SB1->B1_GRUPO)$"PA04" 
+				_cLocOri := "47"
+			ElseIf Alltrim(SB1->B1_GRUPO)$"PA06" 
+				_cLocOri := "67"
+			EndIf
+			
+			//Se for produto virabrequim, o local de destino é o 52 (OS Nº002575 - Mariocp)
+			If ALLTRIM(SB1->B1_COD)$'VWB34.1.0159.00/VWB34.1.0160.00/GMB34.1.0378.00/VWB01.1.0434.00'
+				_cLocDes := '52'
+				
+				
+				
+			Else
+				_cLocDes := '32'
+				
+				if !UPPER(ALLTRIM(cUsername))$"ADILSONMJ/ALMIRANTEC/JOSEMARSP/RODRIGOTS/DOUGLASSD/JOAOFR/ANAP"
+					Alert("Usuário sem permissão para transferir para o 32!")
+					Return
+				endif
+				
+			EndIf
+
+			//_cLote := U_NHEST002()
+			_cLote := ZBB->ZBB_LOTE
+			
+				
+			//VERIFICA CHAVE DUPLICADA, SE EXISTIR ALTERA A SEQUENCIA DO LOTE
+			QEK->(DBSETORDER(14))//QEK_FILIAL+QEK_FORNEC+QEK_LOJFOR+QEK_PRODUT+QEK_NTFISC+QEK_SERINF+DTOS(QEK_DTENTR)+QEK_LOTE+QEK_NUMSEQ
+			WHILE .T.
+				If QEK->(DBSEEK(XFILIAL("QEK")+"999999"+"01"+SB1->B1_COD+"         "+"   "+DTOS(ddatabase)+_cLote))
+					       
+					_nSeq := Val(Substr(_cLote,AT("-",_cLote)+1,2))
+					_nSeq ++
+					_cLote := Substr(_cLote,1,AT("-",_cLote))+ALLTRIM(Str(_nSeq))
+				Else
+					exit
+				EndIf
+			ENDDO
+                 
+			//-- VERIFICACAO DO LOTE PARA NAO GERAR ERRO DE CHAVE DUPLICADA NA QAA!!!!!!!!!!!!!!!!!!!
+			WHILE .T.
+			
+				_n:=aScan(aArray,{|x| alltrim(x[1])==alltrim(SB1->B1_COD) .AND. ;
+									  alltrim(x[20])==alltrim(_cLote)  })
+				If _n<>0
+					_nSeq := Val(Substr(_cLote,AT("-",_cLote)+1,2))
+					_nSeq ++
+					_cLote := Substr(_cLote,1,AT("-",_cLote))+ALLTRIM(Str(_nSeq))
+				else
+					exit
+				Endif
+
+			Enddo				
+
+			//--DETALHE					
+			aAdd(aArray,{   SB1->B1_COD,;					// 01.Produto Origem
+						    SB1->B1_DESC,;  				// 02.Descricao
+							SB1->B1_UM,; 	                // 03.Unidade de Medida
+							_cLocOri,; 						// 27.Local Origem
+							ZBB->ZBB_LOCALI,;				// 05.Endereco Origem
+							SB1->B1_COD,;					// 06.Produto Destino
+							SB1->B1_DESC,;					// 07.Descricao
+							SB1->B1_UM,;					// 08.Unidade de Medida
+							_cLocDes,;						// 09.Armazem Destino
+							"GL01"/*ZBB->ZBB_LOCALI*/,;				// 10.Endereco Destino
+							CriaVar("D3_NUMSERI",.F.),;		// 11.Numero de Serie
+							ZBB->ZBB_LOTE,; 				// 12.Lote Origem
+							CriaVar("D3_NUMLOTE",.F.),;		// 13.Sublote
+							CriaVar("D3_DTVALID",.F.),;		// 14.Data de Validade
+							CriaVar("D3_POTENCI",.F.),;		// 15.Potencia do Lote
+							ZBB->ZBB_QUANT,;				// 16.Quantidade
+							CriaVar("D3_QTSEGUM",.F.),;		// 17.Quantidade na 2 UM             	
+							CriaVar("D3_ESTORNO",.F.),;		// 18.Estorno
+							CriaVar("D3_NUMSEQ",.F.),;		// 19.NumSeq
+						    ZBB->ZBB_LOTE/*_cLote*/,;			 			// 20.Lote Destino
+							CRIAVAR("D3_DTVALID",.F.),;     // 21.Data Validade
+							CRIAVAR("D3_ITEMGRD",.F.),;     // 22.Item da grade
+							CRIAVAR("D3_CARDEF",.F.),;
+							CRIAVAR("D3_DEFEITO",.F.),;
+							CRIAVAR("D3_OPERACA",.F.),;
+							CRIAVAR("D3_FORNECE",.F.),;
+							CRIAVAR("D3_LOJA",.F.),;
+							CRIAVAR("D3_LOCORIG",.F.),;
+							SB1->B1_CC,;
+							CRIAVAR("D3_TURNO",.F.),;
+							CRIAVAR("D3_MAQUINA",.F.),;
+							CRIAVAR("D3_LINHA",.F.),;
+							CRIAVAR("D3_CODPA",.F.),;							
+							CRIAVAR("D3_DTREF",.F.),;
+							CRIAVAR("D3_CORRID",.F.),;
+							CRIAVAR("D3_OP",.F.)})	
+
+			If QAA->(DbSeek(_cUsr))
+				_cSolic := QAA->QAA_MAT
+			Else
+				Alert("Transferência não pode ser realizada. Usuário não cadastrado!")
+				Return .F.
+			EndIf
+				
+			/*-------- FAZ A IMPORTAÇÃO AUTOMÁTICA PARA O QUALITY ---------*/
+			
+			//VERIFICA SE EXISTE PRODUTO NO SA5 E NO QE6
+  			IF SA5->(DBSEEK(XFILIAL("SA5")+"999999"+"01"+SB1->B1_COD)) .AND. ;
+		   	   QE6->(DbSeek(xFilial("QE6")+SB1->B1_COD))
+		   	   
+				nVerifi  := QieSkipLote("999999","01",SB1->B1_COD,SB1->B1_GRUPO,ddatabase,_cLote,ZBA->ZBA_NUM,{})    	
+			
+				//-- verifica chave unica QEK
+				//QEK_FILIAL+QEK_PRODUT+QEK_REVI+QEK_FORNEC+QEK_LOJFOR+QEK_NTFISC+QEK_SERINF+QEK_ITEMNF+QEK_TIPONF+QEK_LOTE+QEK_NUMSEQ                                                                                                                                      
+				
+				cAl := getnextalias()
+				
+				//-- NAO TIRAR OS DELETADOS
+				//-- DEVE CONSIDERAR DELETADOS
+				beginSql alias cAl
+					SELECT * FROM %table:QEK%
+					WHERE QEK_FILIAL = %xFilial:QEK%
+					AND QEK_PRODUT = %Exp:SB1->B1_COD%
+					AND QEK_REVI   = %Exp:QE6->QE6_REVI%
+					AND QEK_FORNEC = '999999'
+					AND QEK_LOJFOR = '01'
+					AND QEK_TIPONF = 'N'
+					AND QEK_LOTE   = %Exp:_cLote%
+					AND QEK_TIPDOC = 'N'
+				endSql
+				
+				If (cAl)->(eof())
+				
+					//ADICIONA O VETOR PARA IMPORTACAO AUTOMATICA NO QUALITY	
+		 			aAdd(aVetTmp,{{"QEK_TIPONF","N",NIL},; 
+								  {"QEK_FORNEC","999999",NIL},;
+								  {"QEK_LOJFOR","01",NIL},;
+								  {"QEK_PRODUT",SB1->B1_COD,NIL},; 
+								  {"QEK_LOTE"  ,_cLote,NIL},;
+								  {"QEK_TAMLOT",ALLTRIM(STR(ZBB->ZBB_QUANT)),NIL},; 
+								  {"QEK_TAMAMO",ALLTRIM(STR(ZBB->ZBB_QUANT)),NIL},; 
+								  {"QEK_DTENTR",ZBA->ZBA_DATA,NIL},;	//{"QEK_NTFISC","111111",NIL},;//{"QEK_SERINF","UNI",NIL},;
+								  {"QEK_DTNFIS",ZBA->ZBA_DATA,NIL},;
+								  {"QEK_DOCENT",ZBA->ZBA_NUM,NIL},;
+								  {"QEK_HRENTR",Substr(Time(),1,5),NIL},;
+								  {"QEK_TIPDOC","N",NIL},;
+								  {"QEK_PRECO",SB1->B1_UPRC*ZBB->ZBB_QUANT,NIL},;
+								  {"QEK_CERFOR","N/A",NIL},;
+								  {"QEK_VERIFI",nVerifi,NIL},;//1 = INSPEÇÃO
+							      {"QEK_SOLIC",_cSolic,NIL},;
+								  {"QEK_SITENT",'2',NIL}})
+				Endif
+				
+				(cAl)->(dbclosearea())
+
+			ELSE 
+				fMAILQUALITY()
+			ENDIF
+	    EndIf
+		ZBB->(DbSkip())
+    EndDo
+Else
+	Alert("Transferência não pode ser concluída")
+	Return
+EndIf 
+
+BEGIN TRANSACTION
+    
+//lTransf := .F. //-- variavel auxiliar para verificar se houve transferencia no SD3
+dbSelectArea("SD3")
+aArray[1][1] := _cDoc := NextNumero("SD3",2,"D3_DOC",.T.)//pega o proximo numero do documento do d3_doc
+
+Processa({|| MSExecAuto({|x| MATA261(x)},aArray)},"Aguarde. Transferindo...") //inclusão
+//MSExecAuto({|x,y| MATA261(x,y)},aArray,6) //estorno
+
+//-- verifica se houve transferencia
+
+lTransf := .T.
+
+For xP:=2 TO LEN(aArray)
+
+	cAl := getnextalias()
+	
+	beginSql alias cAl
+		SELECT D3_DOC, D3_TM FROM %Table:SD3%
+		WHERE D3_COD = %Exp:aArray[xP][1]%
+		AND D3_EMISSAO = %Exp:DtoS(aArray[1][2])%
+		AND D3_QUANT = %Exp:aArray[xP][16]%
+		AND ((D3_LOCAL = %Exp:aArray[xP][4]% AND D3_TM > '500') OR (D3_LOCAL = %Exp:aArray[xP][9]% AND D3_TM < '500' ))
+		AND D3_FILIAL = %xFilial:SD3%
+		AND %NotDel%
+		AND D3_ESTORNO <> 'S'
+	endsql
+
+	lASaida:=.f.
+	lAEntrd:=.f.
+
+	while (cAl)->(!eof())
+		_cDoc := (cAl)->D3_DOC
+
+		If (cAl)->D3_TM > '500'
+			lASaida := .t.    
+		Endif
+		
+		If (cAl)->D3_TM < '500'
+			lAEntrd := .t.
+		Endif
+		
+		(cAl)->(dbskip())
+	Enddo
+
+	(cAl)->(dbclosearea())	
+	
+Next
+
+//-- fim verificacao de gravacao na sd3
+
+If lMsErroAuto
+	mostraerro()
+	DisarmTransaction()
+	Return
+ElseIf !lAEntrd .or. !lASaida
+	alert("Erro na Transferência, não foi gerada transferência para todos os ítens!")
+	mostraerro()
+	DisarmTransaction()
+	Return
+Else
+
+	RecLock("ZBA",.F.)
+		ZBA->ZBA_STATUS := "E"
+		ZBA->ZBA_DOC    := _cDoc
+	MsUnlock("ZBA")
+
+	For _x := 1 to Len(aVetTmp)
+
+	 	Processa({|| MSExecAuto({|x,y| QIEA200(x,y)},aVetTmp[_X],3)},"Gerando Quality...") //Inclusao
+
+		/*
+		If lMsErroAuto 
+			MostraErro()
+			DisarmTransaction()
+			Return
+		Endif
+        */
+        
+	Next     
+
+	MsgBox("Transferencia efetuada com sucesso!","Transferido","INFO")
+
+Endif
+
+END TRANSACTION
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA TELA DE TRANSFERENCIA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValTransf()
+	
+	If Empty(_cLocDes)
+		Alert("Preencha o Local de Destino")
+		Return .F.
+	EndIf
+	
+	If Empty(_cLocOri)
+		Alert("Preencha o Local de Origem")
+		Return .F.
+	EndIf
+	
+	oDlg:End()
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄ¿
+//³ LEGENDA ³
+//ÀÄÄÄÄÄÄÄÄÄÙ
+User Function EST139LEG()       
+
+Local aLegenda :=	{ {"BR_VERDE"   , OemToAnsi("Pendente")    },;                                                                  
+  					  {"BR_VERMELHO", OemToAnsi("Transferido") }}
+  					  
+BrwLegenda(OemToAnsi("Transferência Fun/Usi"), "Legenda", aLegenda)
+
+Return  
+
+Static Function fCriaCor()
+	Local aLegenda :=	{ {"BR_VERDE"   , OemToAnsi("Pendente") },;                                                                  
+  						  {"BR_VERMELHO", OemToAnsi("Transferido")   }}  					  
+
+	Local uRetorno := {}
+	Aadd(uRetorno, { 'ZBA_STATUS == "P" ' , aLegenda[1][1] } )
+	Aadd(uRetorno, { 'ZBA_STATUS == "E" ' , aLegenda[2][1] } )
+Return(uRetorno)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A MULTILINE 	³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fMulti()
+Local _cProd := aCols[n][2]
+
+	If !Acols[n][len(aHeader)+1] //nao pega quando a linha esta deletada
+
+		If Empty(aCols[n][5]) //volume
+			Alert("Preencha a quantidade")
+			Return .F.
+		EndIf   
+		
+		SB1->(DbSetOrder(1)) //filial + cod
+		SB1->(DbSeek(xFilial("SB1")+_cProd))
+		
+		If SB1->B1_RASTRO$"L" .and. EMPTY(aCols[n][6]) //lote
+			Alert("Informe o lote para produtos controlados por lote!")
+			Return .F.
+		EndIf
+		
+	EndIf
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA PLACA DO CAMINHAO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function  fPlCam()
+
+	If Empty(_cPlCam)
+		Alert("Digite a Placa do Caminhão")
+		Return .F.
+	EndIf
+	
+	If Len(ALLTRIM(_cPlCam)) != 8
+		Alert("Digite a placa corretamente!")
+		Return .F.
+	EndIf
+
+Return 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ ENVIA EMAIL PARA DIZER QUE NAO TEM AMARRACAO PRODUTO X FORNECEDOR ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fMAILQUALITY()
+Local cServer	:= Alltrim(GETMV("MV_RELSERV")) //"192.168.1.4"
+Local cAccount  := Alltrim(GETMV("MV_RELACNT")) //'protheus'
+Local cPassword := Alltrim(GETMV("MV_RELPSW"))  //'siga'
+Local lConectou
+Local lEnviado
+Local cMsg      := ""
+Local _aEmail   := "paulohg@whbusinagem.com.br;arthurce@whbbrasil.com.br"
+
+//cabecalho da mensagem
+
+cMsg += '<table border="1" width="100%" style="font-family:arial">'
+cMsg += '<tr style="background:#aabbcc">'
+cMsg += '<td>Produto</td><td>Descrição<td>Fornecedor</td><td>Loja</td><td>Desc. Fornecedor</td>'
+cMsg += '</tr>'
+cMsg += '<tr>'
+cMsg += '<td>'+SB1->B1_COD+'</td><td>'+SB1->B1_DESC+'<td>999999</td><td>01</td><td>WHB FUNDICAO S/A</td>'
+cMsg += '</tr>'
+cMsg += '</table>'
+
+cMsg += '<font size="2" style="font-family:arial"> Mensagem Processada automaticamente. Favor nao responder este email.</font>'
+
+_cAssunto := "*** NÃO EXISTE AMARRAÇÃO ENTRE PRODUTO x FORNECEDOR OU ESPECIFICAÇÃO ***"
+
+CONNECT SMTP SERVER cServer ACCOUNT cAccount PASSWORD cPassword Result lConectou
+
+If lConectou
+
+    Send Mail from 'protheus@whbbrasil.com.br' To _aEmail;
+	SUBJECT _cAssunto;
+    BODY cMsg;
+    RESULT lEnviado
+    If !lEnviado
+   	   Get mail error cMensagem
+	   Alert(cMensagem)
+    EndIf                             
+else
+   Alert("Erro ao se conectar no servidor: " + cServer)		
+Endif
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ RELEASE DAS TRANSFERENCIAS FUNDICAO / USINAGEM ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function fEst139R()
+Private aRotina   := {}
+Private cCadastro := "Transferencia de Produtos Fundicao / Usinagem"
+private nGdTit := 2
+	
+aAdd( aRotina, {"Pesquisar"  ,"AxPesqui"       ,0,1} )
+aAdd( aRotina, {"Visualizar" ,"U_EST139REL(1)" ,0,2} )
+aAdd( aRotina, {"Incluir"    ,"U_EST139REL(2)" ,0,3} )
+aAdd( aRotina, {"Alterar"    ,"U_EST139REL(3)" ,0,4} )
+aAdd( aRotina, {"Excluir"    ,"U_EST139REL(4)" ,0,5} )
+aAdd( aRotina, {"Imprimir"   ,"U_EST139IMP()"  ,0,2} )
+aAdd( aRotina, {"Documento"  ,"U_f139Doc()"   ,0,4} )
+aAdd( aRotina, {"Legenda"    ,"U_EST139LG2()"  ,0,2} )
+
+dbSelectArea("ZBI")
+dbSetOrder(1)
+
+mBrowse(,,,,"ZBI",,,,,,fCriaCor2())
+
+Return
+
+//Abre a funcao base de conhecimento
+User Function f139Doc()
+   MsDocument("ZBI",ZBI->(RECNO()), 4)
+return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FUNCAO PRINCIPAL DO RELEASE DE TRANSFERENCIA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function EST139REL(_nParam)
+// variaveis para uso de posicionamento
+
+Local nOpcA      := 0
+Local _nItemPos  := 0
+Private _nPar    := _nParam
+Private _cNumRel := ""
+Private _aItems  := {}
+Private _cMes    := ""
+Private aCols    := {}
+Private aHeader  := {}
+Private _cAno    := Space(4)
+
+//Cria um array com os meses do ano
+For _x := 1 to 12
+	aAdd(_aItems,STRZERO(_x,2)+"-"+MesExtenso(_x))
+Next
+
+If _nPar == 2 //incluir
+	_cNumRel := GetSxeNum("ZBI","ZBI_NUM")
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montagem do aHeader ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aAdd(aHeader,{"Item"       , "ZBI_ITEM"     , "@!"    ,04,00,".F."           ,"","C","ZBI"})
+aAdd(aHeader,{"Produto"    , "ZBI_PRODUT"   , "@!"    ,15,00,"U_fEST39PRD()" ,"","C","ZBI"}) 
+aAdd(aHeader,{"Descricao"  , "B1_DESC"      , "@!"    ,40,00,".F."           ,"","C","SB1"})
+
+For _x := 1 to 31                             
+
+	aAdd(aHeader,{"Prev. "+AllTrim(Str(_x)),;
+	              "ZBI_PREV"+AllTrim(StrZero(_x,2)),;
+	              "@e 99,999", 06,00,;
+	              "U_EST139T("+AllTrim(Str(_x))+")",;
+	              "","N","ZBI"})
+Next
+
+aAdd(aHeader,{"Total"       , "ZBI_PREV01"   , "@E 9,999,999", 09,00, ".F."  ,"","N","ZBI"})  
+aAdd(aHeader,{"Prev. Mes 1" , "ZBI_PREVM1"   , "@E 9,999,999", 09,00, ".T."  ,"","N","ZBI"})  
+aAdd(aHeader,{"Prev. Mes 2" , "ZBI_PREVM2"   , "@E 9,999,999", 09,00, ".T."  ,"","N","ZBI"})  
+aAdd(aHeader,{"Prev. Mes 3" , "ZBI_PREVM3"   , "@E 9,999,999", 09,00, ".T."  ,"","N","ZBI"})  
+
+/*
+DbSelectArea("SX3")
+DbSetOrder(1)
+dBSeek("ZBI")
+While( !Eof() .And. SX3->X3_ARQUIVO == "ZBI")
+
+	IF (X3USO(SX3->X3_USADO) .AND. cNivel >= SX3->X3_NIVEL)
+		If !UPPER(ALLTRIM(SX3->X3_CAMPO))$"ZBI_NUM/ZBI_DATA"
+		
+			//INSERE A DESCRICAO DO PRODUTO NO AHEADER
+			If ALLTRIM(SX3->X3_CAMPO)$"ZBI_PRODUT" 
+				aAdd(aHeader,{Alltrim(X3Titulo()),SX3->X3_CAMPO,SX3->X3_PICTURE,SX3->X3_TAMANHO,;
+							  SX3->X3_DECIMAL,"U_fEST39PRD()","",SX3->X3_TIPO,SX3->X3_F3,;
+							  SX3->X3_CONTEXT,X3CBOX(),SX3->X3_RELACAO,".T."})
+				aAdd(aHeader,{"Descricao","B1_DESC","@!",40,0,".F.","","C","","","","",".T."})
+			ELSE
+				aAdd(aHeader,{Alltrim(X3Titulo()),;
+				               SX3->X3_CAMPO,;
+				               SX3->X3_PICTURE,;
+				               SX3->X3_TAMANHO,;
+				               SX3->X3_DECIMAL,;
+				               IIF(SX3->X3_CAMPO=="ZBI_ITEM",".F.",SX3->X3_VALID),;
+				               "",; //Reservado
+				               SX3->X3_TIPO,;
+				               SX3->X3_F3,;
+				               SX3->X3_CONTEXT,;
+				               X3CBOX(),;
+				               SX3->X3_RELACAO,;
+				               ".T."})
+			ENDIF
+		EndIf
+	EndIf
+	dBSelectArea("SX3")
+	dBSkip()
+EndDo
+*/
+
+	SB1->(DBSETORDER(1))
+	
+	If AllTrim(Str(_nPar))$"1/3/4" //Visualizar, alterar ou excluir
+		//---------------------------------------------------------
+		// Traz os valores para visualização, alteração ou exclusão
+		//---------------------------------------------------------
+		_cNumRel := ZBI->ZBI_NUM
+		_nMes    := Month(ZBI->ZBI_DATA)
+		_cAno    := ALLTRIM(Str(Year(ZBI->ZBI_DATA)))
+		                               
+		ZBI->(DBGOTOP())
+		
+		IF ZBI->(DBSEEK(XFILIAL("ZBI")+_cNumRel))
+			WHILE ZBI->(!EOF()) .AND. ZBI->ZBI_NUM == _cNumRel
+			    
+			    SB1->(DBSEEK(XFILIAL("SB1")+ZBI->ZBI_PRODUT))
+
+			    aAdd(aCols,{ZBI->ZBI_ITEM,ZBI->ZBI_PRODUT,SB1->B1_DESC})
+			    
+			    For _x := 1 to 31
+			    	_cCampo := "ZBI->ZBI_PREV"+StrZero(_x,2)
+			    	aAdd(aCols[Len(aCols)],&(_cCampo))
+			    Next
+				  
+				_nTotal := 0 
+				
+				For _x:= 4 to 34
+					_nTotal += aCols[Len(aCols)][_x]
+				Next
+				 
+				aAdd(aCols[Len(aCols)],_nTotal)
+				aAdd(aCols[Len(aCols)],ZBI->ZBI_PREVM1)
+				aAdd(aCols[Len(aCols)],ZBI->ZBI_PREVM2)
+				aAdd(aCols[Len(aCols)],ZBI->ZBI_PREVM3)
+			    aAdd(aCols[Len(aCols)],.F.)
+			    	
+				ZBI->(DBSKIP())
+			ENDDO
+		ENDIF
+		
+		If _nPar != 3
+			//Desabilita a edição do GetDados
+			For _x := 1 to Len(aHeader)
+				aHeader[_x][6] := ".F."
+			Next
+
+		EndIf
+			
+	EndIf
+
+	oFont16N := tFont():New("Arial",,16,,.T.)
+	             
+  	//define a tela
+	oDlg := MSDialog():New(0,0,480,800,;
+		"RELEASE - TRANSFERÊNCIA FUN / USI",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+    
+	//contorno
+	oGroup := tGroup():New(005,005,25,397,,oDlg,,,.T.)
+
+	oSay1 := TSay():New(12,10,{||"Número"},oDlg,,,,,,.T.,,)
+	oSay2 := TSay():New(12,31,{||_cNumRel},oDlg,,oFont16N,,,,.T.,,)
+	
+	oSay3 := TSay():New(12,70,{||"Mês"},oDlg,,,,,,.T.,,)
+	
+	//combobox
+	oCombo:= TComboBox():New(10,85,{|u| if(Pcount() > 0,_cMes := u,_cMes)},;
+		_aItems,50,20,oDlg,,{||},,,,.T.,,,,{||_nPar==2 .Or. _nPar==3},,,,,"_cMes")
+
+    IF AllTrim(Str(_nPar))$"1/3/4" //visual, alterar ou excluir
+		If _nMes > 0
+			oCombo:nAt := _nMes
+			_cMes := oCombo:aItems[oCombo:nAt]
+		EndIf
+    EndIf
+		
+	oSay4 := TSay():New(12,152,{||"Ano"},oDlg,,,,,,.T.,,)
+	
+	oGet1 := tGet():New(10,165,{|u| if(Pcount() > 0, _cAno:= u,_cAno)},oDlg,20,8,"@e 9999",/*valid*/,;
+		,,,,,.T.,,,{||_nPar==2 .Or. _nPar==3},,,,,,,"_cAno")
+  
+    // cria o getDados
+	oGeTD := MsGetDados():New( 30               ,; //superior 
+	                           5                ,; //esquerda
+	                           220              ,; //inferior
+	                           397              ,; //direita 	   
+	                           4                ,; // nOpc
+	                           "AllwaysTrue"    ,; // CLINHAOK
+	                           "AllwaysTrue"    ,; // CTUDOOK
+	                           ""               ,; // CINICPOS
+	                           .T.              ,; // LDELETA
+	                           nil              ,; // aAlter
+	                           nil              ,; // uPar1
+	                           .F.              ,; // LEMPTY
+	                           200              ,; // nMax
+	                           nil              ,; // cCampoOk
+	                           "AllwaysTrue()"  ,; // CSUPERDEL
+	                           nil              ,; // uPar2
+	                           "AllwaysTrue()"  ,; // CDELOK
+	                           oDlg              ; // oWnd 
+	                          )
+	                          
+
+	If _nPar == 1 .Or. _nPar == 4//Visualizar ou excluir
+		oGetD:nMax := Len(aCols)
+	EndIF
+
+    
+	//botoes
+    oBt1 := tButton():New(225,332,"Ok",oDlg,{||fGrvZBI()},30,10,,,,.T.)      
+    oBt2 := tButton():New(225,367,"Cancelar",oDlg,{||fCancRel()},30,10,,,,.T.)
+
+	oDlg:Activate(,,,.T.,{||,.T.},,{||})
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ8¿
+//³ CALCULA O TOTAL DAS PREVISOES NO MULTILINE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ8Ù
+User Function EST139T(nPos)
+Local _nTotal := 0
+Local _cField  
+
+	For _x:= 4 to 34
+		IF(_x != nPos+3)
+			_nTotal += aCols[n][_x]
+		EndIf
+	Next
+	
+	_cField := "M->ZBI_PREV"+ALLTRIM(STRZERO(nPos,2))
+
+	_nTotal += &(_cField)
+	
+	aCols[n][35] := _nTotal
+	oGeTD:Refresh()
+
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ CRIA A COR DA LEGENDA DO RELEASE DE TRANSFERENCIA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fCriaCor2()
+Local aLegenda := {{"BR_VERDE"   , OemToAnsi("Pendente") },; 
+  				   {"BR_VERMELHO", OemToAnsi("Realizado")}}
+
+Local uRetorno := {}
+
+	Aadd(uRetorno, { 'AllTrim(STR(Year(ZBI_DATA)))+AllTrim(STR(Month(ZBI_DATA))) >= AllTrim(STR(Year(Date())))+AllTrim(Str(Month(DATE())))' , aLegenda[1][1] } )
+	Aadd(uRetorno, { 'AllTrim(STR(Year(ZBI_DATA)))+AllTrim(Str(Month(ZBI_DATA))) <  AllTrim(Str(Year(Date())))+AllTrim(Str(Month(DATE())))' , aLegenda[2][1] } )
+
+Return(uRetorno)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ LEGENDA DO RELEASE DE TRANSFERENCIA ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function EST139LG2()
+
+Local aLegenda :=	{{"BR_VERDE"   , OemToAnsi("Pendente") },;
+  					 {"BR_VERMELHO", OemToAnsi("Realizado")}}
+  					  
+BrwLegenda(OemToAnsi("Transferência Fun/Usi"), "Legenda", aLegenda)
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ CANCELA RELEASE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fCancRel()
+
+	If _nPar == 2	
+		RollBackSx8()//retorna numeração
+	EndIf
+	
+	oDlg:End()
+	
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FUNCAO PARA INICIALIZAR O CAMPO DE ITEM NO GETDADOS ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function ItmIniZBI()
+Local _nItem := 0
+	
+    DbSelectArea("ZBI")
+    DbSetOrder(1)
+    If DbSeek(xFilial("ZBI")+_cNumRel)
+    	While !Eof() .And. ZBI->ZBI_NUM == _cNumRel
+    		_nItem := Val(ZBI->ZBI_ITEM)
+    	    ZBI->(DBSKIP())
+    	EndDo
+    EndIf
+	     
+	_nItem := Iif(++_nItem >= n,_nItem,n)
+	
+Return (StrZero(_nItem,4))
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ GRAVA O RELEASE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fGrvZBI()
+	If !fValZBI()
+	    Return
+	EndIf
+	
+	If _nPar == 2//Inclui
+		For _x := 1 to Len(aCols)
+			IF !aCols[_x][Len(aHeader)+1]//nao pega quando a linha está deletada
+				RecLock("ZBI",.T.)
+					ZBI->ZBI_FILIAL := xFilial("ZBI")
+					ZBI->ZBI_NUM 	:= _cNumRel
+					ZBI->ZBI_ITEM   := Acols[_x][1]
+					ZBI->ZBI_DATA   := CTOD("01/"+Substr(_cMes,1,2)+"/"+_cAno)
+					ZBI->ZBI_PRODUT := aCols[_x][2]
+					For _j := 1 to 31
+						_cCampo := "ZBI->ZBI_PREV"+STRZERO(_j,2)
+						&(_cCampo) := aCols[_x][_j+3]
+					Next		
+					ZBI->ZBI_PREVM1 := aCols[_x][36]
+					ZBI->ZBI_PREVM2 := aCols[_x][37]
+					ZBI->ZBI_PREVM3 := aCols[_x][38]
+					
+				MsUnlock("ZBI")
+			EndIf
+		Next
+		ConfirmSX8()
+	EndIf
+
+	If _nPar == 3 //alterar
+		ZBI->(DBSETORDER(1))
+		For _x := 1 to Len(aCols)
+			IF !aCols[_x][Len(aHeader)+1]//nao pega quando a linha está deletada
+				If ZBI->(DBSEEK(XFILIAL("ZBI")+_cNumRel+aCols[_x][1]))
+					RecLock("ZBI",.F.)
+						ZBI->ZBI_PRODUT := aCols[_x][2]
+						ZBI->ZBI_DATA   := CtoD("01/"+Substr(_cMes,1,2)+"/"+_cAno)
+						For _j := 1 to 31
+							_cCampo := "ZBI->ZBI_PREV"+STRZERO(_j,2)
+							&(_cCampo) := aCols[_x][_j+3]
+						Next		
+						ZBI->ZBI_PREVM1 := aCols[_x][36]
+						ZBI->ZBI_PREVM2 := aCols[_x][37]
+						ZBI->ZBI_PREVM3 := aCols[_x][38]
+					MsUnLock("ZBI")
+				ELSE	
+					RecLock("ZBI",.T.)
+						ZBI->ZBI_FILIAL := xFilial("ZBI")
+						ZBI->ZBI_NUM 	:= _cNumRel
+						ZBI->ZBI_ITEM   := Acols[_x][1]
+						ZBI->ZBI_DATA   := CTOD("01/"+Substr(_cMes,1,2)+"/"+_cAno)
+						ZBI->ZBI_PRODUT := aCols[_x][2]
+						For _j := 1 to 31
+							_cCampo := "ZBI->ZBI_PREV"+STRZERO(_j,2)
+							&(_cCampo) := aCols[_x][_j+3]
+						Next
+						ZBI->ZBI_PREVM1 := aCols[_x][36]
+						ZBI->ZBI_PREVM2 := aCols[_x][37]
+						ZBI->ZBI_PREVM3 := aCols[_x][38]
+					MsUnlock("ZBI")
+				ENDIF					
+			Else
+				If ZBI->(DBSEEK(XFILIAL("ZBI")+_cNumRel+aCols[_x][1]))
+					RecLock("ZBI",.F.)
+						ZBI->(DbDelete())
+					MsUnLock("ZBI")
+				EndIf
+			EndIf
+	    Next
+	EndIf
+
+	If _nPar == 4 //excluir
+		ZBI->(DBSETORDER(1))
+		If MsgYesNo("Tem certeza de que deseja excluir o Release "+_cNumRel+"?")
+			For _x := 1 to Len(aCols)
+				If ZBI->(DBSEEK(XFILIAL("ZBI")+_cNumRel+aCols[_x][1]))
+					RecLock("ZBI",.F.)
+						ZBI->(DbDelete())
+					MsUnLock("ZBI")
+				EndIf
+		    Next
+		EndIf
+	EndIf	
+
+	oDlg:End()
+Return
+             
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA A INCLUSAO DE UM NOVO RELEASE ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fValZBI()
+
+	If Empty(_cMes)
+		Alert("Informe o mês!")
+		Return .F.
+	Endif
+	
+	If Empty(_cAno)
+		Alert("Informe o ano!")
+		Return .F.
+	EndIf
+	
+	For _x := 1 to Len(aCols)
+		If Empty(aCols[_x][2])
+			Alert("Informe o produto para o Item "+aCols[_x][1]+"!")
+			Return .F.
+		EndIf
+	Next
+	
+Return .T.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ A DESCRICAO DO PRODUTO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function fEST39PRD()
+nDesc := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="B1_DESC"})
+
+	SB1->(DBSETORDER(1))
+	If SB1->(DBSEEK(XFILIAL("SB1")+M->ZBI_PRODUT))
+		aCols[n][nDesc] := SB1->B1_DESC
+		oGetD:Refresh()
+	Else
+		Alert("Produto não encontrado!")
+		Return .F.
+	Endif
+
+Return .T.
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³EST139IMP ºAutor  ³João Felipe da Rosa º Data ³  19/03/09   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ RELATÓRIO DE RELEASE DA TRANSFERENCIA FUN/USI              º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function EST139IMP()
+
+cString   := ""
+cDesc1    := OemToAnsi("")
+cDesc2    := OemToAnsi("")
+cDesc3    := OemToAnsi("")
+tamanho   := "G"
+limite    := 220
+aReturn   := { "Zebrado", 1,"Administracao", 1, 2, 1, "",1 }
+nomeprog  := "NHEST139" //nome do arquivo
+nLastKey  := 0
+titulo    := OemToAnsi("RELEASE DE TRANSFERÊNCIA FUNDIÇÃO / USINAGEM - "+UPPER(MesExtenso(Month(ZBI->ZBI_DATA)))) //título
+//           |01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+cabec1    := "ITEM   PRODUTO           DESCRIÇÃO"
+cabec2    := ""
+cCancel   := "***** CANCELADO PELO OPERADOR *****"
+_nPag     := 1 
+M_PAG     := 1 //Variavel que acumula numero da pagina 
+wnrel     := nomeprog //"NH"
+_cPerg    := "" 
+
+/*
+If !Pergunte(_cPerg,.T.)
+   Return(nil)
+Endif 
+*/
+
+SetPrint(cString,wnrel,_cPerg,titulo,cDesc1,cDesc2,cDesc3,.F.,,,tamanho)
+
+if nlastKey ==27
+    Set Filter to
+    Return
+Endif
+
+SetDefault(aReturn,cString)
+
+nTipo := IIF(aReturn[4]==1,GetMV("MV_COMP"), GetMV("MV_NORM"))
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³CHAMADAS PARA AS FUNÇÕES³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Processa(  {|| Gerando2()   },"Gerando Dados para a Impressao") 
+RptStatus( {|| Imprime2()   },"Imprimindo...")
+
+set filter to //remove o filtro da tabela
+
+If aReturn[5] == 1
+	Set Printer To
+	Commit
+    ourspool(wnrel) //Chamada do Spool de Impressao
+Endif                                          
+
+MS_FLUSH() //Libera fila de relatorios em spool
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³FUNCAO QUE GERA OS DADOS PARA IMPRESSAO³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function Gerando2()
+Local _cZBINum := ZBI->ZBI_NUM
+	
+	ZBI->(DBGOTOP())
+	ZBI->(DbSetOrder(1)) // FILIAL + NUM + ITEM 
+	ZBI->(DbSeek(xFilial("ZBI")+_cZBINum))
+	
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³FUNCAO PARA IMPRESSAO DO RELATÓRIO³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Static Function Imprime2()
+Local _cNum    := ZBI->ZBI_NUM
+Local _aQtdP   := {} //quantidades previstas
+Local _aQtdT   := {} //quantidades transferidas
+Local _nTotDif := 0  //total diferença
+Local _nTotP   := 0  //total previsto por item
+Local _nTotT   := 0  //total transferido por item
+Local _nTGerP  := 0  //total geral previsto
+Local _nTGerT  := 0  //total geral transferido
+
+Cabec(Titulo, Cabec1, Cabec2, NomeProg, Tamanho, nTipo) 
+
+SetRegua(10)
+
+//Percorre os registros
+While ZBI->(!Eof()) .AND. ZBI->ZBI_NUM == _cNum
+
+	If Prow() > 60 
+		_nPag  := _nPag + 1   
+		Cabec(Titulo, Cabec1, Cabec2, NomeProg, Tamanho, nTipo) 
+  	Endif
+
+	IncRegua()
+		
+//	@Prow()+1, 001 psay _cTit
+	
+	SB1->(DBSETORDER(1))
+	SB1->(DBSEEK(XFILIAL("SB1")+ZBI->ZBI_PRODUT))
+
+	@Prow()+1, 001 psay ZBI->ZBI_ITEM
+	@Prow()  , 008 psay ZBI->ZBI_PRODUT
+	@Prow()  , 026 psay SB1->B1_DESC
+	
+	_aQtdP   := {}
+	_aQtdT   := {}
+	_nTotDif := 0
+	
+	//Traz a quantidade prevista e transferida do produto
+	For _x := 1 to 31
+		_cCampo := "ZBI->ZBI_PREV"+STRZERO(_x,2)
+
+		aAdd(_aQtdP,&(_cCampo))     //prevista
+		_nTotP += _aQtdP[_x]
+		
+		aAdd(_aQtdT,fQtdTransf(_x)) //transferida
+		_nTotT += _aQtdT[_x]
+	Next
+	
+	@Prow()+2, 001 psay "DIA:----------->"
+	For _x := 1 to 15
+		@Prow()   , 20+(_x*8) psay AllTrim(StrZero(_x,2))
+  	Next
+  	
+	@Prow()+2, 001 psay "PREVISÃO:------>"
+	For _x := 1 to 15
+		@Prow()   , 16+(_x*8) psay _aQtdP[_x] Picture "@e 999999"
+	Next
+			
+	@Prow()+1, 001 psay "TRANSFERIDO:--->"
+	For _x := 1 to 15
+		@Prow()   , 16+(_x*8) psay _aQtdT[_x] Picture "@e 999999"
+	Next
+
+	@Prow()+1, 001 psay "DIFERENÇA:----->"	
+	For _x := 1 to 15
+		_nTotDif += (_aQtdT[_x] - _aQtdP[_x])
+		@Prow()   , 16+(_x*8) psay _nTotDif Picture "@e 999999"
+	Next
+
+	@Prow()+2, 001 psay "DIA:----------->"
+	For _x := 16 to 31
+		@Prow()   , 20+((_x-15)*8) psay AllTrim(StrZero(_x,2))
+  	Next
+  	
+	@Prow()+2, 001 psay "PREVISÃO:------>"
+	For _x := 16 to 31
+		@Prow()   , 16+((_x-15)*8) psay _aQtdP[_x] Picture "@e 999999"
+	Next
+			
+	@Prow()+1, 001 psay "TRANSFERIDO:--->"
+	For _x := 16 to 31
+		@Prow()   , 16+((_x-15)*8) psay _aQtdT[_x] Picture "@e 999999"
+	Next
+
+	@Prow()+1, 001 psay "DIFERENÇA:----->"	
+	For _x := 16 to 31
+		_nTotDif += (_aQtdT[_x] - _aQtdP[_x])
+		@Prow()   , 16+((_x-15)*8) psay _nTotDif Picture "@e 999999"
+	Next
+	    
+	@Prow()+2, 001 psay "TOTAL PREVISTO            TOTAL ENTREGUE                 DIFERENÇA                PERFORMANCE"
+	@Prow()+1, 002 psay Transform(_nTotP,"@e 99999999")
+	@Prow()  , 029 psay Transform(_nTotT,"@e 99999999")
+	@Prow()  , 056 psay Transform(_nTotT -_nTotP,"@e 99999999")
+	@Prow()  , 085 psay Transform((_nTotT * 100)/_nTotP,"@e 99999")+"%"
+	
+	@ prow()+1,000 psay __PrtThinLine()
+	@ prow()+1,000 Psay ""
+	
+	_nTGerP += _nTotP //total previsto geral recebe total previsto do item
+	_nTGerT += _nTotT //total entregue geral recebe total entregue do item
+	_nTotP    := 0
+	_nTotT    := 0
+	
+	ZBI->(DbSkip())
+
+EndDo
+
+	@ prow()+1,001 Psay "PERFORMANCE GERAL: "
+	@ prow()  ,022 Psay Transform((_nTGerT * 100) / _nTGerP,"@e 99999.99")+"%"
+
+@ prow()+1,000 PSAY __PrtThinLine()        
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ TRAZ A QUANTIDADE TRANSFERIDA DO PRODUTO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function fQtdTransf(nDia)
+Local nQuant
+Local _cData := StrZero(YEAR(ZBI->ZBI_DATA),4)+StrZero(Month(ZBI->ZBI_DATA),2)+STRZERO(_x,2)
+
+	cQuery := " SELECT SUM(ZBB_QUANT) AS QUANT "
+	cQuery += " FROM "+RetSqlName("ZBB")+" ZBB, "+RetSqlName("ZBA")+" ZBA"
+	cQuery += " WHERE ZBB.ZBB_NUM = ZBA.ZBA_NUM"
+	cQuery += " AND ZBA.ZBA_DATA = '"+_cData+"'"
+	cQuery += " AND ZBB.ZBB_COD  = '"+ZBI->ZBI_PRODUT+"'"
+	cQuery += " AND ZBA.ZBA_STATUS = 'E'"
+	cQuery += " AND ZBA.D_E_L_E_T_ = '' AND ZBA.ZBA_FILIAL = '"+xFilial("ZBA")+"'"
+	cQuery += " AND ZBB.D_E_L_E_T_ = '' AND ZBB.ZBB_FILIAL = '"+xFilial("ZBB")+"'"
+
+	TCQUERY cQuery NEW ALIAS "TRA1"
+	
+	TRA1->(DBGOTOP())
+	
+	nQuant := IIF(!EMPTY(TRA1->QUANT),TRA1->QUANT,0)
+
+	TRA1->(DBCLOSEAREA())
+	
+Return nQuant
+
+Static Function fCadEmail()
+axCadastro("ZEM")
+Return

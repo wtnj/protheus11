@@ -1,0 +1,1076 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MODP9    ³ Autor ³ Juan Jose Pereira     ³ Data ³ 11/12/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Registro de Apuracao de ICMS - Modelo P9 (RDMAKE)          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ #MODP9                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function MODP9()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cSvAlias:=Alias()
+wnrel:="MODP9"
+tamanho:="M"
+titulo:="Registro de Apura‡„o de ICMS"
+cDesc1:="Este programa ir  imprimir o Livro de Registro de Apura‡„o de ICMS (modelo P9)"
+cDesc2:="conforme parƒmetros e per¡odo informados."
+cDesc3:=""
+aReturn := { "Zebrado", 1,"Administra‡„o", 2, 2, 1, "",1 }
+nomeprog:="MODP9"
+cPerg   :="MTR943"
+cString:="SF3"
+_Retorno:=NIL
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ AJUSTE NO SX1                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aSvAlias:={Alias(),IndexOrd(),Recno()}
+i:=0
+j:=0
+
+aRegistros:={}
+
+AADD(aRegistros,{"MTR943","01","Mˆs                ?","mv_ch1","N",2,0,0,"G","","mv_par01",""," 1","","","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","02","Ano                ?","mv_ch2","N",2,0,0,"G","","mv_par02","","97","","","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","03","Tipo de Apura‡„o   ?","mv_ch3","N",1,0,3,"C","","mv_par03","Decendial","","","Quinzenal","","","Mensal","","","","","","",""})
+AADD(aRegistros,{"MTR943","04","Per¡odo de Apura‡„o?","mv_ch4","N",1,0,4,"C","","mv_par04","1o.Per¡odo","","","2o.Per¡odo","","","3o.Per¡odo","","","Todos","","","",""})
+AADD(aRegistros,{"MTR943","05","Quebra da Apura‡„o ?","mv_ch5","N",1,0,1,"C","","mv_par05","Al¡quota","","","CFO","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","06","Indice de Convers„o?","mv_ch6","N",5,3,0,"G","","mv_par06","","1.000","","","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","07","Converte valores   ?","mv_ch7","N",1,0,2,"C","","mv_par07","Sim","","","N„o","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","08","Livro Selecionado  ?","mv_ch8","C",1,0,0,"G","","mv_par08","","*","","","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","09","Dt Entrega da Guia ?","mv_ch9","D",8,0,0,"G","","mv_par09","","'01/01/96'","","","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","10","Loc Entrega da Guia?","mv_cha","C",30,0,0,"G","","mv_par10","","","","","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","11","P gina Inicial     ?","mv_chb","N",4,0,0,"G","","mv_par11","","   2","","","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","12","Qtd. P ginas/Feixe ?","mv_chc","N",3,0,0,"G","","mv_par12","","500","","","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","13","Imprime            ?","mv_chd","N",1,0,1,"C","","mv_par13","Livro","","","Termos","","","","","","","","","",""})
+AADD(aRegistros,{"MTR943","14","N£mero do Livro    ?","mv_che","C",2,0,0,"G","","mv_par14","","01","","","","","","","","","","","",""})
+
+dbSelectArea("SX1")
+dbSeek("MTR94314")
+If !Found()
+	dbSeek("MTR943")
+	While SX1->X1_GRUPO=="MTR943".and.!Eof()
+		Reclock("SX1")
+		dbDelete()
+		MsUnlock()
+		dbSkip()
+	End
+	For i:=1 to Len(aRegistros)
+		RecLock("SX1",.T.)
+		For j:=1 to FCount()
+			FieldPut(j,aRegistros[i,j])	
+		Next
+		MsUnlock()
+	Next	
+Endif
+
+dbSelectArea(aSvAlias[1])
+dbSetOrder(aSvAlias[2])
+dbGoto(aSvAlias[3])
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ FIM DO AJUSTE                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+pergunte(cPerg,.F.)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nLastKey:=0
+wnrel:=SetPrint(cString,wnrel,cPerg,Titulo,cDesc1,cDesc2,cDesc3,.F.,"",.F.,,,.F.)
+If nLastKey==27
+   	dbClearFilter()
+   	Return
+Endif
+SetDefault(aReturn,cString)
+If nLastKey==27
+   	dbClearFilter()
+   	Return
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Parametros utilizados:                                       ³
+//ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+//³ mv_par01 = Mes                                               ³
+//³ mv_par02 = Ano                                               ³
+//³ mv_par03 = Tipo de Apuracao ? Decendial / Quinzenal / Mensal ³
+//³ mv_par04 = Periodo Apurado ? 1 / 2 / 3 / Todos               ³
+//³ mv_par05 = Quebra ? Por aliquota / Por CFO                   ³
+//³ mv_par06 = Indice de Conversao                               ³
+//³ mv_par07 = Exibe valores convertidos? Sim / Nao              ³
+//³ mv_par08 = Livro Selecionado                                 ³
+//³ mv_par09 = Dt Entrega da Guia                                ³
+//³ mv_par10 = Local de Entrega da Guia                          ³
+//³ mv_par11 = numero de paginas                                 ³
+//³ mv_par12 = paginas por feixe                                 ³
+//³ mv_par13 = imprime ? livro / termos                          ³
+//³ mv_par14 = Livro Nr?                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nMes		:=mv_par01
+nAno		:=mv_par02
+nApuracao	:=mv_par03
+nPerApurado :=mv_par04
+nQuebra		:=mv_par05
+nIndice		:=IIf(mv_par06>0,mv_par06,1)
+lConverte	:=(mv_par07==1)
+cNrLivro	:=mv_par08
+dDtEntrega	:=mv_par09
+cLocEntrega	:=Upper(mv_par10)
+nPagIni		:=IIf(mv_par11<=2,2,mv_par11)
+nQtFeixe	:=mv_par12
+nImprime	:=mv_par13
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define picture padrao dos valores                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cPictVal:=IIF(lConverte,"@E) 99999999999999.999","@E) 999,999,999,999.99")
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define dias de inicio e fim da apuracao                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nPeriodo:=0
+If nApuracao==3.or.nPerApurado==4
+	dDtIni:=CTOD("01/"+StrZero(nMes,2)+"/"+StrZero(nAno,2))
+	dDtFim:=UltimoDia(dDtIni)
+Else
+	If nApuracao==1
+		nPeriodo:=10
+	ElseIf nApuracao==2
+	   	nPeriodo:=15
+	Endif
+	nDiaIni:=(nPeriodo*(nPerApurado-1)+1)
+	nDiaFim:=(nDiaIni+nPeriodo-1)
+	dDtIni:=CTOD(StrZero(nDiaIni,2)+"/"+StrZero(nMes,2)+"/"+StrZero(nAno,2))
+	If nDiaFim==30
+		dDtFim:=UltimoDia(dDtIni)
+	Else
+		dDtFim:=CTOD(StrZero(nDiaFim,2)+"/"+StrZero(nMes,2)+"/"+StrZero(nAno,2))
+	Endif
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define qual parte da apuracao esta imprimindo                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cImprimindo:="AP_ENT"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Executa relatorio                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RptStatus({|| Execute(RptDetail)})
+
+Return
+
+static FUNCTION RptDetail
+
+lEnd:=.F.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Recebe dados da apuracao                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nQuebra==1
+	lQbrAliquota:=.T.
+	lQbrCFO		:=.F.
+Else
+	lQbrAliquota:=.F.
+	lQbrCFO		:=.T.
+Endif
+
+aDadosApur:=ResumeF3("IC",dDtIni,dDtFim,cNrLivro,lQbrAliquota,lQbrCFO,2,@lEnd)
+
+aEntradas:={}
+aSaidas:={}
+cOperacao:="" 
+cAliq:=""
+cLinha:=""
+cConteudo:=""
+cArqApur:=""
+cCampo:=""
+cValor:=""
+cTexto:=""
+nValICMS:=0
+nValBase:=0
+nValCont:=0
+i:=0
+j:=0
+nArqIni:=0
+nArqFim:=0
+nValor:=0
+uValCont:=NIL
+uValBase:=NIL
+uValICMS:=NIL
+aL:=NIL
+P9LayOut()
+aDriver:={}
+
+nLin:=80
+nPagina:=nPagIni
+cImp:="IC"
+nPeriodo:=0
+nPos:=0
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³         Imprime Termos de Abertura e Encerramento            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nImprime==2
+    aDriver:=ReadDriver()
+    XFIS_IMPTERM(GetMv("MV_LMOD9AB"),GetMv("MV_LMOD9EN"),cPerg,aDriver[4])
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Spool de Impressao                                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	#IFNDEF WINDOWS
+		Set Device to Screen
+	#ENDIF
+	If aReturn[5] == 1
+   		Set Printer To 	
+	    ourspool(wnrel)
+	Endif
+	MS_FLUSH()
+	Return    
+Endif    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Separa entradas e saidas                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SetRegua(Len(aDadosApur))
+For i:=1 to Len(aDadosApur)
+	IncRegua()	
+	If lQbrCFO
+	  	If Substr(aDadosApur[i,1],1,3)<"500"
+			AADD(aEntradas,aDadosApur[i])
+		Else
+			AADD(aSaidas,aDadosApur[i])            
+		Endif                    
+	Else
+	  	If Substr(aDadosApur[i,1],1,4)=="ENTR"
+			AADD(aEntradas,aDadosApur[i])
+		Else
+			AADD(aSaidas,aDadosApur[i])            
+		Endif                    		
+	Endif
+Next    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Coloca entradas e saidas em ordem decrescente de valor contabil ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lQbrCfo
+	aEntradas	:=Asort(aEntradas	,,,{|x,y|x[1]<y[1]})	
+	aSaidas		:=Asort(aSaidas		,,,{|x,y|x[1]<y[1]})
+Else
+	aEntradas	:=Asort(aEntradas	,,,{|x,y|x[11]>y[11]})
+	aSaidas		:=Asort(aSaidas		,,,{|x,y|x[11]>y[11]})
+Endif	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Acrescenta linha para totalizacao                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(aEntradas)
+	If lQbrCFO
+		AADD(aEntradas,Aclone(aEntradas[1]))
+    	Afill(aEntradas[Len(aEntradas)],0,2)
+	    aEntradas[Len(aEntradas),1]:="100"
+		AADD(aEntradas,Aclone(aEntradas[1]))
+	    Afill(aEntradas[Len(aEntradas)],0,2)
+    	aEntradas[Len(aEntradas),1]:="200"
+		AADD(aEntradas,Aclone(aEntradas[1]))
+    	Afill(aEntradas[Len(aEntradas)],0,2)
+	    aEntradas[Len(aEntradas),1]:="300"
+	Endif
+	AADD(aEntradas,Aclone(aEntradas[1]))
+    Afill(aEntradas[Len(aEntradas)],0,2)
+    aEntradas[Len(aEntradas),1]:="T00"
+Endif
+If !Empty(aSaidas)
+	If lQbrCFO
+		AADD(aSaidas,Aclone(aSaidas[1]))
+    	Afill(aSaidas[Len(aSaidas)],0,2)
+	    aSaidas[Len(aSaidas),1]:="500"
+		AADD(aSaidas,Aclone(aSaidas[1]))
+	    Afill(aSaidas[Len(aSaidas)],0,2)
+    	aSaidas[Len(aSaidas),1]:="600"
+		AADD(aSaidas,Aclone(aSaidas[1]))
+    	Afill(aSaidas[Len(aSaidas)],0,2)
+	    aSaidas[Len(aSaidas),1]:="700"
+	Endif
+	AADD(aSaidas,Aclone(aSaidas[1]))
+    Afill(aSaidas[Len(aSaidas)],0,2)
+    aSaidas[Len(aSaidas),1]:="T00"
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Totaliza entradas                                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Len(aEntradas)>0
+	nTot:=Len(aEntradas)
+	For i:=1 to nTot
+		If lQbrCFO
+			If Substr(aEntradas[i,1],2)!="00"
+				If Substr(aEntradas[i,1],1,1)=="1"
+					nPos:=Ascan(aEntradas,{|x|x[1]=="100"})
+				ElseIf Substr(aEntradas[i,1],1,1)=="2"			
+					nPos:=Ascan(aEntradas,{|x|x[1]=="200"})
+				ElseIf Substr(aEntradas[i,1],1,1)=="3"					
+					nPos:=Ascan(aEntradas,{|x|x[1]=="300"})
+				Endif
+				If nPos>0
+					aEntradas[nPos,3]:=aEntradas[nPos,3]+aEntradas[i,3]
+					aEntradas[nPos,4]:=aEntradas[nPos,4]+aEntradas[i,4]
+					aEntradas[nPos,5]:=aEntradas[nPos,5]+aEntradas[i,5]
+					aEntradas[nPos,6]:=aEntradas[nPos,6]+aEntradas[i,6]
+					aEntradas[nPos,11]:=aEntradas[nPos,11]+aEntradas[i,11]
+					aEntradas[nTot,3]:=aEntradas[nTot,3]+aEntradas[i,3]
+					aEntradas[nTot,4]:=aEntradas[nTot,4]+aEntradas[i,4]
+					aEntradas[nTot,5]:=aEntradas[nTot,5]+aEntradas[i,5]
+					aEntradas[nTot,6]:=aEntradas[nTot,6]+aEntradas[i,6]		
+					aEntradas[nTot,11]:=aEntradas[nTot,11]+aEntradas[i,11]	
+				Endif
+			Endif
+		Else
+        	If i<nTot
+				aEntradas[nTot,3]:=aEntradas[nTot,3]+aEntradas[i,3]
+				aEntradas[nTot,4]:=aEntradas[nTot,4]+aEntradas[i,4]
+				aEntradas[nTot,5]:=aEntradas[nTot,5]+aEntradas[i,5]
+				aEntradas[nTot,6]:=aEntradas[nTot,6]+aEntradas[i,6]		
+				aEntradas[nTot,11]:=aEntradas[nTot,11]+aEntradas[i,11]					
+			Endif
+		Endif
+	Next
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Totaliza Saidas                                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Len(aSaidas)>0
+	nTot:=Len(aSaidas)
+	For i:=1 to nTot
+		If lQbrCFO
+			If Substr(aSaidas[i,1],2)!="00"
+				If Substr(aSaidas[i,1],1,1)=="5"
+					nPos:=Ascan(aSaidas,{|x|x[1]=="500"})
+				ElseIf Substr(aSaidas[i,1],1,1)=="6"			
+					nPos:=Ascan(aSaidas,{|x|x[1]=="600"})
+				ElseIf Substr(aSaidas[i,1],1,1)=="7"					
+					nPos:=Ascan(aSaidas,{|x|x[1]=="700"})
+				Endif
+				If nPos>0
+					aSaidas[nPos,3]:=aSaidas[nPos,3]+aSaidas[i,3]
+					aSaidas[nPos,4]:=aSaidas[nPos,4]+aSaidas[i,4]
+					aSaidas[nPos,5]:=aSaidas[nPos,5]+aSaidas[i,5]
+					aSaidas[nPos,6]:=aSaidas[nPos,6]+aSaidas[i,6]
+					aSaidas[nPos,11]:=aSaidas[nPos,11]+aSaidas[i,11]
+					aSaidas[nTot,3]:=aSaidas[nTot,3]+aSaidas[i,3]
+					aSaidas[nTot,4]:=aSaidas[nTot,4]+aSaidas[i,4]
+					aSaidas[nTot,5]:=aSaidas[nTot,5]+aSaidas[i,5]
+					aSaidas[nTot,6]:=aSaidas[nTot,6]+aSaidas[i,6]
+					aSaidas[nTot,11]:=aSaidas[nTot,11]+aSaidas[i,11]
+				Endif
+			Endif
+		Else
+        	If i<nTot
+				aSaidas[nTot,3]:=aSaidas[nTot,3]+aSaidas[i,3]
+				aSaidas[nTot,4]:=aSaidas[nTot,4]+aSaidas[i,4]
+				aSaidas[nTot,5]:=aSaidas[nTot,5]+aSaidas[i,5]
+				aSaidas[nTot,6]:=aSaidas[nTot,6]+aSaidas[i,6]
+				aSaidas[nTot,11]:=aSaidas[nTot,11]+aSaidas[i,11]
+			Endif
+		Endif
+	Next
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Imprime Apuracao                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Entradas                                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cImprimindo:="AP_ENT"
+lFirst:=.T.
+SetRegua(Len(aEntradas))
+For i:=1 to Len(aEntradas)
+	IncRegua()	
+    If Interrupcao(@lEnd)
+        Exit
+	Endif        
+	If nLin>60
+		P9Cabec()
+	Endif
+	_parametros:={aEntradas[i,11],.T.}
+	P9Cv()
+    uValCont:=_retorno
+	_parametros:={aEntradas[i,3],.T.}
+	P9Cv()
+    uValBase:=_retorno
+	_parametros:={aEntradas[i,4],.T.}
+	P9Cv()
+    uValICMS:=_retorno
+	_parametros:={aEntradas[i,5],.T.}
+	P9Cv()
+    uValIsentas:=_retorno
+	_parametros:={aEntradas[i,6],.T.}
+	P9Cv()
+    uValOutras:=_retorno
+	If Substr(aEntradas[i,1],2,2)!="00"
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Resumo por CFO                                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lQbrCFO
+            cCfo:=Transform(aEntradas[i,1],PesqPict("SF4","F4_CF"))
+    	    FmtLin({cCfo,uValCont,uValBase,uValICMS,uValIsentas,uValOutras},aL[22],,,@nLin)	    				
+		Else
+			cCFO:="ALIQUOTA "+Transform(aEntradas[i,2],"@E 99.99")
+    	    FmtLin({cCfo,uValCont,uValBase,uValICMS,uValIsentas,uValOutras},aL[21],,,@nLin)	    				
+		Endif
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Totalizacao                                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lFirst.and.lQbrCFO
+			lFirst:=.F.
+			FmtLin(,aL[23],,,@nLin)
+	        FmtLin({"ENTRADAS"},aL[24],,,@nLin)
+		Endif		
+		If Substr(aEntradas[i,1],1,1)=="1"
+			cDescr:="1.00 DO ESTADO"
+		ElseIf Substr(aEntradas[i,1],1,1)=="2"
+			cDescr:="2.00 DE OUTROS ESTADOS"
+		ElseIf Substr(aEntradas[i,1],1,1)=="3"
+			cDescr:="3.00 DO EXTERIOR"
+		ElseIf Substr(aEntradas[i,1],1,1)=="T"
+			cDescr:="TOTAIS"
+		Endif
+        FmtLin(Array(5),aL[26],,,@nLin)
+		FmtLin({cDescr},aL[25],,,@nLin)
+        FmtLin({uValCont,uValBase,uValICMS,uValIsentas,uValOutras},aL[26],,,@nLin)
+	Endif	
+Next i
+If Len(aEntradas)==0
+	P9Cabec()
+    FmtLin({"     ","SEM MOVIMENTO",,,,},aL[22],,,@nLin)	    
+Endif
+If lEnd
+    Return
+Endif    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Saidas                                                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cImprimindo:="AP_SAI"
+lFirst:=.T.
+SetRegua(Len(aSaidas))
+For i:=1 to Len(aSaidas)
+	IncRegua()	
+    If Interrupcao(@lEnd)
+        Exit
+	Endif
+	If i==1
+   		FmtLin(,{aL[10],aL[12],aL[13],aL[14],aL[15],aL[17],aL[18]},,,@nLin)
+   		FmtLin({"DEBITADO"},aL[19],,,@nLin)
+   		FmtLin(,aL[20],,,@nLin)
+	Endif        
+	If nLin>60
+		P9Cabec()
+	Endif
+	_parametros:={aSaidas[i,11],.T.}
+	P9Cv()
+    uValCont:=_retorno
+	_parametros:={aSaidas[i,3],.T.}
+	P9Cv()
+    uValBase:=_retorno
+	_parametros:={aSaidas[i,4],.T.}
+	P9Cv()
+    uValICMS:=_retorno
+	_parametros:={aSaidas[i,5],.T.}
+	P9Cv()
+    uValIsentas:=_retorno
+	_parametros:={aSaidas[i,6],.T.}
+	P9Cv()
+    uValOutras:=_retorno
+	If Substr(aSaidas[i,1],2,2)!="00"
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Resumo por CFO                                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lQbrCFO
+            cCfo:=Transform(aSaidas[i,1],PesqPict("SF4","F4_CF"))
+    	    FmtLin({cCfo,uValCont,uValBase,uValICMS,uValIsentas,uValOutras},aL[22],,,@nLin)	    				
+		Else
+			cCFO:="ALIQUOTA "+Transform(aSaidas[i,2],"@E 99.99")
+	   	    FmtLin({cCfo,uValCont,uValBase,uValICMS,uValIsentas,uValOutras},aL[21],,,@nLin)	    				
+		Endif
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Totalizacao                                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lFirst.and.lQbrCFO
+			lFirst:=.F.
+			FmtLin(,aL[23],,,@nLin)
+	        FmtLin({"SAIDAS"},aL[24],,,@nLin)
+		Endif		
+		If Substr(aSaidas[i,1],1,1)=="5"
+			cDescr:="5.00 PARA O ESTADO"
+		ElseIf Substr(aSaidas[i,1],1,1)=="6"
+			cDescr:="6.00 PARA OUTROS ESTADOS"
+		ElseIf Substr(aSaidas[i,1],1,1)=="7"
+			cDescr:="7.00 PARA O EXTERIOR"
+		ElseIf Substr(aSaidas[i,1],1,1)=="T"
+			cDescr:="TOTAIS"
+		Endif
+        FmtLin(Array(5),aL[26],,,@nLin)	
+		FmtLin({cDescr},aL[25],,,@nLin)
+        FmtLin({uValCont,uValBase,uValICMS,uValIsentas,uValOutras},aL[26],,,@nLin)
+	Endif	
+	If i==Len(aSaidas)
+		While nLin<60
+			FmtLin(Array(5),aL[26],,,@nLin)
+		End
+		FmtLin(,aL[1],,,@nLin)	                    
+	Endif
+Next i
+If Len(aSaidas)==0
+	FmtLin(,{aL[10],aL[12],aL[13],aL[14],aL[15],aL[17],aL[18]},,,@nLin)        
+	FmtLin({"DEBITADO"},aL[19],,,@nLin)        
+	FmtLin(,aL[20],,,@nLin)        
+    FmtLin({"     ","SEM MOVIMENTO",,},aL[22],,,@nLin)	    
+	While nLin<60
+		FmtLin(Array(5),aL[26],,,@nLin)
+	End
+	FmtLin(,aL[1],,,@nLin)	                    
+Endif
+If lEnd
+    Return
+Endif    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³                RESUMO DA APURACAO DO IMPOSTO                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis que armazenam os campos do resumo da apuracao      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+n001:=0
+n004:=0
+n005:=0
+n008:=0
+n009:=0
+n010:=0
+n011:=0
+n013:=0
+n014:=0
+a002:={}
+a003:={}
+a006:={}
+a007:={}
+a012:={}
+aTit:={}
+aObs:={}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega informacoes dos arquivos .IC?                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Do Case
+	Case nApuracao==1
+		nArqIni:=If(nPerApurado<4,nPerApurado,1)
+		nArqFim:=nArqIni
+	Case nApuracao==2
+		nArqIni:=If(nPerApurado<3,nPerApurado,1)
+		nArqFim:=nArqIni
+	Case nApuracao==3
+		nArqIni:=1
+		If nPerApurado==4
+			nApuracao:=1
+			nArqFim:=3
+		Else
+			nArqFim:=1
+		Endif
+EndCase
+
+SetRegua(nArqFim-nArqIni)
+For i:=nArqIni to nArqFim
+	IncRegua()
+    nPeriodo:=i
+    cArqApur:=NmArqApur(cImp,nAno,nMes,nApuracao,nPeriodo,cNrLivro)
+    If !File(cArqApur)
+        Loop
+	Endif
+    cConteudo:=MemoRead(cArqApur)
+    aCampos:={.f.,.f.,.f.,.f.,.f.}
+    For j:=2 to MlCount(cConteudo,85)
+        cLinha:=MemoLine(cConteudo,85,j)
+		cCampo:=Substr(cLinha,1,3)
+        //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carrega valor numerico e descricao                           ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+        If IsDigit(Substr(cCampo,1,1)).and.IsDigit(Substr(cCampo,3,1))
+            cValor:=Substr(cLinha,52,18)
+            cValor:=StrTran(cValor,'.')
+            cValor:=StrTran(cValor,',','.')
+			_parametros:={Val(cValor),.F.}
+			P9Cv()
+            nValor:=_retorno
+            cTexto:=Substr(cLinha,5,50)
+		Else
+            nValor:=0
+            cTexto:=Substr(cLinha,5)
+        Endif
+        Do Case 
+            Case cCampo=='001'
+                n001:=n001+nValor
+			Case cCampo=='002'
+                If aCampos[1]
+	                AADD(a002,{cTexto,nValor,0})
+				Else
+                    aCampos[1]:=.t.
+				Endif                                        
+			Case cCampo=='003'
+                If aCampos[2]
+	                AADD(a003,{cTexto,nValor,0})
+				Else
+                    aCampos[2]:=.t.
+				Endif                                        
+			Case cCampo=='005'                
+                n005:=n005+nValor
+			Case cCampo=='006'         
+                If aCampos[3]
+		        	AADD(a006,{cTexto,nValor,0})
+				Else
+                    aCampos[3]:=.t.
+				Endif                                        
+			Case cCampo=='007'
+                If aCampos[4]
+					AADD(a007,{cTexto,nValor,0})                                
+				Else
+                    aCampos[4]:=.t.
+				Endif                                        
+			Case cCampo=='009' .and. (nPerApurado!=4.or.(nPerApurado==4.and.i==1))
+                n009:=n009+nValor
+			Case cCampo=='012'
+                If aCampos[5]
+					AADD(a012,{cTexto,nValor,0})                                                
+				Else
+                    aCampos[5]:=.t.
+				Endif                                        
+			Case cCampo=='TIT'
+                AADD(aTit,Substr(cTexto,1,70))
+			Case cCampo=='OBS'
+                AADD(aObs,cTexto)                                                
+		EndCase			                
+	Next j                
+Next i   
+If lConverte
+    AADD(aObs,"VALORES DA APURACAO CONVERTIDOS EM "+GetMv("MV_INDXEST")+", VALOR DA "+GetMv("MV_INDXEST")+": "+GetMv("MV_SIMB1")+Transform(nIndice,"@E 9.999"))
+EndIf    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Faz nova totalizacao dos arquivos de apuracao                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ totaliza saidas                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+n004:=n004+n001
+For i:=1 to Len(a002)
+    a002[Len(a002),3]:=a002[Len(a002),3]+a002[i,2]
+    n004:=n004+a002[i,2]
+Next
+For i:=1 to Len(a003)
+    a003[Len(a003),3]:=a003[Len(a003),3]+a003[i,2]
+    n004:=n004+a003[i,2]
+Next
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ totaliza entradas                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+n008:=n008+n005
+For i:=1 to Len(a006)
+    a006[Len(a006),3]:=a006[Len(a006),3]+a006[i,2]
+    n008:=n008+a006[i,2]
+Next
+For i:=1 to Len(a007)
+    a007[Len(a007),3]:=a007[Len(a007),3]+a007[i,2]
+    n008:=n008+a007[i,2]    
+Next
+n010:=n010+n008+n009
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ totaliza apuracao                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+n011:=n004-n010
+n013:=n011
+For i:=1 to Len(a012)
+    a012[Len(a012),3]:=a012[Len(a012),3]+a012[i,2]
+    n013:=n013-a012[1,2]
+Next
+If n013<0
+    n014:=Abs(n013)
+    n013:=0
+Endif    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Imprime valores                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cImprimindo:="RE_DEB"
+nLin:=80
+P9Cabec()
+SetRegua(30)
+While !lEnd
+    If Interrupcao(@lEnd)
+        Loop
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Debitos                                                      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ            
+	j:=4
+    FmtLin({WriteVer("DEBITO",j),n001},aL[41],cPictVal,,@nLin)
+	P9Cab2()
+	j:=j+1
+    FmtLin({WriteVer("DEBITO",j)},aL[42],,,@nLin)
+	P9Cab2()
+    For i:=1 to Len(a002)
+		j:=j+1
+		FmtLin({WriteVer("DEBITO",j),a002[i,1],a002[i,2],a002[i,3]},aL[43],cPictVal,,@nLin)
+		P9Cab2()
+	Next i		        
+	j:=j+1
+    FmtLin({WriteVer("DEBITO",j)},aL[44],,,@nLin)
+	P9Cab2()
+    For i:=1 to Len(a003)
+		j:=j+1
+		FmtLin({WriteVer("DEBITO",j),a003[i,1],a003[i,2],a003[i,3]},aL[45],cPictVal,,@nLin)
+		P9Cab2()
+	Next i		            
+	j:=j+1
+	FmtLin({WriteVer("DEBITO",j),n004},aL[46],cPictVal,,@nLin)
+	P9Cab2()
+    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Debitos                                                      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ            
+	If Interrupcao(@lEnd)
+        Loop
+	EndIf
+    j:=0
+    cImprimindo:="RE_CRE"
+    FmtLin(,{aL[47],aL[48]},,,@nLin)
+	P9Cab2()
+	j:=j+1
+	FmtLin({WriteVer("CREDITO",j)},aL[49],,,@nLin)
+	P9Cab2()
+	j:=j+1
+	FmtLin({WriteVer("CREDITO",j),n005},aL[50],cPictVal,,@nLin)
+	P9Cab2()
+	j:=j+1
+    FmtLin({WriteVer("CREDITO",j)},aL[51],,,@nLin)
+	P9Cab2()
+    For i:=1 to Len(a006)
+		j:=j+1
+		FmtLin({WriteVer("CREDITO",j),a006[i,1],a006[i,2],a006[i,3]},aL[52],cPictVal,,@nLin)
+		P9Cab2()
+	Next i		        
+	j:=j+1
+    FmtLin({WriteVer("CREDITO",j)},aL[53],,,@nLin)
+	P9Cab2()
+    For i:=1 to Len(a007)
+		j:=j+1
+		FmtLin({WriteVer("CREDITO",j),a007[i,1],a007[i,2],a007[i,3]},aL[54],cPictVal,,@nLin)
+		P9Cab2()
+	Next i		        
+	j:=j+1
+    FmtLin({WriteVer("CREDITO",j),n008},aL[55],cPictVal,,@nLin)
+	P9Cab2()
+	j:=j+1
+    FmtLin({WriteVer("CREDITO",j),n009},aL[56],cPictVal,,@nLin)
+	P9Cab2()
+	j:=j+1
+    FmtLin({WriteVer("CREDITO",j),n010},aL[57],cPictVal,,@nLin)
+	P9Cab2()
+    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Saldo                                                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ            
+	If Interrupcao(@lEnd)
+        Loop
+	EndIf
+    j:=0
+    cImprimindo:="RE_APU"	    
+	FmtLin(,{aL[58],aL[59]},,,@nLin)
+	P9Cab2()
+	j:=j+1
+	FmtLin({WriteVer("SALDO",j)},aL[60],,,@nLin)
+	P9Cab2()
+	j:=j+1
+    FmtLin({WriteVer("SALDO",j),n011},aL[61],cPictVal,,@nLin)
+	P9Cab2()
+	j:=j+1
+	FmtLin({WriteVer("SALDO",j)},aL[62],,,@nLin)
+	P9Cab2()
+    For i:=1 to Len(a012)                                                 
+		j:=j+1
+    	FmtLin({WriteVer("SALDO",j),a012[i,1],a012[i,2],a012[i,3]},aL[63],cPictVal,,@nLin)
+		P9Cab2()
+	Next i		            
+	j:=j+1
+    FmtLin({WriteVer("SALDO",j),n013},aL[64],cPictVal,,@nLin)
+	P9Cab2()
+	j:=j+1
+    FmtLin({WriteVer("SALDO",j),n014},aL[65],cPictVal,,@nLin)
+	P9Cab2()
+    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Informacoes complementares                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ            
+	If Interrupcao(@lEnd)
+        Loop
+	EndIf
+    j:=0
+    cImprimindo:="RE_INF"
+	FmtLin(,{aL[66],aL[67],aL[69],aL[70],aL[71]},,,@nLin)
+	P9Cab2()
+    For i:=1 to Len(aTit)
+        If i==1
+			FmtLin({aTit[i],DtoC(dDtEntrega),cLocEntrega},aL[72],,,@nLin)
+			P9Cab2()
+	    Else
+   			FmtLin({aTit[i]},aL[73],,,@nLin)
+			P9Cab2()
+        Endif
+	Next        
+   	FmtLin(,aL[74],,,@nLin)
+	P9Cab2()
+    For i:=1 to Len(aObs)
+		If i==1
+			FmtLin({aObs[i]},aL[75],,,@nLin)
+		Else
+			FmtLin({aObs[i]},aL[76],,,@nLin)
+		Endif
+		P9Cab2()
+	Next	    
+	While nLin<60
+		FmtLin(,aL[77],,,@nLin)
+	End
+	FmtLin(,aL[01],,,@nLin)
+    Exit
+End    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Restaura Ambiente                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cSvAlias)
+dbClearFilter()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Spool de Impressao                                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+#IFNDEF WINDOWS
+	Set Device to Screen
+#ENDIF
+If aReturn[5] == 1
+   	Set Printer To 	
+    ourspool(wnrel)
+Endif
+
+MS_FLUSH()
+
+Return
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ P9LayOut()   ³Autor ³ Juan Jose Pereira    ³Data³ 17/02/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Armazena lay-out para o modelo P9                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATP9                                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+FUNCTION P9LayOut
+
+aL:=Array(77)
+aL[01]:="+----------------------------------------------------------------------------------------------------------------------------------+"
+aL[02]:="|                                                    REGISTRO DE APURACAO DO ICMS                                                  |"
+aL[03]:="|                                                                                                                                  |"
+aL[04]:="| FIRMA: #########################################################                                                                 |"
+aL[05]:="|                                                                                                                                  |"
+aL[06]:="| INSC.EST.: ######################## CGC(MF): #################                                                                   |"
+aL[07]:="|                                                                                                                                  |"
+aL[08]:="| FOLHA: ####     MES OU PERIODO/ANO: #######                                                                                      |"
+aL[09]:="|                                                                                                                                  |"
+aL[10]:="|==================================================================================================================================|"
+aL[11]:="|                                                         E N T R A D A S                                                          |"
+aL[12]:="|                                                           S A I D A S                                                            |"
+aL[13]:="|==================================================================================================================================|"
+aL[14]:="|               |                   |                                  ICMS - VALORES FISCAIS                                      |"
+aL[15]:="|               |                   |----------------------------------------------------------------------------------------------|"
+aL[16]:="|  CODIFICACAO  |                   |       OPERACOES COM CREDITO DO IMPOSTO      |        OPERACOES SEM CREDITO DO IMPOSTO        |"
+aL[17]:="|  CODIFICACAO  |                   |       OPERACOES COM DEBITO DO IMPOSTO       |        OPERACOES SEM DEBITO DO IMPOSTO         |"
+aL[18]:="|---------------|      VALORES      |---------------------------------------------+------------------------------------------------|"
+aL[19]:="|CONTABIL|FISCAL|     CONTABEIS     |   BASE DE CALCULO    |  IMPOSTO #########   |ISENTAS OU NAO TRIBUTADAS|        OUTRAS        |"
+aL[20]:="|========+======|===================|======================+======================+=========================+======================|"
+aL[21]:="|###############| ##################|  ##################  |  ##################  |    ##################   |  ##################  |"
+aL[22]:="|        | #### | ##################|  ##################  |  ##################  |    ##################   |  ##################  |"
+aL[23]:="|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[24]:="|SUBTOTAIS ########                 |                      |                      |                         |                      |"
+aL[25]:="|###################################|                      |                      |                         |                      |"
+aL[26]:="|        |      | ##################|  ##################  |  ##################  |    ##################   |  ##################  |"
+aL[27]:="+----------------------------------------------------------------------------------------------------------------------------------+"
+aL[28]:="|                                                    RESUMO DA APURACAO DO IMPOSTO                                                 |"
+aL[29]:="|                                                                                                                                  |"
+aL[30]:="| FIRMA: #########################################################                                                                 |"
+aL[31]:="|                                                                                                                                  |"
+aL[32]:="| INSC.EST.: ######################## CGC(MF): #################                                                                   |"
+aL[33]:="|                                                                                                                                  |"
+aL[34]:="| FOLHA: ####     MES OU PERIODO/ANO: #######                                                                                      |"
+aL[35]:="|                                                                                                                                  |"
+aL[36]:="|==================================================================================================================================|"
+aL[37]:="|   | DEBITO DO IMPOSTO                                                                  |                 VALORES                 |"
+aL[38]:="| # |------------------------------------------------------------------------------------|-----------------------------------------|"
+aL[39]:="| # |                                                                                    |   COLUNA AUXILIAR  |        SOMA        |"
+aL[40]:="| # |                                                                                    |--------------------+--------------------|"
+aL[41]:="| # | 001 - POR SAIDAS / PRESTACOES COM DEBITO DO IMPOSTO                                |                    | ################## |"
+aL[42]:="| # | 002 - OUTROS DEBITOS (DISCRIMINAR ABAIXO)                                          |                    |                    |"
+aL[43]:="| # |       ############################################################################ | ################## | ################## |"
+aL[44]:="| # | 003 - ESTORNO DE CREDITOS (DISCRIMINAR ABAIX0)                                     |                    |                    |"
+aL[45]:="| # |       ############################################################################ | ################## | ################## |"
+aL[46]:="| # | 004 - SUB-TOTAL                                                                    |                    | ################## |"
+aL[47]:="|==================================================================================================================================|"
+aL[48]:="|   | CREDITO DO IMPOSTO                                                                 |                    |                    |"
+aL[49]:="| # |------------------------------------------------------------------------------------|--------------------+--------------------|"
+aL[50]:="| # | 005 - POR ENTRADAS / AQUISICOES COM CREDITO DO IMPOSTO                             |                    | ################## |"
+aL[51]:="| # | 006 - OUTROS CREDITOS (DISCRIMINAR ABAIXO)                                         |                    |                    |"
+aL[52]:="| # |       ############################################################################ | ################## | ################## |"
+aL[53]:="| # | 007 - ESTORNO DE DEBITOS (DISCRIMINAR ABAIXO)                                      |                    |                    |"
+aL[54]:="| # |       ############################################################################ | ################## | ################## |"
+aL[55]:="| # | 008 - SUB-TOTAL                                                                    |                    | ################## |"
+aL[56]:="| # | 009 - SALDO CREDOR DO PERIODO ANTERIOR                                             |                    | ################## |"
+aL[57]:="| # | 010 - TOTAL                                                                        |                    | ################## |"
+aL[58]:="|==================================================================================================================================|"
+aL[59]:="|   | APURACAO DO SALDO                                                                  |                    |                    |"
+aL[60]:="| # |------------------------------------------------------------------------------------|--------------------+--------------------|"
+aL[61]:="| # | 011 - SALDO DEVEDOR (DEBITO MENOS CREDITO)                                         |                    | ################## |"
+aL[62]:="| # | 012 - DEDUCOES (DISCRIMIAR ABAIXO)                                                 |                    |                    |"
+aL[63]:="| # |       ############################################################################ | ################## | ################## |"
+aL[64]:="| # | 013 - IMPOSTO A RECOLHER                                                           |                    | ################## |"
+aL[65]:="| # | 014 - SALDO CREDOR (CREDITO MENOS DEBITO) A TRANSPORTAR P/O PERIODO SEGUINTE       |                    | ################## |"
+aL[66]:="|==================================================================================================================================|"
+aL[67]:="|     INFORMACOES COMPLEMEMTARES                                                                                                   |"
+aL[68]:="|----------------------------------------------------------------------------------------------------------------------------------|"
+aL[69]:="|                         GUIAS DE RECOLHIMENTO                                              GUIA DE INFORMACAO                    |"
+aL[70]:="|                                                                                                                                  |"
+aL[71]:="| NUMERO   DATA         VALOR               ORGAO ARRECADADOR                  DT ENTREGA    LOCAL DE ENTREGA(BANCO/REPARTICAO)    |"
+aL[72]:="| ####################################################################          ########  #######################################  |"
+aL[73]:="| ####################################################################                                                             |"
+aL[74]:="|                                                                                                                                  |"
+aL[75]:="| OBSERVACOES: ##################################################################################                                  |"
+aL[76]:="|              ##################################################################################                                  |"
+aL[77]:="|                                                                                                                                  |"
+//       123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x123456789x
+//                10        20        30        40        50        60        70        80        90        100       110       120       30
+
+Return
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ P9Cabec()    ³Autor ³ Juan Jose Pereira    ³Data³ 03/05/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Imprime cabecalho do relatorio                             ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+FUNCTION P9Cabec
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aL:=NIL
+P9LayOut()
+cNome:=cInscr:=cCGC:=cPeriodo:=cPagina:=""
+aImp:=NIL
+cNome	:=SM0->M0_NOMECOM
+cInscr	:=IIf("."$SM0->M0_INSC,SM0->M0_INSC,TRANSFORM(SM0->M0_INSC,"@R 999.999.999.999") )
+cCGC	:=TRANSFORM(SM0->M0_CGC,"@R 99.999.999/9999-99")
+cPeriodo:=Dtoc(dDtIni)+" A "+Dtoc(dDtFim)
+cPagina :=StrZero(nPagina,4)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Imprime caracter de controle de largura de impressao         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nLin<80
+	FMTLIN(,aL[1],,,@nLin)    
+Endif    
+nLin:=1
+#IFDEF WINDOWS
+	@ nLin,0 PSAY AvalImp(132)
+#ELSE
+	@ nLin,0 SAY AvalImp(132)	
+#ENDIF
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Imprime cabecalho                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cImprimindo$'AP_ENT,AP_SAI'
+	FMTLIN(,{aL[1],aL[2],aL[3]},,,@nLin)
+Else
+	FMTLIN(,{aL[27],aL[28],aL[29]},,,@nLin)        
+EndIf    
+FMTLIN({cNome},aL[4],,,@nLin)
+FMTLIN(,aL[5],,,@nLin)
+FMTLIN({cInscr,cCGC},aL[6],,,@nLin)
+FMTLIN(,aL[7],,,@nLin)
+FMTLIN({cPagina,cPeriodo},aL[8],,,@nLin)
+FMTLIN(,aL[9],,,@nLin)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Imprime sub-cabecalho                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Do Case
+    Case cImprimindo=="AP_ENT" 	// Apuracao|Entradas
+		FMTLIN(,{aL[10],aL[11],aL[13],aL[14],aL[15],aL[16],aL[18]},,,@nLin)        
+		FMTLIN({"CREDITADO"},aL[19],,,@nLin)
+		FMTLIN(,aL[20],,,@nLin)
+	Case cImprimindo=="AP_SAI" 	// Apuracao|Saidas
+   		FMTLIN(,{aL[10],aL[12],aL[13],aL[14],aL[15],aL[17],aL[18]},,,@nLin)        
+		FMTLIN({"DEBITADO"},aL[19],,,@nLin)
+		FMTLIN(,aL[20],,,@nLin)
+	Case cImprimindo=="RE_DEB" 	// Resumo|Debitos
+        FMTLIN(,{aL[36],aL[37]},,,@nLin)
+		FMTLIN({"D"},aL[38],,,@nLin)        
+        FMTLIN({"E"},aL[39],,,@nLin)
+        FMTLIN({"B"},aL[40],,,@nLin)        
+	Case cImprimindo=="RE_CRE" 	// Resumo|Creditos
+        FMTLIN(,{aL[47],aL[48]},,,@nLin)
+        FMTLIN({"C"},aL[49],,,@nLin)        
+	Case cImprimindo=="RE_APU"	// Resumo|Saldo
+		FMTLIN(,{aL[58],aL[59]},,,@nLin)  
+        FMTLIN({"S"},aL[60],,,@nLin)              
+	Case cImprimindo=="RE_INF"	// Resumo|Informacoes complementares       
+		FMTLIN(,{aL[73],aL[74],aL[76]},,,@nLin)
+EndCase    	
+
+NovaPg(@nPagina,nQtFeixe)
+
+Return
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ P9Cv()       ³Autor ³ Juan Jose Pereira    ³Data³ 03/05/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Converte valores por indice informado                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+FUNCTION P9Cv
+
+nValor:=_parametros[1]
+lString:=_parametros[2]
+cValor:=""
+
+If lConverte
+	nValor:=Noround(nValor/nIndice,3)
+Endif
+
+cValor:=Transform(nValor,cPictVal)
+_retorno:=NIL
+_retorno:=IIf(lString,cValor,nValor)
+
+Return
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ P9Cab2       ³Autor ³ Juan Jose Pereira    ³Data³ 03/05/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Preenche ultima linha da folha e chama o cabecalho         ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+FUNCTION P9Cab2
+
+IncRegua()
+If nLin>55	
+	FmtLin(,aL[1],,,@nLin)
+	P9Cabec()
+Endif
+
+Return

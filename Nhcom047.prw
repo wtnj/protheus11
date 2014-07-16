@@ -1,0 +1,143 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³NHCOM047  ºAutor  ³Marcos R Roquitski  º Data ³  19/10/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Anexar documentos a solicitacao de compras.                 º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³AP                                                          º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#include "rwmake.ch"  
+
+User Function Nhcom047()   
+
+SetPrvt("CCADASTRO,AROTINA,")
+
+cCadastro := 'Anexo de documentos a Solicitacoes de Compras'
+
+aRotina := {{ "Pesquisar"    ,"AxPesqui",0,1},;
+			{ "Visualizar"   ,"AxVisual",0,1},;
+            { "Anexo  1"     ,'U_fAnexar(1)',0,2},;
+            { "Anexo  2"     ,'U_fAnexar(2)',0,2},;
+            { "Anexo  3"     ,'U_fAnexar(3)',0,2},;
+            { "Mostra Anexo 1" ,'U_fAnexosc1(1)',0,2},;
+            { "Mostra Anexo 2" ,'U_fAnexosc1(2)',0,2},;
+            { "Mostra Anexo 3" ,'U_fAnexosc1(3)',0,2},;            
+            { "Legenda"      ,"U_C047Legenda",0,2}}
+
+DbSelectArea("SC1")
+SC1->(DbSetOrder(1))
+DbGoTop()
+            
+mBrowse(,,,,"SC1",,"C1_ANEXO1<>Space(10)")
+//mBrowse(,,,,"SE2",,"E2_SALDO<=0") 
+                          
+Return(nil)    
+
+
+User Function C047Legenda()
+
+ BrwLegenda("Desenhos","Status",{{"ENABLE", "Sem Anexo"},{"DISABLE","Com Anexo "}})
+
+Return
+
+User Function fAnexar(nParam)
+
+   SetPrvt("_cArquivo,_Tipo")
+
+   _cArquivo := Space(50)      
+   SC7->(DbSetOrder(1))
+   IF SC1->C1_QUANT == SC1->C1_QUJE   
+      If SC7->(dbSeek(xFilial("SC7")+SC1->C1_PEDIDO+SC1->C1_ITEMPED))
+         If SC7->C7_QUANT == SC7->C7_QUJE //verifica se o pedido já esta fechado
+            MsgBox(OemtoAnsi("Não é possivel incluir Anexo em uma Solicitação já Fechada, Verifique !!!"),"Anexos","STOP")	
+            Return
+         Endif
+      Endif      
+   Endif
+
+   IF SC1->C1_RESIDUO$"S" 
+      MsgBox(OemtoAnsi("Não é possivel incluir Anexo em uma Solicitação já Fechada Por Eliminação de Residuo, Verifique !!!"),"Anexos","STOP")	
+      Return
+   Endif
+
+   IF !Alltrim(SC1->C1_SOLICIT)$upper(Alltrim(cUserName))
+      MsgBox(OemtoAnsi("Não é possivel incluir Anexo em uma Solicitação Feita por Outro Usuario, Verifique !!!"),"Anexos","STOP")	
+      Return
+   Endif
+
+   
+   If nParam == 1	
+	   _cArquivo := SC1->C1_ANEXO1
+   ElseIf nParam == 2
+	   _cArquivo := SC1->C1_ANEXO2
+   ElseIf nParam == 3
+	   _cArquivo := SC1->C1_ANEXO3
+   Endif
+   	
+	
+	@ 200,050 To 350,500 Dialog DlgArquivo Title OemToAnsi("Anexar documentos a SC")
+
+   @ 025,020 Say OemToAnsi("Local") Size 20,8
+
+   @ 024,055 Get _cArquivo PICTURE "@!"  Size 110,8 When .F.
+
+	@ 021,180 Button  "Localizar" Size 36,16 Action RunDlg()      
+   @ 058,080 BMPBUTTON TYPE 01 ACTION GravaDados(nParam)
+   @ 058,120 BMPBUTTON TYPE 02 ACTION Close(DlgArquivo)
+   Activate Dialog DlgArquivo CENTERED
+
+Return
+
+
+Static Function GravaDados(nParam)
+	RecLock("SC1",.F.)
+	If nParam == 1	
+		SC1->C1_ANEXO1 := _cArquivo
+	Elseif nParam == 2
+		SC1->C1_ANEXO2 := _cArquivo	
+	Elseif nParam == 3
+		SC1->C1_ANEXO3 := _cArquivo	
+	Endif
+	MsUnlock("SC1")
+	Close(DlgArquivo)
+Return
+
+
+Static Function RunDlg()
+	_cTipo :=          "Todos os Arquivos (*.*)    | *.*   | "
+	_cTipo := _cTipo + "Arquivos tipo     (*.DWG)  | *.DWG | "
+	_cTipo := _cTipo + "Desenhos          (*.BMP)  | *.BMP   "
+    
+	// cFile := cGetFile(cTipo,"Dialogo de Selecao de Arquivos")
+	_cArquivo := cGetFile(_cTipo,,0,,.T.,49)
+
+Return
+
+User Function fAnexoSc1(nParam)
+	Local _cPath
+    cPath    := Space(100)
+
+    If nParam == 1
+		_cPath    := Alltrim(SC1->C1_ANEXO1)
+	Elseif nParam == 2
+		_cPath    := Alltrim(SC1->C1_ANEXO2)
+	Elseif nParam == 3
+		_cPath    := Alltrim(SC1->C1_ANEXO3)
+	Endif
+
+
+   If !Empty(_cPath)
+      ShellExecute( "open", _cPath, "", "",5 )  
+	Else
+		MsgBox("Anexo nao disponivel, ou nao cadastraodo","Anexos","INFO")		
+
+	Endif
+
+Return

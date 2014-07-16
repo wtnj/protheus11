@@ -1,0 +1,184 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+
+User Function Tabfixa()        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+
+Local nCont
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_ACAMPOS,_CNOME,NCONT,")
+
+_aCampos := {  {"NUMTAB","C",3,0 } ,; 
+               {"COD","C",8,0 } ,;
+               {"DESC","C",45,0 }}
+_cNome := CriaTrab(_aCampos,.t.)
+dbUseArea(.T.,, _cNome,"TRB",.F.,.F.)
+
+//--TABELA TIPO DE DESTINATARIO
+
+  dbSelectArea("TRB")
+  dbAppend();TRB->NUMTAB:='007';TRB->COD:='001';TRB->DESC:='CLIENTE'
+  dbAppend();TRB->NUMTAB:='007';TRB->COD:='002';TRB->DESC:='FORNECEDOR'
+  dbAppend();TRB->NUMTAB:='007';TRB->COD:='003';TRB->DESC:='TRANSPORTADORA'
+
+//--TABELA FIXA INDICADOR DE LOCAL DE INVENTARIO
+
+  dbSelectArea("TRB")
+  dbAppend();TRB->NUMTAB:='010';TRB->COD:='1';TRB->DESC:='INVENTARIADO NO ESTABELECIMENTO'
+  dbAppend();TRB->NUMTAB:='010';TRB->COD:='2';TRB->DESC:='INVENTARIADO EM TERCEIROS'
+//													     123456789x123456789x123456789x123456789x
+
+//--TABELA FIXA MODALIDADE DE FRETE
+
+  dbSelectArea("TRB")
+  dbAppend();TRB->NUMTAB:='013';TRB->COD:='CIF';TRB->DESC:='FRETE POR CONTA DO EMITENTE'
+  dbAppend();TRB->NUMTAB:='013';TRB->COD:='FOB';TRB->DESC:='FRETE POR CONTA DO DESTINAT.'
+
+//--TABELA FIXA CLASSIFICACAO FISCAL DO PRODUTO
+
+  dbSelectArea("TRB")
+  dbAppend();TRB->NUMTAB:='016';TRB->COD:='0';TRB->DESC:='NACIONAL'
+  dbAppend();TRB->NUMTAB:='016';TRB->COD:='1';TRB->DESC:='ESTRANGEIRA-IMPORTACAO DIRETA'
+  dbAppend();TRB->NUMTAB:='016';TRB->COD:='2';TRB->DESC:='ESTRANGEIRA-ADQ.NO MERC.INTERNO'
+
+//--TABELA FIXA CODIGO DE SITUACAO TRIBUTARIA - TABELA A+B
+
+  dbSelectArea("TRB")
+	// Nacional
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='00';TRB->DESC:='NAC.-TRIBUT.INTEGRALMENTE'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='01';TRB->DESC:='NAC.-TRIBUT.C/COBRANCA ICMS SUBST.TRIBUTARIA'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='02';TRB->DESC:='NAC.-COM REDUCAO DE BASE DE CALCULO'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='03';TRB->DESC:='NAC.-ISENTA OU N/TRIBUT. C/ICMS SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='04';TRB->DESC:='NAC.-ISENTA OU N/TRIBUTADA'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='05';TRB->DESC:='NAC.-COM SUSPENCAO OU DIFERIMENTO'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='06';TRB->DESC:='NAC.-ICMS COBRADO ANTERIORMENTE P/SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='07';TRB->DESC:='NAC.-C/RED. BS.CALC.E COBR.ICMS P/SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='09';TRB->DESC:='NAC.-OUTRAS'
+
+	// Estrangeira importacao direta
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='10';TRB->DESC:='EST.IMP.DIR-TRIBUT.INTEGRALMENTE'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='11';TRB->DESC:='EST.IMP.DIR-TRIBUT.C/COBR.ICMS SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='12';TRB->DESC:='EST.IMP.DIR-C/REDUCAO BASE DE CALCULO'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='13';TRB->DESC:='EST.IMP.DIR-ISENTA/NAO TRIB.C/ICMS SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='14';TRB->DESC:='EST.IMP.DIR-ISENTA/NAO TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='15';TRB->DESC:='EST.IMP.DIR-COM SUSP. OU DIFERIMENTO'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='16';TRB->DESC:='EST.IMP.DIR-COBRADO ANTER.P/SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='17';TRB->DESC:='EST.IMP.DIR-RED.BS.CALC.E COBR.ICMS P/SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='19';TRB->DESC:='EST.IMP.DIR-OUTRAS'
+
+	// Estrangeira adquirido no mercado interno
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='20';TRB->DESC:='EST.ADQ.MERC.INT-TRIBUTADA INTEGRALMENTE'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='21';TRB->DESC:='EST.ADQ.MERC.INT-TRIBUT.C/COB.ICMS SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='22';TRB->DESC:='EST.ADQ.MERC.INT-COM RED.DE BASE DE CALCULO'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='23';TRB->DESC:='EST.ADQ.MERC.INT-ISENTA OU N/TRIB.C/ICMS SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='24';TRB->DESC:='EST.ADQ.MERC.INT-ISENTA OU N/TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='25';TRB->DESC:='EST.ADQ.MERC.INT-COM SUSPENCAO OU DIFERIMENTO'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='26';TRB->DESC:='EST.ADQ.MERC.INT-ICMS COB.ANT.P/SUBST.TRIB.'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='27';TRB->DESC:='EST.ADQ.MERC.INT-C/RED.BS.CALC.E COBR.ICMS P/SUBST.TRIB'
+  dbAppend();TRB->NUMTAB:='020';TRB->COD:='29';TRB->DESC:='EST.ADQ.MERC.INT-OUTRAS'
+
+  //--TABELA FIXA (ATF) TIPO DE MOVIMENTACAO
+	dbSelectArea("TRB")
+	For nCont:= 1 To 9
+		dbAppend()
+		REPLACE NUMTAB   WITH   '026'
+		REPLACE COD      WITH   StrZero(nCont,3)
+		If nCont == 1
+			REPLACE DESC     WITH   "BAIXA"
+		ElseIf nCont == 2
+			REPLACE DESC     WITH   "SUBSTITUICAO"
+		ElseIf nCont == 3
+			REPLACE DESC     WITH   "TRANSF DE"
+		ElseIf nCont == 4
+			REPLACE DESC     WITH   "TRANSF PARA"
+		ElseIf nCont == 5
+			REPLACE DESC     WITH   "IMPLANTACAO"
+		ElseIf nCont == 6
+			REPLACE DESC     WITH   "DEPRECIACAO"
+		ElseIf nCont == 7
+			REPLACE DESC     WITH   "CORRECAO MONETARIA"
+		ElseIf nCont == 8
+			REPLACE DESC     WITH   "CORRECAO MONETARIA DA DEPRECIACAO"
+		ElseIf nCont == 9
+			REPLACE DESC     WITH   "AMPLIACAO"
+		EndIf			
+	Next nCont
+
+  //--TABELA FIXA TIPOS CODIGO DA SITUACAO DO BEM
+  dbSelectArea("TRB")
+  dbAppend()
+  REPLACE NUMTAB   WITH   '027'
+  REPLACE COD      WITH   '001'
+  REPLACE DESC     WITH   "BEM EM USO"
+  dbAppend()
+  REPLACE NUMTAB   WITH   '027'
+  REPLACE COD      WITH   '002'
+  REPLACE DESC     WITH   "BEM FORA DE USO"
+  dbAppend()
+  REPLACE NUMTAB   WITH   '027'
+  REPLACE COD      WITH   '003'
+  REPLACE DESC     WITH   "BEM TOTALMENTE DEPRECIADO"
+  dbAppend()
+  REPLACE NUMTAB   WITH   '027'
+  REPLACE COD      WITH   '004'
+  REPLACE DESC     WITH   "BEM BAIXADO"
+
+  //--TABELA FIXA (GPE) TIPO DE FOLHA
+  dbSelectArea("TRB")
+  dbAppend()
+  REPLACE NUMTAB   WITH   '028'
+  REPLACE COD      WITH   '001'
+  REPLACE DESC     WITH   "MENSALISTA"
+  dbAppend()
+  REPLACE NUMTAB   WITH   '028'
+  REPLACE COD      WITH   '002'
+  REPLACE DESC     WITH   "SEMANALISTA"
+  dbAppend()
+  REPLACE NUMTAB   WITH   '028'
+  REPLACE COD      WITH   '003'
+  REPLACE DESC     WITH   "13o. SALARIO "
+  dbAppend()
+  REPLACE NUMTAB   WITH   '028'
+  REPLACE COD      WITH   '004'
+  REPLACE DESC     WITH   "FERIAS"
+
+  MsUnLockAll()
+	
+Return(nil)        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+
+User Function Tabfx02()        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+
+SetPrvt("_ACAMPOS,_CNOME,NCONT,")
+
+_aCampos := {  {"NUMTAB","C",3,0 } ,; 
+               {"COD","C",8,0 } ,;
+               {"DESC","C",45,0 }}
+_cNome := CriaTrab(_aCampos,.t.)
+dbUseArea(.T.,, _cNome,"TRB02",.F.,.F.)
+
+  dbSelectArea("TRB02")
+  dbAppend()
+  REPLACE NUMTAB   WITH   '002'
+  REPLACE COD      WITH   '000'
+  REPLACE DESC     WITH   "OPERACOES CONTABEIS"
+
+  dbSelectArea("TRB02")
+  dbAppend()
+  REPLACE NUMTAB   WITH   '002'
+  REPLACE COD      WITH   '9499'
+  REPLACE DESC     WITH   "REQUISICAO INTERNA"
+
+  dbSelectArea("TRB02")
+  dbAppend()
+  REPLACE NUMTAB   WITH   '002'
+  REPLACE COD      WITH   '9999'
+  REPLACE DESC     WITH   "PRODUCAO INTERNA"
+  
+  MsUnLockAll()
+
+Return .T.

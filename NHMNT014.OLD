@@ -1,0 +1,243 @@
+#include 'fivewin.ch'
+#include 'topconn.ch'
+#include "rwmake.ch"
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ NHMNT014  ºAutor ³João Felipe da Rosa º Data ³  28/11/07   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ RELATORIO DE APONTAMENTO DE HORAS POR MANUTENCAO           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Estoque Custos                                             º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDATA      ³ ANALISTA ³ MOTIVO                                          º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±º          ³          ³                                                 º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function NHMNT014()   
+
+SetPrvt("")
+aCols     := {}                  
+cString   := "STJ"
+cDesc1    := OemToAnsi("Este relatório tem por objetivo fornecer o total de horas Apontadas")
+cDesc2    := OemToAnsi("Por funcionário")
+cDesc3    := OemToAnsi("")
+tamanho   := "G"
+limite    := 232
+aReturn   := { "Zebrado", 1,"Administracao", 1, 2, 1, "",1 }
+nomeprog  := "NHMNT014"
+aLinha    := { }
+nLastKey  := 0
+titulo    := OemToAnsi("RELATORIO HORAS APONTADAS")                
+cabec1    := OemToAnsi("  Mat     Funcionário                      Hs Apontadas   Hs Trabalhadas  %Utilização  Turno")    
+cabec2    := " "
+cabec3    := " "
+cCancel   := "***** CANCELADO PELO OPERADOR *****"
+_nPag     := 1  //Variavel que acumula numero da pagina 
+M_PAG     := 1  
+wnrel     := "NHMNT014"
+_cPerg    := "MNT014" 
+
+// mv_par01 -> do Funcionario
+// mv_par02 -> ate Funcionario
+// mv_par03 -> do MesAno
+// mv_par04 -> ate MesAno ex. 102007 (sem barras)
+// mv_par05 -> de Turno
+// mv_par06 -> ate Turno
+
+SetPrint(cString,wnrel,_cPerg,titulo,cDesc1,cDesc2,cDesc3,.F.,,,tamanho)
+
+Pergunte(_cPerg,.F.) 
+
+If Val(Substr(mv_par03,1,2)) < 0 .Or. Val(Substr(mv_par03,1,2))> 12 .Or.;
+   Val(Substr(mv_par04,1,2)) < 0 .Or. Val(Substr(mv_par04,1,2)) > 12
+   
+	Msgbox(OemtoAnsi("Atenção MesAno com Erro de Digitação!","Atenção","ALERT"))
+ 	Return(nil)
+
+Else
+	mv_par03 := Substr(mv_par03,4,4)+Substr(mv_par03,1,2)+'01'
+	mv_par04 := Substr(mv_par04,4,4)+Substr(mv_par04,1,2)+'30'
+
+EndIf
+
+if nlastKey ==27
+    Set Filter to
+    Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+    Set Filter To
+    Return
+Endif
+
+nTipo := IIF(aReturn[4]==1,GetMV("MV_COMP"), GetMV("MV_NORM"))
+
+Processa( {|| Gerando()   },"Gerando Dados para a Impressao")
+Processa( {|| RptDetail() },"Imprimindo...")
+
+set filter to 
+//set device to screen
+If aReturn[5] == 1
+	Set Printer To
+	Commit
+    ourspool(wnrel) //Chamada do Spool de Impressao
+Endif
+MS_FLUSH() //Libera fila de relatorios em spool
+TRA->(DbCloseArea())
+
+Return
+
+Static Function Gerando()
+		//-----------------------------------------------------------------------
+		//  monta a query para o 
+		//-----------------------------------------------------------------------		
+		
+
+		
+		cQuery := " SELECT RD.RD_MAT, T1.T1_NOME, T1.T1_TURNO, RD.RD_PD, RD.RD_DATARQ, RD.RD_HORAS AS HORAS_MES, RX.RX_TXT"
+		cQuery += " FROM " + RetSqlName( 'SRD' ) + " RD, " + RetSqlName( 'ST1' ) + " T1, " + RetSqlName('SRX') + " RX"//," + RetSqlName('STL') + " TL"
+		cQuery += " WHERE RD.RD_MAT = T1.T1_CODFUNC AND"
+//		cQuery += " TL.TL_CODIGO = RD.RD_MAT AND"
+		cQuery += " T1.T1_CODFUNC > '000334' AND"
+		cQuery += " T1.T1_CODFUNC BETWEEN '" + mv_par01 + "' AND'" + mv_par02 + "' AND"
+		cQuery += " RD.RD_DATARQ BETWEEN '" + Substr(mv_par03,1,6) + "' AND '" + Substr(mv_par04,1,6) + "' AND
+//		cQuery += " TL.TL_DTINICI BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"'AND"
+//		cQuery += " TL.TL_DTFIM BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' AND"
+		cQuery += " RD.RD_PD BETWEEN '101' AND '111' AND"
+		cQuery += " T1.T1_TURNO BETWEEN '" + mv_par05 + "' AND '" + mv_par06 + "' AND	"
+		cQuery += " T1.T1_DISPONI = 'S' AND"
+		cQuery += " SUBSTRING(RX.RX_COD,3,6) = RD.RD_DATARQ"
+		cQuery += " GROUP BY RD.RD_MAT, T1.T1_NOME, T1.T1_TURNO, RD.RD_PD, RD.RD_DATARQ, RD.RD_HORAS,RX.RX_TXT"
+		cQuery += " ORDER BY RD.RD_MAT, RD.RD_DATARQ"
+		
+		cQuery2 := " SELECT RD.RD_MAT, T1.T1_NOME, T1.T1_TURNO, TL.TL_DTINICI, TL.TL_DTFIM, TL.TL_HOINICI, TL.TL_HOFIM"
+		cQuery2 += " FROM " + RetSqlName( 'SRD' ) + " RD, " + RetSqlName( 'ST1' ) + " T1, " + RetSqlName('STL') + " TL"
+		cQuery2 += " WHERE RD.RD_MAT = T1.T1_CODFUNC AND"
+		cQuery2 += " TL.TL_CODIGO = RD.RD_MAT AND"
+		cQuery2 += " T1.T1_CODFUNC > '000334' AND"
+		cQuery2 += " T1.T1_CODFUNC BETWEEN '" + mv_par01 + "' AND'" + mv_par02 + "' AND"
+//		cQuery2 += " RD.RD_DATARQ BETWEEN '" + Substr(mv_par03,1,6) + "' AND '" + Substr(mv_par04,1,6) + "' AND"
+		cQuery2 += " TL.TL_DTINICI BETWEEN '"+mv_par03+"' AND '"+mv_par04+"'AND"
+		cQuery2 += " TL.TL_DTFIM BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' AND"
+		cQuery2 += " T1.T1_TURNO BETWEEN '" + mv_par05 + "' AND '" + mv_par06 + "' AND	"
+		cQuery2 += " T1.T1_DISPONI = 'S' "
+		cQuery2 += " GROUP BY RD.RD_MAT, T1.T1_NOME, T1.T1_TURNO, TL.TL_DTINICI, TL.TL_DTFIM, TL.TL_HOINICI, TL.TL_HOFIM"
+		cQuery2 +=" ORDER BY RD.RD_MAT, TL.TL_DTINICI"
+
+		MemoWrit('C:\TEMP\NHMNT014.SQL',cQuery)
+		MemoWrit('C:\TEMP\NHMNT0142.SQL',cQuery2)
+		TCQUERY cQuery NEW ALIAS 'TRA'
+		TCQUERY cQuery2 NEW ALIAS 'TRB'
+
+		If	! USED()
+			MsgBox(cQuery+'. Query errada','Erro!!!','STOP')
+		EndIf
+		
+		TcSetField("TRB","TL_DTINICI","D")
+		TcSetField("TRB","TL_DTFIM","D")	             
+Return
+    
+Static Function ItoHora(nHora,nDigitos)
+	Local nHoras    := 0 
+	Local nMinutos  := 0 
+	Local cHora     := ""             
+	Local lNegativo := .F.
+	lNegativo := ( nHora < 0 ) 
+	nHora     := ABS( nHora ) 
+	nHoras    := Int(nHora)
+	nMinutos  := (nHora-nHoras)*60
+	nDigitos := If( ValType( nDigitos )=="N", nDigitos, 2 ) - If( lNegativo, 1, 0 ) 
+	cHora := If( lNegativo, "-", "" ) + StrZero( nHoras, nDigitos )+":"+StrZero( nMinutos, 2 )
+Return(cHora)
+
+
+
+Static Function RptDetail()  
+
+Local _nTHorAp := 0
+Local _nTHorMs := 0
+Local _nMes := 0 
+Local _nPD := 0
+Local _NHoraini
+Local _NHorafim
+Local nDias
+Local nHoras
+Local _cMatA
+Local _cMatB
+Local _lHor := .F.
+Local _nTotalAp := 0
+Local _nTotalMs := 0
+
+Cabec(Titulo, Cabec1,Cabec2,NomeProg, "G", nTipo)                                    
+
+DbSelectArea('TRA')
+TRA->(DbGotop())
+TRB->(DbGotop())
+_cMatA := TRA->RD_MAT
+_cMatB := TRB->RD_MAT
+
+While TRA->( ! Eof() ) //.OR. !TRB->(EOF())
+	If Prow() > 60
+		Cabec(Titulo, Cabec1,Cabec2,NomeProg, "G", nTipo)
+	Endif  
+	
+	@ Prow()+1 , 002 Psay TRA->RD_MAT
+	@ Prow()   , 010 Psay TRA->T1_NOME
+	@ Prow()   , 089 Psay TRA->T1_TURNO
+	//SOMA AS HORAS APONTADAS	
+	if (TRA->RD_MAT==TRB->RD_MAT)
+		While (_cMatB == TRB->RD_MAT)	
+			If TRB->TL_HOINICI <> '00:00' .And. TRB->TL_HOFIM <> '24:00'
+				nDias := TRB->TL_DTFIM - TRB->TL_DTINICI
+				_NHoraini := HoraToInt(TRB->TL_HOINICI)
+		 		_NHorafim := HoraToInt(TRB->TL_HOFIM)
+	   			nHoras := _NHorafim - _NHoraini
+				_nTHorAp += (nHoras+(nDias*24)) 
+ 			EndIf
+			TRB->(DbSkip())
+		END
+    ELSE 
+		_nTHorAp := 0   
+    ENDIF
+	//SOMA AS HORAS MENSAIS
+	While (_cMatA == TRA->RD_MAT)
+		if VAL(TRA->RD_PD) <> _nPD
+			If TRA->RD_PD == '101'
+			  	_nTHorMs += (Val(Substr(TRA->RX_TXT,1,6))/30)*TRA->HORAS_MES
+			    _lHor := .T.
+			ElseIf TRA->RD_PD$'102/105/106/107/108/109/110/111' .And. _lHor == .F.
+	    		_nTHorMs += TRA->HORAS_MES
+			EndIf
+		EndIf
+		_nPD := VAL(TRA->RD_PD)
+		TRA->(DbSkip())
+	End
+	@ Prow()   , 047 Psay ItoHora(_nTHorAp,5)
+		_nTotalAp += _nTHorAp
+	@ Prow()   , 062 Psay ItoHora(_nTHorMs,5)
+		_nTotalMs += _nTHorMs
+    @ Prow()   , 077 Psay Transform((_nTHorAp*100)/_nTHorMs, "@e 99,99") + " %"    
+    _nMes := 0
+    _nPD := 0
+    _nTHorMs := 0
+    _cMatA := TRA->RD_MAT
+	_cMatB := TRB->RD_MAT
+	_nTHorAp := 0
+	_lHor := .F.
+end
+@ Prow()+1,000 PSAY __PrtThinLine()
+@ Prow()+1,046 Psay ItoHora(_nTotalAp,5)
+@ Prow()  ,061 Psay ItoHora(_nTotalMs,5)
+@ Prow()  ,076 Psay Transform((_nTotalAp*100)/_nTotalMs, "@e 99,99") + " %"    
+TRB->(DbCloseArea('TRB')) 
+
+Return(nil)
+  

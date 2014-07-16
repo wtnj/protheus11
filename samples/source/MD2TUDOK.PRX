@@ -1,0 +1,6 @@
+#IFDEF WINDOWS
+	MsgStop("Existem "+Str(Len(aCols))+" linhas na GetDados")
+#ELSE
+	Alert("Existem "+Str(Len(aCols))+" linhas na GetDados")
+#ENDIF
+__RETURN(.T.)

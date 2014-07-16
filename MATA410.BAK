@@ -1,0 +1,1312 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³P.Entrada ³ MATA410  ³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Automatizacao de nota fiscal 694                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±³ Alterado em 26/05/04 por Alexandre R. Bento                           ³±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+
+#include "rwmake.ch"      
+
+User Function mata410()     
+                                                                                  
+SetPrvt("_CTES,CPRODUTO,_LGERAOK,_LOK,_CNUMPED,_NPEDGER")
+SetPrvt("_CSERVICO,_ITEM,_PRODUTO,_UM,_PRCVEN,_VALOR")
+SetPrvt("_QTDLIB,_TES,_CF,_SEGUM,_UNSVEN,_LOCAL")
+SetPrvt("_QTDVEN,_QTDENT,_CLI,_DESCONT,_VALDESC,_ENTREG")
+SetPrvt("_LA,_LOJA,_SERIE,_DATFAT,_COMIS1,_COMIS2")
+SetPrvt("_COMIS3,_COMIS4,_PEDCLI,_DESCRI,_PRUNIT,_BLOQUEI")
+SetPrvt("_GEROUPV,_RESERVA,_OP,_OK,_NFORI,_SERIORI")
+SetPrvt("_ITEMORI,_IDENTB6,_BLQ,_PICMRET,_CODISS,_GRADE")
+SetPrvt("_ITEMGRD,_LOTECTL,_NUMLOTE,_DTVALID,_NUMORC,_CHASSI")
+SetPrvt("_OPC,_LOCALIZ,_NUMSERI,_NUMOP,_ITEMOP,_CLASFIS")
+SetPrvt("_QTDRESE,_NUMOS,_NUMOSFA,_CODFAB,_LOJAFA,_TPOP")
+SetPrvt("_REVISAO,_CC5PEDCOM,_CALTERA,_LTRIANGULAR,_CCLIENTE,_CLOJACLI")
+SetPrvt("_CMENSAGEM,_NSALPC6,_NSALSC6,_CEST,_CCFO,_NTOTSC6")
+SetPrvt("_CMSGNF,_NITEM,_CNEWPED,_STRUCT,_CARQUIVO,_DDATASB6")
+SetPrvt("_CITEM,_LAPPEND,_CMSGQULIB,_NQUANTIDADE,_NTOTVALOR,_NQTD")
+SetPrvt("ASTRUCT,_CARQ,_NI,_CCONTEUDO,_NPEDATUAL,_CNUMATUAL")
+SetPrvt("_LOPTR,_ASB1,_CARQSB1,NESTRU")
+SetPrvt("NQUANT,CALIASESTRU,CARQTRAB,CNOMEARQ,_CESTRUTURA,")
+SetPrvt("lErro,lCabSC5,_cCli,_cLoj,cAliasSB6")
+
+
+If Upper(Alltrim(Funname()))$"NHFAT015" 
+   Return
+Endif
+
+_cTES := GetMv("MV_TESREME")      // Verifica TES de remessa 
+cProduto   := CriaVar("B1_COD")
+_lGeraOk   := .T.
+_lOk       := .F.    // Processa apenas para tes de servico MV_TESSERV
+lErro      := .F.    // Saida p/ qualquer erro de processamento ( sem estoque )
+lCabSC5    := .F.    // Variavel p/ controle de gravação do SC5 executa apenas uma vez
+_cNumPed   := SC5->C5_NUM 
+_nPedGer   := SC5->(Recno())      
+//Armazena para pesquisar no SB6 somente notas dos clientes e loja do pedido
+_cCli      := SC5->C5_CLIENTE
+_cLoj      := SC5->C5_LOJACLI
+
+_cServico := GetMv("MV_TESSERV")
+
+DbSelectArea("SC6")
+SC6->(DbSetOrder(1))
+If SC6->(DbSeek(xFilial("SC6")+_cNumPed,.T.))
+
+   // Usado Quando Tem Operacao Triangular por Jose Roberto 10/03/2000
+   _ITEM    := SC6->C6_ITEM
+   _PRODUTO := SC6->C6_PRODUTO
+   _UM      := SC6->C6_UM
+   _PRCVEN  := SC6->C6_PRCVEN
+   _VALOR   := SC6->C6_VALOR
+   _QTDLIB  := SC6->C6_QTDLIB
+   _TES     := SC6->C6_TES
+   _CF      := SC6->C6_CF
+   _SEGUM   := SC6->C6_SEGUM
+   _UNSVEN  := SC6->C6_UNSVEN
+   _LOCAL   := SC6->C6_LOCAL
+   _QTDVEN  := SC6->C6_QTDVEN
+   _QTDENT  := SC6->C6_QTDENT
+   _CLI     := SC6->C6_CLI
+   _DESCONT := SC6->C6_DESCONT
+   _VALDESC := SC6->C6_VALDESC
+   _ENTREG  := SC6->C6_ENTREG
+   _LA      := SC6->C6_LA
+   _LOJA    := SC6->C6_LOJA
+   _SERIE   := SC6->C6_SERIE
+   _DATFAT  := SC6->C6_DATFAT
+   _COMIS1  := SC6->C6_COMIS1
+   _COMIS2  := SC6->C6_COMIS2
+   _COMIS3  := SC6->C6_COMIS3
+   _COMIS4  := SC6->C6_COMIS4
+   _PEDCLI  := SC6->C6_PEDCLI
+   _DESCRI  := SC6->C6_DESCRI
+   _PRUNIT  := SC6->C6_PRUNIT
+   _BLOQUEI := SC6->C6_BLOQUEI
+   _GEROUPV := SC6->C6_GEROUPV
+   _RESERVA := SC6->C6_RESERVA
+   _OP      := SC6->C6_OP
+   _OK      := SC6->C6_OK
+   _NFORI   := SC6->C6_NFORI
+   _SERIORI := SC6->C6_SERIORI
+   _ITEMORI := SC6->C6_ITEMORI
+   _IDENTB6 := SC6->C6_IDENTB6
+   _BLQ     := SC6->C6_BLQ
+   _PICMRET := SC6->C6_PICMRET
+   _CODISS  := SC6->C6_CODISS
+   _GRADE   := SC6->C6_GRADE
+   _ITEMGRD := SC6->C6_ITEMGRD
+   _LOTECTL := SC6->C6_LOTECTL
+   _NUMLOTE := SC6->C6_NUMLOTE
+   _DTVALID := SC6->C6_DTVALID
+   _NUMORC  := SC6->C6_NUMORC
+   _CHASSI  := SC6->C6_CHASSI
+   _OPC     := SC6->C6_OPC
+   _LOCALIZ := SC6->C6_LOCALIZ
+   _NUMSERI := SC6->C6_NUMSERI
+   _NUMOP   := SC6->C6_NUMOP
+   _ITEMOP  := SC6->C6_ITEMOP
+   _CLASFIS := SC6->C6_CLASFIS
+   _QTDRESE := SC6->C6_QTDRESE
+   _NUMOS   := SC6->C6_NUMOS
+   _NUMOSFA := SC6->C6_NUMOSFA
+   _CODFAB  := SC6->C6_CODFAB
+   _LOJAFA  := SC6->C6_LOJAFA
+   _TPOP    := SC6->C6_TPOP
+   _REVISAO := SC6->C6_REVISAO
+   _GRUPO   := SB1->B1_GRUPO
+
+   While SC6->(!Eof()) .and. SC6->C6_FILIAL == SC5->C5_FILIAL .and. SC6->C6_NUM == _cNumPed
+      // Altera‡Æo Feita por Jos‚ Roberto em 29/02/2000
+      If SC6->C6_TES $ _cServico
+         _lOk := .T.
+         cProduto := SC6->C6_PRODUTO
+         Exit
+      EndIf
+      SC6->(DbSkip())
+   End
+   
+   If _lOk  
+      If altera
+         // Alteracao feita por Jose Roberto em 25/02/2000
+         SC5->(DbSetOrder(1)) // Pedido de Venda
+         _cC5PedCom := SC5->C5_PEDCOM 
+         If SC5->(DbSeek(xFilial("SC5")+SC5->C5_PEDCOM))
+            MsgBox("Ja existe um Pedido N. " + _cC5PedCom  + " , para componentes, exclua este pedido antes de efetuar a alteracao.") 
+            Return
+         Endif
+         SC5->(DbGoTo(_nPedGer))
+         
+         _cAltera := 'Este pedido foi alterado.  Deseja disparar' + Chr(13)
+         _cAltera := _cAltera + 'retorno de componentes ? ' + Chr(13) 
+         _cAltera := _cAltera + 'Caso dispare esta rotina, o sistema trara parametros' + chr(13)
+         _cAltera := _cAltera + 'a serem informados.' + chr(13)
+         If !MsgBox(_cAltera,"Atencao","YESNO") 
+            Return
+         EndIf
+      EndIf
+      
+      If Pergunte("NH410A")  // Pergunta se gera pedido de retorno de componentes
+                             // Pergunta se gera pedido de embalagem 
+                             // Pergunta se gera pedido de operacao triangular  
+         _lTriangular := Iif(mv_par03 == 1, .T.,.F.)
+         _cCliente    := SC5->C5_CLIENTE
+         _cLojaCli    := SC5->C5_LOJACLI
+         // _cTes        := Iif(_lTriangular,'595',_cTes) Alteracao feita por Jose Roberto
+         _Man()       
+         If _lOk //Quando encontrar saldo sucifiente do produto 
+            // Saida de erro na geração sem saldo em estoque 
+            If lErro
+               RollBackSX8() //Volta a numeração do pedido de venda
+            Else
+               If _lTriangular 
+                  _Triangular()
+               EndIf   
+               _Implode()
+              // ConfirmSX8() //confirma o numero do pedido
+            Endif   
+         Endif   
+      EndIf   // Pergunte
+   EndIf    // _lOk
+EndIf   
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³ _Man     ³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Principal                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function _Man()
+
+   _TESCFO()
+   Estoura()
+   If _lGeraOK 
+	   Processa({||_ProcSC6()},"Explodindo Estrutura do Produto Acabado...")
+	   Processa({||_Integrid()},"Processando Integridade de Saldos...")
+	   DbSelectArea("SC6") 
+	   If PROCSC6->(RecCount()) > 0 .and. _lGeraOk 
+	      Processa({||_SC6Grava()},"Gerando Pedido...")
+	   Else
+	      _cMensagem := "Atencao o pedido nao XXXXX foi gerado devido a " + chr(13) 
+	      _cMensagem := _cMensagem + "insconsistencia. Verificar saldo das materias primas " + chr(13)
+	      _cMensagem := _cMensagem + "deve haver saldo suficiente para cada item da estrutura." 
+	      MsgBox(_cMensagem,"Atencao","ALERT")
+	      _lOK       := .F. // Erro na Geração        
+	   EndIf
+   Endif   
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³ _Integrid³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Verifica Integridade de Saldos antes de gerar o pedido     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function _Integrid()
+
+   // Neste momento deve ser testado se foi encontrado saldo
+   // para transacao
+
+//   DbSelectArea("TRB")
+   ProcRegua(TRB->(RecCount()))
+   TRB->(DbSetOrder(1))
+   TRB->(DbGoTop())
+   
+   While TRB->(!Eof())
+   
+      IncProc(AllTrim(TRB->PRODUTO) + "-" + SubStr(Posicione("SB1",1,xFilial("SB1")+AllTrim(TRB->PRODUTO),"B1_DESC"),1,23) )
+      
+      _nSalPC6 := _nSalSC6 := 0.000
+      DbSelectArea("PROCSC6")
+      PROCSC6->(DbGoTop())
+      
+      While PROCSC6->(!Eof())
+      
+         If PROCSC6->C6_PRODUTO <> TRB->PRODUTO
+            PROCSC6->(DbSkip())
+            Loop
+         EndIf
+         
+         _nSalPC6 := _nSalPC6 + PROCSC6->C6_QTDVEN
+         
+         PROCSC6->(DbSkip())
+      End
+      
+      //--DbSelectArea("TMP")
+      If TMP->(DbSeek(TRB->PRODUTO,.T.))
+         RecLock("TRB")
+            TRB->ALOCADO     := _nSalPC6
+            TRB->DIFERENCA   := TRB->SALDO - _nSalPC6
+            TRB->ESTRUTURA   := TMP->QUANT
+         MsUnLock("TRB")
+      Else
+         MsgBox("Produto: " + AllTrim(TRB->PRODUTO) + " nao foi encontrado na estrutura","Atencao","INFO")
+      EndIf
+
+      If TRB->DIFERENCA > 0.00 .or. TRB->SALDO <= 0.0001
+                            //SSSSSSSSSSSSSSSSSSSSSSSSS
+         _cMensagem := "Foram Encontradas Inconsistencias ao Alocar Saldo (saldo)" + chr(13)
+         _cMensagem := _cMensagem +  "do Produto Consignado: " + TRB->PRODUTO
+         _cMensagem := _cMensagem +  Posicione("SB1",1,xFilial("SB1")+TRB->PRODUTO,"B1_DESC") + CHR(13)
+         
+         If TRB->DIFERENCA > 0.00
+            _cMensagem := _cMensagem + "Diferenca: " + Transform(TRB->DIFERENCA,"@E 99,999,999.999")
+         ElseIf TRB->SALDO <= 0.0001
+            _cMensagem := _cMensagem + "Saldo: " + Transform(TRB->SALDO,"@E 99,999,999.999")
+         EndIf
+         
+         MsgBox(_cMensagem,"Inconsistencia","ALERT")
+         _lGeraOk := .F.
+         Exit
+         
+      EndIf
+      
+      TRB->(DbSkip())
+   Enddo   
+   
+Return
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³ _TESCFO  ³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Seleciona tes/cfo                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function _TESCFO()
+   
+   _cEst := GetMv("MV_ESTADO")
+   _cCFO :=  ''
+   DbSelectArea("SF4")
+   SF4->(DbSetOrder(1))
+   If SF4->(DbSeek(xFilial("SF4")+_cTES,.T.))
+       If (SC5->C5_TIPO $ "DB")
+           _cCFO := Iif(SC5->C5_TIPOCLI!="X",If(SA2->A2_EST==_cEst,"5"+substr(SF4->F4_CF,2,3),"6"+Subs(SF4->F4_CF,2,3)),"7"+Subs(SF4->F4_CF,2,3))
+       Else
+           _cCFO := Iif(SC5->C5_TIPOCLI!="X",If(SA1->A1_EST==_cEst,"5"+substr(SF4->F4_CF,2,3),"6"+Subs(SF4->F4_CF,2,3)),"7"+Subs(SF4->F4_CF,2,3))
+       EndIf   
+   EndIf
+   
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³ _SC6Grava³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Grava no Itens de pedido de venda                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function _SC6Grava()
+
+   _lOk := .T.
+   
+   DbSelectArea("TMP")
+   TMP->(DbGoTop())
+   
+   While TMP->(!Eof())
+   
+      DbSelectArea("SB1")
+      SB1->(DbSetOrder(1))
+      If !SB1->(DbSeek(xFilial("SB1")+TMP->COMP,.T.))
+         Exit
+      EndIf   
+   
+      // Testa se o produto e consignado 
+//      If Upper(SB1->B1_CONSIG) <> 'S'     
+//         TMP->(DbSkip())
+//         Loop                                                          
+//      EndIf                  
+      
+      // Testa se o tipo do produto eh consignado
+      If !SB1->B1_TIPO$"CC/MC" .Or. Alltrim(SB1->B1_COD) == 'VW01.5.900.11' // este segundo foi colocado a pedido do daniel pcp
+         TMP->(DbSkip())
+         Loop                                                          
+      EndIf   
+     
+      
+      _nTotSC6 := 0.000000
+      
+      DbSelectArea("PROCSC6")
+      PROCSC6->(DbGoTop())
+      
+      While PROCSC6->(!Eof())
+         If PROCSC6->C6_PRODUTO <> TMP->COMP 
+            PROCSC6->(DbSkip())
+            Loop
+         EndIf
+         _nTotSC6 := _nTotSC6 + PROCSC6->C6_QTDVEN
+         PROCSC6->(DbSkip())
+      End
+      
+      If TMP->QUANT <> _nTotSC6
+         _cMsgNF := 'Nao existem saldos nas notas fiscais de entrada suficiente' + chr(13)
+         _cMsgNF := _cMsgNF + 'para alocar saldo para o componente: ' + chr(13)
+         _cMsgNF := _cMsgNF + AllTrim(TMP->COMP) + ' ' + SubStr(SB1->B1_DESC,1,23) 
+         MsgBox(_cMsgNF,"Atencao","INFO")
+         _lOk := .F. //ESTA PARANDO AQUI ERRO.
+         //lErro := .T.
+         Exit
+      EndIf
+      TMP->(DbSkip())
+   End
+   If !_lOk 
+      Return
+   EndIf                            
+   
+   _cNewPed := GetSXENum("SC5","C5_NUM") //pega o proximo numero do pedido de retorno
+   
+   DbSelectArea("PROCSC6")
+   ProcRegua(PROCSC6->(RecCount()))
+   PROCSC6->(DbGoTop())
+   While PROCSC6->(!Eof())
+      If PROCSC6->C6_QTDVEN <= 0.0001
+         _cMensagem := "Foram Encontradas Inconsistencias ao Alocar Saldo (pedido)" + chr(13)
+         _cMensagem := _cMensagem +  "do Produto Consignado: " + PROCSC6->C6_PRODUTO
+         _cMensagem := _cMensagem +  Posicione("SB1",1,xFilial("SB1")+TRB->PRODUTO,"B1_DESC") + CHR(13)
+         MsgBox(_cMensagem,"Inconsistencia","ALERT")
+         _lGeraOk := .F.         
+         lErro    := .T. // Erro na Geração        
+         Exit
+      EndIf
+      
+      IncProc("Gerando Pedido nr. " + _cNewPed)
+      
+      DbSelectArea("SC6")   // Gera Itens de Pedido de Venda
+      RecLock("SC6",.T.)
+         SC6->C6_FILIAL  :=  PROCSC6->C6_FILIAL    // C  2  0  Filial do Sistema         @!                  
+         SC6->C6_ITEM    :=  PROCSC6->C6_ITEM      // C  2  0  Numero do Item no Pedido                      
+         SC6->C6_PRODUTO :=  PROCSC6->C6_PRODUTO   // C 15  0  Codigo do Produto         @!                  
+         SC6->C6_UM      :=  PROCSC6->C6_UM        // C  2  0  Unidade de Medida Primar. @!                  
+         SC6->C6_QTDVEN  :=  PROCSC6->C6_QTDVEN    // N  9  2  Quantidade Vendida        @E 999999.99        
+         SC6->C6_PRCVEN  :=  PROCSC6->C6_PRCVEN    // N 11  2  Preco Unitario Liquido    @E 99,999,999.99    
+         SC6->C6_VALOR   :=  PROCSC6->C6_VALOR     // N 12  2  Valor Total do Item       @E 999,999,999.99   
+         SC6->C6_QTDLIB  :=  PROCSC6->C6_QTDLIB    // N  9  2  Quantidade Liberada       @E 999999.99        
+         SC6->C6_TES     :=  PROCSC6->C6_TES       // C  3  0  Tipo de Saida do Item     @9                  
+         SC6->C6_CF      :=  PROCSC6->C6_CF        // C  3  0  Codigo Fiscal da Operacao @9                  
+         SC6->C6_SEGUM   :=  PROCSC6->C6_SEGUM     // C  2  0  Segunda Unidade de Medida @!                  
+         SC6->C6_UNSVEN  :=  PROCSC6->C6_UNSVEN    // N  9  2  Quant. Vend. na 2 Unid M. @E 999999.99        
+         SC6->C6_LOCAL   :=  PROCSC6->C6_LOCAL     // C  2  0  Almoxarifado              @!                  
+         SC6->C6_QTDEMP  :=  PROCSC6->C6_QTDVEN    // N  9  2  Quantidade Empenhada      @E 999999.99        
+         SC6->C6_QTDENT  :=  PROCSC6->C6_QTDENT    // N  9  2  Quantidade Entregue       @E 999999.99        
+         SC6->C6_CLI     :=  PROCSC6->C6_CLI       // C  6  0  Codigo do Cliente         @!                  
+         SC6->C6_DESCONT :=  PROCSC6->C6_DESCONT   // N  5  2  Percentual de Desconto    @E 99.99            
+         SC6->C6_VALDESC :=  PROCSC6->C6_VALDESC   // N 14  2  Valor do Desconto do Item @E 99,999,999,999.99
+         SC6->C6_ENTREG  :=  PROCSC6->C6_ENTREG    // D  8  0  Data da Entrega                               
+         SC6->C6_LA      :=  PROCSC6->C6_LA        // C  8  0  Campo de Controle                             
+         SC6->C6_LOJA    :=  PROCSC6->C6_LOJA      // C  2  0  Loja do Cliente           @!                  
+         SC6->C6_NOTA    :=  PROCSC6->C6_NOTA      // C  6  0  Numero da Nota Fiscal     @X                  
+         SC6->C6_SERIE   :=  PROCSC6->C6_SERIE     // C  3  0  Serie da Nota Fiscal      @!                  
+         SC6->C6_DATFAT  :=  PROCSC6->C6_DATFAT    // D  8  0  Data do Faturamento                           
+         SC6->C6_NUM     :=  _cNewPed              // C  6  0  Numero do Pedido          @X                  
+         SC6->C6_COMIS1  :=  PROCSC6->C6_COMIS1    // N  5  2  Percentual Comissao 1     @E 99.99            
+         SC6->C6_COMIS2  :=  PROCSC6->C6_COMIS2    // N  5  2  Percentual Comissao 2     @E 99.99            
+         SC6->C6_COMIS3  :=  PROCSC6->C6_COMIS3    // N  5  2  Percentual Comissao 3     @E 99.99            
+         SC6->C6_COMIS4  :=  PROCSC6->C6_COMIS4    // N  5  2  Percentual Comissao 4     @E 99.99            
+         SC6->C6_COMIS5  :=  PROCSC6->C6_COMIS5    // N  5  2  Percentual Comissao 5     @E 99.99            
+         SC6->C6_PEDCLI  :=  PROCSC6->C6_PEDCLI    // C  9  0  Numero do Pedido Cliente  @X                  
+         SC6->C6_DESCRI  :=  PROCSC6->C6_DESCRI    // C 30  0  Descricao Auxiliar        @X                  
+         SC6->C6_PRUNIT  :=  PROCSC6->C6_PRUNIT    // N 11  2  Preco Unitario de Tabela  @E 99,999,999.99    
+         SC6->C6_BLOQUEI :=  PROCSC6->C6_BLOQUEI   // C  2  0  Bloqueio do Pedido        @!                  
+         SC6->C6_GEROUPV :=  PROCSC6->C6_GEROUPV   // C  1  0  Se gerou previsao de vend                     
+         SC6->C6_RESERVA :=  PROCSC6->C6_RESERVA   // C  6  0  Numero da reserva         @!                  
+         SC6->C6_OP      :=  PROCSC6->C6_OP        // C  2  0  Flag de geracao de OP     @!                  
+         SC6->C6_OK      :=  PROCSC6->C6_OK        // C  2  0  Ok para Emissao de O.P.                       
+         SC6->C6_NFORI   :=  PROCSC6->C6_NFORI     // C  6  0  N.F.Original              999999              
+         SC6->C6_SERIORI :=  PROCSC6->C6_SERIORI   // C  3  0  Serie da N.F. Original    @!                  
+         SC6->C6_ITEMORI :=  PROCSC6->C6_ITEMORI   // C  2  0  Nr.Item da N.Fiscal Orig. 99                  
+         SC6->C6_IPIDEV  :=  PROCSC6->C6_IPIDEV    // N 14  2  Vl.IPI qdo.nota devolucao @E 999,999,999.99   
+         SC6->C6_IDENTB6 :=  PROCSC6->C6_IDENTB6   // C  6  0  Identificador Poder Terc. @!                  
+         SC6->C6_BLQ     :=  PROCSC6->C6_BLQ       // C  2  0  Bloqueio Pedido           @!                  
+         SC6->C6_PICMRET :=  PROCSC6->C6_PICMRET   // N  5  2  Icm Retido (Margem Lucro) @E 99.99            
+         SC6->C6_CODISS  :=  PROCSC6->C6_CODISS    // C  8  0  C¢digo de Servi‡o do ISS  @9                  
+         SC6->C6_GRADE   :=  PROCSC6->C6_GRADE     // C  1  0  Ind.se prod.digitado Grad @!                  
+         SC6->C6_ITEMGRD :=  PROCSC6->C6_ITEMGRD   // C  3  0  Item de Grade             @!                  
+         SC6->C6_LOTECTL :=  PROCSC6->C6_LOTECTL   // C 10  0  Lote                      @!                  
+         SC6->C6_NUMLOTE :=  PROCSC6->C6_NUMLOTE   // C  6  0  Sub-Lote                  @!                  
+         SC6->C6_DTVALID :=  PROCSC6->C6_DTVALID   // D  8  0  Validade do Lote Inform.                      
+         SC6->C6_NUMORC  :=  PROCSC6->C6_NUMORC    // C  8  0  Numero do Or‡amento       @!                  
+         SC6->C6_CHASSI  :=  PROCSC6->C6_CHASSI    // C 17  0  Codigo do Chassi          @!                  
+         SC6->C6_OPC     :=  PROCSC6->C6_OPC       // C 80  0  Opcionais utilizados p/PV @!S40               
+         SC6->C6_LOCALIZ :=  PROCSC6->C6_LOCALIZ   // C 15  0  Localizacao Fisica        @!                  
+         SC6->C6_NUMSERI :=  PROCSC6->C6_NUMSERI   // C 20  0  Num de Serie do Produto   @!                  
+         SC6->C6_NUMOP   :=  PROCSC6->C6_NUMOP     // C  6  0  Num. da OP gerada por PV  @X                  
+         SC6->C6_ITEMOP  :=  PROCSC6->C6_ITEMOP    // C  2  0  Item da OP gerada por PV  @!                  
+         SC6->C6_CLASFIS :=  PROCSC6->C6_CLASFIS   // C  3  0  Situacao Tributaria       @!                  
+         SC6->C6_QTDRESE :=  PROCSC6->C6_QTDRESE   // N 12  2  Quant. Reservada          @r 999,999,999.99   
+         SC6->C6_NUMOS   :=  PROCSC6->C6_NUMOS     // C 10  0  Nr. da Ordem de Servico   @!                  
+         SC6->C6_NUMOSFA :=  PROCSC6->C6_NUMOSFA   // C 10  0  Nr.OS do Fabricante       @!                  
+         SC6->C6_CODFAB  :=  PROCSC6->C6_CODFAB    // C  6  0  Codigo do Fabricante      @!                  
+         SC6->C6_LOJAFA  :=  PROCSC6->C6_LOJAFA    // C  2  0  Loja do Fabricante        @!                  
+         SC6->C6_TPOP    :=  PROCSC6->C6_TPOP      // C  1  0  Tipo da Ordem de Produ‡„o @!                  
+         SC6->C6_REVISAO :=  PROCSC6->C6_REVISAO   // C  3  0  Revisao da Estrutura      @!                       
+
+      MsUnlock("SC6")
+      // Neste momento deve ser alocado quantidade no  Saldo em poder de terceiros
+      DbSelectArea("SB6")
+      SB6->(DbGoTo(ProcSC6->C6_RECNO))
+      RecLock("SB6")
+         SB6->B6_QULIB := SB6->B6_QULIB + PROCSC6->SB6
+      MsUnLock("SB6")
+      
+      _SC9Grava() // Grava liberação de pedido de retorno
+      
+      If !lCabSC5 //se FALSO grava o SC5 - cabecalho do pedido de venda nota de retorno
+         _SC5Grava()
+         lCabSC5 := .T.                               
+         ConfirmSX8() //confirma o numero do pedido de retorno no arq SXF SXE
+      EndIf   
+      
+      PROCSC6->(DbSkip())   
+   Enddo
+   
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³ _ProcSC6 ³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Processa dados para gravar Itens do Pedido retorno         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function _ProcSC6()
+   
+   _nItem := 0
+//   _cNewPed := GetSXENum("SC5","C5_NUM")
+   DbSelectArea("SC6")
+   _Struct   := DbStruct("SC6")
+   AADD(_Struct,{"C6_GRUPO","C",4,0})
+   AADD(_Struct,{"C6_RECNO","N",17,0})
+   AADD(_Struct,{"SB6","N",17,4})
+   _cArquivo := CriaTrab(_Struct)
+   Use (_cArquivo) Alias PROCSC6 New Exclusive
+   DbSelectArea("PROCSC6")
+   
+   DbSelectArea("ESTRUT")
+   ProcRegua(ESTRUT->(RecCount()))
+   ESTRUT->(DbGoTop())
+
+   _dDataSB6 := CTOD(GetMv("MV_DATASB6")) // Pega data do inicio p/ pesquisa no sb6
+   While ESTRUT->(!Eof())
+      
+      
+      DbSelectArea("SB1")
+      SB1->(DbSetOrder(1))
+      If !SB1->(DbSeek(xFilial("SB1")+ESTRUT->COMP,.T.))
+         Exit
+      EndIf
+      
+//      If Upper(SB1->B1_CONSIG) <> 'S'     // Testa se o produto e consignado 
+//         ESTRUT->(DbSkip())
+//         Loop                                                          
+//      EndIf   
+      // Testa se o tipo do produto eh consignado
+      
+      If !SB1->B1_TIPO$"CC/MC" .Or. Alltrim(SB1->B1_COD) == 'VW01.5.900.11' // este segundo foi colocado a pedido do daniel pcp
+         ESTRUT->(DbSkip())
+         Loop                                                          
+      EndIf   
+      
+      cProduto := ESTRUT->COMP
+      IncProc(AllTrim(cProduto) + " -> " + SubStr(SB1->B1_DESC,1,20) )
+      
+      If ESTRUT->QUANT < 0.00000
+         ESTRUT->(DbSkip())
+         Loop
+      EndIf
+      
+        _cNewPed := Space(06) 
+      
+      _nItem := _nItem + 1
+      _cItem := StrZero(_nItem,2)
+      If _nItem > 99
+         _nItem := 0
+         Loop 
+      EndIf
+//************************************************************* inicio bloco SB6
+
+      cAliasSB6 := GetNextAlias()	            
+      BeginSql Alias cAliasSB6    
+	     SELECT SB6.B6_SALDO,SB6.B6_QULIB,SB6.B6_SERIE,SB6.B6_IDENT,SB6.B6_DOC,SB6.R_E_C_N_O_ AS RECSB6,
+	     SD1.D1_ITEM,SD1.D1_VUNIT,SD1.D1_LOTECTL
+	     FROM %Table:SB6% SB6 (NOLOCK), %Table:SD1% SD1 (NOLOCK)  	    
+	     WHERE                                  
+	     SB6.B6_PRODUTO	= SD1.D1_COD AND	     
+	     SB6.B6_PRODUTO	= %Exp:ESTRUT->COMP% AND
+	     SB6.B6_CLIFOR 	= %Exp:_cCli% AND
+	     SB6.B6_LOJA	= %Exp:_cLoj% AND
+	     SB6.B6_CLIFOR 	= SD1.D1_FORNECE AND
+	     SB6.B6_LOJA	= SD1.D1_LOJA AND
+	     SB6.B6_TES     = SD1.D1_TES AND
+	     SB6.B6_DOC     = SD1.D1_DOC AND
+	     SB6.B6_SERIE   = SD1.D1_SERIE AND	     
+	     SB6.B6_EMISSAO = SD1.D1_EMISSAO AND
+	     SB6.B6_DTDIGIT = SD1.D1_DTDIGIT AND
+	     SB6.B6_IDENT   = SD1.D1_IDENTB6 AND	     	     
+	     SB6.B6_TES < '500' AND
+	     SB6.B6_TES IN ('041','043','193','292','293') AND
+	     SB6.B6_PODER3 = 'R' AND
+	     SB6.B6_SALDO > 0 AND	     
+         SB6.%NotDel% AND        
+         SD1.%NotDel% AND                 
+     	 SB6.B6_FILIAL 	= %xFilial:SB6% AND
+     	 SD1.D1_FILIAL 	= %xFilial:SD1%      	 
+    	 ORDER BY SB6.B6_DTDIGIT
+	  EndSql   	
+
+      _lAppend := .T.
+      (cAliasSB6)->(Dbgotop())
+     	
+      While (cAliasSB6)->(!Eof()) 
+		   
+          If ESTRUT->QUANT == 0.00
+             Exit
+          Endif
+
+            //cria um novo registro na tabela SC6 temporaria              
+          If _lAppend
+             DbSelectArea("PROCSC6")
+             Append Blank 
+                PROCSC6->C6_FILIAL     :=  SC5->C5_FILIAL
+                PROCSC6->C6_PRODUTO    :=  ESTRUT->COMP        
+                PROCSC6->C6_ITEM       :=  _cItem             // C  2  0  Numero do Item no Pedido                      
+                PROCSC6->C6_UM         :=  SB1->B1_UM         // C  2  0  Unidade de Medida Primar. @!                  
+                PROCSC6->C6_TES        :=  _cTES              // C  3  0  Tipo de Saida do Item     @9                  
+                PROCSC6->C6_CF         :=  _cCFO              // C  3  0  Codigo Fiscal da Operacao @9                        
+                PROCSC6->C6_CLI        :=  _cCliente          // C  6  0  Codigo do Cliente         @! 
+                PROCSC6->C6_ENTREG     :=  dDataBase          // D  8  0  Data da Entrega         
+                PROCSC6->C6_LOJA       :=  _cLojaCli          // C  2  0  Loja do Cliente           @!
+                PROCSC6->C6_NUM        :=  _cNewPed           // C  6  0  Numero do Pedido          @x
+                PROCSC6->C6_LOCAL      :=  SB1->B1_LOCPAD         
+                PROCSC6->C6_GRUPO      :=  SB1->B1_GRUPO
+               _lAppend := .F.      
+          EndIf      
+            
+            // Verifica disponibilidade
+            _nQuantidade := 0.0000
+            
+            // Caso o saldo em beneficiamento for menor ou igual ao saldo 
+            // requisitado pela estrutura entao baixa quantidade liberada
+            // em B6_QULIB senao aloca o necessaria e procura a proxima nota
+            
+            If ((cAliasSB6)->B6_SALDO - (cAliasSB6)->B6_QULIB) >= ESTRUT->QUANT 
+            
+              // If SB6->B6_QULIB + ESTRUT->QUANT <= SB6->B6_SALDO  //TIRADO ALEXANDRE 21/01/05
+               
+                  _nQuantidade := ESTRUT->QUANT
+              
+                  RecLock("PROCSC6")
+                     PROCSC6->SB6       :=  ESTRUT->QUANT                      
+                     PROCSC6->C6_RECNO  :=  (cAliasSB6)->RECSB6 //numero do registro do SB6
+                  MsUnLock("PROCSC6")
+                  
+                  RecLock("ESTRUT")
+                     ESTRUT->QUANT := ESTRUT->QUANT - _nQuantidade
+                  MsUnLock("ESTRUT")
+                  
+                  // Localiza a nf de origem
+                  DbSelectArea("SD1")
+                  SD1->(DbSetOrder(1))
+                  
+                  // SD1->(DbSeek(xFilial("SD1")+SB6->B6_DOC+SB6->B6_SERIE+SC5->C5_CLIENTE+SC5->C5_LOJACLI+PROCSC6->C6_PRODUTO,.T.))
+                  // Alteracao feita por Jose Roberto 09/05/2000                                   // PROCSC6->C6_PRODUTO
+//                  SD1->(DbSeek(xFilial("SD1")+SB6->B6_DOC+SB6->B6_SERIE+SB6->B6_CLIFOR+SB6->B6_LOJA+SB6->B6_PRODUTO,.T.))
+                  
+                  _nTotValor := Round((cAliasSB6)->D1_VUNIT*_nQuantidade,2)
+                  _nTotValor := Iif(_nTotValor > 0.00,_nTotValor,0.01)
+                  
+                  DbSelectArea("PROCSC6")
+                  RecLock("PROCSC6")
+                     PROCSC6->C6_LOTECTL :=  (cAliasSB6)->D1_LOTECTL               // C 10  0  Lote                      @!                  
+                     PROCSC6->C6_DESCRI  :=  AllTrim(SubStr(SB1->B1_DESC,1,24)) + " S/NF:" + Alltrim((cAliasSB6)->B6_DOC)    // C 30  0  Descricao Auxiliar        @X                  
+                    
+                     PROCSC6->C6_QTDVEN  :=  _nQuantidade   // N  9  2  Quantidade Vendida        @E 999999.99        
+                     PROCSC6->C6_PRCVEN  :=  (cAliasSB6)->D1_VUNIT  // N 11  2  Preco Unitario Liquido    @E 99,999,999.99    
+                     PROCSC6->C6_VALOR   :=  _nTotValor   // N 12  2  Valor Total do Item       @E 999,999,999.99                        
+                     PROCSC6->C6_LOCAL   :=  SB1->B1_LOCPAD
+                     PROCSC6->C6_IDENTB6 :=  (cAliasSB6)->B6_IDENT
+                     PROCSC6->C6_NFORI   :=  (cAliasSB6)->B6_DOC
+                     PROCSC6->C6_SERIORI :=  (cAliasSB6)->B6_SERIE
+                     PROCSC6->C6_ITEMORI :=  (cAliasSB6)->D1_ITEM  // C  2  0  Nr.Item da N.Fiscal Orig. 99                  
+                  MsUnLock("PROCSC6")                  
+                  
+                  DbSelectArea("TRB")
+                  TRB->(DbSetOrder(1))
+                  If TRB->(DbSeek(ESTRUT->COMP,.T.))
+                     RecLock("TRB")
+                        TRB->SALDO := TRB->SALDO + _nQuantidade
+                     MsUnLock("TRB")
+                  Else
+                     DbSelectArea("TRB")
+                     Append Blank
+                        TRB->PRODUTO := ESTRUT->COMP
+                        TRB->SALDO   := _nQuantidade
+                  EndIf
+                  Exit //Sai do while do SB6, pois a qtde foi atendida total
+                  
+            Else   //  ESTRUT->QUANT > SB6->B6_SALDO
+            
+               If ((cAliasSB6)->B6_SALDO - (cAliasSB6)->B6_QULIB) > 0  //verifica se a nota já foi utilizada em outro pedido 
+               
+                  _lAppend := .T.
+                  _nItem := _nItem + 1
+                  _cItem := StrZero(_nItem,2)
+                  If _nItem > 99
+                     _nItem := 0
+                   EndIf                  
+                   
+                  _nQtd :=  (cAliasSB6)->B6_SALDO - (cAliasSB6)->B6_QULIB
+                  _nQuantidade :=  _nQtd
+                  RecLock("PROCSC6")
+                   //  PROCSC6->SB6 := SB6->B6_QULIB + _nQtd
+                     PROCSC6->SB6 := _nQtd  // qtde SB6 Parcial  
+                     PROCSC6->C6_RECNO  := (cAliasSB6)->RECSB6 //numero do registro do SB6
+                  MsUnLock("PROCSC6")
+                  
+                  RecLock("ESTRUT")
+                     ESTRUT->QUANT := ESTRUT->QUANT - _nQuantidade
+                  MsUnLock("ESTRUT")
+                  
+                  // Localiza a nf de origem
+//                  DbSelectArea("SD1")
+//                  SD1->(DbSetOrder(1))
+                 //  SD1->(DbSeek(xFilial("SD1")+SB6->B6_DOC+SB6->B6_SERIE+SC5->C5_CLIENTE+SC5->C5_LOJACLI+PROCSC6->C6_PRODUTO,.T.))
+                  // Alteracao feita por Jose Roberto 09/05/2000
+//                  SD1->(DbSeek(xFilial("SD1")+SB6->B6_DOC+SB6->B6_SERIE+SB6->B6_CLIFOR+SB6->B6_LOJA+PROCSC6->C6_PRODUTO,.T.))
+                  
+                 
+                  _nTotValor := Round((cAliasSB6)->D1_VUNIT*_nQuantidade,2)
+                  _nTotValor := Iif(_nTotValor > 0.00,_nTotValor,0.01)
+                  
+                  DbSelectArea("PROCSC6")
+                  RecLock("PROCSC6")
+                     PROCSC6->C6_LOTECTL :=  (cAliasSB6)->D1_LOTECTL               // C 10  0  Lote                      @!                  
+                     PROCSC6->C6_DESCRI  :=  AllTrim(SubStr(SB1->B1_DESC,1,24)) + " S/NF:" + alltrim((cAliasSB6)->B6_DOC)    // C 30  0  Descricao Auxiliar        @X                  
+                     PROCSC6->C6_QTDVEN  :=  _nQuantidade    // N  9  3  Quantidade Vendida        @E 999999.999 
+                     PROCSC6->C6_PRCVEN  :=  (cAliasSB6)->D1_VUNIT   // N 11  2  Preco Unitario Liquido    @E 99,999,999.99 
+                     PROCSC6->C6_VALOR   :=  _nTotValor      // N 12  2  Valor Total do Item       @E 999,999,999.99 
+                     PROCSC6->C6_LOCAL   :=  SB1->B1_LOCPAD  // 
+                     PROCSC6->C6_IDENTB6 :=  (cAliasSB6)->B6_IDENT   // 
+                     PROCSC6->C6_NFORI   :=  (cAliasSB6)->B6_DOC     // 
+                     PROCSC6->C6_SERIORI :=  (cAliasSB6)->B6_SERIE   // 
+                     PROCSC6->C6_ITEMORI :=  (cAliasSB6)->D1_ITEM    // C  2  0  Nr.Item da N.Fiscal Orig. 99                  
+                  MsUnLock("PROCSC6")                  
+                  
+                  DbSelectArea("TRB")
+                  TRB->(DbSetOrder(1))
+                  If TRB->(DbSeek(ESTRUT->COMP,.T.))
+                     RecLock("TRB")
+                        TRB->SALDO := TRB->SALDO + _nQuantidade
+                     MsUnLock("TRB")
+                  Else
+                     DbSelectArea("TRB")
+                     Append Blank
+                        TRB->PRODUTO := ESTRUT->COMP
+                        TRB->SALDO   := _nQuantidade
+                  EndIf   
+                  
+               EndIf
+               
+            EndIf
+            
+           (cAliasSB6)->(Dbskip())
+      Enddo
+      (cAliasSB6)->(DbCloseArea()) //Fecha area aberta
+
+      ESTRUT->(DbSkip())
+   Enddo
+   
+Return
+
+
+
+//*****************************************************************fim      
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³ _SC9Grava³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Grava Liberacao do Pedido de retorno                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function _SC9Grava()             
+
+   DbSelectArea("SC9")            
+   Reclock("SC9",.T.)
+       SC9->C9_OK      :=  ''               // C 2  0 Ok para Emissao da N.F.                
+	   SC9->C9_FILIAL  :=  xFilial("SC9")   // C 2  0 Filial do Sistema         @!           
+	   SC9->C9_PEDIDO  :=  _cNewPed         // C 6  0 Pedido                                 
+	   SC9->C9_ITEM    :=  PROCSC6->C6_ITEM     // C 2  0 Item do Pedido Liberado                
+	   SC9->C9_CLIENTE :=  _cCliente            // C 6  0 Cliente                                
+	   SC9->C9_LOJA    :=  _cLojaCli            // C 2  0 Loja do Cliente                        
+	   SC9->C9_PRODUTO :=  PROCSC6->C6_PRODUTO  // C15  0 Produto                                
+	   SC9->C9_QTDLIB  :=  PROCSC6->C6_QTDVEN   // N 9  2 Quantidade Liberada       @E 999999.99 
+	   SC9->C9_NFISCAL :=  ''               // C 6  0 Nota Fiscal                            
+	   SC9->C9_SERIENF :=  ''               // C 3  0 Serie da Nota Fiscal                   
+	   SC9->C9_DATALIB :=  dDataBase        // D 8  0 Data da Liberacao do Item              
+	   SC9->C9_SEQUEN  :=  PROCSC6->C6_ITEM  // C 2  0 Sequencia                              
+	   SC9->C9_GRUPO   :=  PROCSC6->C6_GRUPO // C 4  0 Grupo de Estoque                       
+	   SC9->C9_PRCVEN  :=  PROCSC6->C6_PRCVEN // N14  2 Preco de Venda Liberado   @E 9,999,999,
+	   SC9->C9_AGREG   :=  ''               // C 4  0 Agregador de liberacao    @!           
+	   SC9->C9_IDENTB6 :=  PROCSC6->C6_IDENTB6  // C 6  0 Identificador de Poder 3               
+	   SC9->C9_VENDA   :=  ''               // C 2  0 Venda                     @!             
+	   SC9->C9_BLEST   :=  ''               // C 2  0 Cod.Bloqueio ref.estoque               
+	   SC9->C9_BLCRED  :=  ''               // C 2  0 Cod.Bloqueio ref.Credito               
+	   SC9->C9_BLOQUEI :=  ''               // C 2  0 Bloqueio                  @!           
+	   SC9->C9_LOTECTL :=  ''                // C10  0 Lote                      @!           
+	   SC9->C9_NUMLOTE :=  ''               // C 6  0 Sub-Lote                  @!           
+	   SC9->C9_NUMSERI :=  ''               // C20  0 Numero de Serie           @!           
+	   SC9->C9_REMITO  :=  ''               // C12  0 Campo para Localiza‡”es                
+	   SC9->C9_RESERVA :=  ''               // C 6  0 Numero da Reserva         @!           
+	   SC9->C9_ITEMREM :=  ''               // C 2  0 Campo para Localiza‡”es                
+	   SC9->C9_QTDRESE :=  0.00             // PROCSC6->C6_QTDVEN   N12  2 Qtd.Reservada             @r999,999,999
+	   SC9->C9_DTVALID :=  CTOD("//")       // D 8  0 Data de Validade do Lote               
+	   SC9->C9_LOCAL   := PROCSC6->C6_LOCAL    //INCLUIDO EM 08/10/01 (NA VERSAO 4.07 NAO EXISTIA)
+   MsUnlock("SC9")
+
+Return
+
+/*/ 
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³ _SC5Grava³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Grava Cabecalho de Pedido de Venda                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function _SC5Grava()
+
+   DbSelectArea("SC5")
+   aStruct := DbStruct("SC5")
+   _cArq   := CriaTrab(aStruct) 
+   USE (_cArq) ALIAS C5T new Exclusive
+//   DbSelectArea("C5T")
+
+   RecLock("C5T",.T.)
+//   Append Blank
+   For _nI:= 1 to Len(aStruct)
+//      DbSelectArea("SC5")
+      _cConteudo := SC5->(FieldGet(_nI))
+//      DbSelectArea("C5T")
+      C5T->(FieldPut(_nI,_cConteudo))
+   Next
+   MsUnLock("C5T")   
+   
+//   DbSelectArea("C5T")
+   RecLock("C5T")
+      C5T->C5_NUM := SC6->C6_NUM
+   MsUnLock("C5T")   
+//   DbSelectArea("SC5")
+   
+   RecLock("SC5",.T.)   
+//   Append Blank
+   For _nI:= 1 to Len(aStruct)
+//      DbSelectArea("C5T")
+      _cConteudo := C5T->(FieldGet(_nI))
+//      DbSelectArea("SC5")
+      SC5->(FieldPut(_nI,_cConteudo))
+   Next   
+   MsUnLock("SC5")      
+   
+   DbSelectArea("SC5")
+   RecLock("SC5")
+      SC5->C5_LIBEROK := 'S' 
+      SC5->C5_CLIENTE := _cCliente
+      SC5->C5_CLIENT  := _cCliente      
+      SC5->C5_LOJACLI := _cLojaCli
+      SC5->C5_LOJAENT := _cLojaCli
+      SC5->C5_CONDPAG := "APR"
+      SC5->C5_MENNOTA := " "      
+   MsUnLock("SC5")
+ //  DbSelectArea("C5T")
+// DbCloseArea("C5T")
+   
+   // Alterado por Jose Roberto em 25/02/2000
+   _nPedAtual := SC5->(Recno())
+   _cNumAtual := SC5->C5_NUM
+   
+   // Atualiza o Pedido Gerador (613) com o Numero do pedido dos componentes
+   SC5->(DbGoTo(_nPedGer))
+   RecLock("SC5",.f.)
+     SC5->C5_PEDCOM := _cNumAtual  // Numero do Pedido dos componentes
+   MsUnLock("SC5")
+   
+  // Volta para o Pedido recem criado
+  SC5->(DbGoTo(_nPedAtual))
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³_Embalagem³ Autor ³ Geandre G. Oliveira   ³ Data ³ 24.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Prepara pedido embalagem                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+
+Static Function _Embalagem()
+   Close(oDlg1)   
+Return
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³_Triangular³Autor ³ Geandre G. Oliveira   ³ Data ³ 24.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Prepara pedido embalagem                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+
+Static Function _Triangular()
+Local _cfo     := Space(04)
+Local _nRecSA1 := 0
+Local _nOrdSA1 := 0
+
+
+   If _lTriangular               
+      lCabSC5   := .F.    // Variavel p/ controle de gravação do SC5 executa apenas uma vez
+      _cCliente := mv_par04 //cliente p/ nota de triangular
+      _cLojaCli := mv_par05 //loja    p/ nota de triangular
+      _lOPTR    := .t.
+   
+      DbSelectArea("C5T")
+      DbCloseArea()
+            
+      If File( _cArq+".DBF")
+         fErase(_cArq+".DBF")  // Deleta arquivo de dados temporario pois vai ser usado novamente
+      Endif   
+
+      _cNewPed := GetSXENum("SC5","C5_NUM") //pega numero do pedido da nota de triangulação.
+      ConfirmSX8() //confirma o numero do pedido de retorno no arq SXF SXE
+
+
+      _nRecSA1 := SA1->(Recno())//Guarda posição do registro
+      _nOrdSA1 := SA1->(IndexOrd()) //Guarda posição do index
+      SA1->(Dbseek(xFilial("SA1")+_cCliente +_cLojaCli))
+      IF SA1->A1_EST$"PR"
+         _Cfo := "5924" //Dentro do estado
+      Else
+         _Cfo := "6924" //Fora do estado        
+      Endif
+      SA1->(Dbgoto(_nRecSA1)) //volta a posição do registro do SA1
+      SA1->(DbSetOrder(_nOrdSA1))//volta a posição do index do SA1
+      
+      DbSelectArea("SC6")   // Gera Itens de Pedido de Venda
+      RecLock("SC6",.T.)
+      
+         SC6->C6_FILIAL  :=  xFilial("SC6")    // C  2  0  Filial do Sistema         @!                  
+         SC6->C6_ITEM    :=  "01"  // PROCSC6->C6_ITEM      // C  2  0  Numero do Item no Pedido                      
+         SC6->C6_PRODUTO :=  _PRODUTO   // C 15  0  Codigo do Produto         @!                  
+         SC6->C6_UM      :=  _UM        // C  2  0  Unidade de Medida Primar. @!                  
+         SC6->C6_QTDVEN  :=  _QTDVEN    // N  9  2  Quantidade Vendida        @E 999999.99        
+         SC6->C6_PRCVEN  :=  _PRCVEN    // N 11  2  Preco Unitario Liquido    @E 99,999,999.99    
+         SC6->C6_VALOR   :=  _VALOR     // N 12  2  Valor Total do Item       @E 999,999,999.99   
+         SC6->C6_QTDLIB  :=  _QTDVEN    // N  9  2  Quantidade Liberada       @E 999999.99        
+         SC6->C6_TES     :=  "595"       // C  3  0  Tipo de Saida do Item     @9                  
+         SC6->C6_CF      :=  _Cfo       // C  3  0  Codigo Fiscal da Operacao @9                  
+         SC6->C6_SEGUM   :=  _SEGUM     // C  2  0  Segunda Unidade de Medida @!                  
+         SC6->C6_UNSVEN  :=  _UNSVEN    // N  9  2  Quant. Vend. na 2 Unid M. @E 999999.99        
+         SC6->C6_LOCAL   :=  _LOCAL     // C  2  0  Almoxarifado              @!                  
+         SC6->C6_QTDEMP  :=  _QTDVEN    // N  9  2  Quantidade Empenhada      @E 999999.99        
+         SC6->C6_QTDENT  :=  _QTDENT    // N  9  2  Quantidade Entregue       @E 999999.99        
+         SC6->C6_CLI     :=  _cCliente  // C  6  0  Codigo do Cliente         @!                  
+         SC6->C6_LOJA    :=  _cLojaCli  // C  2  0  loja   do Cliente         @!                           
+         SC6->C6_DESCONT :=  _DESCONT   // N  5  2  Percentual de Desconto    @E 99.99            
+         SC6->C6_VALDESC :=  _VALDESC   // N 14  2  Valor do Desconto do Item @E 99,999,999,999.99
+         SC6->C6_ENTREG  :=  _ENTREG    // D  8  0  Data da Entrega                               
+         SC6->C6_LA      :=  _LA        // C  8  0  Campo de Controle                             
+         SC6->C6_NUM     :=  _cNewPed              // C  6  0  Numero do Pedido          @X                  
+         SC6->C6_COMIS1  :=  _COMIS1    // N  5  2  Percentual Comissao 1     @E 99.99            
+         SC6->C6_COMIS2  :=  _COMIS2    // N  5  2  Percentual Comissao 2     @E 99.99            
+         SC6->C6_COMIS3  :=  _COMIS3    // N  5  2  Percentual Comissao 3     @E 99.99            
+         SC6->C6_COMIS4  :=  _COMIS4    // N  5  2  Percentual Comissao 4     @E 99.99            
+//         SC6->C6_COMIS5  :=  _COMIS5    // N  5  2  Percentual Comissao 5     @E 99.99            
+         SC6->C6_PEDCLI  :=  _PEDCLI    // C  9  0  Numero do Pedido Cliente  @X                  
+         SC6->C6_DESCRI  :=  _DESCRI    // C 30  0  Descricao Auxiliar        @X                  
+         SC6->C6_PRUNIT  :=  _PRUNIT    // N 11  2  Preco Unitario de Tabela  @E 99,999,999.99    
+         SC6->C6_BLOQUEI :=  _BLOQUEI   // C  2  0  Bloqueio do Pedido        @!                  
+         SC6->C6_GEROUPV :=  _GEROUPV   // C  1  0  Se gerou previsao de vend                     
+         SC6->C6_RESERVA :=  _RESERVA   // C  6  0  Numero da reserva         @!                  
+         SC6->C6_OP      :=  _OP        // C  2  0  Flag de geracao de OP     @!                  
+         SC6->C6_OK      :=  _OK        // C  2  0  Ok para Emissao de O.P.                       
+         SC6->C6_NFORI   :=  _NFORI     // C  6  0  N.F.Original              999999              
+         SC6->C6_SERIORI :=  _SERIORI   // C  3  0  Serie da N.F. Original    @!                  
+         SC6->C6_ITEMORI :=  _ITEMORI   // C  2  0  Nr.Item da N.Fiscal Orig. 99                  
+//         SC6->C6_IPIDEV  :=  _IPIDEV    // N 14  2  Vl.IPI qdo.nota devolucao @E 999,999,999.99   
+         SC6->C6_IDENTB6 :=  _IDENTB6   // C  6  0  Identificador Poder Terc. @!                  
+         SC6->C6_BLQ     :=  _BLQ       // C  2  0  Bloqueio Pedido           @!                  
+         SC6->C6_PICMRET :=  _PICMRET   // N  5  2  Icm Retido (Margem Lucro) @E 99.99            
+         SC6->C6_CODISS  :=  _CODISS    // C  8  0  C¢digo de Servi‡o do ISS  @9                  
+         SC6->C6_GRADE   :=  _GRADE     // C  1  0  Ind.se prod.digitado Grad @!                  
+         SC6->C6_ITEMGRD :=  _ITEMGRD   // C  3  0  Item de Grade             @!                  
+         SC6->C6_LOTECTL :=  _LOTECTL   // C 10  0  Lote                      @!                  
+         SC6->C6_NUMLOTE :=  _NUMLOTE   // C  6  0  Sub-Lote                  @!                  
+         SC6->C6_DTVALID :=  _DTVALID   // D  8  0  Validade do Lote Inform.                      
+         SC6->C6_NUMORC  :=  _NUMORC    // C  8  0  Numero do Or‡amento       @!                  
+         SC6->C6_CHASSI  :=  _CHASSI    // C 17  0  Codigo do Chassi          @!                  
+         SC6->C6_OPC     :=  _OPC       // C 80  0  Opcionais utilizados p/PV @!S40               
+         SC6->C6_LOCALIZ :=  _LOCALIZ   // C 15  0  Localizacao Fisica        @!                  
+         SC6->C6_NUMSERI :=  _NUMSERI   // C 20  0  Num de Serie do Produto   @!                  
+         SC6->C6_NUMOP   :=  _NUMOP     // C  6  0  Num. da OP gerada por PV  @X                  
+         SC6->C6_ITEMOP  :=  _ITEMOP    // C  2  0  Item da OP gerada por PV  @!                  
+         SC6->C6_CLASFIS :=  _CLASFIS   // C  3  0  Situacao Tributaria       @!                  
+         SC6->C6_QTDRESE :=  _QTDRESE   // N 12  2  Quant. Reservada          @r 999,999,999.99   
+         SC6->C6_NUMOS   :=  _NUMOS     // C 10  0  Nr. da Ordem de Servico   @!                  
+         SC6->C6_NUMOSFA :=  _NUMOSFA   // C 10  0  Nr.OS do Fabricante       @!                  
+         SC6->C6_CODFAB  :=  _CODFAB    // C  6  0  Codigo do Fabricante      @!                  
+         SC6->C6_LOJAFA  :=  _LOJAFA    // C  2  0  Loja do Fabricante        @!                  
+         SC6->C6_TPOP    :=  _TPOP      // C  1  0  Tipo da Ordem de Produ‡„o @!                  
+         SC6->C6_REVISAO :=  _REVISAO   // C  3  0  Revisao da Estrutura      @!                       
+      MsUnLock("SC6") 
+         
+            
+      If _lOPTR
+         Processa({||_SC9TR()},"Gerando Pedido Op. Triangular...")
+         _lOPTR := .f.
+      Endif
+            
+  //    _SC9Grava() // grava liberação de pedido de triangulação
+      
+
+      If !lCabSC5 //se FALSO grava o SC5 - cabecalho do pedido de venda nota de triangulação
+         _SC5Grava()
+         lCabSC5 := .T.                               
+      EndIf   
+  
+   EndIf
+   
+Return
+
+/*                                                                                                                        
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ                                             
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±                                             
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±                                             
+±±³ Funcao   ³ estoura  ³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±                                             
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±                                             
+±±³Descri‡„o ³ Funcao para explodir estrutura do produto                  ³±±                                             
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±                                             
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±                                             
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±                                             
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±                                             
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß                                             
+*/                                                                                                                        
+
+Static Function Estoura()
+   _aSB1 := {}
+   AADD(_aSB1,{"PRODUTO","C",15,0})
+   AADD(_aSB1,{"SALDO","N",10,3})
+   AADD(_aSB1,{"ALOCADO","N",10,3})
+   AADD(_aSB1,{"DIFERENCA","N",10,3})
+   AADD(_aSB1,{"ESTRUTURA","N",21,6})
+                                                                                                                          
+   _cArqSB1 := CriaTrab(_aSB1)
+                                                                                                                          
+   USE (_cArqSB1) ALIAS TRB New Exclusive
+                                                                                                                          
+   IndRegua("TRB",_cArqSB1,"PRODUTO",,,"Criando arquivo temporario...")
+                                                                                                                          
+   TRB->(DbSetOrder(1))
+   TRB->(DbGoTop())
+   DbSelectArea("TRB")
+                                                                                                                          
+   DbSelectArea("SB1")
+   SB1->(DbSetOrder(1))
+   SB1->(DbSeek(xFilial()+cProduto,.F.))
+   nEstru      := 0
+   nQuant      := SC6->C6_QTDVEN
+   cAliasEstru := "ESTRUT"
+   cArqTrab    := CriaTrab(nil,.f.)
+   cNomeArq    := Estrut2(cProduto,nQuant)
+                                                                                                                          
+   ESTRUT->(DbGoTop())
+   If ESTRUT->(RecCount()) <= 0
+      MsgBox("Nao existe Estrutura Cadastrada para o Produto "+cProduto+chr(13)+;
+             "Verifique se ha Estrutura Cadastrada ou Data Validade"+chr(13)+;
+             "Vencida da Estrutura","Atencao","STOP")
+      _lGeraOk := .F.  //flag de controle             
+      _lOK     := .F. // Erro na Geração        
+      TRB->(DbCloseArea("TRB"))     
+      Return // retorna apos erro gerado
+   EndIf
+                                                                                                                          
+   // Copia explosao da estrutura para arquivo temporario
+   _cEstrutura := CriaTrab(nil,.F.)
+   DbSelectArea("ESTRUT")
+   Copy to (_cEstrutura)
+   Use (_cEstrutura)  ALIAS TMP New Exclusive
+   DbSelectArea("TMP")
+   IndRegua("TMP",_cEstrutura,"COMP",,,"Criando indice...")
+   TMP->(DbSetOrder(1))
+   TMP->(DbGoTop())
+Return
+                                                                                               
+/*                                                                                             
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ                  
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±                  
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±                  
+±±³ Funcao   ³ _Implode ³ Autor ³ Geandre G. Oliveira   ³ Data ³ 19.11.99 ³±±                  
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±                  
+±±³Descri‡„o ³ Funcao para implodir estrutura do produto                  ³±±                  
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±                  
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±                  
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±                  
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±                  
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß                  
+*/                                                                                             
+
+
+Static Function _Implode()
+   // EndEstrut2(Nil,cNomeArq)   // Implode a estrutura
+//   DbSelectArea("TRB")
+//   DbCloseArea("TRB")
+//   DbSelectArea("PROCSC6")
+//   DbCloseArea("PROCSC6")
+//   DbSelectArea("TMP")
+//   DbCloseArea("TMP")     
+//   DbSelectArea("C5T")
+//   DbCloseArea("C5T") 
+
+   DbSelectArea("TRB")
+   DbCloseArea()
+   DbSelectArea("TMP")
+   DbCloseArea()
+   DbSelectArea("C5T")
+   DbCloseArea()
+   DbSelectArea("PROCSC6")
+   DbCloseArea()
+      
+   
+   If File( _cArq+".DBF")
+      fErase(_cArq+".DBF")  // Deleta arquivo de dados temporario
+   Endif   
+   fErase(_cArquivo+".DBF")
+   fErase(_cArquivo+".CDX")
+   If File( _cArqSB1+".DBF")   
+      fErase(_cArqSB1+".DBF")  // Deleta arquivo de dados temporario
+   Endif   
+
+   If File( _cArquivo+".DBF")
+      fErase(_cArquivo+".DBF")  // Deleta arquivo de dados temporario
+   Endif   
+
+   If File( cArqTrab+".DBF")   
+      fErase(cArqTrab+".DBF")  // Deleta arquivo de dados temporario
+   Endif   
+
+
+   If File( _cEstrutura+".DBF")   
+      fErase(_cEstrutura+".DBF")  // Deleta arquivo de dados temporario
+   Endif   
+
+   
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Funcao   ³ _SC9TR   ³ Autor ³ Geandre G. Oliveira   ³ Data ³ 17.11.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Grava no Itens de pedido de venda para Triangulacao        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para New Hubner                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function _SC9TR()
+
+/*
+      DbSelectArea("SC6")   // Gera Itens de Pedido de Venda
+      RecLock("SC6",.T.)
+      
+         SC6->C6_FILIAL  :=  xFilial("SC6")    // C  2  0  Filial do Sistema         @!                  
+         SC6->C6_ITEM    :=  "01"  // PROCSC6->C6_ITEM      // C  2  0  Numero do Item no Pedido                      
+         SC6->C6_PRODUTO :=  PROCSC6->C6_PRODUTO   // C 15  0  Codigo do Produto         @!                  
+         SC6->C6_UM      :=  PROCSC6->C6_UM        // C  2  0  Unidade de Medida Primar. @!                  
+         SC6->C6_QTDVEN  :=  PROCSC6->C6_QTDVEN    // N  9  2  Quantidade Vendida        @E 999999.99        
+         SC6->C6_PRCVEN  :=  PROCSC6->C6_PRCVEN    // N 11  2  Preco Unitario Liquido    @E 99,999,999.99    
+         SC6->C6_VALOR   :=  PROCSC6->C6_VALOR     // N 12  2  Valor Total do Item       @E 999,999,999.99   
+         SC6->C6_QTDLIB  :=  PROCSC6->C6_QTDLIB    // N  9  2  Quantidade Liberada       @E 999999.99        
+         SC6->C6_TES     :=  PROCSC6->C6_TES       // C  3  0  Tipo de Saida do Item     @9                  
+         SC6->C6_CF      :=  PROCSC6->C6_CF        // C  3  0  Codigo Fiscal da Operacao @9                  
+         SC6->C6_SEGUM   :=  PROCSC6->C6_SEGUM     // C  2  0  Segunda Unidade de Medida @!                  
+         SC6->C6_UNSVEN  :=  PROCSC6->C6_UNSVEN    // N  9  2  Quant. Vend. na 2 Unid M. @E 999999.99        
+         SC6->C6_LOCAL   :=  PROCSC6->C6_LOCAL     // C  2  0  Almoxarifado              @!                  
+         SC6->C6_QTDEMP  :=  PROCSC6->C6_QTDVEN    // N  9  2  Quantidade Empenhada      @E 999999.99        
+         SC6->C6_QTDENT  :=  PROCSC6->C6_QTDENT    // N  9  2  Quantidade Entregue       @E 999999.99        
+         SC6->C6_CLI     :=  PROCSC6->C6_CLI       // C  6  0  Codigo do Cliente         @!                  
+         SC6->C6_DESCONT :=  PROCSC6->C6_DESCONT   // N  5  2  Percentual de Desconto    @E 99.99            
+         SC6->C6_VALDESC :=  PROCSC6->C6_VALDESC   // N 14  2  Valor do Desconto do Item @E 99,999,999,999.99
+         SC6->C6_ENTREG  :=  PROCSC6->C6_ENTREG    // D  8  0  Data da Entrega                               
+         SC6->C6_LA      :=  PROCSC6->C6_LA        // C  8  0  Campo de Controle                             
+         SC6->C6_LOJA    :=  PROCSC6->C6_LOJA      // C  2  0  Loja do Cliente           @!                  
+         SC6->C6_NOTA    :=  PROCSC6->C6_NOTA      // C  6  0  Numero da Nota Fiscal     @X                  
+         SC6->C6_SERIE   :=  PROCSC6->C6_SERIE     // C  3  0  Serie da Nota Fiscal      @!                  
+         SC6->C6_DATFAT  :=  PROCSC6->C6_DATFAT    // D  8  0  Data do Faturamento                           
+         SC6->C6_NUM     :=  _cNewPed              // C  6  0  Numero do Pedido          @X                  
+         SC6->C6_COMIS1  :=  PROCSC6->C6_COMIS1    // N  5  2  Percentual Comissao 1     @E 99.99            
+         SC6->C6_COMIS2  :=  PROCSC6->C6_COMIS2    // N  5  2  Percentual Comissao 2     @E 99.99            
+         SC6->C6_COMIS3  :=  PROCSC6->C6_COMIS3    // N  5  2  Percentual Comissao 3     @E 99.99            
+         SC6->C6_COMIS4  :=  PROCSC6->C6_COMIS4    // N  5  2  Percentual Comissao 4     @E 99.99            
+         SC6->C6_COMIS5  :=  PROCSC6->C6_COMIS5    // N  5  2  Percentual Comissao 5     @E 99.99            
+         SC6->C6_PEDCLI  :=  PROCSC6->C6_PEDCLI    // C  9  0  Numero do Pedido Cliente  @X                  
+         SC6->C6_DESCRI  :=  PROCSC6->C6_DESCRI    // C 30  0  Descricao Auxiliar        @X                  
+         SC6->C6_PRUNIT  :=  PROCSC6->C6_PRUNIT    // N 11  2  Preco Unitario de Tabela  @E 99,999,999.99    
+         SC6->C6_BLOQUEI :=  PROCSC6->C6_BLOQUEI   // C  2  0  Bloqueio do Pedido        @!                  
+         SC6->C6_GEROUPV :=  PROCSC6->C6_GEROUPV   // C  1  0  Se gerou previsao de vend                     
+         SC6->C6_RESERVA :=  PROCSC6->C6_RESERVA   // C  6  0  Numero da reserva         @!                  
+         SC6->C6_OP      :=  PROCSC6->C6_OP        // C  2  0  Flag de geracao de OP     @!                  
+         SC6->C6_OK      :=  PROCSC6->C6_OK        // C  2  0  Ok para Emissao de O.P.                       
+         SC6->C6_NFORI   :=  PROCSC6->C6_NFORI     // C  6  0  N.F.Original              999999              
+         SC6->C6_SERIORI :=  PROCSC6->C6_SERIORI   // C  3  0  Serie da N.F. Original    @!                  
+         SC6->C6_ITEMORI :=  PROCSC6->C6_ITEMORI   // C  2  0  Nr.Item da N.Fiscal Orig. 99                  
+         SC6->C6_IPIDEV  :=  PROCSC6->C6_IPIDEV    // N 14  2  Vl.IPI qdo.nota devolucao @E 999,999,999.99   
+         SC6->C6_IDENTB6 :=  PROCSC6->C6_IDENTB6   // C  6  0  Identificador Poder Terc. @!                  
+         SC6->C6_BLQ     :=  PROCSC6->C6_BLQ       // C  2  0  Bloqueio Pedido           @!                  
+         SC6->C6_PICMRET :=  PROCSC6->C6_PICMRET   // N  5  2  Icm Retido (Margem Lucro) @E 99.99            
+         SC6->C6_CODISS  :=  PROCSC6->C6_CODISS    // C  8  0  C¢digo de Servi‡o do ISS  @9                  
+         SC6->C6_GRADE   :=  PROCSC6->C6_GRADE     // C  1  0  Ind.se prod.digitado Grad @!                  
+         SC6->C6_ITEMGRD :=  PROCSC6->C6_ITEMGRD   // C  3  0  Item de Grade             @!                  
+         SC6->C6_LOTECTL :=  PROCSC6->C6_LOTECTL   // C 10  0  Lote                      @!                  
+         SC6->C6_NUMLOTE :=  PROCSC6->C6_NUMLOTE   // C  6  0  Sub-Lote                  @!                  
+         SC6->C6_DTVALID :=  PROCSC6->C6_DTVALID   // D  8  0  Validade do Lote Inform.                      
+         SC6->C6_NUMORC  :=  PROCSC6->C6_NUMORC    // C  8  0  Numero do Or‡amento       @!                  
+         SC6->C6_CHASSI  :=  PROCSC6->C6_CHASSI    // C 17  0  Codigo do Chassi          @!                  
+         SC6->C6_OPC     :=  PROCSC6->C6_OPC       // C 80  0  Opcionais utilizados p/PV @!S40               
+         SC6->C6_LOCALIZ :=  PROCSC6->C6_LOCALIZ   // C 15  0  Localizacao Fisica        @!                  
+         SC6->C6_NUMSERI :=  PROCSC6->C6_NUMSERI   // C 20  0  Num de Serie do Produto   @!                  
+         SC6->C6_NUMOP   :=  PROCSC6->C6_NUMOP     // C  6  0  Num. da OP gerada por PV  @X                  
+         SC6->C6_ITEMOP  :=  PROCSC6->C6_ITEMOP    // C  2  0  Item da OP gerada por PV  @!                  
+         SC6->C6_CLASFIS :=  PROCSC6->C6_CLASFIS   // C  3  0  Situacao Tributaria       @!                  
+         SC6->C6_QTDRESE :=  PROCSC6->C6_QTDRESE   // N 12  2  Quant. Reservada          @r 999,999,999.99   
+         SC6->C6_NUMOS   :=  PROCSC6->C6_NUMOS     // C 10  0  Nr. da Ordem de Servico   @!                  
+         SC6->C6_NUMOSFA :=  PROCSC6->C6_NUMOSFA   // C 10  0  Nr.OS do Fabricante       @!                  
+         SC6->C6_CODFAB  :=  PROCSC6->C6_CODFAB    // C  6  0  Codigo do Fabricante      @!                  
+         SC6->C6_LOJAFA  :=  PROCSC6->C6_LOJAFA    // C  2  0  Loja do Fabricante        @!                  
+         SC6->C6_TPOP    :=  PROCSC6->C6_TPOP      // C  1  0  Tipo da Ordem de Produ‡„o @!                  
+         SC6->C6_REVISAO :=  PROCSC6->C6_REVISAO   // C  3  0  Revisao da Estrutura      @!                       
+      MsUnLock("SC6") 
+
+      _SC9Grava() // grava liberação de pedido de triangulação
+      
+  */
+  
+//Static Function _SC9Grava()             
+
+   DbSelectArea("SC9")            
+   Reclock("SC9",.T.)
+       SC9->C9_OK      :=  ''               // C 2  0 Ok para Emissao da N.F.                
+	   SC9->C9_FILIAL  :=  xFilial("SC9")   // C 2  0 Filial do Sistema         @!           
+	   SC9->C9_PEDIDO  :=  _cNewPed         // C 6  0 Pedido                                 
+	   SC9->C9_ITEM    :=  "01"             // C 2  0 Item do Pedido Liberado                
+	   SC9->C9_CLIENTE :=  _cCliente            // C 6  0 Cliente                                
+	   SC9->C9_LOJA    :=  _cLojaCli            // C 2  0 Loja do Cliente                        
+	   SC9->C9_PRODUTO :=  _PRODUTO  // C15  0 Produto                                
+	   SC9->C9_QTDLIB  :=  _QTDVEN   // N 9  2 Quantidade Liberada       @E 999999.99 
+	   SC9->C9_NFISCAL :=  ''               // C 6  0 Nota Fiscal                            
+	   SC9->C9_SERIENF :=  ''               // C 3  0 Serie da Nota Fiscal                   
+	   SC9->C9_DATALIB :=  dDataBase        // D 8  0 Data da Liberacao do Item              
+	   SC9->C9_SEQUEN  :=  _ITEM  // C 2  0 Sequencia                              
+	   SC9->C9_GRUPO   :=  _GRUPO // C 4  0 Grupo de Estoque                       
+	   SC9->C9_PRCVEN  :=  _PRCVEN // N14  2 Preco de Venda Liberado   @E 9,999,999,
+	   SC9->C9_AGREG   :=  ''               // C 4  0 Agregador de liberacao    @!           
+//	   SC9->C9_IDENTB6 :=  PROCSC6->C6_IDENTB6  // C 6  0 Identificador de Poder 3               
+	   SC9->C9_VENDA   :=  ''               // C 2  0 Venda                     @!             
+	   SC9->C9_BLEST   :=  ''               // C 2  0 Cod.Bloqueio ref.estoque               
+	   SC9->C9_BLCRED  :=  ''               // C 2  0 Cod.Bloqueio ref.Credito               
+	   SC9->C9_BLOQUEI :=  ''               // C 2  0 Bloqueio                  @!           
+	   SC9->C9_LOTECTL :=  ''                // C10  0 Lote                      @!           
+	   SC9->C9_NUMLOTE :=  ''               // C 6  0 Sub-Lote                  @!           
+	   SC9->C9_NUMSERI :=  ''               // C20  0 Numero de Serie           @!           
+	   SC9->C9_REMITO  :=  ''               // C12  0 Campo para Localiza‡”es                
+	   SC9->C9_RESERVA :=  ''               // C 6  0 Numero da Reserva         @!           
+	   SC9->C9_ITEMREM :=  ''               // C 2  0 Campo para Localiza‡”es                
+	   SC9->C9_QTDRESE :=  0.00             // PROCSC6->C6_QTDVEN   N12  2 Qtd.Reservada             @r999,999,999
+	   SC9->C9_DTVALID :=  CTOD("//")       // D 8  0 Data de Validade do Lote               
+	   SC9->C9_LOCAL   := _LOCAL    //INCLUIDO EM 08/10/01 (NA VERSAO 4.07 NAO EXISTIA)
+   MsUnlock("SC9")
+
+      If !lCabSC5 //se FALSO grava o SC5 - cabecalho do pedido de venda nota de triangulação
+         _SC5Grava()
+         lCabSC5 := .T.                               
+      EndIf   
+   
+Return
+

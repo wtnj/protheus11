@@ -1,0 +1,54 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ NHVLD003 ³ Autor ³ Alexandre R. Bento    ³ Data ³ 23/04/02 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Traz a Descricao do Centro de Custo no Cad. EPI            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Execblock usado do programa NHEST023                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Arquivos ³ SZ7                                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+
+#include "rwmake.ch"  
+
+User Function Nhvld003()
+
+SetPrvt("_LRET,_CDESCRCC,")
+
+_lRet := .t.
+SI3->(DbSetOrder(1))
+SI3->(DbSeek(xFilial("SI3")+_CCC))
+
+If Empty(_CCC) .Or. Len(Alltrim(_CCC)) < 6 
+   MSGBOX("O CENTRO DE CUSTO e Obrigatorio e Com Seis Digitos, REDIGITE Novamente para Contabilizar Corretamente!!!!!!!!","Atencao Centro de Custo","STOP")
+   _CCC := Space(09) //limpa campo de centro de custo     
+   _lRet := .f.
+Endif
+
+//If Subs(_CCC,1,6)$"401002/401003/401007/401009/401011/402001/404002/411002/411003/411004/412001/413001/413002/415001/302002/404002/402001/401012/410002"
+If SI3->I3_ATIVO =="I" // Inativo
+   MsgBox("ATENCAO: CENTRO DE CUSTO BLOQUEADO, USAR  CENTRO DE CUSTO VALIDO !!!!!!!!")
+   _CCC := Space(09) //limpa campo de centro de custo     
+   _lRet := .f.
+Endif
+
+IF ExistCpo("SI3")
+   _cDescrCC := SI3->I3_DESC
+ELSE
+   _lRet := .f.
+ENDIF   
+
+QAA->(DbSeek(xFilial("QAA")+ _cMatr))
+If QAA->(Found())
+    If Alltrim(_CCC) <> Alltrim(QAA->QAA_CC)
+       MsgBox("ATENCAO: Centro de Custo "+ Alltrim(_CCC) +" é Diferente do Centro de Custo " +Alltrim(QAA->QAA_CC)+" Do Cadastro do funcionario !!!!!!!!")
+    Endif   
+Endif             
+
+Return(_lRet)  

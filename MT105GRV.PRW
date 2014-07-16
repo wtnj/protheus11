@@ -1,0 +1,89 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³MT105GRV ºAutor  ³Alexandre R. Bento  º Data ³  04/05/07   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Ponto de entrada apos confirmacao da inclusao da solicitacaoº±±
+±±º          ³e gera  a pre requisicao automaticamente                    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP8                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#include "Topconn.ch"
+#include "rwmake.ch"
+
+User Function MT105GRV
+_cNum := SCP->CP_NUM
+cSeq  := "01"
+
+	dbSelectArea("SCP")
+	dbSetOrder(1)
+
+	If Substr(SCP->CP_PRODUTO,1,2)$"FE" .And. "305004"$SCP->CP_CC //FERRAMENTAS
+		Return
+	EndIf
+
+	If !UPPER(ALLTRIM(FUNNAME()))$"NHEST151"
+		If Acols[n][len(aHeader)+1]  //nao pega quando a linha esta deletada
+			Return
+		EndIf
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Grava Pre-Requisicao         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SCQ")
+	RecLock("SCQ",.T.)
+		SCQ->CQ_FILIAL := xFilial("SCQ")
+		SCQ->CQ_NUM    := SCP->CP_NUM
+		SCQ->CQ_ITEM   := SCP->CP_ITEM
+		SCQ->CQ_PRODUTO:= SCP->CP_PRODUTO
+		SCQ->CQ_LOCAL  := SCP->CP_LOCAL
+		SCQ->CQ_UM     := SCP->CP_UM
+		SCQ->CQ_QUANT  := SCP->CP_QUANT
+		SCQ->CQ_QTSEGUM:= SCP->CP_QTSEGUM
+		SCQ->CQ_SEGUM  := SCP->CP_SEGUM
+		SCQ->CQ_QTDISP := SCP->CP_QUANT
+		SCQ->CQ_NUMSQ  := cSeq
+		SCQ->CQ_DATPRF := SCP->CP_DATPRF
+		SCQ->CQ_DESCRI := SCP->CP_DESCRI
+		SCQ->CQ_CC     := SCP->CP_CC
+		SCQ->CQ_CONTA  := SCP->CP_CONTA
+		SCQ->CQ_ITEMCTA:= SCP->CP_ITEMCTA
+		SCQ->CQ_CLVL   := SCP->CP_CLVL
+		SCQ->CQ_HORA   := Substr(time(),1,5)
+		MaAvalRA("SCQ",1)
+	MsUnLock("SCQ")
+	
+	dbSelectArea("SCP")
+	Reclock("SCP",.F.)
+		
+		//-- quando for rotina de solicitacao de epi, grava o numero da solicitacao de epi na requisicao eletronica
+		If AllTrim(UPPER(FUNNAME()))$"NHEST151"
+			SCP->CP_NUMSEPI := cNum
+			//GRAVA NO ZDC O NUMERO DO DOCUMENTO GERADO NO SCP
+			ZDC->(dbGoTop())
+			ZDC->(dbSetOrder(1)) //ZDC_FILIAL+ZDC_NUM
+			ZDC->(dbSeek(xFilial("ZDC")+cNum))
+
+			While ZDC->(!EOF()) .AND. ZDC->ZDC_NUM==cNum
+			    RecLock("ZDC",.F.)
+			    	ZDC->ZDC_NUMSA := SCP->CP_NUM
+			    MsUnLock("ZDC")
+				ZDC->(dbSkip())
+			EndDo
+
+		EndIf
+	    
+	    SCP->CP_HORA := Substr(time(),1,5)
+	    SCP->CP_PREREQU := "S"   
+	    SCP->CP_SOLICIT := Upper(Alltrim(cUserName))  //Pega o nome do usuario que esta logado no sistema
+	MsUnLock("SCP")
+
+	cSeq  := Soma1(cSeq,Len(SCQ->CQ_NUMSQ))
+
+Return

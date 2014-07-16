@@ -1,0 +1,556 @@
+#include "SIGAWIN.CH"        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+#INCLUDE "VKEY.CH"
+#include "RWMAKE.CH"        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+#IFNDEF WINDOWS
+	#DEFINE PSAY SAY
+#ENDIF
+
+User Function Ort()        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CBTXT,CBCONT,NORDEM,ALFA,Z,M")
+SetPrvt("TAMANHO,LIMITE,TITULO,CDESC1,CDESC2,CDESC3")
+SetPrvt("CNATUREZA,ARETURN,NOMEPROG,CPERG,NLASTKEY,LCONTINUA")
+SetPrvt("NLIN,WNREL,NTAMNF,CSTRING,NOPCA,XREMANT")
+SetPrvt("NLININI,XNUM_REM,XEMISSAO_REM,XCOD_PROD,XCANT_PROD,XUM_PROD")
+SetPrvt("XORDEN,XCOD_PROVE,XLOJA_PROVE,XTIPOC,XNUM_ORT,XNOM_PROD")
+SetPrvt("XCUENTA_PROD,XNOM_PROVE,XNUM_OC,XNUM_AUT,XCANT_AUT,XEMISSAO_AUT")
+SetPrvt("XEMISSAO_OC,NOPC,CCOR,_SALIAS,AREGS,I")
+SetPrvt("J,")
+
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 09/09/99 ==> #INCLUDE "VKEY.CH"
+#IFNDEF WINDOWS
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 09/09/99 ==> 	#DEFINE PSAY SAY
+#ENDIF
+
+/*/
+_____________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Programa  ¦  ORT     ¦ Autor ¦   Bruno Sobieski      ¦ Data ¦ 08/07/98 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Impresion de ORT                                           ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Uso       ¦ Especifico para Cliente Trinter                            ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+/*/
+
+ValidPerg()
+
+//+--------------------------------------------------------------+
+//¦ Define Variables Ambientales                                 ¦
+//+--------------------------------------------------------------+
+//+--------------------------------------------------------------+
+//¦ Variables utilizadas para parametros                         ¦
+//¦ mv_par01             // Nro de Remito                        ¦
+//¦ mv_par02             // Nro de Proveedor                     ¦ 
+//+--------------------------------------------------------------+
+CbTxt:=""
+CbCont:=""
+nOrdem :=0
+Alfa := 0
+Z:=0
+M:=0
+tamanho:="G" 
+limite:=220
+titulo :=PADC("Impresion de ORT ",74)
+cDesc1 :=PADC("Este programa emitira las ORT para los articulos del ",74)
+cDesc2 :=""
+cDesc3 :=PADC("REMITO recien tipeado.",74)
+cNatureza:="" 
+aReturn := { "Especial", 1,"Administracion", 1, 2, 1,"",1 }
+//nomeprog:="nfiscal" 
+nomeprog:="ort"
+cPerg:="COMORT"
+nLastKey:= 0 
+lContinua := .T.
+nLin:=0
+//wnrel    := "siganf"
+wnrel      := "sigaort"
+//+-----------------------------------------------------------+
+//¦ Tamano del Formulario de ORT (em Lineas)                  ¦
+//+-----------------------------------------------------------+
+
+nTamNf:=72     // Apenas Informativo 
+
+//+-------------------------------------------------------------------------+
+//¦ Verifica ls preguntas seleccionadas                                     ¦
+//+-------------------------------------------------------------------------+
+
+Pergunte(cPerg,.F.)               // Pergunta no SX1
+                                                                 
+  cString:="SCM"
+
+  //+--------------------------------------------------------------+
+  //¦ Envia control para la funciona SETPRINT                       ¦
+  //+--------------------------------------------------------------+
+  wnrel:=SetPrint(cString,wnrel,cPerg,Titulo,cDesc1,cDesc2,cDesc3,.T.)
+
+  If nLastKey == 27
+    Return
+  Endif
+
+  //+--------------------------------------------------------------+
+  //¦ Verifica Posicion del Formulario en la Impresora             ¦          
+  //+--------------------------------------------------------------+
+
+  SetDefault(aReturn,cString)
+
+  If nLastKey == 27
+     Return
+  Endif
+
+ 
+  VerImp()
+
+
+  //+--------------------------------------------------------------+
+  //¦                                                              ¦
+  //¦ Inicio de Procesamiento de la ORT                            ¦
+  //¦                                                              ¦
+  //+--------------------------------------------------------------+
+  #IFDEF WINDOWS
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==>         RptStatus({|| Execute(RptDetail)})
+        RptStatus({|| RptDetail()})
+	Return
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> 	Function RptDetail
+Static Function RptDetail()
+  #ENDIF
+
+     dbSelectArea("SCM")                // * REMITO DE ENTRADA
+     dbSetOrder(5)
+     dbSeek(xFilial("SCM")+mv_par01+mv_par02,.T.)
+     if !found()
+          Alert("No existe el remito "+mv_par01+" para "+mv_par02)
+          nOpcA:=2
+     Endif
+  //+-----------------------------------------------------------+
+  //¦ Inicializa  regla de impresion                            ¦
+  //+-----------------------------------------------------------+
+If nOpcA #2
+
+  SetRegua(1)
+    dbSelectArea("SCM")
+
+    xRemAnt:=SCM->CM_REMITO+SCM->CM_FORNECE
+    While !eof() .and. SCM->CM_REMITO+SCM->CM_FORNECE==xRemAnt .and. lContinua
+
+
+	#IFNDEF WINDOWS
+	      IF LastKey()==286
+                 @ 00,01 PSAY "** CANCELADO POR EL OPERADOR **"
+	         lContinua := .F.
+	         Exit
+	      Endif
+	#ELSE
+	      IF lAbortPrint
+                 @ 00,01 PSAY "** CANCELADO POR EL OPERADOR **"
+	         lContinua := .F.
+	         Exit
+	      Endif
+	#ENDIF
+
+      nLinIni:=nLin                         // Linha Inicial da Impressao
+
+    
+
+      //+--------------------------------------------------------------+
+      //¦ Inicio de Levantamiento de los datos del Remito para la ort  ¦
+      //+--------------------------------------------------------------+
+
+      // *                          
+
+      xNUM_REM     :=SCM->CM_REMITO          // Numero
+      xEMISSAO_REM :=SCM->CM_EMISSAO         // Data de Emision
+      xCOD_PROD    :=SCM->CM_PRODUTO
+      xCANT_PROD   :=SCM->CM_QUANT
+      xUM_PROD     :=SCM->CM_UM
+      xORDEN       :=SCM->CM_PEDIDO
+      xCOD_PROVE   :=SCM->CM_FORNECE
+      xLOJA_PROVE  :=SCM->CM_LOJA            // Suc. del Cliente
+      xTIPOC       :=SCM->CM_TIPOC
+      xNUM_ORT     :=SCM->CM_ORT
+
+      dbSelectArea("SB1")                    // * Desc. Generica do Produto
+      dbSetOrder(1)
+
+      dbSeek(xFilial()+xCOD_PROD)
+
+          xNOM_PROD    := SB1->B1_DESC
+          xCUENTA_PROD := SB1->B1_CONTA
+
+      dbSelectArea("SA2")                     // *PROVEEDOR
+      dbSetOrder(1)
+
+      dbSeek(xFilial()+xCOD_PROVE+xLOJA_PROVE)
+
+          xNOM_PROVE   := SA2->A2_NOME
+
+//Chequeo si la ort es productiva o improductiva para saber que datos
+//imprimir (La OC, si es productiva, es el contrato de aparceria y la
+//autorizacion de entrega es el pedido de compra (SC7) , sino la OC
+//es el pedido mismo (sc7)).
+
+      If xTIPOC=="P"
+
+         dbSelectArea("SC3")
+         dbSetOrder(4)
+
+         dbSeek(xFilial()+xCOD_PROD+xCOD_PROVE+xLOJA_PROVE,.t.)
+         
+             xNUM_OC      := SC3->C3_NUM
+
+             dbSelectArea("SC7")                     // *ORDEN DE COMPRA
+             dbSetOrder(4)
+             dbSeek(xFilial()+xCOD_PROD+xORDEN)
+
+             xNUM_AUT     := SC7->C7_NUM
+             xCANT_AUT    := (SC7->C7_QUANT-SC7->C7_QUJE)
+             xEMISSAO_AUT := SC7->C7_EMISSAO
+                  
+      Else
+             dbSelectArea("SC7")                     // *ORDEN DE COMPRA
+             dbSetOrder(4)
+             dbSeek(xFilial()+xCOD_PROD+xORDEN)
+
+             xNUM_OC      := SC7->C7_NUM
+             xCANT_AUT    := (SC7->C7_QUANT-SC7->C7_QUJE)
+             xEMISSAO_OC := SC7->C7_EMISSAO
+             
+       Endif
+//Abro una ventana para pedir que llenen un campo de
+//observaciones que se imprime en la ort
+
+ #IFDEF WINDOWS
+
+                store space(44) to xObserva,xObserva1
+                @ 96,5 to 210,550 DIALOG oDlg1 TITLE "Observaciones."
+                @ 05,5 TO 40,270         
+                @ 5.1,8.3  SAY OemToAnsi("Si desea incluir alguna observacion para la ORT nro "+xNUM_ORT+", hagalo aqui : ")
+                @ 15.1,10.3  GET xObserva
+                @ 25.1,10.3  GET xObserva1
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==>                 @ 41,200 BMPBUTTON TYPE 1  Action Execute(myProc)
+                @ 41,200 BMPBUTTON TYPE 1  Action myProc()
+		ACTIVATE DIALOG oDlg1 CENTERED
+ #ENDIF
+      Imprime()
+
+      //+--------------------------------------------------------------+
+      //¦ Termino de Impresion de la ORT                               ¦
+      //+--------------------------------------------------------------+
+
+      IncRegua()                    // Termometro de Impresion
+
+      nLin:=0
+      dbSelectArea("SCM")     
+      dbSkip()                      // passa para la proxima ORT        
+
+    EndDo
+Endif
+//+--------------------------------------------------------------+
+//¦                                                              ¦
+//¦                      FIN DE LA IMPRESION                     ¦
+//¦                                                              ¦
+//+--------------------------------------------------------------+
+
+//+--------------------------------------------------------------+
+//¦ Cierre del programa de impresion de  ORT                     ¦
+//+--------------------------------------------------------------+
+
+dbSelectArea("SCM")
+Retindex("SCM")
+Set Device To Screen
+
+If aReturn[5] == 1
+   Set Printer TO
+   dbcommitAll()
+   ourspool(wnrel)
+Endif
+
+MS_FLUSH()
+
+//+--------------------------------------------------------------+
+//¦ Fin del Programa                                             ¦
+//+--------------------------------------------------------------+
+
+//+--------------------------------------------------------------+
+//¦                                                              ¦
+//¦                   FUNCIONES ESPECIFICAS                      ¦
+//¦                                                              ¦
+//+--------------------------------------------------------------+
+
+/*/
+_____________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦FunCION   ¦ VERIMP   ¦ Autor ¦   Marcos Simidu       ¦ Data ¦ 20/12/95 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+ ¦¦Descripcion Verifica posicionamento de papel en la Impresora           ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Uso       ¦ Nfiscal                                                    ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+/*/
+
+//+---------------------+
+//¦ Inicio da Funcao    ¦
+//+---------------------+
+
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function VerImp
+Static Function VerImp()
+
+nLin:= 0                // Contador de Linhas
+nLinIni:=0
+If aReturn[5]==2
+
+   nOpc       := 1
+	#IFNDEF WINDOWS
+	   cCor       := "B/BG"
+	#ENDIF
+   While .T.
+
+      EJECT
+        //SetPrc(0,0)
+      DBCOMMITALL()
+
+      @ nLin ,000 PSAY " "
+      @ nLin ,004 PSAY "*"
+      @ nLin ,022 PSAY "."
+		#IFNDEF WINDOWS
+	      Set Device to Screen
+	      DrawAdvWindow(" Formulario ",10,25,14,56)
+	      SetColor(cCor)
+	      @ 12,27 Say "Formulario esta posicionado?"
+              nOpc:=Menuh({"Si","No","Cancelar Impresion"},14,26,"b/w,w+/n,r/w","SNC","",1)
+			Set Device to Print
+		#ELSE
+                        IF MsgYesNo("El Fomulario esta posicionado ? ")
+				nOpc := 1
+                        ElseIF MsgYesNo("Intenta Nuevamente ? ")
+				nOpc := 2
+			Else
+				nOpc := 3
+			Endif
+		#ENDIF
+
+      Do Case
+         Case nOpc==1
+            lContinua:=.T.
+            Exit
+         Case nOpc==2
+            Loop
+         Case nOpc==3
+            lContinua:=.F.
+            Return
+      EndCase
+   End
+Endif
+
+Return
+
+//+---------------------+
+//¦ Fim da Funcao       ¦
+//+---------------------+
+
+
+/*/
+_____________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funcion   ¦ IMPRIME  ¦ Autor ¦   BRUNO SOBIESKI      ¦ Data ¦ 07/07/98 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descripcion Imprime la ORT de trinter                                  ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Uso       ¦ Para uso de Trinter                                        ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+/*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function Imprime
+Static Function Imprime()
+//+--------------------------------------------------------------+
+//¦                                                              ¦
+//¦              IMPRESION DE LA ORT                             ¦
+//¦                                                              ¦
+//+--------------------------------------------------------------+
+
+//+-------------------------------------+
+//¦ Impresion del encabezado de la ORT  ¦
+//+-------------------------------------+
+
+//@ 02, 000 PSAY Chr(15)                // Compresion de Impresion
+
+@ 02, 001 PSAY "T R I N T E R s.a.c.i.f."
+
+If xTIPOC=="P"
+
+   @ 02, 060 PSAY "Orden de recepcion y traslado    (ORT)"
+   @ 03, 085 PSAY "Nro O.R.T. : " + xNUM_ORT               // Numero de ORT
+   @ 04, 085 PSAY DDATABASE
+   @ 05, 001 PSAY "Recibido en 10 (PLANTA)"
+   @ 05, 085 PSAY xCuenta_proD                            //Cta contable
+
+   @ 08, 001 PSAY "--- P R O V E E D O R ------------------------"
+   @ 09, 001 PSAY "|   Numero    Nombre                         |"
+   @ 10, 001 PSAY "|   " + xCOD_PROVE +"    "+ xNOM_PROVE 
+   @ 10, 047 PSAY "|"
+   @ 11, 001 PSAY "----------------------------------------------"
+
+   @ 14, 009 PSAY         "------------------------------------"
+   @ 15, 009 PSAY         "| O/Compra  |  A/E     | Remito    |" 
+   @ 16, 001 PSAY "--------------------------------------------"
+   @ 17, 001 PSAY "| Nro   | "+xNUM_OC
+   @ 17, 021 PSAY "| "+xNUM_AUT                         // Aut. de Ent.
+   @ 17, 034 PSAY "| "+xNUM_REM                         // Remito
+   @ 17, 044 PSAY "|"
+   @ 17, 055 PSAY "CANTIDAD AUTORIZADA : "
+   @ 17, 089 PSAY xCANT_AUT PICTURE "99999.99"
+   @ 17, 095 PSAY xUM_PROD
+   @ 18, 001 PSAY "| Fecha | "+DTOC(xEMISSAO_OC)
+   @ 18, 021 PSAY "| "+DTOC(xEMISSAO_AUT)
+   @ 18, 032 PSAY "|  "+DTOC(xEMISSAO_REM)
+   @ 18, 044 PSAY "|"
+   @ 19, 001 PSAY "---------------------------------------------"
+
+Else
+   @ 02, 060 PSAY "O.R.T. IMPRODUCTIVA    (ORTA)"
+   @ 03, 085 PSAY "Nro O.R.T. : " + xNUM_ORT               // Numero de ORT
+   @ 04, 085 PSAY DDATABASE
+   @ 05, 001 PSAY "Recibido en 10 (PLANTA)"
+   @ 05, 085 PSAY xCuenta_prod                             //Cta contable
+
+   @ 08, 001 PSAY "--- P R O V E E D O R ------------------------"
+   @ 09, 001 PSAY "|   Numero    Nombre                         |"
+   @ 10, 001 PSAY "|   "  + xCOD_PROVE +"    "+ xNOM_PROVE
+   @ 10, 047 PSAY "|"
+   @ 11, 001 PSAY "----------------------------------------------"
+
+   @ 14, 009 PSAY         "-------------          -------------"
+   @ 15, 009 PSAY         "| O/Compra  |          | Remito    |" 
+   @ 16, 001 PSAY "---------------------  ---------------------"
+   @ 17, 001 PSAY "|  Nro  |"
+   @ 17, 011 PSAY xNUM_OC                             //Nro de orden de compra
+   @ 17, 021 PSAY "|  |  Nro  |"
+   @ 17, 036 PSAY xNUM_REM                           //Nro de Remito
+   @ 17, 044 PSAY "|"
+   @ 17, 055 PSAY "CANTIDAD AUTORIZADA : "
+   @ 17, 089 PSAY xCANT_AUT  PICTURE "999999.99"
+   @ 17, 098 PSAY xUM_PROD
+   @ 18, 001 PSAY "| Fecha |"+DTOC(xEMISSAO_OC)
+   @ 18, 021 PSAY "|  | Fecha |  "+DTOC(xEMISSAO_REM)
+   @ 18, 044 PSAY "|"
+   @ 19, 001 PSAY "---------------------  ---------------------"
+
+ Endif
+
+@ 24,011 PSAY "--- MATERIAL ENCARGADO -------------------------------------------------------------------"
+@ 25,011 PSAY "|                                                                                        |"         
+@ 26,011 PSAY "| "+xNOM_PROD
+@ 26,100 PSAY "|"
+@ 27,011 PSAY "------------------------------------------------------------------------------------------"
+@ 28,011 PSAY "|     *** R e c e p c i o n ***        | Ctrol. de calidad | * Panol/Sector de Destino * |"
+@ 29,011 PSAY "------------------------------------------------------------------------------------------"
+@ 30,011 PSAY "|      RECIBIDO    |      CONTADO      |     APROBADO      |    ACEPTADO   |  RECHAZADO  |"
+@ 31,011 PSAY "------------------------------------------------------------------------------------------"
+@ 32,011 PSAY "|                  |                   |                   |               |             |"
+@ 33,001 PSAY "CANTIDAD  |"
+@ 33,014 PSAY xCANT_PROD
+@ 33,030 PSAY                    "|                   |                   |               |             |"
+@ 34,011 PSAY "|                  |                   |                   |               |             |"
+@ 35,011 PSAY "------------------------------------------------------------------------------------------"
+@ 36,011 PSAY "|                  |                   |                   |               |             |"
+@ 37,001 PSAY "FIRMA     |"
+@ 37,014 PSAY SUBSTR(CUSUARIO,7,15)
+@ 37,030 PSAY                    "|                   |                   |               |             |"
+@ 38,011 PSAY "|                  |                   |                   |               |             |"
+@ 39,011 PSAY "------------------------------------------------------------------------------------------"
+@ 40,011 PSAY "|                  |                   |                   |               |             |"
+@ 41,001 PSAY "FECHA     |"
+@ 41,014 PSAY DDATABASE
+@ 41,030 PSAY                    "|                   |                   |               |             |"
+@ 42,011 PSAY "|                  |                   |                   |               |             |"
+@ 43,011 PSAY "------------------------------------------------------------------------------------------"
+@ 44,011 PSAY "      (ORT-A)      | (AD )             |                          (ORT-V)  |    (AMR)    |"
+@ 45,030 PSAY                    "|                   |"
+@ 45,075 PSAY xNUM_ORT
+@ 45,086 PSAY "|             |"
+@ 46,030 PSAY                    "|___________________|                                   |_____________|"
+@ 52,002 PSAY "OBSERVACIONES : "  
+@ 52,018 PSAY xObserva
+@ 52,062 PSAY XObserva1
+
+eject
+
+
+
+//@ 72, 000 PSAY chr(18)                   // Descompresion de la Impresora
+
+
+Return .t.
+
+/*
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funcion   ¦ myProc   ¦ Autor ¦ Armando T. Buchina    ¦ Data ¦ 10.02.98 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descripcion Click en el Button OK de Dialog                            ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Uso       ¦ MatARem                                                    ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function myProc
+Static Function myProc()
+	nOpcA := 1	
+	Close(oDlg1)
+Return
+
+/*/
+_____________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçào    ¦VALIDPERG ¦ Autor ¦ Armando T. Buchina    ¦ Data ¦ 12/01/98 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Verifica las preguntas incluyendolas en caso que no existan¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Uso       ¦ aRemEmi .prx                                               ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+/*/
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function ValidPerg
+Static Function ValidPerg()
+Local i:=0, j:=0
+_sAlias := Alias()
+dbSelectArea("SX1")
+dbSetOrder(1)
+cPerg := PADR("COMORT",6)
+aRegs:={}
+
+aAdd(aRegs,{cPerg,"01","¿Nro de Remito      ?","mv_ch1","C",12,0,0,"G","","mv_par01",""     ,"000000000000","",""           ,"","",""         ,"","","","","","","",""})
+aAdd(aRegs,{cPerg,"02","¿Nro de Proveedor   ?","mv_ch2","C",06,0,0,"G","","mv_par02",""     ,"999999"      ,"",""           ,"","",""         ,"","","","","","","",""})
+
+For i:=1 to Len(aRegs)
+    If !dbSeek(cPerg+aRegs[i,2])
+        RecLock("SX1",.T.)
+        For j:=1 to FCount()
+            If j <= Len(aRegs[i])
+                FieldPut(j,aRegs[i,j])
+            Endif
+        Next
+        MsUnlock()
+    Endif
+Next
+dbSelectArea(_sAlias)
+Return

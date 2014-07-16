@@ -1,0 +1,94 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ MT120ISC  ³ Autor ³ Alexandre R. Bento     Data ³ 08/06/06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Apos confirmar a Solicitação de Compra traz  ultimo preço  ³±±
+±±³          ³ de compra do produto                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Rdmake                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Compra                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+#include "rwmake.ch"
+
+User Function MT120ISC()
+Local x:=nQtde:=nAE:=0
+Local _cCod   := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_PRODUTO"})  
+Local _nPreco := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_PRECO"})
+Local _nTotal := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_TOTAL"})
+Local _nQtde  := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_QUANT"})
+Local _nOS    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_NUMOS"}) //utilizado na OS. do ATIVO
+//Local _nNumOS := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_ORDSERV"}) //utilizado na OS. da manutencao de ATIVOs
+Local _nSigla := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_SIGLA"}) //SIGLA
+Local _nPreOrc:= aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_PRECOOR"}) //preco de orcado
+Local _nQtdeSo:= aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_QTDSOL"}) //Qtde solicitada
+Local _ncc    := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_CC"}) //centro de custo
+Local _cLocal := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "C7_LOCAL"}) // Local
+
+//nTipoped  Numérico  nTipoped == 1 - Pedido de Compras   nTipo == 2 - Autorização de Entrega
+SB1->(DbSetOrder(1))
+If nTipoped <> 2 // so executa no pedido de compras
+
+   If !Acols[n][len(aHeader)+1]  //nao pega quando a linha esta deletada
+	  If SB1->(Dbseek(xFilial("SB1")+Acols[n][_cCod] ))
+	     Acols[n][_nPreOrc] := SB1->B1_UPRC 
+	     Acols[n][_nPreco]  := SB1->B1_UPRC 
+	     Acols[n][_nTotal]  := Acols[n][_nQtde] * SB1->B1_UPRC         
+	  Endif                                                     
+      Acols[n][_nOS]    := SC1->C1_NUMOS //guarda o numero da OS do ativo incluida na SC 
+//      Acols[n][_nNumOS] := SC1->C1_ORDSERV //guarda o numero da OS da manutencao         	   
+      
+   Endif	
+Else// Autorização de Entrega
+
+    Acols[n][_nSigla] := SC3->C3_SIGLA //Atribui a sigla cadastradan no contrato
+    Acols[n][_ncc]    := SC3->C3_CC    //Atribui o CC cadastrada no contrato
+    Acols[n][_cLocal] := SC3->C3_LOCAL //Atribui o Local cadastrada no contrato
+    
+ 	@ 96,42 TO 250,440 DIALOG oDlg1 TITLE "Autorização de Entrega"
+	@ 13,14 Say "Digite o Numero de Autorizacao de Entrega a ser Geradas."
+	@ 28,14 Say "Num. Entregas :" Size 80,10
+	@ 38,14 Get nAE Picture "99999" Size 030,10 Object oAE
+	@ 28,140 Say "Qtde Cada Entrega :" Size 70,10
+	@ 38,130 Get nQtde Picture "999,999,999.999" Size 060,10 Object oQtde
+	@ 55,135 BUTTON "Fechar" Size 40,15  ACTION Close(oDlg1)
+	ACTIVATE DIALOG oDlg1 CENTERED
+                
+   	If nQtde > 0
+   	   If (nQtde * nAE) > Acols[1][_nQtde]
+          Msgbox("A Quantidade que Foi Digitada é Maior que o Saldo do Pedido em Aberto ","Autorizacao de Entrega","ALERT" )  
+          Return
+   	   Else
+   	      //altera o b1_contrat para sim, pois desta forma pode-se alterar a qtde da linha na A.E.
+		  If SB1->(Dbseek(xFilial("SB1")+Acols[n][_cCod] ))
+		     RecLock("SB1",.F.)
+		        SB1->B1_CONTRAT := "S"
+		     MsUnlock("SB1")  
+		  Endif                                                     
+		
+          Acols[1][_nQtde]  := nQtde      
+          Acols[1][_nQtdeSo]:= nQtde       
+          Acols[1][_nTotal] := Acols[1][_nQtde] * Acols[1][_nPreco]
+       Endif   
+    Endif   
+  
+    For x:= 2 to nAE
+      	AADD(aCols,Aclone(aCols[n]))
+      	Acols[x][1] := StrZero(x,4)
+      	
+      	If nQtde > 0
+           Acols[x][_nQtde]    := nQtde
+           Acols[x][_nQtdeSo]  := nQtde
+           Acols[x][_nTotal]   := Acols[x][_nQtde] * Acols[x][_nPreco]
+        Endif   
+    Next
+
+Endif	
+		
+Return(.T.)

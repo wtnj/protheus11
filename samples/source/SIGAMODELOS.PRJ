@@ -1,0 +1,522 @@
+Group SIGAMODELOS
+   Version=7.0
+   VSSDB=
+   HasProperties=1
+   Properties
+      BeforeApply=
+      AfterApply=
+      Icon=
+      ID=
+      Version=
+      PalmName=
+      OutPut=
+   End
+   ProjectsCount=1
+   Project SIGAMODELOS
+      FoldersCount=15
+      Folder Administrativo
+         VSSPath=Fontes
+         FilesCount=13
+         File \VER912\MODELOS\Administrativos\FA340FILT.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\bltbrad.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\BLTCD001.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\BLTCDBAR.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\BOLFIN.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\BOLITAU.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\BOLSANT.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\F060brow.prx
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\F090FIL.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\F130FILT.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\F340brow.prx
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\fa100trf.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Administrativos\FA330FLT.PRX
+             Type=T
+         End
+      End
+      Folder Automacao Comercial
+         VSSPath=Nova Pasta2
+         FilesCount=0
+      End
+      Folder Call Center
+         VSSPath=Nova Pasta3
+         FilesCount=0
+      End
+      Folder Comercio Exterior
+         VSSPath=Nova Pasta4
+         FilesCount=0
+      End
+      Folder Gestao de Transporte
+         VSSPath=Nova Pasta5
+         FilesCount=17
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR16.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSE01.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR01.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR02.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR03.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR04.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR05.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\rtmsr06.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR07.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR08.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR09.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR10.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR11.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR12.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR13.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\rtmsr14.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao de Transportes\RTMSR15.prw
+             Type=T
+         End
+      End
+      Folder Gestao Educacional
+         VSSPath=Nova Pasta6
+         FilesCount=34
+         File \VER912\MODELOS\Gestao Educacional\GabResp.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\AC060DLB.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\AC70Decl.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\AC540msg.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\AC680Htm.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\AC680Msg.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\AC680Prf.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\ACADIA.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\ACAWUSER.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\GabRed.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE22.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updgac01.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updgac02.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updgac03.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updge01.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updge02.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE03.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updge04.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updge05.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updge06.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE07.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE08.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE09.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE10.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE11.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE12.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updge13.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE14.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE16.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updge17.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\updge18.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UPDGE19.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE20.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Gestao Educacional\Updates\UpdGE21.prw
+             Type=T
+         End
+      End
+      Folder Quality
+         VSSPath=Nova Pasta7
+         FilesCount=8
+         File \VER912\MODELOS\Quality\qier111.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Quality\qdom700.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Quality\qdom710.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Quality\qdom720.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Quality\qie010tp.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Quality\qie010vp.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Quality\qiea231.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Quality\qiem021.prw
+             Type=T
+         End
+      End
+      Folder Servicos Publicos
+         VSSPath=Nova Pasta8
+         FilesCount=0
+      End
+      Folder SigaGAV
+         VSSPath=Nova Pasta9
+         FilesCount=0
+      End
+      Folder Recursos Humanos
+         VSSPath=Nova Pasta10
+         FilesCount=17
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\wsusuario.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\APD80DEL.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\APDCONV01.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\APDFIMAVA.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\gch001.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\HCMGP.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\PwSA30Vld.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\TOIXFormulas.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\TRMGRV01.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\WS010PADR.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\WSAPUSR014.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\WsClient_WsRhUsuario.prx
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Avaliacao e Pesquisa Desempenho\wshistsal.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Cargos e Salarios\raumsal.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Recrutamento e Selecao\WSUSERFIELD.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Recrutamento e Selecao\rs150ml.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Recursos Humanos\Treinamento\TOIXFormulas.PRW
+             Type=T
+         End
+      End
+      Folder Software de Terceiros
+         VSSPath=Nova Pasta11
+         FilesCount=10
+         File \VER912\MODELOS\Software de Terceiros\MIL\VA010DPGR.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\MIL\impord.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\MIL\MT010INC.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\MIL\nepecser.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\MIL\nfpecser.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\MIL\ORCAMTO.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\MIL\ordbusca.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\MIL\ordbuscb.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\MIL\prefecto.prw
+             Type=T
+         End
+         File \VER912\MODELOS\Software de Terceiros\Ng\NGCUSTTL.PRX
+             Type=T
+         End
+      End
+      Folder SPED NF-e
+         VSSPath=Nova Pasta12
+         FilesCount=2
+         File \VER912\MODELOS\SPED NF-e\danfeii.prw
+             Type=T
+         End
+         File \VER912\MODELOS\SPED NF-e\nfesefaz.prw
+             Type=T
+         End
+      End
+      Folder TReport
+         VSSPath=Nova Pasta13
+         FilesCount=0
+      End
+      Folder WR
+         VSSPath=Nova Pasta14
+         FilesCount=0
+      End
+      Folder Outros
+         VSSPath=Nova Pasta15
+         FilesCount=47
+         File \VER912\MODELOS\RDMOD3.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\A440F4AE.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\Libr010.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\Libr011.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\LibrBol.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\LibrGer.prw
+             Type=T
+         End
+         File \VER912\MODELOS\librgua.prw
+             Type=T
+         End
+         File \VER912\MODELOS\librmex.prw
+             Type=T
+         End
+         File \VER912\MODELOS\LIBRPAR2.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\librpar.prx
+             Type=T
+         End
+         File \VER912\MODELOS\librper.prw
+             Type=T
+         End
+         File \VER912\MODELOS\librrd1.prx
+             Type=T
+         End
+         File \VER912\MODELOS\LibrSal.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\LibrTik.prw
+             Type=T
+         End
+         File \VER912\MODELOS\LIBRURU.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\Librve1.prw
+             Type=T
+         End
+         File \VER912\MODELOS\LocxPE24.prw
+             Type=T
+         End
+         File \VER912\MODELOS\M140BAR.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\M241BAR.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\M460IMPF.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\M461impf.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\M462SER.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\M462srem.prx
+             Type=T
+         End
+         File \VER912\MODELOS\M464SER.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\M465grv.prw
+             Type=T
+         End
+         File \VER912\MODELOS\M465SER.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\M465SQNF.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\m466ser.prx
+             Type=T
+         End
+         File \VER912\MODELOS\m466sqnf.prx
+             Type=T
+         End
+         File \VER912\MODELOS\m467ser.prx
+             Type=T
+         End
+         File \VER912\MODELOS\m467sqnf.prx
+             Type=T
+         End
+         File \VER912\MODELOS\m468Aser.prx
+             Type=T
+         End
+         File \VER912\MODELOS\m468Asqnf.prx
+             Type=T
+         End
+         File \VER912\MODELOS\m468ser.prx
+             Type=T
+         End
+         File \VER912\MODELOS\m468sqnf.prx
+             Type=T
+         End
+         File \VER912\MODELOS\MATRAPR.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\matrciap.prx
+             Type=T
+         End
+         File \VER912\MODELOS\MATRISS.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\MODP8.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\MODP9.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\MODP10.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\MODP11.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\MS520VLD.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\NFEXAMP.PRX
+             Type=T
+         End
+         File \VER912\MODELOS\RDDEMO2.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\RDDEMO.PRW
+             Type=T
+         End
+         File \VER912\MODELOS\RDMOD2.PRX
+             Type=T
+         End
+      End
+   End
+End

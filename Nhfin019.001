@@ -1,0 +1,40 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³NHFIN019  ³ Autor ³ Jose Roberto Gorski   ³ Data ³ 16.05.00 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Cadastro dos Colaboradoes                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/  
+
+#include "rwmake.ch" 
+
+User Function nhfin019()   
+AxCadastro("SZ5", "Cadastro de Colaboradores") //,"ExecBlock('Excluir',.f.,.f.,0)","ExecBlock('Alterar',.f.,.f.,0)")
+Return
+
+User Function TESTE21
+If Alltrim(Upper(cusername))$"GUSTAVOCR/PAUL0CB/PAULOCI/ANDERSON.SILVA"
+	TudoOK:= .F.
+	Aviso("Inclusão de Titulos","Caro usuário, você não tem permissão para incluir Titulos.", {"OK"},2)
+Else
+	TudoOK:= .T.
+Endif
+
+Return(TudoOK)
+
+User Function TESTE12 //ALTERA
+if inclui
+	TudoOK:= .T.
+Else 
+If Alltrim(Upper(cusername))$"GUSTAVOCR/PAUL0CB/PAULOCI/ANDERSON.SILVA"
+	TudoOK:= .F.
+	Aviso("Inclusão de Titulos","Caro usuário, você não tem permissão para incluir Titulos.", {"OK"},2)
+Else
+	TudoOK:= .T.
+Endif
+
+return(TudoOK)

@@ -1,0 +1,171 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ NHEST033        ³ Alexandre R. Bento    ³ Data ³ 24.11.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Distribuição Automatica de Produtos                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Chamada padr„o para programas em RDMake.                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+#include "rwmake.ch"      
+#INCLUDE "TOPCONN.CH"
+
+User Function NhEst033()  
+
+SetPrvt("_aCabec, _aItem, cQuery, x, y, z,aRadio,nRadio")
+Private lMsHelpAuto := .t.
+Private lMsErroAuto := .f.
+aRadio := {}
+nRadio := 1
+     
+// Adiciona os almoxarifado a ser feita a distribuição automatica
+
+If SM0->M0_CODIGO == "NH" //Empresa Usinagem       
+
+   aAdd( aRadio, "10 - Almox Processo " )            
+   aAdd( aRadio, "40 - Almox Processo Usinagem" )
+   aAdd( aRadio, "60 - Almox Produto Intermediario" )
+   aAdd( aRadio, OemToAnsi("95 - Almox Devolução " ))
+   aAdd( aRadio, "96 - Almox Mat. Indisponivel Processo" )
+   aAdd( aRadio, "97 - Almox Retrabalho " )
+   aAdd( aRadio, "99 - Almox Usinagem " )
+   aAdd( aRadio, "00 - Almox Fundido " )
+   
+Elseif SM0->M0_CODIGO == "FN" .AND. SM0->M0_CODFIL = "01" //Empresa Fundicao      
+
+   aAdd( aRadio, "20 - Almox de Machos" )
+   aAdd( aRadio, "23 - Almox Semi Acabado " )            
+   aAdd( aRadio, "24 - Almox Processo Fundido " )            
+   aAdd( aRadio, OemToAnsi("26 - Almox Devolução " ))
+   aAdd( aRadio, "25 - Almox Qualidade" )
+   aAdd( aRadio, "27 - Almox Acabado Fundido" )   
+   aAdd( aRadio, "34 - Almox Processo Usinagem" )
+   aAdd( aRadio, "30 - Almox Refugo Fundido " )   
+   aAdd( aRadio, "3T -  " )   
+   aAdd( aRadio, "39 - Almox Refugo Usinagem " )   
+   
+Elseif SM0->M0_CODIGO == "FN" .AND. SM0->M0_CODFIL = "02" //Empresa Pernambuco      
+   
+   aAdd( aRadio, "50 - ALMOX REFUGO DE FUNDIDO " )   
+   aAdd( aRadio, "51 - ALMOX CENTRAL " )
+   aAdd( aRadio, "52 - ALMOX MATERIA PRIMA E MATERIAL AUX. " )
+   aAdd( aRadio, "54 - ALMOX PROCESSO " )   
+   aAdd( aRadio, "57 - ALMOX ACABADOS " )
+   aAdd( aRadio, "59 - ALMOX REFUGO " ) 
+    
+Endif
+
+@ 0,0 TO 280,565 DIALOG oDlg1 TITLE OemToAnsi("Distribuição Automática")
+@ 05,05 TO 135,280
+@ 10,060 TO 130,205 TITLE "Escolha um Almoxarifado"
+@ 20,080 RADIO aRadio VAR nRadio
+
+@ 080,220 BUTTON "_Distribui" SIZE 35,15 ACTION fOK()
+@ 105,220 BUTTON "_Sair " SIZE 35,15 ACTION Close(oDlg1)
+ACTIVATE DIALOG oDlg1 CENTER
+Return
+
+Static Function fOK()
+
+Processa( {|| Gerando()   },"Gerando Produtos a Distribuir")
+
+TMP->(DbGoTop())
+If Empty(TMP->DA_DOC)
+   MsgBox("Nao Existe Produto a Distribuir","Atencao","STOP")
+   DbSelectArea("TMP")
+   DbCloseArea()
+  
+   Return
+Endif
+
+Processa( {|| fDistribui() },"Distribuindo Automaticamente ")
+DbSelectArea("TMP")
+DbCloseArea()
+Return
+
+
+Static Function Gerando()    
+                                      
+   cQuery := "SELECT *"
+   cQuery += " FROM " + RetSqlName( 'SDA' ) +" SDA " // + RetSqlName( 'SDB' ) +" SDB"   
+   cQuery += " WHERE SDA.DA_FILIAL = '" + xFilial("SDA")+ "'"
+   cQuery += " AND SDA.D_E_L_E_T_ = ' '"
+   // AND SDB.D_E_L_E_T_ = ' '"
+ //  cQuery += " AND SDA.DA_DOC = SDB.DB_DOC" 
+//   cQuery += " AND SDA.DA_PRODUTO = SDB.DB_PRODUTO"
+//   cQuery += " AND SDA.DA_DATA = SDB.DB_DATA"
+   cQuery += " AND SDA.DA_QTDORI = SDA.DA_SALDO" //Se nao foi distribuido
+   cQuery += " AND SDA.DA_LOCAL = '" + Subs(aRadio[nRadio],1,2) + "'" //Almox de entrada de material 
+
+ // MemoWrit('C:\TEMP\EST033.SQL',cQuery)
+//TCQuery Abre uma workarea com o resultado da query
+   TCQUERY cQuery NEW ALIAS "TMP"
+
+Return
+
+Static Function fDistribui()
+                           
+TMP->(DbGoTop())
+ProcRegua(TMP->(RecCount()))
+While TMP->(!Eof())
+
+   _aCabec := {}
+   _aItem  := {}
+   
+   IncProc("Distribuindo.. " + TMP->DA_LOCAL +"  "+TMP->DA_PRODUTO)
+   
+   Aadd(_aCabec, {"DA_PRODUTO"	, TMP->DA_PRODUTO	, nil})
+   Aadd(_aCabec, {"DA_QTDORI"	, TMP->DA_QTDORI	, nil})
+   Aadd(_aCabec, {"DA_SALDO"	, TMP->DA_SALDO		, nil})
+   Aadd(_aCabec, {"DA_DATA"	    , STOD(TMP->DA_DATA), nil})
+   Aadd(_aCabec, {"DA_LOTECTL"	, TMP->DA_LOTECTL	, nil})
+   Aadd(_aCabec, {"DA_NUMLOTE"	, TMP->DA_NUMLOTE	, nil})
+   Aadd(_aCabec, {"DA_LOCAL"	, TMP->DA_LOCAL		, nil})
+   Aadd(_aCabec, {"DA_DOC"		, TMP->DA_DOC		, nil})
+   Aadd(_aCabec, {"DA_SERIE"	, TMP->DA_SERIE		, nil})
+   Aadd(_aCabec, {"DA_CLIFOR"	, TMP->DA_CLIFOR	, nil})
+   Aadd(_aCabec, {"DA_LOJA"		, TMP->DA_LOJA		, nil})
+   Aadd(_aCabec, {"DA_TIPONF"	, TMP->DA_TIPONF	, nil})
+   Aadd(_aCabec, {"DA_ORIGEM"	, TMP->DA_ORIGEM	, nil})
+   Aadd(_aCabec, {"DA_NUMSEQ"	, TMP->DA_NUMSEQ	, nil})
+   Aadd(_aCabec, {"DA_QTSEGUM"	, TMP->DA_QTSEGUM	, nil})
+   Aadd(_aCabec, {"DA_QTDORI2"	, TMP->DA_QTDORI2	, nil})
+		
+   Aadd(_aItem, {"DB_ITEM"		, "0001"      		, nil})
+   Aadd(_aItem, {"DB_LOCALIZ"	, "01"         		, nil}) //Localizacao fixa
+   Aadd(_aItem, {"DB_DATA"		,STOD(TMP->DA_DATA)/*Ddatabase*/ , nil})   
+   Aadd(_aItem, {"DB_QUANT"		, TMP->DA_SALDO		, nil})
+		
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Efetua a distribuição do saldo total para o endereço informado ³
+	//³ através da chamada da rotina padrão automática, dentro de uma  ³
+	//³ transação.                                                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lMsErroAuto := .F.
+	Begin Transaction 
+		MsExecAuto({|x,y,z|mata265(x,y,z)}, _aCabec, {_aItem}, 3 )
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Se houver qualquer problema retornado pela variável      ³
+			//³ "lMsErroAuto", restaura a integridade dos dados gravados ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF lMsErroAuto
+			DisarmTransaction()
+			Break			
+		Endif
+	End Transaction 
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Havendo a ocorrência do erro, exibe LOG informativo padrão ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IF lMsErroAuto
+		MostraErro()
+	Endif
+	IncProc()
+   TMP->(Dbskip())   
+EndDo
+      
+Return(nil)      

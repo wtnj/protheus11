@@ -1,0 +1,85 @@
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³rdmake	 ³ EtiqZ001 ³ Autor ³ Fernando Alves        ³ Data ³ 05.04.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Rotina de impressao de etiquetas codigo de Barras		     ³±±
+±±³          ³ do cadastro de produtos                         			  ³±±
+±±³          ³                                                 			  ³±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+user function Etiqz001()
+cPerg      := "ETIZ01"  // Nome da Pergunte
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+IF !Pergunte(cPerg,.T.)               // Pergunta no SX1
+   Return
+Endif	
+
+Processa({|| Execute(Execblock("Eti",.F.,.F.)) }) // Atualmente é necessario o uso de 
+                                                  // Execblock para rdmake
+Return
+
+User Function Eti()
+Local cCmd
+
+If     mv_par04 == 1
+	_cPorta    := "COM1:9600,e,7,2"  // Default 
+ElseIf mv_par04 == 2
+   _cPorta := "COM2:9600,e,7,2"
+EndIf							
+
+If     mv_par04 == 1
+       cCmd:= "mode COM1:9600,e,7,2 >nul"
+       Winexec(cCmd)
+ElseIf mv_par04 == 2
+       cCmd:= "mode COM2:9600,e,7,2 >nul"
+       WinExec(cCmd)
+EndIf                   
+					
+
+cIndexSB1 := CriaTrab(nil,.f.)
+DbSelectArea("SB1")
+dIndexSB1 :="B1_COD"
+cCondicao :=""
+cCondicao := cCondicao + 'B1_COD     >= "'+ mv_par01 +'" .And. '
+cCondicao := cCondicao + 'B1_COD     <= "'+ mv_par02 +'"'    
+
+IndRegua("SB1",cIndexSB1,dIndexSB1,,cCondicao,"Selecionando Produtos..." )
+SB1->(DBGoTop())
+
+MSCBPRINTER("S500-8",_cPorta,,42) //Seta tipo de impressora no padrao ZPL
+MSCBLOADGRF("LOGO.GRF") //Carrega o logotipo para impressora
+//Seta Impressora (Zebra)
+   ProcRegua(SB1->(RecCount()))
+
+While  ! SB1->(eof())
+      IncProc("Imprimindo Etiqueta...")
+		
+	MSCBBEGIN(val(mv_par03),4) //Inicio da Imagem da Etiqueta 
+		MSCBBOX(01,01,80,40)  //Monta BOX
+		MSCBBOX(12,01,31.5,10,37)
+      MSCBGRAFIC(2.3,2.5,"LOGO") //Posiciona o logotio 
+      MSCBSAY(15,3,"MICROSIGA ","N","C","018,010",.t.) //Imprime Texto
+		MSCBSAY(13,6.5,"SOFTWARE S/A","N","C","018,010",.t.)
+		MSCBLineH(01,10,80) //Monta Linha Horizontal
+		MSCBSAY(35,2,"Codigo Interno","N","B","11,7")
+		MSCBSAY(35,5,SB1->B1_COD,"N","E","28,15")
+		MSCBSAY(4,12,"Descricao","N","B","11,7")
+		MSCBSAY(4,16,SB1->B1_DESC,"N","F","26,13")
+		MSCBLineH(01,20,80)
+		MSCBSAYBAR(20,22,AllTrim(SB1->B1_CODBAR),"N","C",13,.f.,.t.,,,3,2,.t.) //monta codigo de barras
+	MSCBEND() //Fim da Imagem da Etiqueta
+	
+   SB1->(DbSkip())	
+End  
+
+dbSelectArea("SB1")
+RetIndex("SB1")
+Ferase(cIndexSB1+OrdBagExt())
+Return 	

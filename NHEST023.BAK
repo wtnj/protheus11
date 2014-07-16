@@ -1,0 +1,826 @@
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ NHEST023 ³ Autor ³ Jose Roberto Gorski   ³ Data ³ 16/04/01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Cadastro das Requisicoes de EPI'S                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para WHB                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Arquivos ³ SZ7                                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±³ Alteração³ Incluido a gravação no SB3 por Alexandre R.Bento 28/08/06  ³±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+#include "rwmake.ch"        
+
+User Function nhest023()    
+
+SetPrvt("CTITULO,NLINGETD,ACGD,AR,AC,_CNUMERO")
+SetPrvt("_CMATR,_CNOME,_DDATA,_CCC,_CDESCRCC,ACAMPOS,_cNomeTer")
+SetPrvt("CLINHAOK,CTUDOOK,NUSADO,AHEADER,ACOLS,_NI")
+SetPrvt("LRETMOD2,_I,NJ,NI,RETORNO,nAux,_cProduto,lExclui,cMes,cValid")
+
+cTitulo := "Cadastro das EPIs"
+
+nLinGetD:= 0              // Variaveis do Rodape do Modelo 2
+nAux    := 1
+VK_F4     := 115
+
+// aCGD:={44,5,118,315}  // Vetor com coordenadas da GetDados no modelo2
+// aCGD:={51,5,118,315}  // Vetor com coordenadas da GetDados no modelo2
+aCGD:={98,15,125,315}    // Vetor com coordenadas da GetDados no modelo2
+
+aR:={}                  // Vetor com descricao dos campos do Rodape do Modelo 2
+   // Vetor com descricao dos caampos do Rodape do Modelo 2
+   // aR[n,1] = Nome da Variavel Ex.:"cCliente"
+   // aR[n,2] = Vetor com coordenadas do Get [x,y], em Windows estao em PIXEL
+   // aR[n,3] = Titulo do Campo
+   // aR[n,4] = Picture
+   // aR[n,5] = Validacao
+   // aR[n,6] = F3
+   // aR[n,7] = Se campo e' editavel .t. se nao .f.
+   // AADD(aR,{"nLinGetD" ,{120,10},"Linha na GetDados"   ,"@E 999",,,.F.})
+
+aC:={}                 // Vetor com descricao dos campos do Cabecalho do Modelo 2
+   // Vetor com descricao dos campos do Cabecalho do Modelo 2
+   // aC[n,1] = Nome da Variavel Ex.:"cCliente"
+   // aC[n,2] = Vetor com coordenadas do Get [x,y], em Windows estao em PIXEL
+   // aC[n,3] = Titulo do Campo
+   // aC[n,4] = Picture
+   // aC[n,5] = Validacao
+   // aC[n,6] = F3
+   // aC[n,7] = Se campo e' editavel .t. se nao .f.
+
+_cNumero  := SZ7->Z7_NUMERO      // Variaveis do Cabecalho da Cotacao
+_cMatr    := SZ7->Z7_MATR   
+_cNome    := SZ7->Z7_NOME
+_dData    := SZ7->Z7_DATA
+_cCC      := SZ7->Z7_CC
+_cDESCRCC := SZ7->Z7_DESCRCC
+_cProduto := SZ7->Z7_PRODUTO
+_cNomeTer := SZ7->Z7_NOMETER
+
+// Validacoes na GetDados da Modelo 2
+cLinhaOk :='ExecBlock("NHESTOK",.f.,.f.)' 
+cTudoOK  := 'ExecBlock("NHESTTOK",.f.,.f.)'
+
+// Montando aHeader
+DbSelectArea("SX3")
+DbSetOrder(1)
+DbSeek("SZ7")
+nUsado:=0
+aHeader:={}
+
+While !SX3->(EOF()) .And. (SX3->X3_arquivo == "SZ7")
+    IF (X3USO(SX3->X3_usado) .AND. cNivel >= SX3->X3_nivel) .AND. SX3->X3_CAMPO #"Z7_NUMERO ";
+       .AND. SX3->X3_CAMPO #"Z7_MATR   " .AND. SX3->X3_CAMPO # "Z7_NOME   ";
+       .AND. SX3->X3_CAMPO #"Z7_DATA  "  .AND. SX3->X3_CAMPO # "Z7_CC     " .AND. SX3->X3_CAMPO # "Z7_DESCRCC" ;
+       .AND. SX3->X3_CAMPO #"Z7_NOMETER"
+       
+    	If "Z7_LOCALIZ"==ALLTRIM(SX3->X3_CAMPO)
+    		If !empty(SX3->X3_VLDUSER)
+    			cValid := '('+SX3->X3_VLDUSER+') AND U_Z7LOCALIZ()'
+    		Else
+	       		cValid := 'U_Z7LOCALIZ()'
+	     	Endif
+		ElseIf "Z7_QUANT"==ALLTRIM(SX3->X3_CAMPO)
+    		If !empty(SX3->X3_VLDUSER)
+    			cValid := '('+SX3->X3_VLDUSER+') AND U_Z7QUANT()'
+    		Else
+	       		cValid := 'U_Z7QUANT()'
+	     	Endif
+		Else
+			cValid := SX3->X3_VLDUSER
+		Endif
+		
+        nUsado:=nUsado+1
+        AADD(aHeader,{ TRIM(SX3->X3_TITULO),;
+        			   SX3->X3_CAMPO,;
+        			   SX3->X3_PICTURE,;
+                       SX3->X3_TAMANHO,;
+                       SX3->X3_DECIMAL,;
+                       cValid,;
+                       SX3->X3_USADO,;
+                       SX3->X3_TIPO,;
+                       SX3->X3_ARQUIVO,;
+                       SX3->X3_CONTEXT } )
+    Endif
+    SX3->(DbSkip())
+End
+
+If paramixb == 2  .or. paramixb == 5 .or. paramixb == 4 // visualizacao ou exclusao ou alteracao
+    
+   // Validacoes na GetDados da Modelo 2
+   cLinhaOk := '.t.'  // Elimina validacao da linha quando for exclusao
+   cTudoOK  := '.t.'  // Elimina validacao de todas as linhas quando for exclusao
+
+   // Montando aCols
+   aCols := {}
+   DbSelectArea("SZ7")
+   DbSetOrder(1) // Numero + Item
+   SZ7->(DbSeek(xFilial("SZ7") + _cNumero ))
+
+   // carrega o vetor aCols com os dados do cadastro das EPI's    
+
+   Do While !SZ7->(EOF()) .And. SZ7->Z7_FILIAL == xFilial("SZ7") .and.;
+      SZ7->Z7_NUMERO == _cNumero
+      AADD(aCols,Array(nUsado+1))
+      For _ni := 1 To nUsado
+          aCols[Len(aCols),_ni] := FieldGet(FieldPos(aHeader[_ni,2]))
+      Next
+      aCols[Len(aCols),nUsado+1] := .F.
+      SZ7->(DbSkip())
+   EndDo
+
+   AADD(aC,{"_cNumero" ,{15,010} ,"Numero       "  ,"@!" ,,,.f.})
+   AADD(aC,{"_dData"   ,{15,240} ,"Data"           ,     ,,,.f.})
+   AADD(aC,{"_cMatr"   ,{27,010} ,"Matricula    "  ,"@!" ,,,.f.})
+   AADD(aC,{"_cNome"   ,{27,130} ," "              ,"@!" ,,,.f.})
+   AADD(aC,{"_cCC"     ,{39,010} ,"C.Custo      "  ,"@!" ,"ExecBlock('NHVLD003',.f.,.f.)","CTT",.t.})
+   AADD(aC,{"_cDescrCC",{39,130} ," "              ,"@!" ,,,.f.})
+   AADD(aC,{"_cNomeTer",{51,010} ,"Nome Terceiro"  ,"@!" ,,,.T.})
+   aC[3, 6] := " " // Desabilitando F3 QAA
+   
+   lRetMod2:=Modelo2(cTitulo,aC,aR,aCGD,paramixb,cLinhaOk,cTudoOk)
+
+   If lRetMod2 .and. paramixb == 5 // exclusao
+
+      SZ7->(DbSeek(xFilial("SZ7") + _cNumero ))
+
+      Do While !SZ7->(EOF()) .And. SZ7->Z7_FILIAL == xFilial("SZ7") .and.;
+         SZ7->Z7_NUMERO == _cNumero
+         RecLock("SZ7")
+            SZ7->(DbDelete())
+         MsUnLock("SZ7")
+         SZ7->(DbSkip())
+         lExclui := .T.
+      EndDo
+      If lExclui
+         fExclui() // exclui dados no sd3 2 devolve estoque
+         lExclui := .F.
+      Endif
+      
+   EndIf
+
+   // Efetua o teste de confirmacao e gravacao dos dados alterados
+   // TIRADO DE PRODUCAO POR Alexandre R. Bento em 01/11/02
+/*   If lRetMod2 .and. paramixb == 4  .And. nAux <> 1 // Alteracao
+       
+
+      
+      For _i := 1 To Len(aCols)
+                                                                                 
+          SZ7->(DbSeek(xFilial("SZ7") + _cNumero + aCols[_i][1] ))
+          If Found()
+
+             If !aCols[_i][nusado+1] 
+
+                   RecLock("SZ7")
+                     Grava()                // Replace em linha ja existente
+                     For nJ:=1 To Len(aHeader)
+                         FieldPut(FieldPos(aheader [nJ][2]), aCols[_i][nJ])
+                     Next
+                   MsUnLock("SZ7")
+             Else
+                  RecLock("SZ7")
+                  SZ7->(DbDelete())      // Apaga linha encontrada
+                  MsUnLock("SZ7")
+             EndIf
+          Else
+             If !aCols[_i][nusado+1] 
+                   Begin Transaction
+	                  RecLock("SZ7",.T.)
+                         Grava()                // Grava nova linha
+                         For nJ:=1 To Len(aHeader)
+                            FieldPut(FieldPos(aheader [nJ][2]), aCols[_i][nJ])
+                         Next
+                         fGrava() // Grava dados no SD3
+                      MsUnLock("SZ7")
+                      
+                  End Transaction    
+             EndIf
+          EndIf
+      Next
+   EndIf
+  */
+  
+ElseIf paramixb == 3            // inclusao
+  
+   nAux := SZ7->(RecCount())
+   nAux := SZ7->(FCount())
+   nAux := SZ7->(recno())
+   
+//   _cNumero  := GetSX8Num("SZ7","Z7_NUMERO")   // Variaveis do Cabecalho do Cadastro
+//   _cNumero  := Space(06)   // Variaveis do Cabecalho do Cadastro                      
+   _cNumero  := GetSXENum("SZ7","Z7_NUMERO")   // Variaveis do Cabecalho do Cadastro
+   _cMatr    := Space(6)
+   _cNome    := Space(30)
+   _dData    := dDataBase
+   _cCC      := Space(15)
+   _cDESCRCC := Space(25)
+   _cNomeTer := Space(30)
+	
+   aCols:=Array(1,nUsado+1)   // Montando aCols
+   aCols[1,nUsado+1] := .F.
+   For _ni := 1 To nUsado
+        aCols[1,_ni] := CriaVar(aHeader[_ni,2])   // Cria variaveis de acordo com inicializador padrao
+   Next
+
+   AADD(aC,{"_cNumero" ,{15,010} ,"Numero       "  ,"@!" ,"ExecBlock('NHVLD004',.f.,.f.)",,.F.})
+   AADD(aC,{"_dData"   ,{15,240} ,"Data"           ,     ,,,.f.})
+   AADD(aC,{"_cMatr"   ,{27,010} ,"Matricula    "  ,"@!" ,"ExecBlock('NHVLD002',.f.,.f.)","QAA",.T.})
+   AADD(aC,{"_cNome"   ,{27,130} ," "              ,"@!" ,,,.f.})
+   AADD(aC,{"_cCC"     ,{39,010} ,"C.Custo      "  ,"@!" ,"ExecBlock('NHVLD003',.f.,.f.)","CTT",.T.})
+   AADD(aC,{"_cDescrCC",{39,130} ," "              ,"@!" ,,,.f.})
+   AADD(aC,{"_cNomeTer",{51,010} ,"Nome Terceiro"  ,"@!" ,"U_EST23TER()",,.T.})
+
+//   aC[3, 6] := " " // Desabilitando F3 SRA 
+
+	SetKey( VK_F4 , { || F4Localiz() /*U_fNFori()*/ } ) // função que busca a nota original de campra
+
+   lRetMod2:=Modelo2(cTitulo,aC,aR,aCGD,paramixb,cLinhaOk,cTudoOk)
+      
+   If !lRetMod2  
+      RollBackSx8()
+      Return
+   Endif
+                                             
+   // Efetua operacao de Gravacao apos confirmacao
+
+   If !SZ7->(DbSeek(xFilial("SZ7") + _cNumero ))
+
+      If lRetMod2  
+         For nI:=1 To Len(aCols)
+             If ( ! aCols[nI][Len(aHeader)+1] ) 
+                Begin Transaction
+                   RecLock("SZ7", .T.)
+                      Grava()
+                      For nJ:=1 To Len(aHeader) // MUDEI DE NJ:=2 PARA NJ:=1
+                         FieldPut(FieldPos(aheader [nJ][2]), aCols[nI][nJ])
+                      Next                                 
+                      fGrava()  // Grava dados no SD3
+                   MsUnlock()
+                   ConfirmSX8()
+                End Transaction   
+             EndIf
+         Next
+      EndIf
+   Else
+     MsgBox("Chave: " + _cNumero + "  já existe")
+   Endif
+EndIf
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ VALIDA O CAMPO DE TERCEIRO ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+User Function EST23TER()
+
+	If _cMatr$"999991/999992/999993" .AND. Empty(_cNomeTer)
+		Alert("Para terceiros é obrigatório o preenchimento do campo Nome Terceiro!")
+		return .F.
+	EndIf
+
+Return .T.
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ GRAVA    ³ Autor ³ Jose Roberto Gorski   ³ Data ³ 06/02/01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Grava os dados da inclusao / alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Especifico para Racco                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Arquivos ³ SZ7                                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+// Serve para gravar os dados de Inclusao/Alteracao, o Lock deve ser tratado na chamada da funcao
+
+Static Function Grava()
+
+  SZ7->Z7_NUMERO  := _cNumero  
+  SZ7->Z7_MATR    := _cMatr    
+  SZ7->Z7_NOME    := _cNome    
+  SZ7->Z7_DATA    := _dData    
+  SZ7->Z7_CC      := _cCC      
+  SZ7->Z7_DESCRCC := _cDESCRCC 
+  SZ7->Z7_NOMETER := _cNomeTer
+  
+Return
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ BJESTOK  ³ Autor ³Jose Roberto Gorski    ³ Data ³ 11/03/99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Validacao das linhas da Requisicao de Estoques             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Execblock usado do programa BJEST005                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Arquivos ³ SZ6                                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+
+Static Function BJESTOK()
+
+If ( aCols[N][nusado+1] ) //.or. ( !Empty(aCols[_c][2]) .and. aCols[N][4] >0 )
+   //  se deletado
+   Retorno := .t.
+Else
+   MsgAlert("Existem campos obrigatorios sem preenchimento")
+   Retorno := .f.
+EndIf
+
+Return(Retorno)   // Direto estava dando erro. Patetico   
+
+
+Static Function fGrava()
+
+Local cNumSeq := SD3->(ProxNum())
+Local cAlmox
+Local _cC
+Local _cConta
+Local _Grupo
+
+    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+    //³ Grava a Transferencia no SD3 - Saida do Produto              ³
+    //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+    SB1->(DbSeek(xFilial("SB1")+SZ7->Z7_PRODUTO))
+    
+    cLocaliz := SZ7->Z7_LOCALIZ
+     cAlmox  := SZ7->Z7_LOCAL //SB1->B1_LOCPAD //Almoxarifado padrao           
+	_cConta := " "					// Variavel de retorno da conta contabil
+	_Grupo:=SB1->B1_GRUPO
+	_CC:=AllTrim(_cCC)
+
+	SBM->(DbSelectArea("SBM"))	// Abre arquivo SBM -> Grupos de Produtos
+	SBM->(DbSetOrder(1))			// Filial + Grupo
+	SBM->(DbGotop())				// Posiciona no inicio do arquivo
+	SBM->(DbSeek(xFilial("SBM")+_GRUPO),.T.)		// Procura no SBM o grupo digitado no SD3
+
+	If  AllTrim(_GRUPO) == AllTrim(SBM->BM_GRUPO)  // Se forem iguais SBM e SB1
+	   If SM0->M0_CODIGO=="NH"  //WHB USINAGEM
+		  Do Case
+		   	 Case substr(_CC,1,1) $ "1/2"
+				_cConta := SBM->BM_CTAADM
+			 OtherWise
+			   _cConta := SBM->BM_CTADIR
+  	      EndCase
+       ElseIf SM0->M0_CODIGO=="FN" //WHB FUNDIÇAO
+		  Do Case
+		   	 Case substr(_CC,2,1) $ "3/4"
+				_cConta := SBM->BM_CTADIR
+			 Case substr(_CC,2,1) $ "7"
+				_cConta := SBM->BM_CTAINOV			 
+			 OtherWise
+			   _cConta  := SBM->BM_CTAADM
+  	      EndCase
+       Endif
+   Endif   
+   
+	_cHora   := Substr(time(),1,5) //hora da baixa                 
+	_cTurno  := ""
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ DESCOBRE QUAL TURNO OCORREU A BAIXA ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If _cHora >= "06:34" .AND. _cHora <= "14:51"
+		_cTurno := "1"
+	ElseIf _cHora > "14:51" .AND. _cHora <= "22:59"
+		_cTurno := "2"
+	ElseIf (_cHora > "22:59" .AND. _cHora <=   "24:00") .OR. (_cHora >= "00:00" .AND. _cHora < "06:34")
+		_cTurno := "3"
+	EndIf
+
+   Begin Transaction
+      RecLock("SD3",.T.)
+
+         SD3->D3_FILIAL   := xFilial("SD3")
+         SD3->D3_TM       := "501"       // Saida do Almoxifado
+         SD3->D3_COD      := SZ7->Z7_PRODUTO
+         SD3->D3_UM       := SB1->B1_UM
+         SD3->D3_QUANT    := SZ7->Z7_QUANT
+         SD3->D3_CF       := 'RE0'       // Transferencia de Almoxarifado
+         SD3->D3_CONTA    := _cCONTA 
+         SD3->D3_CC       := _cCC
+         SD3->D3_LOCAL    := cAlmox 
+         SD3->D3_LOCALIZ  := cLocaliz
+         SD3->D3_DOC      := _cNumero
+         SD3->D3_EMISSAO  := dDataBase
+         SD3->D3_GRUPO    := SB1->B1_GRUPO
+         SD3->D3_CUSTO1   := SZ7->Z7_QUANT * SB2->B2_CM1
+         SD3->D3_CUSTO2   := SZ7->Z7_QUANT * SB2->B2_CM2
+         SD3->D3_CUSTO3   := SZ7->Z7_QUANT * SB2->B2_CM3
+         SD3->D3_CUSTO4   := SZ7->Z7_QUANT * SB2->B2_CM4
+         SD3->D3_CUSTO5   := SZ7->Z7_QUANT * SB2->B2_CM5
+         SD3->D3_NUMSEQ   := cNumSeq
+         SD3->D3_TIPO     := SB1->B1_TIPO
+         SD3->D3_USUARIO  := upper(alltrim(cUserName))
+         SD3->D3_CHAVE    := "E0"
+         SD3->D3_SOLICIT  := SZ7->Z7_MATR
+         SD3->D3_TURNO    := _cTurno
+         // SD3->D3_IDENT    := Subs(cOP,1,6)
+         // SD3->D3_DTVALID  := dDtVal 
+         // SD3->D3_OPTRANS  := cOP
+    MsUnLock("SD3")
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+    //³ Baixa do Estoque                                             ³
+    //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+        
+    DbSelectArea("SB2")
+    SB2->(DbSeek(xFilial("SB2")+SZ7->Z7_PRODUTO+cAlmox ))
+    
+	RecLock("SB2",.F.)        
+		SB2->B2_QATU     := SB2->B2_QATU  - SZ7->Z7_QUANT
+	    SB2->B2_VATU1    := SB2->B2_VATU1 - SZ7->Z7_QUANT * SB2->B2_CM1
+	    SB2->B2_VATU2    := SB2->B2_VATU2 - SZ7->Z7_QUANT * SB2->B2_CM2
+	    SB2->B2_VATU3    := SB2->B2_VATU3 - SZ7->Z7_QUANT * SB2->B2_CM3
+	    SB2->B2_VATU4    := SB2->B2_VATU4 - SZ7->Z7_QUANT * SB2->B2_CM4
+	    SB2->B2_VATU5    := SB2->B2_VATU5 - SZ7->Z7_QUANT * SB2->B2_CM5
+	MsUnLock("SB2")
+	
+	If SB1->B1_LOCALIZ="S" // CONTROLA ENDEREÇO
+    
+    	nQuant2UM := ConvUM(SB1->B1_COD,SZ7->Z7_QUANT,0,2) // 2UM
+		CriaSDB(SB1->B1_COD,;
+				cAlmox,;
+	     		SZ7->Z7_QUANT,;
+	     		cLocaliz,;
+				nil,; //cNumSerie
+				_cNumero,;
+	     		'',;
+	     		'',;
+	     		'',;
+	     		'',;
+	     		'SD3',;//cOrigem
+	     		ddatabase,;
+	     		'',;
+	     		SPACE(6),;//cNumLote
+	     		cNumSeq,;//cNumSeq
+	     		'501',;
+	     		'M',;
+	     		'0001',;
+	     		.F.,0,nQuant2UM,0)  
+	     		
+	     		
+		SBF->(dbSetOrder(1))//BF_FILIAL+BF_LOCAL+BF_LOCALIZ+BF_PRODUTO+BF_NUMSERI+BF_LOTECTL+BF_NUMLOTE
+		SBF->(dbseek(xFilial("SBF")+cAlmox+cLocaliz+SB1->B1_COD))
+		Reclock("SBF",.F.)
+			SBF->BF_QUANT -= SZ7->Z7_QUANT
+		MsUnlock('SBF')
+
+    Endif
+    
+    End Transaction	    
+    
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Variavel para gravar demanda no mes correto no SB3³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+    cMes := "B3_Q"+StrZero(Month(dDataBase),2)
+
+	SB3->(dbSeek(xFilial("SB3")+SZ7->Z7_PRODUTO))
+	If SB3->(EOF())
+		RecLock("SB3",.T.)
+			SB3->B3_FILIAL  := xFilial("SB3")
+			SB3->B3_COD     := SZ7->Z7_PRODUTO
+	Else
+		RecLock("SB3",.F.)
+	EndIf
+
+		Replace &(cMes) With &(cMes) + SZ7->Z7_QUANT
+	MsUnLock("SB3")
+Return
+
+
+Static Function fExclui() // exclui dados no sd3 e diminui saldo no sb2
+
+   	SetPrvt("_cCod, _cUM,_nQtde, _cconta, _cCC, _cLocal, _cDoc,_dEmi")   
+   	SetPrvt("_cGrupo, _nCus1, _nCus2, _nCus3,_nCus4,_nCus5,_cNumSeq,_cTipo ")
+
+   	SD3->(DbSetOrder(2)) // D3_FILIAL+D3_DOC+D3_COD
+   	SD3->(DbSeek(xFilial("SD3")+_cNumero),.T.) // Procura no SD3  
+   
+   	Begin Transaction       
+   
+	While !SD3->(EOF()) .And. ALLTRIM(SD3->D3_DOC) == _cNumero
+
+    	SB2->(DbSeek(xFilial("SB2")+SD3->D3_COD+SD3->D3_LOCAL ))
+       	// DEVOLUCAO DE ESTOQUE
+
+        RecLock("SB2",.F.)        
+        	SB2->B2_QATU     := SB2->B2_QATU  + SD3->D3_QUANT
+    	    SB2->B2_VATU1    := SB2->B2_VATU1 + SD3->D3_QUANT * SB2->B2_CM1
+  	        SB2->B2_VATU2    := SB2->B2_VATU2 + SD3->D3_QUANT * SB2->B2_CM2
+	        SB2->B2_VATU3    := SB2->B2_VATU3 + SD3->D3_QUANT * SB2->B2_CM3
+	        SB2->B2_VATU4    := SB2->B2_VATU4 + SD3->D3_QUANT * SB2->B2_CM4
+	        SB2->B2_VATU5    := SB2->B2_VATU5 + SD3->D3_QUANT * SB2->B2_CM5
+        MsUnLock("SB2")
+                                                                
+		_cCod   := SD3->D3_COD
+		_cUM    := SD3->D3_UM
+		_nQtde  := SD3->D3_QUANT
+		_cconta := SD3->D3_CONTA
+		_cCC    := SD3->D3_CC
+		_cLocal := SD3->D3_LOCAL
+		_cLocaliz := SD3->D3_LOCALIZ
+		_cDoc   := SD3->D3_DOC
+		_dEmi   := SD3->D3_EMISSAO
+		_cGrupo := SD3->D3_GRUPO
+		_nCus1  := SD3->D3_CUSTO1
+		_nCus2  := SD3->D3_CUSTO2
+		_nCus3  := SD3->D3_CUSTO3
+		_nCus4  := SD3->D3_CUSTO4
+		_nCus5  := SD3->D3_CUSTO5
+		_cNumSeq:= SD3->D3_NUMSEQ
+		_cTipo  := SD3->D3_TIPO
+			      
+  		RecLock("SD3",.T.)
+            SD3->D3_FILIAL   := xFilial("SD3")
+            SD3->D3_TM       := "499"       // Saida do Almoxifado
+	        SD3->D3_COD      := _cCod
+	        SD3->D3_UM       := _cUM
+	        SD3->D3_QUANT    := _nQtde
+	        SD3->D3_CF       := 'DE0'       // Transferencia de Almoxarifado
+	        SD3->D3_CONTA    := _cConta
+	        SD3->D3_CC       := _cCC
+	        SD3->D3_LOCAL    := _cLocal
+	        SD3->D3_LOCALIZ  := _cLocaliz
+	        SD3->D3_DOC      := _cDoc
+	        SD3->D3_EMISSAO  := _dEmi
+	        SD3->D3_GRUPO    := _cGrupo
+	        SD3->D3_CUSTO1   := _nCus1
+	        SD3->D3_CUSTO2   := _nCus2
+	        SD3->D3_CUSTO3   := _nCus3
+	        SD3->D3_CUSTO4   := _nCus4
+	        SD3->D3_CUSTO5   := _nCus5
+	        SD3->D3_NUMSEQ   := _cNumSeq
+	        SD3->D3_TIPO     := _cTipo
+	        SD3->D3_USUARIO  := upper(alltrim(cUserName))
+	        SD3->D3_CHAVE    := "E0"
+
+	       // SD3->D3_IDENT    := Subs(cOP,1,6)
+	       // SD3->D3_DTVALID  := dDtVal 
+	       //SD3->D3_OPTRANS  := cOP
+        MsUnLock("SD3")
+      
+	    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Variavel para gravar demanda no mes correto³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	    cMes := "B3_Q"+StrZero(Month(_dEmi),2)
+	
+
+		SB3->(dbSeek(xFilial("SB3")+_cCod))
+		If SB3->(EOF())
+			RecLock("SB3",.F.)
+	           Replace &(cMes) With &(cMes) - _nQtde
+	        MsUnLock("SB3")
+		Endif        
+      
+		SB1->(dbSeek(xFilial("SB1")+_cCod))
+		
+		If SB1->B1_LOCALIZ="S" // CONTROLA ENDEREÇO
+	    
+	    	nQuant2UM := ConvUM(SB1->B1_COD,_nQtde,0,2) // 2UM
+			CriaSDB(SB1->B1_COD,;
+					_cLocal,;
+		     		_nQtde,;
+		     		_cLocaliz,;
+					nil,; //cNumSerie
+					_cDoc,;
+		     		'',;
+		     		'',;
+		     		'',;
+		     		'',;
+		     		'SD3',;//cOrigem
+		     		ddatabase,;
+		     		'',;
+		     		SPACE(6),;//cNumLote
+		     		_cNumSeq,;//cNumSeq
+		     		'499',;
+		     		'D',;
+		     		'0001',;
+		     		.F.,0,nQuant2UM,0)
+
+			SBF->(dbSetOrder(1))//BF_FILIAL+BF_LOCAL+BF_LOCALIZ+BF_PRODUTO+BF_NUMSERI+BF_LOTECTL+BF_NUMLOTE
+			SBF->(dbseek(xFilial("SBF")+_cLocal+_cLocaliz+SB1->B1_COD))
+			Reclock("SBF",.F.)
+				SBF->BF_QUANT += _nQtde
+			MsUnlock('SBF')
+	
+	    Endif
+
+    	SD3->(DbSkip())
+  	EndDo                
+   
+   	End Transaction
+   
+Return
+
+User Function Z7QUANT()
+nProd  := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_PRODUTO"})
+nLocal := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_LOCAL"})
+
+	If Empty(aCols[n][nLocal])
+		Alert('Informe o Local!')
+		Return .f.
+	Endif
+	
+	If Empty(aCols[n][nProd])
+		Alert('Informe o Produto!')
+		Return .f.
+	Endif
+
+	SB2->(dbsetorder(1)) //B2_FILIAL+B2_COD+B2_LOCAL
+	If SB2->(dbseek(xFilial('SB2')+aCols[n][nProd]+aCols[n][nLocal]))
+	
+		If SB2->B2_QATU + SB2->B2_QEMPSA + SB2->B2_RESERVA < M->Z7_QUANT
+			Alert('Saldo insuficiente!'+CHR(13)+CHR(10)+;
+			      'Produto: '+aCols[n][nProd]+CHR(13)+CHR(10)+;
+			      'Local: '+aCols[n][nLocal]+CHR(13)+CHR(10)+;
+			      '(+)Saldo: '+ALLTRIM(STR(SB2->B2_QATU))+CHR(13)+CHR(10)+;
+			      '(-)Empenho SA:'+ALLTRIM(STR(SB2->B2_QEMPSA))+CHR(13)+CHR(10)+;
+			      '(-)Reserva:'+ALLTRIM(STR(SB2->B2_RESERVA)))
+			Return .F.
+		Endif
+	Else
+		Alert('Saldo do produto não encontrado na tabela SB2!'+CHR(13)+CHR(10)+;
+		      'Produto: '+aCols[n][nProd]+CHR(13)+CHR(10)+;
+		      'Local: '+aCols[n][nLocal])
+		Return .f.
+	Endif
+	
+	SB1->(dbsetorder(1))
+	SB1->(dbSeek(xFilial('SB1')+ACOLS[n][nProd]))
+	If SB1->B1_RASTRO$'L'
+		Alert('Produto controla lote! Esta rotina não está preparada para atender produtos que controlam lote!')
+		Return .F.
+	Endif
+	
+	If SB1->B1_LOCALIZ=='S' //-- controla localizacao
+	
+		nSaldoBF := 0
+		
+	   	SBF->(DbSetOrder(2)) //BF_FILIAL+BF_PRODUTO+BF_LOCAL+BF_LOTECTL+BF_NUMLOTE+BF_PRIOR+BF_LOCALIZ+BF_NUMSERI
+	    If SBF->(DbSeek(xFilial("SBF")+aCols[n][nProd]+aCols[n][nLocal]))
+	    	While SBF->(!Eof()) .And. SBF->BF_PRODUTO==aCols[n][nProd] .AND. SBF->BF_LOCAL==aCols[n][nLocal]
+
+				If SBF->BF_QUANT > 0
+					nSaldoBF += SBF->BF_QUANT
+				EndIf
+
+				SBF->(Dbskip())
+			Enddo	    	
+		Else
+			Alert('Produto não tem saldo por endereço! Verifique se existem saldos a Distribuir/Endereçar!')
+			Return .F.
+		Endif
+	   
+		If nSaldoBF < M->Z7_QUANT
+			Alert('Saldo insuficiente por endereço!')
+			Return .F.
+		Endif
+
+	Endif
+
+Return .t.
+
+User Function Z7LOCALIZ()
+nProd  := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_PRODUTO"})
+nLocal := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_LOCAL"})
+nLocaliz := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_LOCALIZ"})
+nQuant := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_QUANT"})
+
+	SB1->(dbsetorder(1))
+	SB1->(dbSeek(xFilial('SB1')+ACOLS[n][nProd]))
+	If SB1->B1_RASTRO$'L'
+		Alert('Produto controla lote! Esta rotina não está preparada para atender produtos que controlam lote!')
+		Return .F.
+	Endif
+	
+	If SB1->B1_LOCALIZ=='S' //-- controla localizacao
+	
+	   	SBF->(DbSetOrder(1)) //BF_FILIAL+BF_LOCAL+BF_LOCALIZ+BF_PRODUTO+BF_NUMSERI+BF_LOTECTL+BF_NUMLOTE
+	    If SBF->(DbSeek(xFilial("SBF")+aCols[n][nLocal]+M->Z7_LOCALIZ+aCols[n][nProd]))
+			If SBF->BF_QUANT < Acols[n][nQuant]
+				Alert('Saldo insuficiente no Local!')                                                        
+				Return .f.
+			endif
+		endif
+	
+    Else
+		Alert('Produto não controla localização!')
+		Return .F.
+    Endif
+  
+Return .t.
+
+Static Function F4LOCALIZ()
+nProd  := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_PRODUTO"})
+nLocal := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_LOCAL"})
+aSaldoBF := {}
+
+	If Alltrim(ReadVar())$"M->Z7_LOCALIZ"
+		Return
+	Endif
+	
+	SB1->(dbsetorder(1))
+	SB1->(dbSeek(xFilial('SB1')+ACOLS[n][nProd]))
+	If SB1->B1_RASTRO$'L'
+		Alert('Produto controla lote! Esta rotina não está preparada para atender produtos que controlam lote!')
+		Return .F.
+	Endif
+	
+	If SB1->B1_LOCALIZ=='S' //-- controla localizacao
+	
+	   	SBF->(DbSetOrder(2)) //BF_FILIAL+BF_PRODUTO+BF_LOCAL+BF_LOTECTL+BF_NUMLOTE+BF_PRIOR+BF_LOCALIZ+BF_NUMSERI
+	    If SBF->(DbSeek(xFilial("SBF")+aCols[n][nProd]+aCols[n][nLocal]))
+	    	While SBF->(!Eof()) .And. SBF->BF_PRODUTO==aCols[n][nProd] .AND. SBF->BF_LOCAL==aCols[n][nLocal]
+
+				If SBF->BF_QUANT > 0
+				
+					dDtValid := CtoD("  /  /  ")
+				
+					If !Empty(SBF->BF_LOTECTL)
+						SB8->(dbsetorder(3))//B8_FILIAL+B8_PRODUTO+B8_LOCAL+B8_LOTECTL+B8_NUMLOTE+DTOS(B8_DTVALID)
+						If SB8->(dbSeek(xFilial("SB8")+aCols[n][nProd]+aCols[n][nLocal]+SBF->BF_LOTECTL))
+						 	dDtValid := SB8->B8_DTVALID
+						Else
+							Alert('Erro ao encontrar o lote na tabela SB8!'+chr(13)+chr(10)+;
+								  'Produto:' + aCols[n][nProd] +chr(13)+chr(10)+ ;
+								  'Local: ' + aCols[n][nLocal] +chr(13)+chr(10)+ ;
+								  'Localiz: '+ SBF->BF_LOCALIZ +chr(13)+chr(10)+;
+								  'Lote: '+ SBF->BF_LOTECTL	)
+							return .f.
+						Endif
+					Endif
+					
+					aAdd(aSaldoBF,{SBF->BF_LOCALIZ,SBF->BF_QUANT,SBF->BF_LOTECTL,dDtValid})
+				
+				EndIf
+
+				SBF->(Dbskip())
+			Enddo	    	
+		Else
+			Alert('Produto não tem saldo por endereço! Verifique se existem saldos a Distribuir/Endereçar!')
+			Return .F.
+		Endif
+	   
+    eLSE
+    	Alert('Produto não controla localizacao!')
+    	Return 
+	Endif
+
+	oDlgSalEnd  := MsDialog():New(0,0,300,400,"Saldo por Localização",,,,,,,,,.T.)
+	
+	@ 010,010 Say "Produto:"      SIZE 040,008 Object olProd
+	@ 008,040 Get aCols[n][nProd] SIZE 060,008 When .F. Object oProd
+	
+	@ 010,140 Say "Local:"         SIZE 040,008 Object olLocal
+	@ 008,170 Get aCols[n][nLocal] SIZE 020,008 When .F. Object oLocal
+	
+	@ 020,005 LISTBOX oLbx FIELDS HEADER "Endereço","Saldo","Lote","Data Validade" ;
+	SIZE 192,110 PIXEL OF oDlgSalEnd  //ON DBLCLICK( u_fDet(oLbx:nAt))//,oDlg:End())
+	
+	oLbx:SetArray( aSaldoBF )
+	
+	If Empty(aSaldoBF)
+		aAdd(aSaldoBF,{"",0,"",""})
+	EndIf
+	
+	oLbx:bLine := {|| {aSaldoBF[oLbx:nAt,1],;  // ENDERECO
+					   aSaldoBF[oLbx:nAt,2],;  // SALDO
+		               aSaldoBF[oLbx:nAt,3],;  // LOTE
+	   		           aSaldoBF[oLbx:nAt,4]}}  // DATA VALIDADE
+	
+	oLbx:Refresh()                  
+	
+    oBt1 := tButton():New(135,132,"Ok",oDlgSalEnd,{||fOkSalEnd()},30,10,,,,.T.)      
+    oBt2 := tButton():New(135,168,"Cancelar",oDlgSalEnd,{||oDlgSalEnd:End()},30,10,,,,.T.)
+
+	oDlgSalEnd:Activate(,,,.T.,{||.T.},,)
+	
+Return .T.
+
+Static Function fOkSalEnd()
+Local nLocaliz := aScan(aHeader,{|x| UPPER(ALLTRIM(x[2]))=="Z7_LOCALIZ"})
+
+	aCols[n][nLocaliz] := oLbx:AARRAY[oLbx:nAt][1] 
+	oDlgSalEnd:End()
+	
+Return

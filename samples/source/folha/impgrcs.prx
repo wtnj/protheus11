@@ -1,0 +1,624 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 19/11/99
+#INCLUDE "IMPGRCS.CH"
+#IFNDEF WINDOWS
+	#DEFINE PSAY SAY
+#ENDIF
+
+/*                           
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ IMPGRCS  ³ Autor ³ R.H. - Natie          ³ Data ³ 06.03.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Guia de Recolhimento da Contribuicao Sindical -GRCS        ³±± 
+±±³          ³ 						                                      ³±± 
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ImpGrcs()                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Natie       ³26/03/01³      ³ Consistencia na busca do Sindicato       ³±±
+±±³Natie       ³17/04/01³      ³ Carrega Empresa conforme Fil.Centralizad.³±±  
+±±³Natie       ³05/06/01³      ³ Impressao Entid.sindical-12 digitos      ³±±  
+±±³Natie       ³29/08/01³009963³ PrnFlush-Descarrega spool impressao teste³±±
+±±³Natie       ³11/12/01³009963³ Acerto Impressao-Teste                   ³±±
+±±|Priscila    ³07/10/02³059762³ Tratamento da Perg. Data Pagamento.      ³±± 
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function IMPGRCS()    
+
+#IFNDEF WINDOWS
+// Movido para o inicio do arquivo pelo assistente de conversao do AP5 IDE em 19/11/99 ==> 	#DEFINE PSAY SAY
+#ENDIF
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("ADRIVER,AINFO,CCGC,CRAZAO,CENDERECO")
+SetPrvt("CCEP,CCIDADE,CUF,CCNAE,CBAIRRO")
+SetPrvt("NLIN,NVIRGULA,CNUMERO,CNUMERO,TPESTAB")
+SetPrvt("NEMPRESA,NESTABEL,NCAPESTB,NNUMENPR,NCAPSOCI")   
+SetPrvt("NTBASESIN1,CCODESTA,WNREL")
+SetPrvt("NVEZ,CFILSINDI")
+
+cAno		:= "  "
+Cdia		:= "  "
+cMes		:= "  " 
+cDataPg		:= "  "
+nEstbEmp	:= 0
+nEmpresa	:= 0
+aInfo      	:= {}
+aSindic		:= {}
+cCgc       	:= ""
+cRazao     	:= ""
+cEndereco  	:= ""
+cCep       	:= ""
+cCidade    	:= ""
+cUf        	:= ""
+cBairro		:= ""
+nLin 		:= 6
+CTpEstab	:= "  "
+aDriver    	:= ReadDriver()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega dados do Sindicato do RCE                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("RCE")
+dbSetOrder(1)
+//-- se RCE for Exclusivo, procura pela filial do SRA->RA_SINDICA 
+cFilSindi	:= If( Empty( xFilial("RCE") ) , xFilial("RCE"), cFilialAnt ) 
+
+If dbSeek( cFilSindi + cSinAnt )
+	Do While !eof() .and. cFilSindi + cSinAnt = RCE->RCE_FILIAL+ RCE->RCE_CODIGO
+		aAdd(aSindic,{RCE->RCE_DESCRI,RCE->RCE_CGC   ,RCE->RCE_ENTSIN,RCE->RCE_ENDER,RCE->RCE_NUMER,;
+                      RCE->RCE_COMPLE,RCE->RCE_BAIRRO,RCE->RCE_CEP   ,RCE->RCE_MUNIC,RCE->RCE_UF } ) 
+		RCE->(dbSkip())
+	Enddo	
+Else
+	aAdd(aSindic,{"Sindicato nao Cadastrado !",,,,,,,,,,})
+Endif             
+
+dbSelectArea("SRA")
+dbSetOrder(1)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Numero de Empresas do Estabelecimento/Tipo Estabel           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+dbSelectArea("SM0")
+dbSeek(cEmpAnt)     
+If(FieldPos(SM0->M0_TPESTAB)=0,CtpEstab:= "  ",cTpEstab := SM0->MO_TPESTAB)
+Do while !eof() .and. cEmpAnt ==SM0->M0_CODIGO
+	nEstbEmp ++
+	SM0->(dbSkip())
+Enddo
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Carrega Dados da Empresa                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Separa o numero no endereco                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If(cCentFil # space(2))
+		IF !fInfo(@aInfo,cCentFil)	
+			Return Nil
+		Endif
+	Else
+		IF !fInfo(@aInfo,cFilialAnt)
+			Return Nil
+		Endif
+	Endif	
+	nVirgula	:= Rat(",",aInfo[4])
+	cNumero 	:= AllTrim(SubStr(aInfo[4],nVirgula+1))               
+	nNumero 	:= Val(AllTrim(cNumero))
+	cEnder		:= subs(If(nNumero!=0,SubStr(aInfo[4],1,nVirgula-1),aInfo[4]),1,30)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Quando nao ha virgula no endereco procura-se o caracter branco³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( nVirgula == 0 )
+		nVirgula 	:= Rat(" ",AllTrim(aInfo[4]))
+		cNumero 	:= AllTrim(SubStr(aInfo[4],nVirgula+1))
+		nNumero 	:= Val(AllTrim(cNumero))
+		cEnder  	:= subs(If(nNumero!=0,SubStr(aInfo[4],1,nVirgula-1),aInfo[4]),1,30)
+	EndIf
+
+cCGC		:= aInfo[8]
+cRazao    	:= Subs(aInfo[3],1,40) 	// Razao Social
+cTelefone 	:= Subs(aInfo[10],1,8)
+cCep      	:= aInfo[7]
+cCidade   	:= Subs(aInfo[5],1,20)
+cBairro     := subs(aInfo[13],1,20) 				//Bairro
+cComple     := subs(aInfo[14],1,15)               //Comple
+cUf       	:= aInfo[6]
+cTipInsc  	:= If (aInfo[15] == 1 ,"2","1" )
+cCgc      	:= If (cTipInsc == "2",aInfo[8],Transform(cCgc,"@R ##.###.###/####-##")) // CGC
+cCNAE		:= aInfo[16]
+
+If Empty(cTpEstab) 
+	If(nEstbEmp =1,cTpEstab:="01",IF(substr(cCgc,12,4)="0001",cTpEstab :="02",cTpEstab:="03"))
+Endif
+
+  
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³monta DATA para pagamento da GRCS                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+cMes 		:= If (Month(dDataBase) + 1 > 12,"01" ,StrZero(Month(dDataBase)+1,2) )
+cAno 		:= If (cMes = "01", StrZero(Year(dDataBase)+1,4),STrZero(Year(dDataBase),4) )
+cDia        := Strzero(F_UltDia(Ctod("01"+"/"+cMes+"/"+cAno)),2)
+cDataPg 	:= cDia +"/"+ cMes + "/" + cAno 
+
+Do While .T.      
+	If nTpImpre ==2  
+		SetPrc(00,00)
+		nLin :=6
+		ImprP()		//Impressao Formulario Pre_impresso
+		If nVez == 0  .and. aReturn[5] # 1 
+			fImpTeste(cString)
+			If mv_par01 == 2
+				Loop 
+			Endif
+		Endif
+	elseIf nTpImpre ==3  
+		ImprZe()	//Impressao Formulario zebrado
+	Endif
+	Exit
+Enddo        
+Return    
+
+	         
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ IMPRP()  ³ Autor ³ R.H. - Natie          ³ Data ³ 06.03.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao da Guia em Formulario Pre Impresso               ³±± 
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ImprP()                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÀÄÄÄÄÄÄ ÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Function ImprP() 
+	/* DADOS DA ENTIDADE SINDICAL */
+    // Campo 03 
+    Set Device To Print
+	If aReturn[4] == 1  // Comprimido
+    	@ nlin,0 PSAY &(if(nTamanho=="P",aDriver[1],if(nTamanho=="G",aDriver[5],aDriver[3])))
+   	Else					  // Normal
+    	@ nlin,0 PSAY &(if(nTamanho=="P",aDriver[2],if(nTamanho=="G",aDriver[6],aDriver[4])))
+   	Endif                
+
+    @ nlin,073 PSAY  cCGC 
+    nLIn := nlin +2
+    //Campo 04 /  CAMPO 05
+	@ nlin,073 PSAY If(Empty(dDtPg),cDataPg,SUBSTR((DTOC(dDtPg))+SPACE(2),1,10)) + Space(06) + cAno     //Data limite de Pagamento 
+    nLIn := nlin +3
+	// CAMPO 06 /  CAMPO 07       
+	@ nLin,02  psay aSindic[1,1]					//-- Desc.sindicato
+	@ nLin,073 psay aSindic[1,3]					//-- Cod.entidade sindical 
+    nLIn := nlin +2
+	// CAMPO 08/09/10/11     
+	@ nLIn,02  psay aSindic[1,4]					//--Endereco
+	@ nLin,42  psay aSindic[1,5]					//--Numer  
+	@ nLin,52  psay aSindic[1,6]					//--Comple 
+	@ nLin,073 pSay substr(aSindic[1,2],01,02)+"."+substr(aSindic[1,2],03,03)+"."+substr(aSindic[1,2],06,03)+"/" +substr(aSindic[1,2],09,04)+"-"+ substr(aSindic[1,2],13,02)
+    nLin := nlin +2
+	// CAMPO 12/13/14/15 - Bairro
+	@ nLin,02 psay aSindic[1,7]						//-- Bairro 
+	@ nLin,37 psay aSindic[1,8]						//-- Cep
+	@ nLin,052 psay space(17)+ aSindic[1,9]		//-- municipio
+	@ nLin,088 psay aSindic[1,10]					//-- UF
+    nLIn := nlin +3
+	/* DADOS DO CONTRIBUINTE */ 
+	//campo 16 - 17 
+	@ nLin,02  psay   cRazao 
+	@ nLin,073 psay   subs(cCodEsta,1,15)       // Razao Social + codigo do Estabelec. fornec.pelo sindicato
+    nLin := nlin +2
+	//CAMPO 18-19-20-21              
+	@ nLin,002 psay  cEnder 
+	@ nLin,042 psay  strzero(nNumero,5)
+	@ nLin,052 psay  cComple
+	@ nLin,073 psay  dtoc(dIniAtiv) 
+    nLIn := nlin +2
+   	// CAMPO 22-23-24-25
+
+	@ nLin,002 psay  cCep 
+	@ nLin,020 psay  cCidade
+	@ nLin,052 psay  cbairro
+	@ nLin,088 psay  cUF
+    nLIn := nlin +2
+    
+	// CAMPO 26-27-28-29     - //| 26- Atividade do contribuinte | 27-Cod.Ativ.|28- Subcodigo Ativid.|29- Cod.CBO| 30- Tipo      [ ]Unico[ ]Principal| 31- No Estabel.  |"
+	@ nLin,002 psay cDescAti
+	@ nLin,026 psay cCNAE 
+	@ nLin,035 psay cSubCod 
+	//CAMPO 30 Tipo de Estabelecimento -//Estabelec [ ]Filial [ ]Outros | da Empresa      |"
+	If  cTpEstab =="01"	  		//Unico
+		@ nLin,058 psay "X" 
+	ElseIf cTpEstab	=="02"     //Principal		 	
+		@ nLin,065 psay "X"  
+    ElseIF cTpEstab	=="03" .or. cTpEstab="04" 
+		@ nLin,072 psay "X"   
+	Else 
+		@ nLin,078 psay "X"   
+	Endif	       
+	//CAMPO 31 No Estabel. da Empresa 	
+	@ nLin,090 psay  strzero(nEstbEmp,3)
+    nLIn := nlin +3
+    
+	/*	DADOS DE REFERENCIA DA CONTRIBUICAO  */ 
+	//CAMPO 32  
+	//CAMPO 42 Valor da Contribuicao  
+	
+	@ nLin,34  psay "X"
+	@ nLin,073 psay  TRANSFORM(nTContrib,"@E 999,999,999.99")	
+    nLIn := nlin +2
+
+	//CAMPO 33 Capital Social da Empresa	                    
+	@ nLin,10 psay transform(nCapSocI,"@E 999,999,999.99")
+	//CAMPO 38 Num.empregado que contribuem  - quando guia de empregados
+	@ nLin,42 psay transform(nNumEmpr,"@E 999,999")
+	//CAMPO 43 MULTA                
+	@ nLin,075 psay transform(nMulta,"@e 999,999.99")
+	nLin := nLin +2
+		
+	// CAMPO 34 Total da Empresa 	
+    @ nLin,10 psay  transform(nEmpresa,"@E 999,999,999.99")
+    //CAMPO 39 Total da remuneracao
+	@ nLin,42 psay  TrANSFORM(nTBaseSin1,"@E 999,999,999.99")	
+	//CAMPO 44 Multa    
+	@ nLin,075 psay TRANSFORM(nJurosMo,"@E 999,999.99")
+    nLIn := nlin +2
+			
+	//CAMPO 35 Deste EStabelecimento  
+	@ nLin,10 psay Transform(nEstabel,"@E 999,999,999.99") 
+    //CAMPO 40 Total de Empregados
+	@ nLin,42 psay  transform(nNumEmpr,"999,999")
+	//CAMPO 45 CORRECAO MONETARIA     
+	@ nLIn,075 psay Transform(nCorrMon,"@E 999,999.99")
+    nLIn := nlin +2
+    	          
+	//CAMPO 36 Capital Atribuido a este Estabelecimento 
+	@ nLin,10 psay Transform(nCapEstb,"@E 999,999,999.99") 
+	//CAMPO 41 - Numero de Nao contribuintes  (campo 40 - campo 38) 	
+	//CAMPO 46  Total a Recolher 
+	@ nLin,073 psay TRANSFORM( ( nTContrib+nMulta+nJurosMo+nCorrMon),"@E 999,999,999.99") 
+    nLIn := nlin +2
+     	 	
+	//CAMPO 37 Valor Base de Calculo Contribuicao  -campo 35, se não houver, considerar campo 33
+	If nEstabel >0 
+		@ nLin,10  psay transform(nEstabel,"@E 999,999,999.99")
+	else 
+		@ nLin,10 psay transform(nCapSoci,"@E 999,999,999.99")
+	endif	
+    nLin := nlin +2	                                                                 
+ 	@ nLin,05 psay  cCidade 
+ 	@ nLin,28 psay  If(Empty(dDtPg),cDataPg,SUBSTR((DTOC(dDtPg))+SPACE(2),1,10)) 
+    nLin := nLin + 5
+    @ nLin,00 psay " " 
+ Return
+
+
+//"*--------------------------------------------------------------*----------------------------------*-----------------------------------*"//
+//"|                                                              |1-CPF ou Carimbo padronizado do   | 02-Reservado                      |"//
+//"|                                                              |  CGC do Estabelecimento          |                                   |"//
+//"|   MINISTERIO DO TRABALHO                                     |                                  |                                   |"//
+//"|                                                              |                                  |                                   |"//
+//"|                                                              |                                  *-----------------------------------|"//
+//"|   GUIA RECOLHIMENTO DA CONTRIBUICAO SINDICAL - GRCS          |                                  | 03- CPF/CGC do Estabelecimento    |"//
+//"|                                                              |                                  |     99.999.999/9999-99            |"//
+//"|                                                              |                                  | 04- Dt Limite de Pgto 05-Exercicio|"//
+//"|                                                              |                                  |     99/99/9999           9999     |"//
+//"*--------------------------------------------------------------*----------------------------------*-----------------------------------|"//
+//"|                                       D A D O S  D A   E N T I D A D E  S I N D I C A L                                             |"//
+//"*-------------------------------------------------------------------------------------------------------------------------------------|"//
+//"| 06- NOME DA ENTIDADE                                                                            | 07- Codigo da Entidade Sindical   |"//
+//"|     40xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                     |     99                            |"//
+//"| 08- Endereco  (Rua,Av,praca,etc)            | 09- Numero |10- Complem(Andar,sala,etc)           | 11- CGC da Entidade               |"//
+//"|     123456789012345678901234567890          |     99999  |    10                                |     99.999.999/9999-99            |"//
+//"| 12- Bairro ou Distrito                      | 13- CEP    |14- Municipio(Cidade)                 | 15- Sigla UF                      |"//
+//"|     12345678901234567890                    | 99999-999  |    01234567890123456789              |     xx                            |"//
+//"*-------------------------------------------------------------------------------------------------------------------------------------|"//
+//"|                                     D A D O S  D O   C O N T R I B U I N T E                                                        |"//
+//"*--------------------------------------- ---------------------------------------------------------------------------------------------|"//
+//"| 16- NOME / RAZAO SOCIAL / DENOMINACAO SOCIAL                                                    | 17- Codigo do Estabelecimento     |"//
+//"|     12345678901234567890123456789012345678901234567890                                        41|     123456789012345               |"//
+//"| 18- Endereco (Rua,Av,praca,etc)             |19- Numero  |20- Complem(Andar,sala,etc)           | 21- Data Inicio da Atividade      |"//
+//"|     123456789012345678901234567890        09|    99999   |    12345678901234567890            13|     99/99/99999                 18|"//
+//"| 22- CEP        | 23- Municipio(Cidade)      |24- Bairro ou Distrito                             | 25- Sigla UF                      |"//
+//"|     99999-999  |     20345678901234567890   |    12345678901234567890                         27|     xx                            |"//
+//"|---------------------------------------------*---------------------------------------------------*-----------------------------------|"//
+//"| 26- Atividade do contribuinte | 27-Cod.Ativ.|28- Subcodigo Ativid.|29- Cod.CBO| 30- Tipo      [ ]Unico[ ]Principal| 31- No Estabel. |"//
+//"|     12345678901234567890      |    xx       |    xxxxxxxxxxxxxxx  |           |     Estabelec [ ]Filial [ ]Outros | da Empresa      |"//
+//"*-------------------------------*-------------*---------------------*-----------*-----------------------------------*-----------------|"//               
+//"|   D A D O S  D E  R E F E R E N C I A  D A  C O N T R I B U I C A O                     |   D A D O S  D A  C O N T R I B U I C A O |"//
+//"*--------------------------------------- -------------------------------------------------|-----------------------------------------43|"//
+//"| 32- 01[ ] Estabel.Empregador 02-[ ] Autonomo/Liberal 03-[ ]Empregados                   | 42- Vl.Contribuicao        999.999.999,99 |"//
+//"*-----------------------------------------------------------------------------------------|                                           |"//
+//"| 33- Capital Social da Empresa           | 38- No Empregados que Contribuem              | 43- Multa                      999.999,99 |"//
+//"|                          999.999.999,99 |                                    999.999    |                                           |"//
+//"|-----------------------------------------| 39- Total da Remuneracao    999.999.999,99    | 44- Juros de Mora              999.999,99 |"// 
+//"| Operacao Economica                      |                                               |                                           |"//
+//"| 34- Total da Empresa     999.999.999,99 | 40- Total de Empregados            999.999    | 45- Correcao Monetaria         999.999,99 |"//
+//"| 35- Deste Estabelec.     999.999.999,99 |                                               |                                           |"//
+//"|-----------------------------------------| 41- No de nao contribuintes        999.999    | 46- Total a Recolher       999.999.999,99 |"//
+//"| 36- Capital Atribuido a este Estabelec. |-------------------------------------------------------------------------------------------|"//
+//"|                          999.999.999,99 | 47- Local  / 48- Data                         |49- Autenticacao Mecanica                  |"//           
+//"| 37- Vl.Base de Calculo  Contribuicao    |                                               |                                           |"//
+//"|                          999.999.999,99 |                                               |                                           |"//
+//"*-------------------------------------------------------------------------------------------------------------------------------------|"// 
+//"1¦VIA - INSS - 2¦VIA - CONTRIBUINTE"//
+
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ IMPRZE() ³ Autor ³ R.H. - Natie          ³ Data ³ 06.03.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressoa da Guia em Formulario Continuo                   ³±± 
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ImprZ()                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÀÄÄÄÄÄÄ ÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Function ImprZe()
+
+    nLin := 0
+    Set Device To Print
+   	@ nlin,0 PSAY AvalImp(132) 
+	nLin ++
+	@ nLin,00 PSAY STR0001
+	nLin  ++
+	@ nLin,00 PSAY STR0002 
+	nLin  ++
+	@ nLin,00 PSAY STR0003
+	nLin  ++
+	@ nLin,00 PSAY STR0004
+	nLin  ++
+	@ nLin,00 PSAY STR0005
+	nLin  ++
+	@ nLin,00 PSAY STR0006
+	nLin  ++
+	@ nLin,00 PSAY STR0007
+	nLin  ++   
+	/* DADOS DA ENTIDADE SINDICAL */
+    // Campo 03 
+    @ nLin,00 PSAY  "|" + Space(62) +"|"+ space(34) + "|" + space(5) + cCGC +space(12)+"|"
+    nLin  ++ 
+	@ nLin,00 PSAY STR0008						
+	nLin  ++
+	//Campo 04 /  CAMPO 05
+	@ nLin,00 PSAY "|"+ space(62) + "|"+space(34) + "|" + space(5) + If(Empty(dDtPg),cDataPg,SUBSTR((DTOC(dDtPg))+SPACE(2),1,10))+ space(11) + cAno  +space(5) +"|"      //Data limite de Pagamento 
+	nLin ++
+    @ nLin,00 PSAY "*"+ repl("-",62) + "*"+ repl("-",34) +"*" + repl("-",35) + "*"  	
+    nLin ++
+	@ nLin,00 PSAY STR0009		//Dados da Entidade Sindical
+	nLIn ++
+    @ nLin,00 PSAY "*"+ repl("-",133)+ "*"  
+	nLin ++			
+	// CAMPO 06 /  CAMPO 07       
+    @ nLin,00 PSAY STR0010			//Nome Entidade Sindical
+	nLin ++
+	@ nLin,00 PSAY "|"+ space(5)+ aSindic[1,1] + space(52) +"|"+ space(5) +  aSindic[1,3]+ space(18) +"|"
+	nLin ++
+	// CAMPO 08/09/10/11     -Endereco
+	@ nLin,00 PSAY  "| 08- "+ STR0011+space(12) +  "| 09- " + STR0012	+space(1)+"| 10- "+ STR0013	+space(10)+"| 11- "+ STR0014+space(14)+ "|"
+	nLin ++ 		                                                                                                                                                                                      
+	cDet :=  "|" + space(05) + aSindic[1,4] + SPACE(10)+ "|"+space(5)	+aSindic[1,5] + SPACE(2) + "|"+ space(5)+ aSindic[1,6]+ space(23) + "|"+space(5)
+	cDet +=	  substr(aSindic[1,2],01,02)+"."+substr(aSindic[1,2],03,03)+"."+substr(aSindic[1,2],06,03)+"/" +substr(aSindic[1,2],09,04)+"-"+ substr(aSindic[1,2],13,02)+ space(12)+"|"
+	@ nLin,00 PSAY cDet
+	nLin ++                                                                                                                         
+
+	// CAMPO 12/13/14/15 - Bairro
+	@ nLin,00 psay "| 12- " + STR0015+ space(22) +"| 13- " + STR0016+SPACE(4)+"| 14- "+ STR0017 +space(16) +"| 15- "+STR0018+space(22) + "|"  
+	nLin ++	
+	@ nLin,00 psay "|" + space(4) + aSindic[1,7]+ space(21)+ "|"+space(4)+ aSindic[1,8] +"|" + space(5)+ aSindic[1,9] +space(13)+"|" +space(5)+aSindic[1,10]+ space(28) +"|" 
+	nLin ++
+	@ nLin,00 psay STR0001
+	nLin ++   
+	/* DADOS DO CONTRIBUINTE */
+	@ nLin,00 PSAY STR0019
+	nLin ++
+	@ nLin,00 PSAY STR0001
+	nLin ++
+	//campo 16 - 17 
+	@ nLin,00 psay STR0020
+	nLin ++                                                     
+	@ nLin,00 psay  "|"+space(5) + cRazao +space(52) +"|"+space(5)+ subs(cCodEsta,1,15)  +space(15)+ "|"     // Razao Social + codigo do Estabelec. fornec.pelo sindicato
+	nLin  ++  
+
+	//CAMPO 18-19-20-21              
+	@ nLin,00 PSAY  "| 18- "+ STR0011+space(12) + "| 19- " + STR0012	+space(1)+"| 20- "+ STR0013 + space(10) + STR0021
+	nLin ++	
+	@ nLin,00 PSAY  "|" +space(5) + SUBSTR(cEnder+ SPACE(30),1,30) + space(10) +"|" +space(4)+ STRZERO(nNumero,5) +space(3)+"|"+space(5)+cComple+ space(21)+"|"+space(5)+SUBSTR(dtoc(dIniAtiv)+SPACE(2),1,10)+space(20)+"|" 
+	nLin ++
+
+	// CAMPO 22-23-24-25
+	@ nLin,00 psay "| 22- " + STR0016 +space(8)+"| 23- " + STR0017+ SPACE(6) +"| 24- "+ STR0015+  SPACE(28) + "| 25- " +STR0018+  space(22)+"|"
+	nLin ++
+	@ nLin,00 psay "|"+ space(5) + cCep  + space(3)+"|"+ space(5)+ cCidade + space(3) +"|" +space(5)+ cbairro +space(26)+"|" + space(5)+ cUF+ space(28)+"|" 
+	nLin ++
+	@ nLin,00 psay "|"+ repl("-",45) + "*" + repl("-",51) +"*"+ repl("-",35)+"|" 
+	nLin ++	                                                                                                                
+	// CAMPO 26-27-28-29     - //| 26- Atividade do contribuinte | 27-Cod.Ativ.|28- Subcodigo Ativid.|29- Cod.CBO| 30- Tipo      [ ]Unico[ ]Principal| 31- No Estabel.  |"
+	If  cTpEstab =="01"	  		//Unico
+		cDet := substr(STR0022,1,96)
+		cDet += "X" + substr(STR0022,99,38) 
+	ElseIf cTpEstab	=="02"     //Principal		 	
+		cDet := substr(STR0022,1,96)
+		cDet += substr(STR0022,98,8)+ "X" + substr(STR0022,106,30) 
+    ElseIF cTpEstab	=="03" .or. cTpEstab="04"     
+		cDet := STR0022
+	Endif		
+	@ nLin,00 psay cDet 
+	nLin ++ 
+	            
+	cDet := "|" + space(5)+ SUBSTR(cDescAti+SPACE(5),1,20) + space(6) +"|"+SPACE(3)+SUBSTR(cCNAE+SPACE(5),1,11)+ "|" + space(4) +SUBSTR(cSubCod,1,15) + space(2) + "|"+ space(11)+"|" +space(1) 
+	//CAMPO 30 Tipo de Estabelecimento -//Estabelec [ ]Filial [ ]Outros | da Empresa      |"
+	If cTpEstab	=="03"     //Filial   	     
+		cDet += space(4) + substr(STR0023,1,11)
+		cDet += "X"+substr(STR0023,13,30)		 
+	ElseIf cTpEstab =="04"
+		cDet += space(4) + substr(STR0023,1,11)
+		cDet += substr(STR0023,12,10)+"X"+substr(STR0023,23,20)
+	ElseIf cTpEstab =="01" .or. cTpEstab =="02"
+		cDet += space(4)+substr(STR0023,1,43)	
+	Endif 
+	//CAMPO 31 No Estabel. da Empresa 
+	cDet += space(1) + strzero(nEstbEmp,3)+ space(01) + "|" 
+	@ nLin,00 psay cDet 
+	nLin  ++
+	
+	/*	DADOS DE REFERENCIA DA CONTRIBUICAO  */
+	@ nLin,00 psay "|" + repl("-",31)+"*"+ repl("-",13)+ "*" +repl("-",21)+ "*" + repl("-",11) +"*" + repl("-",34) +"*"+ repl("-",18)+"|"
+	nLin ++
+	@ nLin,00 psay STR0024
+	nLin ++
+	@ nLin,00 psay "|" + repl("-",89) + "|"+ repl("-",43)+"|"
+	nLin ++	
+	
+	//CAMPO 32  
+	//CAMPO 42 Valor da Contribuicao  
+	@ nLin,00 psay substr(STR0025,1,59)+"X"+substr(STR0025,60,61)  +SPACE(6)+ TRANSFORM(nTContrib,"@E 999,999,999.99")	+ space(2)+"|"
+	
+	nLin ++
+	@ nLin,00 psay "*-----------------------------------------------------------------------------------------|                                           |"
+	nLin ++
+	//CAMPO 43 MULTA	    
+	@ nLin,00 psay substr(STR0026,1,101) + Space(21)+ transform(nMulta,"@E 999,999.99") + space(2)+ "|"
+	nLin ++
+	
+	//CAMPO 33 Capital Social da Empresa	
+	cDet := "|"+ space(26)+ transform(nCapSocI,"@E 999,999,999.99")+ space(1)+"|" 
+	//CAMPO 38 Num.empregado que contribuem  - quando guia de empregados
+	cDet += space(36)+ transform(nNumEmpr,"999,999")+ space(4)+"|"+ space(43)+"|"  
+	@ nLin,00 psay  cDet
+	nLin ++	                     
+	
+	//CAMPO 39 Total da remuneracao
+	cDet := STR0027 + space(6) + TRANSFORM(nTBaseSin1,"@E 999,999,999.99")	+ space(2)
+	//CAMPO 44 JUROS DE MORA
+	cDet +=  STR0028+space(12)+transform(nJurosMo,"@E 999,999.99") + space(2) +"|"  
+	@ nLin,00 psay cDet  
+	nLin ++
+	
+	@ nLin,00 psay  STR0029
+  	nLin ++ 
+	// CAMPO 34 Total da Empresa 	
+    cDet := STR0030 + space(5) + transform(nEmpresa,"@E 999,999,999.99")+ space(1)
+    //CAMPO 40 Total de Empregados
+	cDet+=  STR0031 + space(12)+ transform(nNumEmpr,"999,999")+ space(4)
+	
+	//CAMPO 45 CORRECAO MONETARIA     
+	cDet += STR0032 +space(7)+ Transform(nCorrMon,"@ER 999,999.99")+ space(2)+"|" 
+	@ nLin,00 psay cDet 
+	nLin ++ 
+	
+	//CAMPO 35 Deste EStabelecimento  
+	@nLin,00 psay STR0033+space(5)+ Transform(nEstabel,"@E 999,999,999.99") +space(1)+"|"+ space(47)+"|" +space(43)+"|"
+	nLin ++
+           
+	//CAMPO 41 - Numero de Nao contribuintes  (campo 40 - campo 38) 
+	
+	cDet := STR0034 +  space(08)+ Transform((nNumEmpr - nNumEmpr),"@E 999,999")+space(4)
+	//CAMPO 46  Total a Recolher 
+	cDet += STR0035+  space(6)+ TRANSFORM(nTContrib+nMulta+nJurosMo+nCorrMon,"@E 999,999,999.99") + space(2) +"|" 
+	@ nLin,00 psay cDet
+ 	nLin ++
+ 	//CAMPO 36 Capital Atribuido a este Estabelecimento 
+	@ nLin,00 psay STR0036 
+	nLin ++
+	cDet := "|" + space(26)+Transform(nCapEstb,"@E 999,999,999.99") +space(1)
+	cDet +=  STR0037 					//Local e Data -Autenticacao
+	@ nLin,00 psay cDet 
+	nLin ++
+  	
+  	//CAMPO 37 Valor Base de Calculo Contribuicao  -campo 35, se não houver, considerar campo 33
+	@ nLin,00 psay  STR0038 	
+	nLin ++                                                                   
+	If nEstabel >0 
+		@ nLin,00 psay "|" 	+ space(26) + Transform(nEstabel,"@E 999,999,999.99")+space(1)+"|"+ space(2)+ cCidade+ space(2)+If(Empty(dDtPg),cDataPg,SUBSTR((DTOC(dDtPg))+SPACE(2),1,10))+ space(13)+ "|"+space(43)+"|"
+	else 
+		@ nLin,00 psay "|" 	+ space(26) + transform(nCapSoci,"@E 999,999,999.99")+space(1)+"|"+space(2)+ cCidade+ space(2)+ If(Empty(dDtPg),cDataPg,SUBSTR((DTOC(dDtPg))+SPACE(2),1,10))+ space(13)+"|"+space(43)+"|"
+	endif		                                                                 
+	nLin ++
+	@ nLin,00 psay STR0001
+	nLin ++
+	@ nLin,00 psay STR0039	
+               
+Return   Nil
+                                                             
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fImpTeste ºAutor  ³R.H. - Natie        º Data ³  11/29/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Testa impressao de Formulario Teste                         º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static function fImpTeste(cString)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Descarrega teste de impressao                                ³ 
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MS_Flush()
+fInicia(cString)
+
+Pergunte("GPR30A",.T.)
+nVez	:= If(mv_par01 = 1 ,1, 0)
+
+Return nVez
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fInicia   ºAutor  ³R.H.Natie           º Data ³  11/12/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Inicializa Impressao                                        º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function fInicia(cString)
+
+aDriver	:= ReadDriver()
+If	nLastKey == 27
+	Return .F.
+Endif
+SetDefault(aReturn,cString)
+If	nLastKey == 27
+	Return .F.
+Endif  
+
+Return .T.

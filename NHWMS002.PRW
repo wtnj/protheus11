@@ -1,0 +1,310 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³WMS002    ºAutor  ³José Henrique M Felipetto Data:02/06/12  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Gera Etiqueta a partir da Nota Fiscal, com o Padrão        º±±
+±±º          ³ de Etiquetas de 2012                                       º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ WMS                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+#include "rwmake.ch"
+#INCLUDE "TOPCONN.CH"
+#include "colors.ch"
+#include "font.ch"
+#INCLUDE "PROTHEUS.CH"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ8¿
+//³Função para pegar Informações da Nota Fiscal³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ8Ù
+User Function NHWMS002()
+
+Private _nNf := Space(Len(SD1->D1_DOC))
+Private _nSerie := Space(Len(SD1->D1_SERIE))
+Private _cForn := Space(Len(SD1->D1_FORNECE))
+Private _cLoja := Space(Len(SD1->D1_LOJA))
+Private _nQuant := Space(5)
+
+oDlgNf  := MsDialog():New(0,0,280,280,"Assistente de etiqueta.",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+	oSay1 := TSay():New(08,10,{||"Nota Fiscal:"},oDlgNf,,,,,,.T.,CLR_HBLUE,)
+	oGet1 := tGet():New(06,50,{|u| if(Pcount() > 0, _nNF := u,_nNF)},oDlgNf,60,8,"999999999",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,"SD1","_nNF")
+
+	oSay2 := TSay():New(28,10,{||"Serie:"},oDlgNf,,,,,,.T.,,)
+	oGet2 := tGet():New(26,50,{|u| if(Pcount() > 0, _nSerie := u,_nSerie)},oDlgNf,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .F. },,,,,,,"_nSerie")
+
+	oSay3 := TSay():New(48,10,{||"Fornecedor:"},oDlgNf,,,,,,.T.,CLR_HBLUE,)
+	oGet3 := tGet():New(46,50,{|u| if(Pcount() > 0, _cForn := u,_cForn)},oDlgNf,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,,"_cForn")
+
+	oSay4 := TSay():New(68,10,{||"Loja:"},oDlgNf,,,,,,.T.,,)
+	oGet4 := tGet():New(66,50,{|u| if(Pcount() > 0, _cLoja := u,_cLoja)},oDlgNf,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,,"_cLoja")
+	
+	oSay4 := TSay():New(88,10,{||"Qtd. Etiquetas:"},oDlgNf,,,,,,.T.,,)
+	oGet4 := tGet():New(86,50,{|u| if(Pcount() > 0, _nQuant := u,_nQuant)},oDlgNf,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,,"_nQuant")
+	
+	oBtnNf := tButton():New(106,50,"Avançar",oDlgNf,{|| getRight(_nNf,_nSerie,_cForn,_cLoja) } ,60,10,,,,.T.)
+
+oDlgNf:Activate(,,,.t.,{||.T.},,)
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ ¿
+//³Valida os campos Digitados³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Ù
+Static Function getRight(Nota,Serie,Fornecedor,Loja)
+SD1->(DbSetOrder(1) )
+If !SD1->(DbSeek(xFilial("SD1") + Nota + Serie + Fornecedor + Loja ))
+	alert("Não existe nota Fiscal na tabela do Sistema! Favor Digite Novamente. ")
+	Return .F.
+EndIf
+
+getPrNf()
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Pegar Produtos da Nota Fiscal³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function getPrNF()
+Local cSerie := ""
+
+SetPrvt("cMarca,_aDBF,_cArqDBF,aCampos,cCadastro,aRotina,oDlgLocalNF,oDlgParamNF")
+cMarca := GetMark()
+cCadastro := OemToAnsi("Selecione o Nota - <ENTER> Marca/Desmarca")
+
+aRotina := { {"Marca Tudo"    ,'U_fMarcavk()', 0 , 4 },;
+             {"Desmarca Tudo" ,'U_fDesmarvk()', 0 , 1 },;
+             {"Legenda"       ,'U_fLegVoks()', 0 , 1  },;
+             {"Alterar"       ,'U_fAltNF()', 0 , 1 } }
+
+If Select("XDBF") > 0
+	XDBF->(DbCloseArea())
+Endif
+
+// Cria Campos para mostrar no Browser
+_cArqDBF := CriaTrab(NIL,.f.)
+//_cArqDBF += ".DBF"
+_aDBF    := {}
+
+AADD(_aDBF,{"OK"         ,"C", 02,0})
+AADD(_aDBF,{"Nota"       ,"C", 09,0})
+AADD(_aDBF,{"Serie"       ,"C", 09,0})
+AADD(_aDBF,{"Produto"        ,"C", 15,0})
+AADD(_aDBF,{"QtdeEtiq"    ,"C", 15,2})
+AADD(_aDBF,{"QtdePadr"    ,"C", 17,2})
+AADD(_aDBF,{"Lote"    ,"C", 06,2})
+AADD(_aDBF,{"Emissao"    ,"D", 08,2})
+
+DbCreate(_cArqDBF,_aDBF)
+DbUseArea(.T.,,_cArqDBF,"XDBF",.F.)
+
+INDEX ON XDBF->NOTA TO (_cArqDBF)
+
+XDBF->(DbGoTop())
+
+aCampos := {}
+Aadd(aCampos,{"OK"        ,"C", "  "             ,"@!"})
+Aadd(aCampos,{"NOTA"      ,"C", "Nota"           ,"@!"})
+Aadd(aCampos,{"SERIE"     ,"C", "Serie"          ,"@!"})
+Aadd(aCampos,{"PRODUTO"       ,"C", "Produto"           ,"@!"})
+Aadd(aCampos,{"QTDEETIQ"   ,"C", "Qtde de Etiqueta"  ,"@!"})
+Aadd(aCampos,{"QTDEPADR"   ,"C", "Qtde. Embalagem Padrão"      ,"@!"})
+Aadd(aCampos,{"Lote"   ,"C", "Lote"      ,"@!"})
+Aadd(aCampos,{"Emissao"   ,"D", "Emissão"      ,"99/99/9999"})
+
+_nQtEtiq := 0
+cAux    := SD1->D1_DOC
+cSerie  := SD1->D1_SERIE
+cAuxFor := SD1->D1_FORNECE
+cAuxLoj := SD1->D1_LOJA
+While SD1->(!EOF() ) .AND. Alltrim(SD1->D1_DOC)     == Alltrim(cAux)    ;
+				     .AND. Alltrim(SD1->D1_SERIE)   == Alltrim(cSerie)  ; 
+				     .AND. Alltrim(SD1->D1_FORNECE) == Alltrim(cAuxFor) ; 
+				     .AND. Alltrim(SD1->D1_LOJA)    == Alltrim(cAuxLoj)
+	
+	If SB5->(DbSeek(xFilial("SB5") + Alltrim(SD1->D1_COD) ))
+		_nQtdPadr := SB5->B5_QPA
+	EndIf
+
+    If SB5->B5_QPA == 0
+    	_nQtEtiq := Val(_nQuant)
+    Else
+    	If (( Val(_nQuant) % _nQtdPadr) <> 0)
+ 			_nQtEtiq :=  Arredonda(Val(_nQuant) / SB5->B5_QPA)
+ 		EndIf
+ 	EndIf
+
+	RecLock("XDBF",.T.)
+		XDBF->OK	   := ""
+		XDBF->Nota     := SD1->D1_DOC
+		XDBF->Serie    := SD1->D1_SERIE
+		XDBF->Produto  := SD1->D1_COD
+		XDBF->QtdeEtiq := ALLTRIM(STR(_nQtEtiq))
+		XDBF->QtdePadr := Alltrim(Str(_nQtdPadr))
+		XDBF->Lote     := U_NHEST002(SD1->D1_DTDIGIT)
+		XDBF->Emissao  := SD1->D1_DTDIGIT
+	MsUnLock("XDBF")
+	SD1->(DbSkip() )
+EndDo
+
+XDBF->(DbGoTop() )
+MarkBrow("XDBF","OK" ,"XDBF->OK",aCampos,,cMarca)
+getLoImpNF()
+Return
+
+// Alterar Dados do MarkBrowser
+User Function fAltNF()
+SetPrvt("_cLote,_cProd,_nQuant2,_nQtdPadr,_cSerie,oDlgParam")
+
+_cSerie := Space(Len(SD1->D1_SERIE))
+_nQuant2 := XDBF->QtdeEtiq
+_cProd := XDBF->PRODUTO
+_cLote := XDBF->Lote
+_nQtdPadr := XDBF->QtdePadr
+
+If ValType(_cLote)!='C'
+	_cLote := space(10)
+Endif
+
+If SB5->(DbSeek(xFilial("SB5") + Alltrim(XDBF->PRODUTO) ))
+	_nQtdPadr := SB5->B5_QPA
+EndIf
+
+oDlgParamNF  := MsDialog():New(0,0,250,280,"Assistente de etiqueta.",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+	oSay1 := TSay():New(08,10,{||"Peca:"},oDlgParam,,,,,,.T.,,)
+	oGet1 := tGet():New(06,50,{|u| if(Pcount() > 0, _cProd := u,_cProd)},oDlgParamNF,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .F. },,,,,,,"_cProd")
+
+	oSay2 := TSay():New(28,10,{||"Quantidade:"},oDlgParam,,,,,,.T.,,)
+	oGet2 := tGet():New(26,50,{|u| if(Pcount() > 0, _nQuant := u,_nQuant)},oDlgParamNF,60,8,"99999",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,,"_nQuant")
+
+	oSay3 := TSay():New(48,10,{||"Qtd. por Emb:"},oDlgParam,,,,,,.T.,CLR_HBLUE,)
+	oGet3 := tGet():New(46,50,{|u| if(Pcount() > 0, _nQtdPadr := u,_nQtdPadr)},oDlgParamNF,60,8,"999999",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,,"_nQtdPadr")
+
+	oSay4 := TSay():New(68,10,{||"Lote:"},oDlgParam,,,,,,.T.,,)
+	oGet4 := tGet():New(66,50,{|u| if(Pcount() > 0, _cLote := u,_cLote)},oDlgParamNF,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,,"_cLote")
+
+	oSay5 := TSay():New(88,10,{||"Serie:"},oDlgParam,,,,,,.T.,,)
+	oGet5 := tGet():New(86,50,{|u| if(Pcount() > 0, _cSerie := u,_cSerie)},oDlgParamNF,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .F. },,,,,,,"_cSerie")
+
+	oBtnParam := tButton():New(108,50,"Alterar",oDlgParamNF,{||fAtuDBF(_nQuant,_nQtdPadr), oDlgParamNF:End() } ,60,10,,,,.T.)
+oDlgParamNF:Activate(,,,.t.,{||.T.},,)
+Return
+
+Static Function fAtuDBF()
+RecLock("XDBF",.F.)
+		XDBF->Nota     := XDBF->NOTA
+		XDBF->Serie    := _cSerie
+		XDBF->Produto  := _cProd
+		XDBF->Lote     := _cLote
+		XDBF->QtdeEtiq := _nQuant
+		XDBF->QtdePadr := Alltrim(Str(_nQtdPadr))
+MsUnLock("XDBF")
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Pega Local da Impressão³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Static Function getLoImpNF()
+Local _nCont := 0
+_cLocal   := CB5->CB5_CODIGO
+
+While XDBF->(!EOF() )
+	If !Empty(XDBF->OK)
+		_nCont++
+	EndIf
+	XDBF->(DbSkip() )		
+EndDo
+
+If _nCont == 0
+	alert("Nenhum produto selecionado.Favor selecione algum!")
+	Return .F.
+EndIf
+XDBF->(DbGoTop() )
+oDlgLocalNF  := MsDialog():New(0,0,50,400,"Assistente de etiqueta.",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+	oSay1 := TSay():New(08,10,{||"Local:"},oDlgLocalNF,,,,,,.T.,CLR_HBLUE,)
+	oGet1 := tGet():New(06,30,{|u| if(Pcount() > 0, _cLocal := u,_cLocal)},oDlgLocalNF,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,"CB5","_cLocal")
+
+	oBtnLocal := tButton():New(06,110,"Avançar",oDlgLocalNF,{|| Processa({|| doBarCodNF() },"Gerando Etiqueta...")} ,60,10,,,,.T.)
+oDlgLocalNF:Activate(,,,.t.,{||.T.},,)
+Return
+
+Static Function doBarCodNF()
+
+If CB5->(DbSeek(xFilial("CB5") + Alltrim(_cLocal) ))
+	If CB5->CB5_PORTA == '0'
+		_cPorta := "LPT"+CB5->CB5_LPT
+	Endif
+Else
+	alert(" Impressora não configurada ou não cadastrada no sistema. Verifique! ")
+	Return .F.
+EndIf
+
+SB1->(DbSetOrder(1) )
+If !SB1->(DbSeek(xFilial("SB1") + Alltrim(XDBF->Produto) ))
+	alert("Peça não foi selecionada! ")
+	Return .F.
+EndIf
+
+
+MSCBPRINTER("S4M",_cPorta,,,.F.,NIL,NIL,NIL,NIL,NIL,.T.)
+MSCBCHKStatus(.T.)
+
+SB1->( DbSetOrder(1) )
+SD1->( DbSeek(xFilial("SD1") + _nNf + _nSerie + _cForn + _cLoja ))
+While XDBF->(!EOF() )
+	If !empty(XDBF->OK)
+		For x := 1 to Val(XDBF->QtdeEtiq)
+			MSCBBEGIN(1,6)
+			MSCBSAY(10,05,"WHB","N","0","100,105")
+
+			// Bloco: Fornecedor - Código Peca - Descrição - Quantidade - Código de barra - DtDigit - NF
+			MSCBSAY(10,24,"Fornecedor / Loja","N","0","035,035")
+			MSCBSAY(10,29,SD1->D1_FORNECE + SD1->D1_LOJA,"N","0","035,035")
+			MSCBSAY(10,39,"Codigo Peca: " ,"N","0","035,035")
+			MSCBSAY(10,51,XDBF->PRODUTO ,"N","0","095,095")
+			SB1->(DbSeek(xFilial("SB1") + Alltrim(XDBF->PRODUTO) ))
+			MSCBSAY(10,65,"Descricao: " + Alltrim(SB1->B1_DESC) ,"N","0","035,035")
+			MSCBSAY(10,71,"Quantidade: ","N","0","035,035")
+			MSCBSAY(50,76, Alltrim(XDBF->QtdePadr),"N","0","085,085")
+			MSCBSAY(76,34,DTOC(XDBF->EMISSAO),"N","0","075,075")
+			MSCBSAY(82,44,"NF: " + XDBF->Nota + " / " + XDBF->Serie ,"N","0","035,035")
+	
+			MSCBSAYBAR(10,91,XDBF->PRODUTO,"N","MB07",13,.F.,.T.,.F.,,3.4,1,.F.,.F.,"1",.T.)
+			MSCBSAYBAR(10,115,XDBF->Lote,"N","MB07",13,.F.,.T.,.F.,,3.4,1,.F.,.F.,"1",.T.)
+
+			MSCBInfoEti("Produto","30X100")
+			MSCBEND()
+		Next x
+	EndIf
+	XDBF->(DbSkip() )
+EndDo
+
+MSCBCLOSEPRINTER()
+MS_FLUSH()
+
+MsgInfo("Impressão Finalizada com Sucesso!")
+Return
+
+
+Static Function Arredonda(nValor)
+
+If Int(nValor) != nValor 
+	nValor := Int(nValor) + 1
+Endif
+
+Return (nValor)

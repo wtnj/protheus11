@@ -1,0 +1,627 @@
+#INCLUDE "FINR502.CH"
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "FILEIO.CH"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ FINR502  ³ Autor ³ Alvaro Camillo Neto   ³ Data ³ 14.02.10 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relatorio de Liquidacoes Financeiras (Contas a Pagar)    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ FINR502(void)                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function NHFin104()
+Local oReport
+Private cPerg := "FIN502"
+
+CriaSx1(cPerg)
+Fr502MotBx("LIQ","LIQUIDACAO","ANSS")
+
+oReport := ReportDef()
+oReport:PrintDialog()
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ ReportDef³ Autor ³ Daniel Batori         ³ Data ³ 10.07.06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Definicao do layout do Relatorio									  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ReportDef(void)                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function ReportDef()
+Local oReport  
+Local oSection1
+Local oSection11
+Local aTam1, aTam2, aTam3, nTamLiq
+Local aTamCHQ := {}
+Local nTamCHQ := 0
+
+oReport := TReport():New("NHFIN502",STR0001,"FIN502",;//"Liquidacoes Financeiras"	
+{|oReport| ReportPrint(oReport)},STR0002+STR0003)//"Este relatorio irá imprimir o extrato de Liquidacoes "##"Financeiras."
+
+Pergunte("FIN502", .F.)
+
+aTam1 := TamSX3("E2_NUMLIQ")
+aTam2 := TamSX3("E2_FORNECE")
+aTam3 := TamSX3("E2_LOJA")
+nTamLiq :=	LEN(STR0004) + aTam1[1] + aTam2[1] + aTam3[1] + 15 //"LIQUIDACAO : "
+
+nTamCHQ := 2 // considerar os 2 tracos
+aTamCHQ := TamSX3("E2_BCOCHQ")
+nTamCHQ += aTamCHQ[1]
+aTamCHQ := TamSX3("E2_AGECHQ")
+nTamCHQ += aTamCHQ[1]
+aTamCHQ := TamSX3("E2_CTACHQ")
+nTamCHQ += aTamCHQ[1]
+
+oSection1 := TRSection():New(oReport,STR0005,{"Trb","SA2"},)//"No. da Liquidação"
+TRCell():New(oSection1,"LIQUIDA" ,,STR0005,,nTamLiq,.F.,)//"No. da Liquidação"
+oSection1:SetHeaderSection(.F.)
+
+nTamStat := 15 
+
+oSection11 := TRSection():New(oSection1,STR0006,{"Trb","SE2"},) // "Titulos Liquidados"
+TRCell():New(oSection11,"E2_PREFIXO" ,"SE2",STR0007,,,.F.,)  //"PRF"
+TRCell():New(oSection11,"E2_NUM" ,"SE2",STR0008,,,.F.,)  //"NUMERO"
+TRCell():New(oSection11,"E2_PARCELA" ,"SE2",STR0009,,,.F.,)  //"PARCELA"
+TRCell():New(oSection11,"E2_TIPO" ,"SE2",STR0010,,,.F.,)  //"TIPO"
+TRCell():New(oSection11,"E2_EMISSAO" ,"SE2",STR0011,,12,.F.,)  //"EMISSAO"
+TRCell():New(oSection11,"E1_EMITCHQ" ,"SE1",STR0012,,,.F.,)  //"EMITENTE"
+TRCell():New(oSection11,"VALOR",,STR0013,"@E 9,999,999,999.99",16,.F.,)  //"VALOR"
+TRCell():New(oSection11,"JUROS",,STR0014,"@E 9,999,999.99",12,.F.,)  //"JUROS"
+TRCell():New(oSection11,"DESCONTOS",,STR0015,"@E 9,999,999.99",12,.F.,)  //"DESCONTOS"
+TRCell():New(oSection11,"E2_BCOCHQ" ,"SE2",STR0016+"-"+STR0017+"-"+STR0018,,nTamCHQ,.F.,)  //"BANCO"##"AGENCIA"##"CONTA"
+TRCell():New(oSection11,"STATUS" ,,STR0029,,nTamStat,.F.,)  //"STATUS"
+
+	
+Return oReport                                                                              
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ReportPrint³ Autor ³Daniel Batori          ³ Data ³10.07.06	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³A funcao estatica ReportDef devera ser criada para todos os  ³±±
+±±³          ³relatorios que poderao ser agendados pelo usuario.           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpO1: Objeto Report do Relatório                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                             ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function ReportPrint(oReport)
+Local oSection1  := oReport:Section(1)
+Local oSection11 := oReport:Section(1):Section(1)
+Local cAlias1 := GetNextAlias()
+Local cAlias2 := GetNextAlias()
+Local cWhere := ""
+Local aCampos:={},aTam:={}
+Local cNomeArq
+Local	cCondE5, cIndexSE5, cChaveSE5, nIndex, cCondE2
+Local nTaxa		:= 1
+Local nValor	:= 0 
+Local lParcial	:= .F.
+Local cChvTit	:= ""
+Local nJurDesc	:= 0
+
+#IFDEF TOP
+	cWhere := " AND E5_DOCUMEN >= '"+ PADR(mv_par01,TamSx3("E5_DOCUMEN")[1]) + "' "
+	cWhere += " AND E5_DOCUMEN <= '"+ PADR(mv_par02,TamSx3("E5_DOCUMEN")[1]) + "' "
+	cWhere += " AND E5_DOCUMEN <> '"+ Space(TamSx3("E5_DOCUMEN")[1]) + "'"
+	cWhere := "%" + cWhere + "%"
+
+	//baixado
+	BeginSql Alias cAlias1
+		//column E2_VENCREA as Date
+		SELECT SE5.*
+		FROM %table:SE5% SE5
+		WHERE E5_FILIAL = %xFilial:SE5% AND
+				E5_CLIFOR >= %exp:mv_par03% AND
+				E5_CLIFOR <= %exp:mv_par04% AND
+				E5_MOTBX = 'LIQ' AND 
+				E5_SITUACA <> 'C' AND
+				E5_RECPAG = 'P' AND
+				E5_TIPODOC = 'BA' AND 
+				SE5.%NotDel%
+				%Exp:cWhere%
+	EndSQL
+
+	cWhere := " AND E2_NUMLIQ <> '"+ Space(TamSx3("E2_NUMLIQ")[1]) + "'"
+	cWhere := "%" + cWhere + "%"		
+	//gerado SE2
+	BeginSql Alias cAlias2
+		column E2_EMISSAO as Date	
+		SELECT SE2.* 
+		FROM %table:SE2% SE2
+		WHERE E2_FILIAL = %xFilial:SE2% AND
+				E2_FORNECE >= %exp:mv_par03% AND
+				E2_FORNECE <= %exp:mv_par04% AND
+				E2_NUMLIQ >=  %exp:mv_par01% AND 
+				E2_NUMLIQ <= %exp:mv_par02% AND 
+				(E2_BCOCHQ <> ' ' OR E2_TIPO = 'NCC') AND 
+				SE2.%NotDel%
+				%Exp:cWhere%
+	EndSQL		
+
+#ELSE
+
+	cAlias2 := "SE2"
+	dbSelectArea(cAlias2)
+	cCondE2	:='E2_FILIAL=="'+xFilial("SE2")+'".and.'
+	cCondE2	+='E2_NUMLIQ>="'+mv_par01+'".And.'
+	cCondE2	+='E2_NUMLIQ<="'+mv_par02+'".And.'
+	cCondE2	+='E2_FORNECE>="'+mv_par03+'".And.'
+	cCondE2	+='E2_FORNECE<="'+mv_par04+'".and.'
+	cCondE2	+='E2_NUMLIQ<>"'+ Space(TamSx3("E2_NUMLIQ")[1])+'".and.'
+	cCondE2	+='(E2_BCOCHQ<>" " .Or. E2_TIPO == "NCC") '
+	cIndex	:= CriaTrab(nil,.f.)
+	cChave	:= IndexKey()
+	IndRegua(cAlias2,cIndex,cChave,,cCondE2,STR0019) //"Selecionando Registros..."
+	nIndex := RetIndex(cAlias2)
+	DbSelectArea(cAlias2)
+	DbSetIndex(cIndex+OrdBagExt())
+	DbSetOrder(nIndex+1)
+	DbSeek(xFilial(cAlias2))
+		
+	cAlias1 := "SE5"
+	dbSeLectArea(cAlias1)
+	dbSetOrder(10)
+	cCondE5 := "E5_FILIAL=='"+xFilial("SE5")+"'.AND."
+	cCondE5 += "E5_CLIFOR>='"+ mv_par03 + "'.AND."
+	cCondE5 += "E5_CLIFOR<='"+ mv_par04 + "'.AND."
+	cCondE5 += "E5_DOCUMEN>='"+ PADR(mv_par01,TamSx3("E5_DOCUMEN")[1]) + "'.AND."
+	cCondE5 += "E5_DOCUMEN<='"+ PADR(mv_par02,TamSx3("E5_DOCUMEN")[1]) + "'.AND."
+	cCondE5 += "E5_DOCUMEN<>'"+ Space(TamSx3("E5_DOCUMEN")[1]) + "'.AND."
+	cCondE5 += "E5_MOTBX=='LIQ'.and."
+	cCondE5 += "E5_TIPODOC == 'BA'.and."
+	cCondE5 += "E5_RECPAG == 'R'.and."
+	cCondE5 += "E5_SITUACA<>'C'"
+	cIndexSE5 :=  CriaTrab(nil,.f.)
+	cChaveSE5 := IndexKey()
+	IndRegua(cAlias1,cIndexSE5,cChaveSE5,,cCondE5,STR0019) //"Selecionando Registros..."
+	nIndex := RetIndex(cAlias1)
+	DbSelectArea(cAlias1)
+	DbSetIndex(cIndexSE5+OrdBagExt())
+	DbSetOrder(nIndex+1)
+	DbSeek(xFilial(cAlias1))
+#ENDIF
+
+aTam:=TamSX3("E2_FORNECE")
+AADD(aCampos,{"FORNECEDOR" ,"C",aTam[1],aTam[2]})
+aTam:=TamSX3("E2_LOJA")
+AADD(aCampos,{"LOJA"   ,"C",aTam[1],aTam[2]})
+aTam:=TamSX3("E2_NUMLIQ")
+AADD(aCampos,{"NUMLIQ" ,"C",aTam[1],aTam[2]})
+AADD(aCampos,{"PREFIXO","C",3,0})
+aTam:=TamSX3("E2_NUM")
+AADD(aCampos,{"NUMTIT" ,"C",aTam[1],aTam[2]})
+aTam:=TamSX3("E2_PARCELA")
+AADD(aCampos,{"PARCELA","C",aTam[1],aTam[2]})
+aTam:=TamSX3("E2_TIPO")
+AADD(aCampos,{"TIPO"   ,"C",aTam[1],aTam[2]})
+AADD(aCampos,{"MOEDA"  ,"N",2,0})
+aTam:=TamSX3("E2_EMISSAO")
+AADD(aCampos,{"EMISSAO","D",aTam[1],aTam[2]})
+AADD(aCampos,{"EMITENTE","C",40,0})
+AADD(aCampos,{"VALOR"  ,"N",18,2})
+AADD(aCampos,{"JUROS"  ,"N",18,2})
+AADD(aCampos,{"DESCONT","N",18,2})
+aTam:=TamSX3("E2_BCOCHQ")
+AADD(aCampos,{"BANCO","C",aTam[1],aTam[2]})
+aTam:=TamSX3("E2_AGECHQ")
+AADD(aCampos,{"AGENCIA","C",aTam[1],aTam[2]})
+aTam:=TamSX3("E2_CTACHQ")
+AADD(aCampos,{"CONTA","C",aTam[1],aTam[2]})
+AADD(aCampos,{"BG"     ,"C", 1,0}) // Baixado ou Gerado
+AADD(aCampos,{"TIPOBX"  ,"C",1,0})
+
+cNomeArq:=CriaTrab(aCampos)
+dbUseArea( .T.,, cNomeArq, "Trb", .F., .F. )
+IndRegua("Trb",cNomeArq,"NUMLIQ+BG+PREFIXO+NUMTIT+PARCELA+TIPO",,,STR0019) //"Selecionando Registros..."
+
+
+// Titulos Gerados na liquidacao - SE2
+If mv_par05 != 2
+	While (cAlias2)->(!Eof())
+		If MV_PAR06 <> 1
+			DbSelectArea( "SM2" )
+			SM2->( DbSetOrder( 1 ) )
+			If SM2->( DbSeek( DtoS( IIf( MV_PAR06 == 2, DDATABASE, (cAlias2)->E2_EMISSAO ) ) ) )
+				If FieldPos( "M2_MOEDA" + MV_PAR07 ) > 0
+					nTaxa := SM2->&( "M2_MOEDA" + MV_PAR07 )
+				EndIf
+			EndIf
+		EndIf
+
+		DBSelectArea("Trb")
+		RecLock("Trb",.T.)
+		Trb->FORNECEDOR	:= (cAlias2)->E2_FORNECE
+		Trb->LOJA		:= (cAlias2)->E2_LOJA	 
+		Trb->NUMLIQ		:= (cAlias2)->E2_NUMLIQ	
+		Trb->PREFIXO	:= (cAlias2)->E2_PREFIXO
+		Trb->NUMTIT		:= (cAlias2)->E2_NUM
+		Trb->PARCELA	:= (cAlias2)->E2_PARCELA
+		Trb->TIPO		:= (cAlias2)->E2_TIPO
+		Trb->EMISSAO	:= (cAlias2)->E2_EMISSAO
+		Trb->VALOR		:= iif( MV_PAR06 == 1, (cAlias2)->E2_VALOR, xMoeda((cAlias2)->E2_VALOR, (cAlias2)->E2_MOEDA, MV_PAR07, IIf( MV_PAR06 == 2, DDATABASE, (cAlias2)->E2_EMISSAO ) ) )
+		Trb->JUROS		:= (cAlias2)->E2_ACRESC
+		Trb->BANCO		:= (cAlias2)->E2_BCOCHQ
+		Trb->AGENCIA	:= (cAlias2)->E2_AGECHQ
+		Trb->CONTA		:= (cAlias2)->E2_CTACHQ
+		Trb->EMITENTE 	:= SPACE(40)
+		Trb->BG			:= "G"	// Gerado
+		Trb->TIPOBX		:= ""
+		MsUnlock()
+		(cAlias2)->(dbSkip())
+	Enddo
+Endif	
+
+// Titulos Baixados na liquidacao
+If mv_par05 != 3
+	While (cAlias1)->(!Eof())
+		If MV_PAR06 <> 1
+			DbSelectArea( "SM2" )
+			SM2->( DbSetOrder( 1 ) )
+			If SM2->( DbSeek( IIf( MV_PAR06 == 2, DtoS( DDATABASE ), (cAlias1)->E5_DATA ) ) )
+				If FieldPos( "M2_MOEDA" + MV_PAR07 ) > 0
+					nTaxa := SM2->&( "M2_MOEDA" + MV_PAR07 )
+				EndIf
+			EndIf
+		EndIf
+
+		SE2->(dbSetOrder(6))//E2_FILIAL+E2_FORNECE+E2_LOJA+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO                   
+		SE2->(MsSeek(xFilial("SE2")+(cAlias1)->(E5_CLIFOR+E5_LOJA+E5_PREFIXO+E5_NUMERO+E5_PARCELA+E5_TIPO)))
+
+		DBSelectArea("Trb")
+		RecLock("Trb",.T.)
+		Trb->FORNECEDOR	:= (cAlias1)->E5_CLIFOR
+		Trb->LOJA		:= (cAlias1)->E5_LOJA	 
+		Trb->NUMLIQ		:= Substr((cAlias1)->E5_DOCUMEN,1,6)	
+		Trb->PREFIXO	:= (cAlias1)->E5_PREFIXO
+		Trb->NUMTIT		:= (cAlias1)->E5_NUMERO
+		Trb->PARCELA	:= (cAlias1)->E5_PARCELA
+		Trb->TIPO		:= (cAlias1)->E5_TIPO
+		Trb->EMISSAO	:= SE2->E2_EMISSAO
+		nValor 			:= iif( MV_PAR06 == 1, SE2->E2_VALOR, xMoeda( SE2->E2_VALOR, SE2->E2_MOEDA, MV_PAR07, IIf( MV_PAR06 == 2, DDATABASE, SE2->E2_EMISSAO ) ) )	
+		Trb->VALOR		:= nValor
+		Trb->JUROS		:= (cAlias1)->E5_VLJUROS
+		Trb->DESCONT	:= (cAlias1)->E5_VLDESCO       
+		Trb->EMITENTE 	:= SPACE(40)
+		Trb->BG			:= "B"	// Baixado
+
+		//Verifica Baixas Parciais
+		cChvTit  := xFilial("SE5")+(cAlias1)->(E5_PREFIXO+E5_NUMERO+E5_PARCELA+E5_TIPO+E5_CLIFOR)
+		nJurDesc := (cAlias1)->E5_VLJUROS + (cAlias1)->E5_VLDESCO
+		
+		aAreaSE5 := SE5->(GetArea())
+		dbSelectArea("SE5")
+		dbSetOrder(7)
+		
+		If dbSeek(cChvTit)
+			While SE5->( !EoF() .And. E5_FILIAL+E5_PREFIXO+E5_NUMERO+E5_PARCELA+E5_TIPO+E5_CLIFOR == cChvTit )
+				If SE5->E5_TIPODOC == "BA"		.And.;
+				   ! SE5->E5_SITUACA $ "C,E,X"	.And.;
+				   nValor > (SE5->E5_VALOR - nJurDesc)
+					lParcial := .T.
+					Exit
+				Endif      
+				SE5->(dbSkip())
+			Enddo
+		Endif 
+		
+		If lParcial
+			Trb->TIPOBX := "P" //Parcial
+		Else
+			Trb->TIPOBX := "T" //Total
+		Endif  
+		Trb->( MsUnlock() )
+		
+		lParcial := .F.
+		
+		SE5->(RestArea(aAreaSE5))
+		
+		(cAlias1)->(dbSkip())
+	Enddo
+Endif		
+
+oReport:SetPageFooter(4,{|| If(!oSection11:Printing(),F502Legenda(oReport),"")})
+
+oSection1:Cell("LIQUIDA"):SetBlock( {|| STR0004 + Trb->NUMLIQ + "-" + Trb->FORNECEDOR + "-" + Trb->LOJA + " - " + STR0020}) //"LIQUIDACAO : "##"A Pagar"
+TRPosition():New( oSection1, "SA2", 1, {|| xFilial("SA2") + Trb->FORNECEDOR + Trb->LOJA   })
+TRPosition():New( oSection11, "SE2", 1, {|| xFilial("SE2") + Trb->PREFIXO + Trb->NUMTIT + Trb->PARCELA + Trb->TIPO}) 
+	
+oSection11:Cell("E2_PREFIXO"):SetBlock(	{|| Trb->PREFIXO })
+oSection11:Cell("E2_NUM"):SetBlock(			{|| Trb->NUMTIT })
+oSection11:Cell("E2_PARCELA"):SetBlock(	{|| Trb->PARCELA })
+oSection11:Cell("E2_TIPO"):SetBlock(		{|| Trb->TIPO })
+oSection11:Cell("E2_EMISSAO"):SetBlock(	{|| Trb->EMISSAO })
+oSection11:Cell("E1_EMITCHQ"):SetBlock(	{|| Trb->EMITENTE })
+oSection11:Cell("VALOR"):SetBlock(			{|| Trb->VALOR })
+oSection11:Cell("JUROS"):SetBlock(			{|| Trb->JUROS })
+oSection11:Cell("DESCONTOS"):SetBlock(		{|| Trb->DESCONT })
+oSection11:Cell("E2_BCOCHQ"):SetBlock(		{|| If (Empty(Trb->(BANCO+AGENCIA+CONTA))," ", Trb->BANCO+"-"+Trb->AGENCIA+"-"+Trb->CONTA) })
+oSection11:Cell("STATUS"):SetBlock(			{|| If(Trb->BG == "B",Iif(Trb->TIPOBX == "P",STR0021,STR0022),STR0023) })//"Baixa Parc. "##"Baixado"##"Gerado"  
+
+//Faz o alinhamento do cabecalho das celulas
+oSection11:Cell("E2_PREFIXO"):SetHeaderAlign("CENTER")
+oSection11:Cell("E2_NUM" 	):SetHeaderAlign("CENTER")
+oSection11:Cell("E2_PARCELA"):SetHeaderAlign("CENTER")
+oSection11:Cell("E2_TIPO"	):SetHeaderAlign("CENTER")
+oSection11:Cell("E2_EMISSAO"):SetHeaderAlign("CENTER")
+oSection11:Cell("E1_EMITCHQ"):SetHeaderAlign("CENTER")
+oSection11:Cell("VALOR"		):SetHeaderAlign("RIGHT")
+oSection11:Cell("JUROS" 	):SetHeaderAlign("RIGHT")
+oSection11:Cell("DESCONTOS"	):SetHeaderAlign("RIGHT")
+oSection11:Cell("E2_BCOCHQ"	):SetHeaderAlign("RIGHT")
+oSection11:Cell("STATUS" 	):SetHeaderAlign("LEFT")
+
+oSection11:SetHeaderPage(.T.)
+
+oSection11:SetParentFilter({|cParam| Trb->(NUMLIQ+FORNECEDOR+LOJA) == cParam},{|| Trb->(NUMLIQ+FORNECEDOR+LOJA)})
+
+TRFunction():New(oSection11:Cell("VALOR")		,"T_VAL" ,"SUM",,Iif(mv_par05 == 1,STR0024,STR0025),,{|| If(mv_par05==1,If(Trb->BG=="G",Trb->VALOR,Iif(Trb->JUROS>0,Trb->JUROS*(-1),0)), Trb->VALOR) },.T.,.F.) //"Total Liq. "##"Totais "
+TRFunction():New(oSection11:Cell("JUROS")		,"T_JUR" ,"SUM",,Iif(mv_par05 == 1,STR0024,STR0025),,,.T.,.F.)//"Total Liq. "##"Totais "
+TRFunction():New(oSection11:Cell("DESCONTOS") ,"T_DESC" ,"SUM",,Iif(mv_par05 == 1,STR0024,STR0025),,,.T.,.F.)//"Total Liq. "##"Totais "
+
+oSection11:SetTotalInLine(.F.)
+oSection11:SetTotalText(Iif(mv_par05 == 1,STR0024,STR0025)) //"Total Liq. "##"Totais "
+oSection1:Print()
+
+Trb->(dbCloseArea())
+Ferase(cNomeArq+GetDBExtension())	// Elimina arquivos de Trabalho
+Ferase(cNomeArq+OrdBagExt())			// Elimina arquivos de Trabalho
+
+#IFNDEF TOP
+	dbSelectArea("SE2")
+	dbClearFil()
+	RetIndex( "SE2" )
+	If !Empty(cIndex)
+		FErase (cIndex+OrdBagExt())
+	Endif
+	dbSetOrder(1)
+
+	dbSelectArea("SE5")
+	dbClearFil()
+	RetIndex( "SE5" )
+	If !Empty(cIndex)
+		FErase (cIndexSE5+OrdBagExt())
+	Endif
+	dbSetOrder(1)
+#ENDIF
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o	 ³CriaSX1   ³ Autor ³ Marcelo Celi Marques  ³ Data ³ 02/10/08³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Atualiza perguntas no SX1                              	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³CriaSX1() 												  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso		 ³FINR502()     											  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function CriaSx1(cPerg)
+
+Local aArea:=GetArea()
+Local aHelpPor:={}
+Local aHelpEsp:={}
+Local aHelpIng:={}
+
+Aadd(aHelpPor,"Informe o código inicial do ")
+Aadd(aHelpPor,"intervalo de códigos de ")
+Aadd(aHelpPor,"liquidações a serem impressas "	)
+Aadd(aHelpEsp,"Digite el codigo inicial del ")
+Aadd(aHelpEsp,"intervalo de codigos de ")
+Aadd(aHelpEsp,"liquidaciones que se deben imprimir."	)
+Aadd(aHelpIng,"Enter the initial code of")
+Aadd(aHelpIng,"codes interval related to")
+Aadd(aHelpIng,"settlements to be printed."	)
+
+PutSx1(cPerg,"01","Da Liquidação ?","¿De Liquidacion ?","From Settlement?","mv_ch1",;
+	"C",6,0,0,"G","","","","S","mv_par01"," "," "," "," ",;
+	" "," "," "," "," "," ", " "," "," "," "," "," ",;
+	aHelpPor,aHelpEsp,aHelpIng)
+
+aHelpPor:={}
+aHelpEsp:={}
+aHelpIng:={}
+
+Aadd(aHelpPor,"Informe o código final do ")
+Aadd(aHelpPor,"intervalo de códigos de ")
+Aadd(aHelpPor,"liquidações a serem impressas "	)
+Aadd(aHelpEsp,"Digite el codigo final del ")
+Aadd(aHelpEsp,"intervalo de codigos de ")
+Aadd(aHelpEsp,"liquidaciones que se deben imprimir."	)
+Aadd(aHelpIng,"Enter the final code of")
+Aadd(aHelpIng,"codes interval related to")
+Aadd(aHelpIng,"settlements to be printed."	)
+PutSx1(cPerg,"02","Ate Liquidacao ?","¿A Liquidacion ?","To Settlement ?","mv_ch2",;
+	"C",6,0,0,"G","","","","S","mv_par02"," "," "," "," ",;
+	" "," "," "," "," "," ", " "," "," "," "," "," ",;
+	aHelpPor,aHelpEsp,aHelpIng)
+
+aHelpPor:={}
+aHelpEsp:={}
+aHelpIng:={}
+
+Aadd(aHelpPor,"Selecione o código inicial do intervalo")
+Aadd(aHelpPor," de códigos de fornecedores a serem ")
+Aadd(aHelpPor," considerados na geração do relatório.")
+Aadd(aHelpPor," Tecla [F3] disponível para consulta")
+Aadd(aHelpPor," ao cadastro de fornecedores")
+
+Aadd(aHelpEsp,"Elija el codigo inicial del intervalo")
+Aadd(aHelpEsp," de codigos de fornecedores que se deben")
+Aadd(aHelpEsp," considerar en la generacion del ")
+Aadd(aHelpEsp,"informe. Pulse la tecla [F3] para")
+Aadd(aHelpEsp," consulta el Archivo de fornecedores. ")
+
+Aadd(aHelpIng,"Select the initial code of codes ")
+Aadd(aHelpIng,"interval related to customers to be ")
+Aadd(aHelpIng,"considered when generating the report. ")
+Aadd(aHelpIng,"Press F3 to query the Suppliers File. ")    
+
+PutSx1(cPerg,"03","Do Fornecedor ?","¿De Fornecedor ?","From Supplier ?","mv_ch3",;
+	"C",TamSx3('A2_COD')[1],0,0,"G","","SA2","001","S","mv_par03"," "," "," "," ",;
+	" "," "," "," "," "," ", " "," "," "," "," "," ",;
+	aHelpPor,aHelpEsp,aHelpIng)
+
+Aadd(aHelpPor,"Selecione o código final do intervalo")
+Aadd(aHelpPor," de códigos de Fornecedores a serem ")
+Aadd(aHelpPor," considerados na geração do relatório.")
+Aadd(aHelpPor," Tecla [F3] disponível para consulta")
+Aadd(aHelpPor," ao cadastro de Fornecedores")
+
+Aadd(aHelpEsp,"Elija el codigo final del intervalo")
+Aadd(aHelpEsp," de codigos de Fornecedores que se deben")
+Aadd(aHelpEsp," considerar en la generacion del ")
+Aadd(aHelpEsp,"informe. Pulse la tecla [F3] para")
+Aadd(aHelpEsp," consulta el Archivo de Fornecedores. ")
+
+Aadd(aHelpIng,"Select the final code of codes ")
+Aadd(aHelpIng,"interval related to customers to be ")
+Aadd(aHelpIng,"considered when generating the report. ")
+Aadd(aHelpIng,"Press F3 to query the Suppliers File. ")    
+
+PutSx1(cPerg,"04","Ate Fornecedor ?","¿A Fornecedor ?","To Supplier ?","mv_ch4",;
+	"C",TamSx3('A2_COD')[1],0,0,"G","","SA2","001","S","mv_par04"," "," "," "," ",;
+	" "," "," "," "," "," ", " "," "," "," "," "," ",;
+	aHelpPor,aHelpEsp,aHelpIng)
+
+
+Aadd(aHelpPor,'Selecione o "Todos" listar os títulos ') 
+Aadd(aHelpPor,'gerados pela liquidação e os títulos  ') 
+Aadd(aHelpPor,'liquidados. Selecione "Liquidados"  ') 
+Aadd(aHelpPor,'para listar apenas os titulos liquidados ') 
+Aadd(aHelpPor,' ou "Gerados", para listar apenas os  ') 
+Aadd(aHelpPor,'títulos gerados pela liquidação. ') 
+
+Aadd(aHelpEsp,'Elija "Todos" para listar los títulos  ')
+Aadd(aHelpEsp,'generados por la liquidacion y los  ')
+Aadd(aHelpEsp,'titulos liquidados. Elija "Liquidados"  ')
+Aadd(aHelpEsp,'para listar apenas los titulos liquidados  ')
+Aadd(aHelpEsp,'o "Generados", para listar solo los titulos ')
+Aadd(aHelpEsp,' generados por la liquidacion.     ')     
+
+Aadd(aHelpIng,'Select "All" to list the bills generated ')
+Aadd(aHelpIng,'by the settlement and the bills settled. ')
+Aadd(aHelpIng,'Select "Settled" to list only the bills ')
+Aadd(aHelpIng,'settled or "Generated" to list only ')
+Aadd(aHelpIng,'the bills generated by the settlement.  ') 
+  
+PutSx1(cPerg,"05","Listar Titulos ?","¿Listar Titulos ?","List Bills ?","mv_ch5",;
+	"N",1,0,0,"C","","","","S","MV_PAR05","Todos","Todos","All","",;
+	"Liquidados","Liquidados","Liquidados","Gerados","Gerados","Gerados", ""," "," "," "," "," ",;
+	aHelpPor,aHelpEsp,aHelpIng)
+
+aHelpPor:={}
+aHelpEsp:={}
+aHelpIng:={}
+PutSx1(cPerg,"06","Converter Moeda?","Converter Moeda?","Converter Moeda?","mv_ch6",;
+	"N",1,0,0,"C","","","","S","MV_PAR06","Nao Converter","Nao Converter","Nao Converter","",;
+	"Dt.Referencia","Dt.Referencia","Dt.Referencia","Dt.Movimentacao","Dt.Movimentacao","Dt.Movimentacao", ""," "," "," "," "," ",;
+	aHelpPor,aHelpEsp,aHelpIng)
+
+PutSx1(cPerg,"07","Moeda?","Moeda?","Moeda?","mv_ch7",;
+	"C",TamSx3('E2_MOEDA')[1],0,0,"G","","","","S","MV_PAR07"," "," "," ","",;
+	" "," "," "," "," "," ", " "," "," "," "," "," ",;
+	aHelpPor,aHelpEsp,aHelpIng)
+	
+RestArea(aArea)
+Return                                       
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³FR502MotBXºAutor  ³Marcelo Celi Marquesº Data ³  23/01/09   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Funcao criar automaticamente o motivo de baixa LIQ na      º±±
+±±º          ³ tabela Mot baixas                                          º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ FINR502                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/                    
+Static Function Fr502MotBx(cMot,cNomMot, cConfMot)
+	Local aMotbx := ReadMotBx()
+	Local nHdlMot, I, cFile := "SIGAADV.MOT"
+	
+	If ExistBlock("FILEMOT")
+		cFile := ExecBlock("FILEMOT",.F.,.F.,{cFile})
+	Endif
+	
+	If Ascan(aMotbx, {|x| Substr(x,1,3) == Upper(cMot)}) < 1
+		nHdlMot := FOPEN(cFile,FO_READWRITE)
+		If nHdlMot <0
+			HELP(" ",1,"SIGAADV.MOT")
+			Final("SIGAADV.MOT")
+		Endif
+		
+		nTamArq:=FSEEK(nHdlMot,0,2)	// VerIfica tamanho do arquivo
+		FSEEK(nHdlMot,0,0)			// Volta para inicio do arquivo
+
+		For I:= 0 to  nTamArq step 19 // Processo para ir para o final do arquivo	
+			xBuffer:=Space(19)
+			FREAD(nHdlMot,@xBuffer,19)
+	    Next		
+		
+		fWrite(nHdlMot,cMot+cNomMot+cConfMot+chr(13)+chr(10))	
+		fClose(nHdlMot)		
+	EndIf	
+Return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³F502LegendaºAutor  ³Microsiga           º Data ³  06/02/09   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Legenda do relatorio.                                       º±±
+±±º          ³                                                             º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³                                                             º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function F502Legenda(oReport)
+
+oReport:PrintText(STR0026	)//"Observações: " 
+oReport:PrintText(STR0027)//"- Os títulos baixados são impressos com o valor original, independente da forma da baixa. " 
+oReport:PrintText(STR0028)//"- Os totalizadores consideram o valor total da liquidação ou dos títulos gerados/baixados."
+
+Return

@@ -1,0 +1,248 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณWMS005  บAutor:Jos้ Henrique M Felipetto  Data ณ  25/05/12  บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Etiqueta de Recebimento  								   ฑฑ
+ฑฑบ          ณ 															   ฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ WMS                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+
+User Function NHWMS005()
+Private aEtiq 	 := {}
+Private nQtdeEmb := 0
+Private nQuant   := 0
+Private _cPorta  := ""
+
+If !Pergunte("EST004",.T.)
+	Return .F.
+EndIf
+
+Processa({|| takeData() },"Buscando dados...")
+Processa({|| PrintTicket() },"Imprimindo...")
+
+Return
+
+Static Function takeData()
+Local cQuery := ""
+
+   cQuery := "SELECT D1.D1_DOC,D1.D1_SERIE,D1.D1_EMISSAO,D1.D1_FORNECE,D1.D1_CC,D1.D1_DTDIGIT,D1.D1_PEDIDO,D1.D1_ITEMPC,D1.D1_ITEM,"
+   cQuery += "D1.D1_LOJA,D1.D1_COD,D1.D1_UM,D1.D1_QUANT,D1.D1_VUNIT,D1.D1_TOTAL,D1.D1_DESCRI,D1.D1_LOTECTL,F1.F1_TIPO,D1.D1_NUMSEQ,"
+   cQuery += "B5.B5_QE1,B5.B5_EMB1,QEK.QEK_NTFISC,QEK.QEK_SERINF,QEK.QEK_FORNEC,QEK.QEK_LOJFOR,QEK.QEK_VERIFI,D1.D1_LOCAL,"
+   cQuery += "(SELECT TOP 1 D5.D5_LOTECTL
+   cQuery += "	 FROM "+RetSqlName("SD5")+" D5 "
+   cQuery += "	 WHERE D5.D5_NUMSEQ = D1.D1_NUMSEQ "
+   cQuery += "	 AND SUBSTRING(D5.D5_PRODUTO,1,3) = 'VWB'"
+   cQuery += "	 AND D5.D_E_L_E_T_ <> '*'"
+   cQuery += "	 AND D5.D5_FILIAL = '"+xFilial("SD5")+"'"
+   cQuery += ") LOTECTL,
+   cQuery += "'CLIENTE' = "
+   cQuery += "CASE "
+   cQuery += "   WHEN F1.F1_TIPO = 'N' THEN "
+   cQuery += "        (SELECT A2.A2_NREDUZ "
+   cQuery += "         FROM " +RetSqlName('SA2') +" A2 "
+   cQuery += "         WHERE A2.D_E_L_E_T_ = ' ' AND A2.A2_COD = D1.D1_FORNECE "
+   cQuery += "         AND A2.A2_LOJA = D1.D1_LOJA) "
+   cQuery += "   ELSE "
+   cQuery += "        (SELECT A1.A1_NREDUZ "
+   cQuery += "         FROM " +RetSqlName('SA1') +" A1 "
+   cQuery += "         WHERE A1.D_E_L_E_T_ = ' ' AND A1.A1_COD = D1.D1_FORNECE "
+   cQuery += "         AND A1.A1_LOJA = D1.D1_LOJA) "
+   cQuery += "END "
+     
+   cQuery += " FROM   " +RetSqlName('SD1') +" D1 (NOLOCK)  "
+   cQuery += " INNER JOIN " +RetSqlName('SF1') +" F1 (NOLOCK) ON "
+   cQuery += " 		F1.F1_FILIAL = '" + xFilial("SD1")+ "'"
+   cQuery += "      AND F1.F1_DOC = D1.D1_DOC "
+   cQuery += " 		AND F1.F1_SERIE = D1.D1_SERIE "
+   cQuery += " 		AND F1.F1_DTDIGIT = D1.D1_DTDIGIT"
+   cQuery += " 		AND F1.F1_FORNECE = D1.D1_FORNECE "
+   cQuery += " 		AND F1.F1_LOJA = D1.D1_LOJA"
+   cQuery += " 		AND F1.D_E_L_E_T_ = '' "
+   cQuery += " LEFT JOIN " +RetSqlName('SB5') +" B5 (NOLOCK) ON"
+   cQuery += "		B5.B5_FILIAL = '" + xFilial("SB5")+ "'"
+   cQuery += "      AND D1.D1_COD = B5.B5_COD"
+   cQuery += "      AND B5.D_E_L_E_T_ = ' ' "
+   cQuery += " LEFT JOIN " +RetSqlName('QEK') +" QEK (NOLOCK) ON  "
+   cQuery += "		QEK.QEK_FILIAL = '" + xFilial("SD1")+ "'"
+   cQuery += "		AND D1.D1_DOC = QEK.QEK_NTFISC  "
+   cQuery += "      AND D1.D1_SERIE = QEK.QEK_SERINF  "
+   cQuery += "      AND D1.D1_COD = QEK.QEK_PRODUT    "
+   cQuery += "      AND D1.D1_FORNECE = QEK.QEK_FORNEC    "
+   cQuery += "      AND D1.D1_LOJA = QEK.QEK_LOJFOR  "
+   cQuery += "      AND D1.D1_DTDIGIT = QEK.QEK_DTENTR   "
+   cQuery += "      AND D1.D1_QUANT = QEK.QEK_TAMLOT   "
+   cQuery += "      AND QEK.D_E_L_E_T_ = '' "
+   cQuery += " WHERE  D1.D1_FILIAL = '" + xFilial("SD1")+ "'"
+   cQuery += "       AND D1.D1_DTDIGIT BETWEEN '" + Dtos(Mv_par03) + "' AND '" + Dtos(Mv_par04) + "' "   
+   cQuery += "       AND D1.D1_DOC = '" + mv_par01 + "' "
+   cQuery += "       AND D1.D1_SERIE = '" + Mv_par02 + "' "
+   cQuery += "       AND D1.D_E_L_E_T_ = ''  "
+   cQuery += "       AND D1.D1_FORNECE = '" + mv_par05 + "' "
+   cQuery += "       AND D1.D1_LOJA = '" + mv_par06 + "' "
+   
+   cQuery += "GROUP BY D1.D1_DOC,D1.D1_SERIE,D1.D1_EMISSAO,D1.D1_FORNECE,D1.D1_CC,D1.D1_DTDIGIT,D1.D1_PEDIDO,D1.D1_ITEMPC,D1.D1_ITEM,"
+   cQuery += "D1.D1_LOJA,D1.D1_COD,D1.D1_UM,D1.D1_QUANT,D1.D1_VUNIT,D1.D1_TOTAL,D1.D1_DESCRI,D1.D1_LOTECTL,F1.F1_TIPO,D1.D1_NUMSEQ,"
+   cQuery += "B5.B5_QE1,B5.B5_EMB1,QEK.QEK_NTFISC,QEK.QEK_SERINF,QEK.QEK_FORNEC,QEK.QEK_LOJFOR,QEK.QEK_VERIFI,D1.D1_LOCAL"
+   cQuery += " ORDER BY D1.D1_PEDIDO,D1.D1_ITEMPC ASC"
+   
+    MemoWrit('C:\TEMP\EST004.SQL',cQuery)
+
+	TCQUERY cQuery NEW ALIAS "TMP"
+
+Return
+
+Static Function PrintTicket()
+Private cCodPro := ""
+
+//TMP->(DbGoTop() )
+While TMP->(!EOF() )
+	/*
+	EntraDados()
+
+	If nQtdeEmb <= 0
+		TMP->(DbSkip() )
+		Loop
+	EndIf
+	*/
+
+	If TMP->QEK_VERIFI = 1
+		cInsp := 'Inspecionar    '
+	ElseIf TMP->QEK_VERIFI = 2
+		cInsp := 'Skip Lote      '
+	Else
+		cInsp := 'Amarracao      '
+	Endif
+
+	/*If TMP->D1_QUANT < nQtdeEmb
+		nQtImp := TMP->D1_QUANT
+		nQuant := nQtImp
+	Else
+		nQtImp := Int(TMP->D1_QUANT / nQtDeEmb)
+		nQuant := nQtdeEmb
+	EndIf*/
+
+	aAdd(aEtiq,{cInsp,Substr(TMP->CLIENTE,1,18),TMP->D1_DTDIGIT,TMP->D1_DESCRI,TMP->D1_COD,TMP->LOTECTL,0,TMP->D1_DOC,TMP->D1_SERIE,TMP->D1_FORNECE+"/"+TMP->D1_LOJA,TMP->D1_QUANT})
+    TMP->(DbSkip() )
+EndDo
+
+_cPorta := fLocal() // Retorna o local da Impressใo
+
+If CB5->(DbSeek(xFilial("CB5") + Alltrim(_cPorta) ))
+	If CB5->CB5_PORTA == "0"
+		_cPorta := "LPT" + CB5->CB5_LPT
+	EndIf
+Else
+	alert("Impressora nใo configurada ou nใo instalada! ")
+	Return .F.
+EndIf
+
+MSCBPRINTER("S4M",_cPorta,,,.F.,NIL,NIL,NIL,NIL,NIL,.T.)
+MSCBCHKStatus(.T.) 
+
+For i := 1 to Len(aEtiq)
+	MSCBBEGIN(1,6)
+	MSCBSAY(10,05,"WHB","N","0","100,105")
+
+	// Controle de Qualidade
+	MSCBSAY(88,05,"CONTROLE","N","0","054,055") // x, y
+	MSCBSAY(88,14,"QUALIDADE","N","0","054,055")
+	MSCBSAY(94,22,aEtiq[i,1],"N","0","034,035")
+
+	// Bloco: Fornecedor - C๓digo Peca - Descri็ใo - Quantidade - C๓digo de barra - DtDigit - NF
+	MSCBSAY(10,24,"Fornecedor","N","0","035,035")
+	MSCBSAY(10,29,aEtiq[1,10] + aEtiq[i,2],"N","0","035,035")
+	MSCBSAY(10,39,"Codigo Peca: " ,"N","0","035,035")
+	MSCBSAY(10,51,aEtiq[i,5] ,"N","0","095,095")
+	SB1->(DbSeek(xFilial("SB1") + aEtiq[i,5] ))
+	MSCBSAY(10,65,"Descricao: " + Alltrim(SB1->B1_DESC) ,"N","0","035,035")
+	MSCBSAY(10,71,"Quantidade: ","N","0","035,035")
+	MSCBSAY(50,76, Alltrim(Str(aEtiq[i,11])),"N","0","085,085")
+	MSCBSAY(76,34,DTOC(STOD(aEtiq[i,3])),"N","0","075,075")
+	MSCBSAY(82,44,"NF: " + aEtiq[i,8] + " / " + aEtiq[i,9] ,"N","0","035,035")
+	
+	MSCBSAYBAR(10,91,aEtiq[i,5],"N","MB07",13,.F.,.T.,.F.,,3.4,1,.F.,.F.,"1",.T.)
+	MSCBSAYBAR(10,115,aEtiq[i,6],"N","MB07",13,.F.,.T.,.F.,,3.4,1,.F.,.F.,"1",.T.)
+	MSCBSAY(30,186," --> Lote: " + Alltrim(aEtiq[i,6]),"N","0","035,035")
+
+	MSCBInfoEti("Recebimento","30X100")
+	MSCBEND()
+Next i
+
+MSCBCLOSEPRINTER()
+MS_FLUSH() 
+TMP->(DbCloseArea() )
+
+Return
+
+Static Function EntraDados()
+   cEmbalagem := Space(10)
+   nQtdeEmb   := 0
+   cCodPro    := TMP->D1_COD
+
+   @ 200,050 To 350,410 Dialog DlgDadosEmb Title "Produto: " + cCodPro + ", Digite Embalagem e Qtde"
+
+   @ 011,020 Say OemToAnsi("Tipo de embalagem") Size 50,8
+   @ 025,020 Say OemToAnsi("Quantidade       ") Size 50,8
+
+   @ 010,075 Get cEmbalagem  PICTURE "@!" Size 65,8 F3 "XZB" Valid ValEmbalagem()
+   @ 024,075 Get nQtdeEmb    PICTURE "99999" Valid(nQtdeEmb >= 0) Size 35,8
+
+   @ 058,050 BMPBUTTON TYPE 01 ACTION GravaDados()
+   @ 058,090 BMPBUTTON TYPE 02 ACTION Close(DlgDadosEmb)
+   Activate Dialog DlgDadosEmb CENTERED
+
+Return
+
+Static Function ValEmbalagem()
+Local lReturn := .F.
+   If Alltrim(SX5->X5_DESCRI) == Alltrim(cEmbalagem)
+      lReturn := .T.
+   Else
+       MsgBox("Embalagem Nao Econtrada, Verifique !","Tipo de Embalagem","INFO")
+   Endif
+Return(lReturn)
+
+Static Function GravaDados()
+	SB5->(DbSeek(xFilial("SB5")+TMP->D1_COD))
+	If SB5->(Found())
+	    RecLock("SB5",.F.)
+	    SB5->B5_QE1     := nQtdeEmb
+	    SB5->B5_EMB1    := cEmbalagem
+	    MsUnLock("SB5")
+   Else
+       RecLock("SB5",.T.)
+       SB5->B5_FILIAL  := xFilial("SB5")
+	    SB5->B5_COD     := TMP->D1_COD
+	    SB5->B5_CEME    := TMP->D1_DESCRI
+	    SB5->B5_QE1     := nQtdeEmb
+       SB5->B5_EMB1    := cEmbalagem
+	    MsUnLock("SB5")
+   Endif
+
+   Close(DlgDadosEmb)
+
+Return(.T.)
+
+Static Function fLocal()
+Local _cLocal   := CB5->CB5_CODIGO
+
+oDlgLocal  := MsDialog():New(0,0,50,400,"Assistente de etiqueta.",,,,,CLR_BLACK,CLR_WHITE,,,.T.)
+
+	oSay1   := TSay():New(08,10,{||"Local:"},oDlgLocal,,,,,,.T.,CLR_HBLUE,)
+	oGet1   := tGet():New(06,30,{|u| if(Pcount() > 0, _cLocal := u,_cLocal)},oDlgLocal,60,8,"@!",{||.T.},;
+					,,,,,.T.,,,{|| .T. },,,,,,"CB5","_cLocal")
+
+	oBtnLocal := tButton():New(06,110,"Avan็ar",oDlgLocal,{|| oDlgLocal:End() } ,60,10,,,,.T.)
+oDlgLocal:Activate(,,,.t.,{||.T.},,)
+Return _cLocal

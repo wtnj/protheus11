@@ -1,0 +1,136 @@
+#include "SIGAWIN.CH"        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+#include "RWMAKE.CH"        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+User Function M465sqnf()        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("LRET,_CCTRLCLI,_AARRAYSX5,_ATIPO,_CSERIE,_CNUMNF")
+SetPrvt("_NNUMNF,_CSUCCLIE,_CNFCLIE,_NPOSTIPO,_CDESCRTIPO,_ACAB")
+SetPrvt("_CCADASTRO,NOPCA,OLBX,")
+
+/*
+_____________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçào	 ¦ M465SQNF ¦ Autor ¦ Jose Lucas				  ¦ Data ¦ 04.02.99 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Dialogo para Mostrar a Sequencia da númeraçäo de Facturas  ¦¦¦
+¦¦¦          ¦ a serem geradas. ( Dados informativos...)                  ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦ Uso		 ¦ MATA465																	  ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+*/
+lRet := .T.
+
+_cCtrlCli  := Space(06)
+_aArraySX5 := {}
+_cSucClie   := SPACE(4)
+_cNFClie    := SPACE(8)
+_cSerie     := SPACE(3)
+
+_aTipo := {{ "D=Exportación           "},;
+			  { "I=Resp. Inscripto       "},;
+           { "N=Resp. No Inscripto    "},;
+			  { "P=Servicos Publicos     "},;
+           { "X=Exento                "},;
+           { "E=Deudores del Exterior "},;
+           { "F=Consumidor Final      "},;
+           { "M=Monotributista        "},;
+           { "O=Exento Objetivo       "},;
+           { "S=No Sujeito            "},;
+           { "Z=Sujeto No Categorizado"}}
+
+_cSerie := ExecBlock("M465SER",.F.,.F.)
+
+dbSelectArea("SX5")
+dbSeek(xFilial("SX5")+"01"+_cSerie)
+If ! Found()
+	Help("",1,"NOSERIE")
+	lRet := .F.
+EndIf
+
+If lRet
+	
+	_cNumNF := Alltrim(X5_DESCRI)
+	_nNumNF := Val(_cNumNF)
+	
+   If cPaisLoc=="MEX"
+      _cSucClie:=""	
+      if mv_par02==1  //formulario proprio
+         _cNFClie := strzero(_nNumNF,tamsx3("F2_DOC")[1])
+      Else
+          _cNFClie:=""
+      Endif   
+   else
+	   _cSucClie := Subs(_cNumNF,1,4)
+	   _cNFClie := Subs(_cNumNF,5,8)
+	
+	   _nPosTipo := Ascan(_aTipo,{|x| Subs(x[1],1,1) == Subs(SA1->A1_TIPO,1,1)})
+	   If _nPosTipo > 0
+		  _cDescrTipo := _aTipo[_nPosTipo][1] 
+	   Else	
+		   _cDescrTipo := " "
+	   EndIf	
+
+	   if cPaisLoc=="PAR"
+	      AADD(_aArraySX5,{ _cSerie, Trans(_cNumNF,"@R 999999999"),SA1->A1_NOME, _cDescrTipo })
+	   else
+		   AADD(_aArraySX5,{ _cSerie, Trans(_cNumNF,"@R 9999-99999999"),SA1->A1_NOME, _cDescrTipo })
+	   Endif
+	   If Len( _aArraySX5 ) > 0
+
+		  _aCab := { OemToAnsi("Serie"),;
+				 	  OemToAnsi("Número"),;
+					  OemToAnsi("Cliente"),;
+					  OemToAnsi("Tipo") }
+					 
+		  _cCadastro := "Secuencia de Numeración de las Facturas"
+	
+		  #IFDEF WINDOWS
+		
+			    nOpca := 0
+		
+		  	    @ 0,0 TO 160,400 DIALOG oDlg TITLE _cCadastro
+
+			    oLbx := RDListBox(0.3, .4, 157, 52, _aArraySX5, _aCab)
+			 
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> 				@ 03  ,168 BMPBUTTON TYPE 1 ACTION Execute(oOk)
+				@ 03  ,168 BMPBUTTON TYPE 1 ACTION oOk()
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> 				@ 17.5,168 BMPBUTTON TYPE 2 ACTION Execute(oCancel)
+				@ 17.5,168 BMPBUTTON TYPE 2 ACTION oCancel()
+				
+			    ACTIVATE DIALOG oDlg CENTERED
+			
+		  #ENDIF
+  	   Else
+		   lRet := .F.
+	   EndIf	
+   EndIf
+EndIf
+
+If nOpcA == 2
+	lRet := .F.
+EndIf	
+
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> __Return( {_cSucClie, _cNFClie, _cSerie} )
+Return( {_cSucClie, _cNFClie, _cSerie} )        // incluido pelo assistente de conversao do AP5 IDE em 09/09/99
+
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function oOk
+Static Function oOk()
+	nOpcA := 1
+	Close(oDlg)
+Return
+
+// Substituido pelo assistente de conversao do AP5 IDE em 09/09/99 ==> Function oCANCEL
+Static Function oCANCEL()
+	nOpcA := 2
+	Close(oDlg)
+Return

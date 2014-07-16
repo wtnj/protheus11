@@ -1,0 +1,7 @@
+// manutencao de ativos
+// PE movimentação de bens
+// autor: joaofr
+// 30/09/2008             
+
+User Function MNTA0806()
+Return .t.
